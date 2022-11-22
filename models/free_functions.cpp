@@ -2,6 +2,9 @@
 
 #include "recorder/actions_observer.h"
 
+namespace gunit {
+namespace models {
+
 using namespace gunit::recorder;
 
 int calculate_factorial(int value) {
@@ -13,3 +16,6 @@ bool is_this_sparta_word(const char* value) {
   GUNIT_NOTIFY_FREE_FUNCTION("is_this_sparta_word({})", value);
   return strcmp(value, "sparta") == 0;
 }
+
+}  // namespace models
+}  // namespace gunit

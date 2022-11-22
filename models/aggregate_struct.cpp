@@ -7,7 +7,7 @@ namespace gunit {
 namespace recorder {
 
 template <>
-Argument generateImpl(const Aggregate& that, CodeSink& sink) {
+Argument generateImpl(const models::Aggregate& that, CodeSink& sink) {
   ParamVisitor visitor;
   std::string code("local aggr = example.Aggregate()\n");
   code += "aggr.condition = " + visitor(that.condition) + "\n";
@@ -17,9 +17,10 @@ Argument generateImpl(const Aggregate& that, CodeSink& sink) {
 }
 
 }  // namespace recorder
-}  // namespace gunit
 
-Aggregate function_test_aggregate(Aggregate arg) {
+namespace models {
+
+Aggregate function_test_aggregate(const Aggregate& arg) {
   GUNIT_NOTIFY_FREE_FUNCTION("function_test_aggregate({})", arg);
   return arg;
 }
@@ -27,3 +28,6 @@ Aggregate function_test_aggregate(Aggregate arg) {
 bool operator==(const Aggregate& l, const Aggregate& r) {
   return l.condition == r.condition && l.number == r.number;
 }
+
+}  // namespace models
+}  // namespace gunit
