@@ -20,7 +20,7 @@ struct UserDataParam {
  public:
   virtual ~UserDataParam() = default;
   virtual bool equals(const UserDataParam& other) const = 0;
-  virtual Argument generate(CodeSink& sink) const = 0;
+  virtual std::string generate(CodeSink& sink) const = 0;
   virtual UserDataParamPtr clone() const = 0;
 };
 
@@ -35,7 +35,7 @@ inline bool operator!=(const UserDataParamPtr& left,
 }
 
 template <typename Type>
-Argument generateImpl(const Type&, CodeSink& sink);
+std::string produceCode(const Type&, CodeSink& sink);
 
 namespace details {
 
@@ -57,8 +57,8 @@ struct UserDataParamImpl final : public UserDataParam {
     return false;
   }
 
-  Argument generate(CodeSink& sink) const override {
-    return generateImpl(_param, sink);
+  std::string generate(CodeSink& sink) const override {
+    return produceCode(_param, sink);
   }
 
   UserDataParamPtr clone() const override {

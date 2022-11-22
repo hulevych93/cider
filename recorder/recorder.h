@@ -8,7 +8,7 @@ namespace recorder {
 class ScriptRecordSession {
  public:
   virtual ~ScriptRecordSession() = default;
-  virtual std::string getScript() const = 0;
+  virtual std::string getScript() = 0;
 };
 
 using ScriptRecordSessionPtr = std::shared_ptr<ScriptRecordSession>;

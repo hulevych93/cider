@@ -1,6 +1,5 @@
 ﻿#pragma once
 
-#include <optional>
 #include <variant>
 #include <vector>
 
@@ -23,16 +22,8 @@ struct Nil final {
   bool operator==(const Nil&) const { return true; }
 };
 
-namespace details {
-using FundumentalTypesList = TypeList<bool, int, float, std::string>;
-using GenerationTagsTypesList = TypeList<Nil>;
-}  // namespace details
-
-//` The `GeneratorTypesList` includes all the fundamental types + pre-defined
-// generation tags.
-using GeneratorTypesList =
-    utils::ConcatTypeLists<details::FundumentalTypesList,
-                           details::GenerationTagsTypesList>;
+//` The `GeneratorTypesList` includes all the fundamental types.
+using GeneratorTypesList = TypeList<Nil, bool, int, float, std::string>;
 
 //` User action parameters are introduced by the `Param` variant.
 using Param = utils::ApplyTypeList<
@@ -40,9 +31,6 @@ using Param = utils::ApplyTypeList<
     utils::ConcatTypeLists<GeneratorTypesList,
                            utils::ToTypeList<UserDataParamPtr>>>;
 using Params = std::vector<Param>;
-
-//` The `Argument` to be passed into the function call.
-using Argument = std::string;
 
 }  // namespace recorder
 }  // namespace gunit

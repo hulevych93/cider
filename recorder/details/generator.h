@@ -24,15 +24,15 @@ struct ParamVisitor {
       typename Type,
       std::enable_if_t<std::is_integral_v<Type> &&
                        !std::is_same_v<std::decay_t<Type>, bool>>* = nullptr>
-  Argument operator()(Type param) {
+  std::string operator()(Type param) {
     return std::to_string(param);
   }
 
-  Argument operator()(const Nil&) const;
-  Argument operator()(bool value) const;
-  Argument operator()(float value) const;
-  Argument operator()(const char* value) const;
-  Argument operator()(const std::string& value) const;
+  std::string operator()(const Nil&) const;
+  std::string operator()(bool value) const;
+  std::string operator()(float value) const;
+  std::string operator()(const char* value) const;
+  std::string operator()(const std::string& value) const;
 };
 
 //` The `UserDataParamVisitor` is extended with UserDataParamPtr operator
@@ -43,7 +43,7 @@ class UserDataParamVisitor final : public ParamVisitor {
 
   using ParamVisitor::operator();
 
-  Argument operator()(const UserDataParamPtr& value) const;
+  std::string operator()(const UserDataParamPtr& value) const;
 
  private:
   CodeSink& _sink;
@@ -59,9 +59,6 @@ class ScriptGenerator final {
   // the generator and ` it becomes ready to further usage. ` Throws:
   //`ScriptGenerationError`.
   std::string getScript();
-
- private:
-  std::string generate(const char* function, const Params& params);
 
  private:
   std::string _body;

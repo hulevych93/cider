@@ -15,12 +15,12 @@ struct TestStruct final {
   bool operator==(const TestStruct&) const { return true; }
 };
 
-Argument generateImpl(const TestStruct&, CodeSink&) {
+std::string produceCode(const TestStruct&, CodeSink&) {
   return {};
 }
 
-Argument generateImpl(const TestEnum, CodeSink&) {
-  return Argument{};
+std::string produceCode(const TestEnum, CodeSink&) {
+  return std::string{};
 }
 
 TEST_F(ParamsTestSuite, makeParamBool) {

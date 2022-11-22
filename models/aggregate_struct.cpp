@@ -7,13 +7,13 @@ namespace gunit {
 namespace recorder {
 
 template <>
-Argument generateImpl(const models::Aggregate& that, CodeSink& sink) {
+std::string produceCode(const models::Aggregate& that, CodeSink& sink) {
   ParamVisitor visitor;
   std::string code("local aggr = example.Aggregate()\n");
   code += "aggr.condition = " + visitor(that.condition) + "\n";
   code += "aggr.number = " + visitor(that.number) + "\n";
   sink.addLocal("aggr", std::move(code));
-  return Argument{"aggr"};
+  return std::string{"aggr"};
 }
 
 }  // namespace recorder

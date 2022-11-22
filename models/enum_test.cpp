@@ -7,16 +7,16 @@ namespace gunit {
 namespace recorder {
 
 template <>
-Argument generateImpl(const models::SomeEnumeration& that, CodeSink&) {
-    switch(that) {
+std::string produceCode(const models::SomeEnumeration& that, CodeSink&) {
+  switch (that) {
     case models::SomeEnumeration::first_value:
-        return "example.SomeEnumeration_first_value";
-        break;
+      return "example.SomeEnumeration_first_value";
+      break;
     case models::SomeEnumeration::second_value:
-        return "example.SomeEnumeration_second_value";
-        break;
-    }
-    return {};
+      return "example.SomeEnumeration_second_value";
+      break;
+  }
+  return {};
 }
 
 }  // namespace recorder

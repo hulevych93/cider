@@ -14,7 +14,7 @@ struct FreeFunctionCall final {
   Params params;
 };
 
-using UserAction = std::variant<FreeFunctionCall>;
+using Action = std::variant<FreeFunctionCall>;
 
 namespace details {
 template <typename... Types>
@@ -45,7 +45,7 @@ Params packParams(ParamsTypes&&... params) {
 }  // namespace details
 
 template <typename... ParamsTypes>
-UserAction freeFunctionCall(const char* function, ParamsTypes&&... params) {
+Action makeFreeFunctionCall(const char* function, ParamsTypes&&... params) {
   return FreeFunctionCall{
       function, details::packParams(std::forward<ParamsTypes>(params)...)};
 }

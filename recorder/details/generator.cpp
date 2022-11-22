@@ -31,15 +31,15 @@ class CodeSinkImpl : public CodeSink {
 
 }  // namespace
 
-Argument ParamVisitor::operator()(const Nil&) const {
-  return Argument{"nil"};
+std::string ParamVisitor::operator()(const Nil&) const {
+  return std::string{"nil"};
 }
 
-Argument ParamVisitor::operator()(const bool value) const {
+std::string ParamVisitor::operator()(const bool value) const {
   return value ? "true" : "false";
 }
 
-Argument ParamVisitor::operator()(const float value) const {
+std::string ParamVisitor::operator()(const float value) const {
   // Independent from "C" locale conversion approach.
   // The decimal delimeter sign is always a dot.
 
@@ -49,25 +49,53 @@ Argument ParamVisitor::operator()(const float value) const {
   return stream.str();
 }
 
-Argument ParamVisitor::operator()(const char* param) const {
+std::string ParamVisitor::operator()(const char* param) const {
   return (*this)(std::string{param});
 }
 
-Argument ParamVisitor::operator()(const std::string& value) const {
+std::string ParamVisitor::operator()(const std::string& value) const {
   return std::string{"'" + escape(value) + "'"};
 }
 
 UserDataParamVisitor::UserDataParamVisitor(CodeSink& sink) : _sink(sink) {}
 
-Argument UserDataParamVisitor::operator()(const UserDataParamPtr& value) const {
+std::string UserDataParamVisitor::operator()(
+    const UserDataParamPtr& value) const {
   return (*value).generate(_sink);
 }
 
 ScriptGenerationError::ScriptGenerationError(const char* msg)
     : _error(fmt::format("ScriptGenerationError: {}", msg)) {}
 
+namespace {
+
+void generate(const char* function, const Params& params, std::string& body) {
+  std::vector<std::string> args;
+  args.reserve(params.size());
+  CodeSinkImpl sink(body);
+  fmt::dynamic_format_arg_store<fmt::format_context> fmt_args;
+  for (const auto& param : params) {
+    args.emplace_back(std::visit(UserDataParamVisitor{sink}, param));
+    fmt_args.push_back(args.back());
+  }
+
+  assert(function);
+
+  try {
+    body += fmt::vformat(function, fmt_args) + "\n";
+  } catch (const fmt::format_error& fmtErr) {
+    throw ScriptGenerationError{
+        fmt::format(
+            "Function with name \'{}\' generation is failed. Details: \'{}\'",
+            function, fmtErr.what())
+            .c_str()};
+  }
+}
+
+}  // namespace
+
 void ScriptGenerator::operator()(const FreeFunctionCall& context) {
-  _body += generate(context.function, context.params);
+  generate(context.function, context.params, _body);
 }
 
 std::string ScriptGenerator::getScript() {
@@ -78,30 +106,6 @@ std::string ScriptGenerator::getScript() {
   }
 
   return script;
-}
-
-std::string ScriptGenerator::generate(const char* function,
-                                      const Params& params) {
-  std::vector<Argument> args;
-  args.reserve(params.size());
-  CodeSinkImpl sink(_body);
-  fmt::dynamic_format_arg_store<fmt::format_context> fmt_args;
-  for (const auto& param : params) {
-    args.emplace_back(std::visit(UserDataParamVisitor{sink}, param));
-    fmt_args.push_back(args.back());
-  }
-
-  assert(function);
-
-  try {
-    return fmt::vformat(function, fmt_args) + "\n";
-  } catch (const fmt::format_error& fmtErr) {
-    throw ScriptGenerationError{
-        fmt::format(
-            "Function with name \'{}\' generation is failed. Details: \'{}\'",
-            function, fmtErr.what())
-            .c_str()};
-  }
 }
 
 }  // namespace recorder
