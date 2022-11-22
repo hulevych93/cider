@@ -24,36 +24,33 @@ function(gunit_generate_swig)
 
     cmake_parse_arguments(SWIG "${OPTIONS}" "${ONE_VALUE_ARGS}" "${MULTI_VALUE_ARGS}" ${ARGN})
     gunit_add_cmake_deps(${SWIG_SWIG_FILES})
-    set(TEMP_DIR "${GUNIT_TMP_DIR}/swig_gen")
 
     # This ensures that there is no files from previous cmake runs.
-    file(REMOVE_RECURSE "${TEMP_DIR}")
-    file(MAKE_DIRECTORY "${TEMP_DIR}")
+    file(REMOVE_RECURSE "${SWIG_OUTPUT_DIR}")
+    file(MAKE_DIRECTORY "${SWIG_OUTPUT_DIR}")
 
     foreach(FILE ${SWIG_SWIG_FILES})
-        list(REMOVE_ITEM REDUNDANT_OUTPUT_FILES "${FILE}")
         get_filename_component(FILE_NAME "${FILE}" NAME_WE)
         get_filename_component(SWIG_DIRECTORY ${GUNIT_SWIG_EXECUTABLE} DIRECTORY)
-        execute_process(COMMAND "${GUNIT_SWIG_EXECUTABLE}" -c++ -${SWIG_LANGUAGE} ${SWIG_GENERATOR_ARGS}
+        add_custom_command(OUTPUT "${SWIG_OUTPUT_DIR}/${FILE_NAME}_wrap.cpp" "${SWIG_OUTPUT_DIR}/${FILE_NAME}_wrap.h"
+                         COMMAND "${GUNIT_SWIG_EXECUTABLE}" -c++ -${SWIG_LANGUAGE} ${SWIG_GENERATOR_ARGS}
                         -cppext cpp "-I${CMAKE_SOURCE_DIR}"
-                        -outdir "${TEMP_DIR}"
-                        -o "${TEMP_DIR}/${FILE_NAME}_wrap.cpp"
-                        -oh "${TEMP_DIR}/${FILE_NAME}_wrap.h"
+                        -outdir "${SWIG_OUTPUT_DIR}"
+                        -o "${SWIG_OUTPUT_DIR}/${FILE_NAME}_wrap.cpp"
+                        -oh "${SWIG_OUTPUT_DIR}/${FILE_NAME}_wrap.h"
                         ${SWIG_DEFINES}
                         ${FILE}
                 WORKING_DIRECTORY ${SWIG_DIRECTORY}
-                COMMAND_ERROR_IS_FATAL ANY)
+                COMMENT "Generating swig wrapper files...")
 
         if(SWIG_EXTERNAL_RUNTIME)
-            execute_process(COMMAND "${GUNIT_SWIG_EXECUTABLE}" -c++ -${SWIG_LANGUAGE} ${SWIG_FLAGS} -cppext cpp
-                            -external-runtime "${TEMP_DIR}/swig${SWIG_LANGUAGE}run.h"
+            add_custom_command(OUTPUT "${SWIG_OUTPUT_DIR}/swig${SWIG_LANGUAGE}run.h"
+                    COMMAND "${GUNIT_SWIG_EXECUTABLE}" -c++ -${SWIG_LANGUAGE} ${SWIG_FLAGS} -cppext cpp
+                            -external-runtime "${SWIG_OUTPUT_DIR}/swig${SWIG_LANGUAGE}run.h"
                     WORKING_DIRECTORY ${SWIG_DIRECTORY}
-                    COMMAND_ERROR_IS_FATAL ANY)
+                    COMMENT "Generating swig runtime headers...")
         endif()
     endforeach()
-
-    file(REMOVE_RECURSE "${TEMP_DIR}")
-    file(GLOB_RECURSE OUTPUT_FILES "${SWIG_OUTPUT_DIR}/*.cpp")
 endfunction()
 
 ExternalProject_Add(

@@ -11,7 +11,7 @@ include_directories(.
 )
 
 gunit_collect_src(LIST_OUT "tests")
-list(APPEND LIST_OUT "${GEN_DIR}/models_wrap.cpp")
+list(APPEND LIST_OUT "${GEN_DIR}/models_wrap.cpp" "${GEN_DIR}/swigluarun.h")
 
 add_library(wrapper ${LIST_OUT})
 
