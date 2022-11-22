@@ -8,6 +8,7 @@ gunit_generate_swig(LANGUAGE lua
 
 include_directories(.
     ${Lua_INCLUDE_DIRS}
+    ${GEN_DIR}
 )
 
 gunit_collect_src(LIST_OUT "tests")

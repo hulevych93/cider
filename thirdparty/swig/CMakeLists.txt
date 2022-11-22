@@ -38,6 +38,7 @@ function(gunit_generate_swig)
                         -outdir "${SWIG_OUTPUT_DIR}"
                         -o "${SWIG_OUTPUT_DIR}/${FILE_NAME}_wrap.cpp"
                         -oh "${SWIG_OUTPUT_DIR}/${FILE_NAME}_wrap.h"
+                        -xmlout "${SWIG_OUTPUT_DIR}/${FILE_NAME}_wrap.xml"
                         ${SWIG_DEFINES}
                         ${FILE}
                 WORKING_DIRECTORY ${SWIG_DIRECTORY}

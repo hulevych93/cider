@@ -13,3 +13,4 @@ target_link_libraries(recorder_test
     models
     ${GTest_LIBRARIES}
     ${Fmt_LIBRARIES})
+

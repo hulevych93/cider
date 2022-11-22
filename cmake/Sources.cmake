@@ -8,8 +8,7 @@ function(prv_collect_sources SOURCE_FOLDER SRC_LIST_OUT)
     file(GLOB_RECURSE SRC_LIST
             "${SOURCE_FOLDER}/*.cpp"
             "${SOURCE_FOLDER}/*.h"
-            "${SOURCE_FOLDER}/*.rdl"
-            "${SOURCE_FOLDER}/*.json")
+            "${SOURCE_FOLDER}/*.swig")
 
     set(LIST_FILTERED)
     foreach(SOURCE ${SRC_LIST})
@@ -58,7 +57,7 @@ function(gunit_collect_src LIST_OUT)
 endfunction()
 
 function(gunit_collect_only_cpp LIST_OUT)
-    gunit_collect_src(TMP_SRC_LIST ".json" ".rdl")
+    gunit_collect_src(TMP_SRC_LIST ".swig")
     set(${LIST_OUT} ${TMP_SRC_LIST} PARENT_SCOPE)
 endfunction()
 
@@ -96,11 +95,6 @@ function(gunit_collect_only_platform_cpp LIST_OUT)
     list(SORT LIST_FILTERED)
 
     set(${SRC_LIST_OUT} ${LIST_FILTERED} PARENT_SCOPE)
-endfunction()
-
-function(gunit_collect_rdls LIST_OUT)
-    prv_collect_sources(${GUNIT_RDLS_DIR} TMP_SRC_LIST)
-    set(${LIST_OUT} ${TMP_SRC_LIST} PARENT_SCOPE)
 endfunction()
 
 function(gunit_collect_test_src SRC_LIST_OUT)

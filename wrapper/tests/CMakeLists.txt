@@ -11,5 +11,6 @@ add_executable(wrapper_test ${LIST_OUT})
 target_link_libraries(wrapper_test
     wrapper
     models
+    recorder
     ${GTest_LIBRARIES}
     ${Lua_LIBRARIES})
