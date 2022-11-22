@@ -1,8 +1,7 @@
 #include "aggregate_struct.h"
 
 #include "recorder/actions_observer.h"
-#include "recorder/details/params.h"
-#include "recorder/details/user_data.h"
+#include "recorder/details/generator.h"
 
 namespace gunit {
 namespace recorder {

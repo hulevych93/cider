@@ -1,8 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "recorder/details/params.h"
-#include "recorder/details/user_data.h"
-#include "recorder/details/utils.h"
+#include "recorder/details/generator.h"
 
 #include <clocale>
 

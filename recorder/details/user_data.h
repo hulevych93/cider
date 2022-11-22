@@ -24,8 +24,15 @@ struct UserDataParam {
   virtual UserDataParamPtr clone() const = 0;
 };
 
-bool operator==(const UserDataParamPtr& left, const UserDataParamPtr& right);
-bool operator!=(const UserDataParamPtr& left, const UserDataParamPtr& right);
+inline bool operator==(const UserDataParamPtr& left,
+                       const UserDataParamPtr& right) {
+  return (*left).equals(*right);
+}
+
+inline bool operator!=(const UserDataParamPtr& left,
+                       const UserDataParamPtr& right) {
+  return !operator==(left, right);
+}
 
 template <typename Type>
 Argument generateImpl(const Type&, CodeSink& sink);
