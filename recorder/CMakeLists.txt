@@ -8,4 +8,6 @@ include_directories(.
 
 add_library(recorder ${RECORDER_SRC})
 
+add_dependencies(recorder fmt)
+
 add_subdirectory(tests)
