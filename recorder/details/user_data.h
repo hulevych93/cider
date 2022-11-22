@@ -13,8 +13,10 @@ namespace recorder {
 class CodeSink {
  public:
   virtual ~CodeSink() = default;
-  virtual void addLocal(const char* name, std::string&& code) = 0;
+  virtual std::string processLocalVar(const char* name, std::string&& code) = 0;
 };
+
+using ParamCodeProducer = std::string (*)(const Param& param, CodeSink& sink);
 
 struct UserDataParam {
  public:

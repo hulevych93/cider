@@ -70,10 +70,10 @@ class ActionsObservable final {
   ActionsObserverWeakPtr _observer;
 };
 
-#define GUNIT_NOTIFY_FREE_FUNCTION(FUNCTION_NAME, ...)                      \
+#define GUNIT_NOTIFY_FREE_FUNCTION(...)                                     \
   auto scopeGuard =                                                         \
       gunit::recorder::ActionsObservable::getInstance().notifyFreeFunction( \
-          FUNCTION_NAME, __VA_ARGS__);
+          __FUNCTION__, __VA_ARGS__);
 
 }  // namespace recorder
 }  // namespace gunit

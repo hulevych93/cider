@@ -1,19 +1,19 @@
 #include "aggregate_struct.h"
 
 #include "recorder/actions_observer.h"
-#include "recorder/details/generator.h"
+#include "recorder/details/lua/lua_params.h"
 
 namespace gunit {
 namespace recorder {
 
 template <>
-std::string produceCode(const models::Aggregate& that, CodeSink& sink) {
+std::string produceCode(const models::Aggregate& aggregate, CodeSink& sink) {
   ParamVisitor visitor;
-  std::string code("local aggr = example.Aggregate()\n");
-  code += "aggr.condition = " + visitor(that.condition) + "\n";
-  code += "aggr.number = " + visitor(that.number) + "\n";
-  sink.addLocal("aggr", std::move(code));
-  return std::string{"aggr"};
+  std::string code;
+  code += "local {aggregate} = example.Aggregate();\n";
+  code += "{aggregate}.condition = " + visitor(aggregate.condition) + "\n";
+  code += "{aggregate}.number = " + visitor(aggregate.number) + "\n";
+  return sink.processLocalVar("aggregate", std::move(code));
 }
 
 }  // namespace recorder
@@ -21,7 +21,7 @@ std::string produceCode(const models::Aggregate& that, CodeSink& sink) {
 namespace models {
 
 Aggregate function_test_aggregate(const Aggregate& arg) {
-  GUNIT_NOTIFY_FREE_FUNCTION("function_test_aggregate({})", arg);
+  GUNIT_NOTIFY_FREE_FUNCTION(arg);
   return arg;
 }
 

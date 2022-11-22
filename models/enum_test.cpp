@@ -24,7 +24,7 @@ std::string produceCode(const models::SomeEnumeration& that, CodeSink&) {
 namespace models {
 
 SomeEnumeration function_test_enumeration(const SomeEnumeration arg) {
-  GUNIT_NOTIFY_FREE_FUNCTION("function_test_enumeration({})", arg);
+  GUNIT_NOTIFY_FREE_FUNCTION(arg);
   return arg;
 }
 

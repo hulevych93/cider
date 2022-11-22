@@ -10,9 +10,11 @@ namespace gunit {
 namespace recorder {
 
 struct FreeFunctionCall final {
-  const char* function = nullptr;
+  const char* functionName = nullptr;
   Params params;
 };
+
+std::string getFreeFunctionCallTemplate();
 
 using Action = std::variant<FreeFunctionCall>;
 

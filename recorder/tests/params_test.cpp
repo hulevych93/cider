@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "recorder/details/generator.h"
+#include "recorder/details/lua/lua_params.h"
 
 #include <clocale>
 
