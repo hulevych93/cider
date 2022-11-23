@@ -1,7 +1,6 @@
 #pragma once
 
 #include "recorder/details/params.h"
-#include "recorder/details/user_data.h"
 
 #include <memory>
 #include <string>

@@ -15,11 +15,11 @@ struct TestStruct final {
   bool operator==(const TestStruct&) const { return true; }
 };
 
-std::string produceCode(const TestStruct&, CodeSink&) {
+std::string produceAggregateCode(const TestStruct&, CodeSink&) {
   return {};
 }
 
-std::string produceCode(const TestEnum, CodeSink&) {
+std::string produceAggregateCode(const TestEnum, CodeSink&) {
   return std::string{};
 }
 

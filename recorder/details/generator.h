@@ -8,6 +8,8 @@
 namespace gunit {
 namespace recorder {
 
+std::string getFreeFunctionCallTemplate();
+
 struct ScriptGenerationError final : public std::exception {
   explicit ScriptGenerationError(const char* msg);
 
@@ -22,8 +24,11 @@ struct ScriptGenerationError final : public std::exception {
 class ScriptGenerator final {
  public:
   ScriptGenerator(ParamCodeProducer);
+  ~ScriptGenerator();
 
   void operator()(const FreeFunctionCall& context);
+  void operator()(const ClassConstructorCall& context);
+  void operator()(const ClassMethodCall& context);
 
   //` The method returns ready to use script. This method resets the state of
   // the generator and ` it becomes ready to further usage. ` Throws:
@@ -31,8 +36,12 @@ class ScriptGenerator final {
   std::string getScript();
 
  private:
+  std::vector<std::string> produceArgs(const Params& params) const;
+
+ private:
   ParamCodeProducer _paramProducer;
-  std::string _body;
+
+  std::unique_ptr<CodeSink> _sink;
 };
 
 }  // namespace recorder

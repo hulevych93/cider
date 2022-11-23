@@ -3,6 +3,7 @@
 #include "recorder/recorder.h"
 
 #include "models/aggregate_struct.h"
+#include "models/class_construct.h"
 #include "models/enum_test.h"
 #include "models/free_functions.h"
 
@@ -54,10 +55,10 @@ TEST_F(RecordingTestSuite, is_this_sparta_word_test) {
 }
 
 const char* function_test_aggregate_test_script =
-    R"(local aggregate = example.Aggregate()
-aggregate.condition = true
-aggregate.number = 10
-example.function_test_aggregate(aggregate)
+    R"(local aggregate1 = example.Aggregate()
+aggregate1.condition = true
+aggregate1.number = 10
+example.function_test_aggregate(aggregate1)
 )";
 
 TEST_F(RecordingTestSuite, function_test_aggregate_test) {
@@ -95,4 +96,30 @@ TEST_F(RecordingTestSuite, summ_these_two_params_test) {
 
   auto script = session->getScript();
   EXPECT_EQ(summ_these_two_params_test_script, script);
+}
+
+TEST_F(RecordingTestSuite, class_construct_test) {
+  auto session = makeLuaRecordingSession();
+
+  models::ClassConstruct object1;
+  EXPECT_EQ("local ClassConstruct1 = example.ClassConstruct()\n",
+            session->getScript());
+
+  models::ClassConstruct object2(125, true);
+  EXPECT_EQ("local ClassConstruct1 = example.ClassConstruct(125, true)\n",
+            session->getScript());
+}
+
+const char* class_method_test_script =
+    R"(local ClassConstruct1 = example.ClassConstruct()
+ClassConstruct1:someMethod(129)
+)";
+
+TEST_F(RecordingTestSuite, class_method_test) {
+  auto session = makeLuaRecordingSession();
+
+  models::ClassConstruct object1;
+  object1.someMethod(129);
+
+  EXPECT_EQ(class_method_test_script, session->getScript());
 }

@@ -51,11 +51,11 @@ class ActionsObservable final {
   }
 
   template <typename... Args>
-  ActionScopeGuard notifyFreeFunction(const char* function, Args&&... args) {
+  ActionScopeGuard notify(Args&&... args) {
     if (auto observer = _observer.lock()) {
       try {
-        const auto Id = observer->onActionBegins(
-            makeFreeFunctionCall(function, std::forward<Args>(args)...));
+        const auto Id =
+            observer->onActionBegins(makeAction(std::forward<Args>(args)...));
         return ActionScopeGuard{Id, observer.get()};
       } catch (const BadNumCast&) {
         //...
@@ -70,10 +70,17 @@ class ActionsObservable final {
   ActionsObserverWeakPtr _observer;
 };
 
-#define GUNIT_NOTIFY_FREE_FUNCTION(...)                                     \
-  auto scopeGuard =                                                         \
-      gunit::recorder::ActionsObservable::getInstance().notifyFreeFunction( \
-          __FUNCTION__, __VA_ARGS__);
+#define GUNIT_NOTIFY_FREE_FUNCTION(...)                                       \
+  auto scopeGuard = gunit::recorder::ActionsObservable::getInstance().notify( \
+      __FUNCTION__, __VA_ARGS__);
+
+#define GUNIT_NOTIFY_CONSTRUCTOR(...)                                         \
+  auto scopeGuard = gunit::recorder::ActionsObservable::getInstance().notify( \
+      this, __VA_ARGS__);
+
+#define GUNIT_NOTIFY_METHOD_CALL(...)                                         \
+  auto scopeGuard = gunit::recorder::ActionsObservable::getInstance().notify( \
+      this, __FUNCTION__, gunit::recorder::ClassMethodTag{}, __VA_ARGS__);
 
 }  // namespace recorder
 }  // namespace gunit

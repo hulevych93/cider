@@ -7,7 +7,8 @@ namespace gunit {
 namespace recorder {
 
 template <>
-std::string produceCode(const models::SomeEnumeration& that, CodeSink&) {
+std::string produceAggregateCode(const models::SomeEnumeration& that,
+                                 CodeSink&) {
   switch (that) {
     case models::SomeEnumeration::first_value:
       return "example.SomeEnumeration_first_value";

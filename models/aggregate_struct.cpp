@@ -7,10 +7,11 @@ namespace gunit {
 namespace recorder {
 
 template <>
-std::string produceCode(const models::Aggregate& aggregate, CodeSink& sink) {
+std::string produceAggregateCode(const models::Aggregate& aggregate,
+                                 CodeSink& sink) {
   ParamVisitor visitor;
   std::string code;
-  code += "local {aggregate} = example.Aggregate();\n";
+  code += "local {aggregate} = example.Aggregate()\n";
   code += "{aggregate}.condition = " + visitor(aggregate.condition) + "\n";
   code += "{aggregate}.number = " + visitor(aggregate.number) + "\n";
   return sink.processLocalVar("aggregate", std::move(code));

@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "params.h"
-#include "user_data.h"
+#include "sink.h"
 
 #include <optional>
 #include <variant>
@@ -12,11 +12,26 @@ namespace recorder {
 struct FreeFunctionCall final {
   const char* functionName = nullptr;
   Params params;
+  bool hasReturnValue = false;
 };
 
-std::string getFreeFunctionCallTemplate();
+struct ClassConstructorCall final {
+  const char* className;
+  void* objectAddress;
+  Params params;
+};
 
-using Action = std::variant<FreeFunctionCall>;
+struct ClassMethodCall final {
+  void* objectAddress;
+  const char* methodName = nullptr;
+  Params params;
+  bool hasReturnValue = false;
+};
+
+struct ClassMethodTag {};
+
+using Action =
+    std::variant<FreeFunctionCall, ClassConstructorCall, ClassMethodCall>;
 
 namespace details {
 template <typename... Types>
@@ -47,9 +62,28 @@ Params packParams(ParamsTypes&&... params) {
 }  // namespace details
 
 template <typename... ParamsTypes>
-Action makeFreeFunctionCall(const char* function, ParamsTypes&&... params) {
+Action makeAction(const char* function, ParamsTypes&&... params) {
   return FreeFunctionCall{
       function, details::packParams(std::forward<ParamsTypes>(params)...)};
+}
+
+template <typename... ParamsTypes>
+Action makeAction(void* object,
+                  const char* className,
+                  ParamsTypes&&... params) {
+  return ClassConstructorCall{
+      className, object,
+      details::packParams(std::forward<ParamsTypes>(params)...)};
+}
+
+template <typename... ParamsTypes>
+Action makeAction(void* object,
+                  const char* methodName,
+                  ClassMethodTag,
+                  ParamsTypes&&... params) {
+  return ClassMethodCall{
+      object, methodName,
+      details::packParams(std::forward<ParamsTypes>(params)...)};
 }
 
 }  // namespace recorder
