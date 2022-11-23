@@ -4,21 +4,6 @@
 #include "recorder/details/lua/lua_params.h"
 
 namespace gunit {
-namespace recorder {
-
-template <>
-std::string produceAggregateCode(const models::ClassConstruct& classConstruct,
-                                 CodeSink& sink) {
-  ParamVisitor visitor;
-  std::string code;
-  code += "local {classConstruct} = example.ClassConstruct(\n";
-  // code += visitor(classConstruct._condition) + ", ";
-  // code += visitor(classConstruct._number) + ")\n";
-  return sink.processLocalVar("classConstruct", std::move(code));
-}
-
-}  // namespace recorder
-
 namespace models {
 
 ClassConstruct::ClassConstruct() : _number(0), _condition(false) {
@@ -40,6 +25,7 @@ bool ClassConstruct::operator==(const ClassConstruct& that) {
 }
 
 ClassConstruct function_test_class_construct(const ClassConstruct& arg) {
+  GUNIT_NOTIFY_FREE_FUNCTION(arg);
   return arg;
 }
 

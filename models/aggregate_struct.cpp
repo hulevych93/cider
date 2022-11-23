@@ -26,8 +26,12 @@ Aggregate function_test_aggregate(const Aggregate& arg) {
   return arg;
 }
 
-bool operator==(const Aggregate& l, const Aggregate& r) {
-  return l.condition == r.condition && l.number == r.number;
+Aggregate* function_test_aggregate_ptr(Aggregate* arg) {
+  return arg;
+}
+
+bool Aggregate::operator==(const Aggregate& r) const {
+  return condition == r.condition && number == r.number;
 }
 
 }  // namespace models

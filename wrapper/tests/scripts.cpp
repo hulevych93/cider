@@ -42,3 +42,25 @@ assert(not example.is_this_sparta_word('not'), 'no')
   luaopen_example(lState.get());
   EXPECT_TRUE(executeScript(lState.get(), Script));
 }
+
+TEST_F(ScriptsTestSuite, function_test_aggregate) {
+  const char* Script = R"(
+local result = example.Aggregate()
+assert(result == example.function_test_aggregate(result), 'aggregate')
+)";
+
+  auto lState = get_lua();
+  luaopen_example(lState.get());
+  EXPECT_TRUE(executeScript(lState.get(), Script));
+}
+
+TEST_F(ScriptsTestSuite, function_test_aggregate_ptr) {
+  const char* Script = R"(
+local result = example.Aggregate()
+assert(result == example.function_test_aggregate_ptr(result), 'aggregate ptr')
+)";
+
+  auto lState = get_lua();
+  luaopen_example(lState.get());
+  EXPECT_TRUE(executeScript(lState.get(), Script));
+}

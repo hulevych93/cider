@@ -10,6 +10,8 @@
 #include "utils/numeric_cast.h"
 #include "utils/type_utils.h"
 
+#include "sink.h"
+
 namespace gunit {
 namespace recorder {
 
@@ -35,25 +37,12 @@ using Param = utils::ApplyTypeList<
 using Params = std::vector<Param>;
 
 class CodeSink;
-using ParamCodeProducer = std::string (*)(const Param& param, CodeSink& sink);
 
 struct UserDataParam {
  public:
   virtual ~UserDataParam() = default;
-  virtual bool equals(const UserDataParam& other) const = 0;
   virtual std::string generate(CodeSink& sink) const = 0;
-  virtual UserDataParamPtr clone() const = 0;
 };
-
-inline bool operator==(const UserDataParamPtr& left,
-                       const UserDataParamPtr& right) {
-  return (*left).equals(*right);
-}
-
-inline bool operator!=(const UserDataParamPtr& left,
-                       const UserDataParamPtr& right) {
-  return !operator==(left, right);
-}
 
 template <typename Type>
 std::string produceAggregateCode(const Type&, CodeSink& sink);
@@ -61,38 +50,51 @@ std::string produceAggregateCode(const Type&, CodeSink& sink);
 namespace details {
 
 template <typename Type>
-struct UserDataParamImpl final : public UserDataParam {
+struct AggregateUserDataParamImpl final : public UserDataParam {
  public:
   using ParamType = typename std::decay_t<Type>;
 
  public:
-  UserDataParamImpl(Type&& param) : _param(std::forward<Type>(param)) {}
-
-  ~UserDataParamImpl() override = default;
-
-  bool equals(const UserDataParam& other) const override {
-    if (const auto otherUserData =
-            dynamic_cast<const UserDataParamImpl*>(&other)) {
-      return _param == otherUserData->_param;
-    }
-    return false;
-  }
+  AggregateUserDataParamImpl(Type&& param)
+      : _param(std::forward<Type>(param)) {}
+  ~AggregateUserDataParamImpl() override = default;
 
   std::string generate(CodeSink& sink) const override {
     return produceAggregateCode(_param, sink);
-  }
-
-  UserDataParamPtr clone() const override {
-    return std::make_shared<UserDataParamImpl>(*this);
   }
 
  private:
   ParamType _param;
 };
 
-template <typename Type>
+template <typename Type,
+          typename std::enable_if_t<std::is_aggregate_v<std::decay_t<Type>> ||
+                                        std::is_enum_v<std::decay_t<Type>>,
+                                    void*> = nullptr>
 std::shared_ptr<UserDataParam> makeUserData(Type&& arg) {
-  return std::make_shared<UserDataParamImpl<Type>>(std::forward<Type>(arg));
+  return std::make_shared<AggregateUserDataParamImpl<Type>>(
+      std::forward<Type>(arg));
+}
+
+struct ReferenceUserDataParamImpl final : public UserDataParam {
+ public:
+  ReferenceUserDataParamImpl(const void* address) : _address(address) {}
+  ~ReferenceUserDataParamImpl() override = default;
+
+  std::string generate(CodeSink& sink) const override {
+    return sink.searchForLocalVar(_address);
+  }
+
+ private:
+  const void* _address;
+};
+
+template <typename Type,
+          typename std::enable_if_t<!std::is_aggregate_v<std::decay_t<Type>> &&
+                                        !std::is_enum_v<std::decay_t<Type>>,
+                                    void*> = nullptr>
+std::shared_ptr<UserDataParam> makeUserData(Type&& arg) {
+  return std::make_shared<ReferenceUserDataParamImpl>(std::addressof(arg));
 }
 
 template <typename Type>

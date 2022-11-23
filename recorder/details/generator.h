@@ -8,7 +8,12 @@
 namespace gunit {
 namespace recorder {
 
-std::string getFreeFunctionCallTemplate();
+using ParamCodeProducer = std::string (*)(const Param& param, CodeSink& sink);
+using FunctionCodeProducer = std::string (*)(const char* moduleName,
+                                             const char* functionName,
+                                             size_t paramCount,
+                                             bool hasReturnValue,
+                                             bool object);
 
 struct ScriptGenerationError final : public std::exception {
   explicit ScriptGenerationError(const char* msg);
@@ -23,7 +28,10 @@ struct ScriptGenerationError final : public std::exception {
 //` It processes the user action log entries and generates script source code.
 class ScriptGenerator final {
  public:
-  ScriptGenerator(ParamCodeProducer);
+  ScriptGenerator(std::string moduleName,
+                  ParamCodeProducer,
+                  FunctionCodeProducer);
+  ScriptGenerator(ScriptGenerator&&) = default;
   ~ScriptGenerator();
 
   void operator()(const FreeFunctionCall& context);
@@ -39,7 +47,9 @@ class ScriptGenerator final {
   std::vector<std::string> produceArgs(const Params& params) const;
 
  private:
+  std::string _module;
   ParamCodeProducer _paramProducer;
+  FunctionCodeProducer _functionProducer;
 
   std::unique_ptr<CodeSink> _sink;
 };

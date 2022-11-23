@@ -12,7 +12,7 @@ class ScriptRecordSession {
 };
 
 using ScriptRecordSessionPtr = std::shared_ptr<ScriptRecordSession>;
-ScriptRecordSessionPtr makeLuaRecordingSession();
+ScriptRecordSessionPtr makeLuaRecordingSession(const std::string& moduleName);
 
 }  // namespace recorder
 }  // namespace gunit

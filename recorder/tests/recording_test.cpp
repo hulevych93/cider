@@ -15,7 +15,7 @@ class RecordingTestSuite : public testing::Test {
 };
 
 TEST_F(RecordingTestSuite, script_session_clears_test) {
-  auto session = makeLuaRecordingSession();
+  auto session = makeLuaRecordingSession("example");
 
   EXPECT_EQ(120, models::calculate_factorial(5));
   EXPECT_EQ("example.calculate_factorial(5)\n", session->getScript());
@@ -30,7 +30,7 @@ example.calculate_factorial(6)
 )";
 
 TEST_F(RecordingTestSuite, calculate_factorial_test) {
-  auto session = makeLuaRecordingSession();
+  auto session = makeLuaRecordingSession("example");
 
   EXPECT_EQ(120, models::calculate_factorial(5));
   EXPECT_EQ(720, models::calculate_factorial(6));
@@ -45,7 +45,7 @@ example.is_this_sparta_word('sparta')
 )";
 
 TEST_F(RecordingTestSuite, is_this_sparta_word_test) {
-  auto session = makeLuaRecordingSession();
+  auto session = makeLuaRecordingSession("example");
 
   EXPECT_FALSE(models::is_this_sparta_word("something"));
   EXPECT_TRUE(models::is_this_sparta_word("sparta"));
@@ -62,7 +62,7 @@ example.function_test_aggregate(aggregate1)
 )";
 
 TEST_F(RecordingTestSuite, function_test_aggregate_test) {
-  auto session = makeLuaRecordingSession();
+  auto session = makeLuaRecordingSession("example");
 
   models::Aggregate aggregateStruct{10, true};
   EXPECT_EQ(aggregateStruct, models::function_test_aggregate(aggregateStruct));
@@ -76,7 +76,7 @@ const char* function_test_enumeration_test_script =
 )";
 
 TEST_F(RecordingTestSuite, function_test_enumeration_test) {
-  auto session = makeLuaRecordingSession();
+  auto session = makeLuaRecordingSession("example");
 
   models::SomeEnumeration arg = models::SomeEnumeration::second_value;
   EXPECT_EQ(arg, models::function_test_enumeration(arg));
@@ -90,7 +90,7 @@ const char* summ_these_two_params_test_script =
 )";
 
 TEST_F(RecordingTestSuite, summ_these_two_params_test) {
-  auto session = makeLuaRecordingSession();
+  auto session = makeLuaRecordingSession("example");
 
   EXPECT_EQ(22, models::summ_these_two_params(7, 15u));
 
@@ -99,7 +99,7 @@ TEST_F(RecordingTestSuite, summ_these_two_params_test) {
 }
 
 TEST_F(RecordingTestSuite, class_construct_test) {
-  auto session = makeLuaRecordingSession();
+  auto session = makeLuaRecordingSession("example");
 
   models::ClassConstruct object1;
   EXPECT_EQ("local ClassConstruct1 = example.ClassConstruct()\n",
@@ -116,10 +116,24 @@ ClassConstruct1:someMethod(129)
 )";
 
 TEST_F(RecordingTestSuite, class_method_test) {
-  auto session = makeLuaRecordingSession();
+  auto session = makeLuaRecordingSession("example");
 
   models::ClassConstruct object1;
   object1.someMethod(129);
 
   EXPECT_EQ(class_method_test_script, session->getScript());
+}
+
+const char* constructed_class_as_param_test_script =
+    R"(local ClassConstruct1 = example.ClassConstruct(423, false)
+example.function_test_class_construct(ClassConstruct1)
+)";
+
+TEST_F(RecordingTestSuite, constructed_class_as_param_test) {
+  auto session = makeLuaRecordingSession("example");
+
+  models::ClassConstruct object1(423, false);
+  function_test_class_construct(object1);
+
+  EXPECT_EQ(constructed_class_as_param_test_script, session->getScript());
 }

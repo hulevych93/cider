@@ -2,6 +2,7 @@
 
 #include "details/action.h"
 #include "details/generator.h"
+#include "details/lua/lua_func.h"
 #include "details/lua/lua_params.h"
 
 #include <deque>
@@ -18,8 +19,8 @@ class ScriptRecordSessionImpl final : public ScriptRecordSession,
   };
 
  public:
-  explicit ScriptRecordSessionImpl(ParamCodeProducer producer)
-      : _generator(producer) {}
+  explicit ScriptRecordSessionImpl(ScriptGenerator&& generator)
+      : _generator(std::move(generator)) {}
 
   std::string getScript() override {
     try {
@@ -57,8 +58,11 @@ class ScriptRecordSessionImpl final : public ScriptRecordSession,
   ScriptGenerator _generator;
 };
 
-ScriptRecordSessionPtr makeLuaRecordingSession() {
-  auto session = std::make_shared<ScriptRecordSessionImpl>(produceLuaCode);
+ScriptRecordSessionPtr makeLuaRecordingSession(const std::string& moduleName) {
+  ScriptGenerator generator{moduleName, produceLuaCode, produceFunctionCall};
+
+  auto session =
+      std::make_shared<ScriptRecordSessionImpl>(std::move(generator));
   ActionsObservable::getInstance().attachObserver(session);
   return session;
 }

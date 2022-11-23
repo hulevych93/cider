@@ -38,14 +38,14 @@ class CodeSinkImpl : public CodeSink {
     return functionCall(nullptr, false, localName, args, codeTemplate);
   }
 
-  std::string processConstructorCall(void* object,
+  std::string processConstructorCall(const void* object,
                                      const char* localName,
                                      const std::vector<std::string>& args,
                                      const std::string& codeTemplate) override {
     return functionCall(object, false, localName, args, codeTemplate);
   }
 
-  std::string processMethodCall(void* object,
+  std::string processMethodCall(const void* object,
                                 const char* localName,
                                 const std::vector<std::string>& args,
                                 const std::string& codeTemplate) override {
@@ -53,7 +53,12 @@ class CodeSinkImpl : public CodeSink {
   }
 
  private:
-  std::string suggestLocalName(const char* localName, void* object = nullptr) {
+  std::string searchForLocalVar(const void* object) const override {
+    return getObjectLocal((void*)object);
+  }
+
+  std::string suggestLocalName(const char* localName,
+                               const void* object = nullptr) {
     assert(localName);
     const auto suggested =
         std::string{localName} + std::to_string(++_localCounter);
@@ -63,7 +68,7 @@ class CodeSinkImpl : public CodeSink {
     return suggested;
   }
 
-  std::string getObjectLocal(void* object) const {
+  std::string getObjectLocal(const void* object) const {
     const auto localIt = _locals.find(object);
     if (localIt != _locals.end()) {
       return localIt->second;
@@ -72,7 +77,7 @@ class CodeSinkImpl : public CodeSink {
     return {};
   }
 
-  std::string functionCall(void* object,
+  std::string functionCall(const void* object,
                            bool isMethodCall,
                            const char* localName,
                            const std::vector<std::string>& args,
@@ -119,57 +124,41 @@ class CodeSinkImpl : public CodeSink {
 
  private:
   std::string _sink;
-  std::unordered_map<void*, std::string> _locals;
+  std::unordered_map<const void*, std::string> _locals;
   size_t _localCounter = 0u;
 };
 
 struct ActionTemplateProducer final {
+  ActionTemplateProducer(const std::string& module,
+                         FunctionCodeProducer producer)
+      : _module(module), _funcProducer(producer) {}
+
   std::string operator()(const FreeFunctionCall& functionCall) const {
-    return produceFunctionCall(functionCall.functionName,
-                               functionCall.params.size(),
-                               functionCall.hasReturnValue);
+    return _funcProducer(_module.c_str(), functionCall.functionName,
+                         functionCall.params.size(),
+                         functionCall.hasReturnValue, false);
   }
 
   std::string operator()(const ClassConstructorCall& constuctorCall) const {
-    return produceFunctionCall(constuctorCall.className,
-                               constuctorCall.params.size(), true);
+    return _funcProducer(_module.c_str(), constuctorCall.className,
+                         constuctorCall.params.size(), true, false);
   }
 
   std::string operator()(const ClassMethodCall& classMethodCall) const {
-    return produceFunctionCall(classMethodCall.methodName,
-                               classMethodCall.params.size(),
-                               classMethodCall.hasReturnValue, true);
+    return _funcProducer(_module.c_str(), classMethodCall.methodName,
+                         classMethodCall.params.size(),
+                         classMethodCall.hasReturnValue, true);
   }
 
  private:
-  std::string produceFunctionCall(const char* functionName,
-                                  size_t paramCount,
-                                  bool hasReturnValue,
-                                  bool object = false) const {
-    std::string funcTemplate;
-    if (hasReturnValue) {
-      funcTemplate = "local {} = ";
-    }
-    if (object) {
-      funcTemplate += "{}:";
-    } else {
-      funcTemplate += getFreeFunctionCallTemplate();
-    }
-    funcTemplate += functionName;
-    constexpr const char* ParamPlaceholer = "{}";
-    funcTemplate += "(";
-    for (auto i = 0u; i < paramCount; ++i) {
-      if (i > 0u)
-        funcTemplate += ", ";
-      funcTemplate += ParamPlaceholer;
-    }
-    funcTemplate += ")";
-    return funcTemplate;
-  }
+  std::string _module;
+  FunctionCodeProducer _funcProducer;
 };
 
-std::string produceActionTemplate(const Action& action) {
-  ActionTemplateProducer producer;
+std::string produceActionTemplate(const Action& action,
+                                  const std::string& moduleName,
+                                  const FunctionCodeProducer funcProducer) {
+  ActionTemplateProducer producer{moduleName, funcProducer};
   return std::visit(producer, action);
 }
 
@@ -178,13 +167,19 @@ std::string produceActionTemplate(const Action& action) {
 ScriptGenerationError::ScriptGenerationError(const char* msg)
     : _error(fmt::format("ScriptGenerationError: {}", msg)) {}
 
-ScriptGenerator::ScriptGenerator(const ParamCodeProducer producer)
-    : _paramProducer(producer), _sink(std::make_unique<CodeSinkImpl>()) {}
+ScriptGenerator::ScriptGenerator(std::string moduleName,
+                                 const ParamCodeProducer producer,
+                                 const FunctionCodeProducer funcProducer)
+    : _module(std::move(moduleName)),
+      _paramProducer(producer),
+      _functionProducer(funcProducer),
+      _sink(std::make_unique<CodeSinkImpl>()) {}
 
 ScriptGenerator::~ScriptGenerator() = default;
 
 void ScriptGenerator::operator()(const FreeFunctionCall& context) {
-  const auto codeTemplate = produceActionTemplate(context);
+  const auto codeTemplate =
+      produceActionTemplate(context, _module, _functionProducer);
   const auto args = produceArgs(context.params);
 
   if (context.hasReturnValue) {
@@ -196,7 +191,8 @@ void ScriptGenerator::operator()(const FreeFunctionCall& context) {
 }
 
 void ScriptGenerator::operator()(const ClassConstructorCall& context) {
-  const auto codeTemplate = produceActionTemplate(context);
+  const auto codeTemplate =
+      produceActionTemplate(context, _module, _functionProducer);
   const auto args = produceArgs(context.params);
 
   _sink->processConstructorCall(context.objectAddress, context.className, args,
@@ -204,7 +200,8 @@ void ScriptGenerator::operator()(const ClassConstructorCall& context) {
 }
 
 void ScriptGenerator::operator()(const ClassMethodCall& context) {
-  const auto codeTemplate = produceActionTemplate(context);
+  const auto codeTemplate =
+      produceActionTemplate(context, _module, _functionProducer);
   const auto args = produceArgs(context.params);
 
   _sink->processMethodCall(context.objectAddress, nullptr, args, codeTemplate);
