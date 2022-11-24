@@ -6,7 +6,7 @@ namespace gunit {
 
 namespace recorder {
 
-std::string getFreeFunctionCallTemplate() {
+std::string getFreeFunctionTemplate() {
   return "example.";
 }
 

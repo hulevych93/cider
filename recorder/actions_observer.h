@@ -78,9 +78,13 @@ class ActionsObservable final {
   auto scopeGuard = gunit::recorder::ActionsObservable::getInstance().notify( \
       this, __VA_ARGS__);
 
-#define GUNIT_NOTIFY_METHOD_CALL(...)                                         \
+#define GUNIT_NOTIFY_METHOD(...)                                              \
   auto scopeGuard = gunit::recorder::ActionsObservable::getInstance().notify( \
       this, __FUNCTION__, gunit::recorder::ClassMethodTag{}, __VA_ARGS__);
+
+#define GUNIT_NOTIFY_ASSIGNMENT(PARAM)                                        \
+  auto scopeGuard = gunit::recorder::ActionsObservable::getInstance().notify( \
+      this, gunit::recorder::BinaryOpType::Assignment, PARAM);
 
 }  // namespace recorder
 }  // namespace gunit

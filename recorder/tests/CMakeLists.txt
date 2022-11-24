@@ -11,6 +11,8 @@ add_executable(recorder_test ${LIST_OUT})
 target_link_libraries(recorder_test
     recorder
     models
+    scripting
     ${GTest_LIBRARIES}
-    ${Fmt_LIBRARIES})
+    ${Fmt_LIBRARIES}
+    ${Lua_LIBRARIES})
 

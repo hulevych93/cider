@@ -9,29 +9,38 @@
 namespace gunit {
 namespace recorder {
 
-struct FreeFunctionCall final {
+struct FreeFunction final {
   const char* functionName = nullptr;
   Params params;
   bool hasReturnValue = false;
 };
 
-struct ClassConstructorCall final {
+struct ClassConstructor final {
   const char* className;
   void* objectAddress;
   Params params;
 };
 
-struct ClassMethodCall final {
+struct ClassMethod final {
   void* objectAddress;
   const char* methodName = nullptr;
   Params params;
   bool hasReturnValue = false;
 };
 
+enum class BinaryOpType { Assignment };
+
+struct ClassBinaryOp final {
+  void* objectAddress;
+  BinaryOpType opName = BinaryOpType::Assignment;
+  Param param;
+  bool hasReturnValue = false;
+};
+
 struct ClassMethodTag {};
 
 using Action =
-    std::variant<FreeFunctionCall, ClassConstructorCall, ClassMethodCall>;
+    std::variant<FreeFunction, ClassConstructor, ClassMethod, ClassBinaryOp>;
 
 namespace details {
 template <typename... Types>
@@ -63,7 +72,7 @@ Params packParams(ParamsTypes&&... params) {
 
 template <typename... ParamsTypes>
 Action makeAction(const char* function, ParamsTypes&&... params) {
-  return FreeFunctionCall{
+  return FreeFunction{
       function, details::packParams(std::forward<ParamsTypes>(params)...)};
 }
 
@@ -71,7 +80,7 @@ template <typename... ParamsTypes>
 Action makeAction(void* object,
                   const char* className,
                   ParamsTypes&&... params) {
-  return ClassConstructorCall{
+  return ClassConstructor{
       className, object,
       details::packParams(std::forward<ParamsTypes>(params)...)};
 }
@@ -81,9 +90,13 @@ Action makeAction(void* object,
                   const char* methodName,
                   ClassMethodTag,
                   ParamsTypes&&... params) {
-  return ClassMethodCall{
-      object, methodName,
-      details::packParams(std::forward<ParamsTypes>(params)...)};
+  return ClassMethod{object, methodName,
+                     details::packParams(std::forward<ParamsTypes>(params)...)};
+}
+
+template <typename ParamType>
+Action makeAction(void* object, BinaryOpType type, ParamType&& param) {
+  return ClassBinaryOp{object, type, makeParam(std::forward<ParamType>(param))};
 }
 
 }  // namespace recorder

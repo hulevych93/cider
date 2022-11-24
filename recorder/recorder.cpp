@@ -59,7 +59,11 @@ class ScriptRecordSessionImpl final : public ScriptRecordSession,
 };
 
 ScriptRecordSessionPtr makeLuaRecordingSession(const std::string& moduleName) {
-  ScriptGenerator generator{moduleName, produceLuaCode, produceFunctionCall};
+  LanguageContext context;
+  context.funcProducer = produceFunctionCall;
+  context.paramProducer = produceLuaCode;
+  context.binaryOpProducer = produceBinaryOpCall;
+  ScriptGenerator generator{moduleName, context};
 
   auto session =
       std::make_shared<ScriptRecordSessionImpl>(std::move(generator));

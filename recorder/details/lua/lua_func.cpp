@@ -30,5 +30,23 @@ std::string produceFunctionCall(const char* moduleName,
   return funcTemplate;
 }
 
+std::string produceBinaryOpCall(const BinaryOpType type,
+                                const bool hasReturnValue) {
+  std::string funcTemplate;
+  if (hasReturnValue) {
+    funcTemplate = "local {} = ";
+  }
+
+  funcTemplate += "{}";
+  switch (type) {
+    case BinaryOpType::Assignment:
+      funcTemplate += " = ";
+      break;
+  }
+
+  funcTemplate += "{}";
+  return funcTemplate;
+}
+
 }  // namespace recorder
 }  // namespace gunit

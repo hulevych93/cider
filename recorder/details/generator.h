@@ -14,6 +14,13 @@ using FunctionCodeProducer = std::string (*)(const char* moduleName,
                                              size_t paramCount,
                                              bool hasReturnValue,
                                              bool object);
+using BinaryOpCodeProducer = std::string (*)(BinaryOpType, bool hasReturnValue);
+
+struct LanguageContext final {
+  ParamCodeProducer paramProducer;
+  FunctionCodeProducer funcProducer;
+  BinaryOpCodeProducer binaryOpProducer;
+};
 
 struct ScriptGenerationError final : public std::exception {
   explicit ScriptGenerationError(const char* msg);
@@ -28,15 +35,14 @@ struct ScriptGenerationError final : public std::exception {
 //` It processes the user action log entries and generates script source code.
 class ScriptGenerator final {
  public:
-  ScriptGenerator(std::string moduleName,
-                  ParamCodeProducer,
-                  FunctionCodeProducer);
+  ScriptGenerator(std::string moduleName, LanguageContext);
   ScriptGenerator(ScriptGenerator&&) = default;
   ~ScriptGenerator();
 
-  void operator()(const FreeFunctionCall& context);
-  void operator()(const ClassConstructorCall& context);
-  void operator()(const ClassMethodCall& context);
+  void operator()(const FreeFunction& context);
+  void operator()(const ClassConstructor& context);
+  void operator()(const ClassMethod& context);
+  void operator()(const ClassBinaryOp& context);
 
   //` The method returns ready to use script. This method resets the state of
   // the generator and ` it becomes ready to further usage. ` Throws:
@@ -48,8 +54,7 @@ class ScriptGenerator final {
 
  private:
   std::string _module;
-  ParamCodeProducer _paramProducer;
-  FunctionCodeProducer _functionProducer;
+  LanguageContext _langContext;
 
   std::unique_ptr<CodeSink> _sink;
 };

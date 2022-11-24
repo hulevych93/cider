@@ -18,6 +18,5 @@ add_subdirectory(thirdparty/swig)
 add_subdirectory(thirdparty/lua)
 
 add_subdirectory(models)
-add_subdirectory(wrapper)
 add_subdirectory(recorder)
 add_subdirectory(scripting)

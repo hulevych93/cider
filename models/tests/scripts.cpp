@@ -3,8 +3,6 @@
 
 #include <gtest/gtest.h>
 
-#include <lua.hpp>
-
 #include "scripting/interpreter.h"
 
 using namespace gunit::scripting;

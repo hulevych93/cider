@@ -74,7 +74,7 @@ class CodeSinkImpl : public CodeSink {
       return localIt->second;
     }
 
-    return {};
+    throw std::logic_error{"Object is unreachable."};
   }
 
   std::string functionCall(const void* object,
@@ -128,58 +128,24 @@ class CodeSinkImpl : public CodeSink {
   size_t _localCounter = 0u;
 };
 
-struct ActionTemplateProducer final {
-  ActionTemplateProducer(const std::string& module,
-                         FunctionCodeProducer producer)
-      : _module(module), _funcProducer(producer) {}
-
-  std::string operator()(const FreeFunctionCall& functionCall) const {
-    return _funcProducer(_module.c_str(), functionCall.functionName,
-                         functionCall.params.size(),
-                         functionCall.hasReturnValue, false);
-  }
-
-  std::string operator()(const ClassConstructorCall& constuctorCall) const {
-    return _funcProducer(_module.c_str(), constuctorCall.className,
-                         constuctorCall.params.size(), true, false);
-  }
-
-  std::string operator()(const ClassMethodCall& classMethodCall) const {
-    return _funcProducer(_module.c_str(), classMethodCall.methodName,
-                         classMethodCall.params.size(),
-                         classMethodCall.hasReturnValue, true);
-  }
-
- private:
-  std::string _module;
-  FunctionCodeProducer _funcProducer;
-};
-
-std::string produceActionTemplate(const Action& action,
-                                  const std::string& moduleName,
-                                  const FunctionCodeProducer funcProducer) {
-  ActionTemplateProducer producer{moduleName, funcProducer};
-  return std::visit(producer, action);
-}
-
 }  // namespace
 
 ScriptGenerationError::ScriptGenerationError(const char* msg)
     : _error(fmt::format("ScriptGenerationError: {}", msg)) {}
 
 ScriptGenerator::ScriptGenerator(std::string moduleName,
-                                 const ParamCodeProducer producer,
-                                 const FunctionCodeProducer funcProducer)
+                                 const LanguageContext context)
     : _module(std::move(moduleName)),
-      _paramProducer(producer),
-      _functionProducer(funcProducer),
+      _langContext(context),
       _sink(std::make_unique<CodeSinkImpl>()) {}
 
 ScriptGenerator::~ScriptGenerator() = default;
 
-void ScriptGenerator::operator()(const FreeFunctionCall& context) {
-  const auto codeTemplate =
-      produceActionTemplate(context, _module, _functionProducer);
+void ScriptGenerator::operator()(const FreeFunction& context) {
+  const auto codeTemplate = _langContext.funcProducer(
+      _module.c_str(), context.functionName, context.params.size(),
+      context.hasReturnValue, false);
+
   const auto args = produceArgs(context.params);
 
   if (context.hasReturnValue) {
@@ -190,19 +156,31 @@ void ScriptGenerator::operator()(const FreeFunctionCall& context) {
   }
 }
 
-void ScriptGenerator::operator()(const ClassConstructorCall& context) {
-  const auto codeTemplate =
-      produceActionTemplate(context, _module, _functionProducer);
+void ScriptGenerator::operator()(const ClassConstructor& context) {
+  const auto codeTemplate = _langContext.funcProducer(
+      _module.c_str(), context.className, context.params.size(), true, false);
+
   const auto args = produceArgs(context.params);
 
   _sink->processConstructorCall(context.objectAddress, context.className, args,
                                 codeTemplate);
 }
 
-void ScriptGenerator::operator()(const ClassMethodCall& context) {
-  const auto codeTemplate =
-      produceActionTemplate(context, _module, _functionProducer);
+void ScriptGenerator::operator()(const ClassMethod& context) {
+  const auto codeTemplate = _langContext.funcProducer(
+      _module.c_str(), context.methodName, context.params.size(),
+      context.hasReturnValue, true);
+
   const auto args = produceArgs(context.params);
+
+  _sink->processMethodCall(context.objectAddress, nullptr, args, codeTemplate);
+}
+
+void ScriptGenerator::operator()(const ClassBinaryOp& context) {
+  const auto codeTemplate =
+      _langContext.binaryOpProducer(context.opName, context.hasReturnValue);
+
+  const auto args = produceArgs({context.param});
 
   _sink->processMethodCall(context.objectAddress, nullptr, args, codeTemplate);
 }
@@ -212,7 +190,7 @@ std::vector<std::string> ScriptGenerator::produceArgs(
   std::vector<std::string> args;
   args.reserve(params.size());
   for (const auto& param : params) {
-    args.emplace_back(_paramProducer(param, *_sink));
+    args.emplace_back(_langContext.paramProducer(param, *_sink));
   }
   return args;
 }

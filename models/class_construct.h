@@ -7,10 +7,16 @@ class ClassConstruct final {
  public:
   ClassConstruct();
   ClassConstruct(int number, bool condition);
+  ClassConstruct(const ClassConstruct& other);
+  ClassConstruct(ClassConstruct&& other);
 
   void someMethod(int newNumber);
 
-  bool operator==(const ClassConstruct& that);
+  ClassConstruct& operator=(const ClassConstruct& other);
+  ClassConstruct& operator=(ClassConstruct&& other);
+
+  bool operator==(const ClassConstruct& that) const;
+  bool operator!=(const ClassConstruct& that) const;
 
  private:
   int _number = 0;
