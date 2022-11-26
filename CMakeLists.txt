@@ -16,6 +16,7 @@ add_subdirectory(thirdparty/gtest)
 add_subdirectory(thirdparty/fmt)
 add_subdirectory(thirdparty/swig)
 add_subdirectory(thirdparty/lua)
+add_subdirectory(thirdparty/boost)
 
 add_subdirectory(models)
 add_subdirectory(recorder)

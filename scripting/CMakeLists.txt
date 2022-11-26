@@ -7,4 +7,4 @@ include_directories(.
 gunit_collect_src(LIST_OUT "tests")
 
 add_library(scripting ${LIST_OUT})
-add_dependencies(scripting lua)
+add_dependencies(scripting ${GUNIT_THIRDPARTY_TARGET_NAME})

@@ -9,12 +9,13 @@ gunit_generate_swig(LANGUAGE lua
 include_directories(.
                     ${Lua_INCLUDE_DIRS}
                     ${GEN_DIR}
+                    ${Boost_INCLUDE_DIRS}
                     )
 
 gunit_collect_src(LIST_OUT "tests")
 list(APPEND LIST_OUT "${GEN_DIR}/models_wrap.cpp" "${GEN_DIR}/swigluarun.h")
 
 add_library(models ${LIST_OUT})
-add_dependencies(models swig)
+add_dependencies(models ${GUNIT_THIRDPARTY_TARGET_NAME})
 
 add_subdirectory(tests)
