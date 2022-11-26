@@ -3,15 +3,6 @@
 #include "recorder/actions_observer.h"
 
 namespace gunit {
-
-namespace recorder {
-
-std::string getFunctionTemplate() {
-  return "example.";
-}
-
-}  // namespace recorder
-
 namespace models {
 
 using namespace gunit::recorder;
