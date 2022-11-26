@@ -7,12 +7,12 @@ namespace gunit {
 namespace recorder {
 
 std::string produceFunctionCall(const char* moduleName,
-                                const char* functionName,
+                                const char* name,
                                 size_t paramCount,
-                                bool hasReturnValue,
+                                bool keepResultAsLocalVar,
                                 bool object = false);
 
-std::string produceBinaryOpCall(BinaryOpType, bool hasReturnValue);
+std::string produceBinaryOpCall(BinaryOpType);
 
 }  // namespace recorder
 }  // namespace gunit

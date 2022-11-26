@@ -20,48 +20,50 @@ class CodeSinkImpl : public CodeSink {
   }
 
  private:
-  std::string processLocalVar(const char* localName,
-                              const std::string& codeTemplate) override {
-    const auto actualLocalName = suggestLocalName(localName);
+  std::string processLocalVar(const std::string& codeTemplate) override {
+    const auto actualLocalName = suggestLocalName();
 
     fmt::dynamic_format_arg_store<fmt::format_context> fmt_args;
-    fmt_args.push_back(fmt::arg(localName, actualLocalName));
+    fmt_args.push_back(fmt::arg("var", actualLocalName));
 
     format(codeTemplate, fmt_args);
 
     return actualLocalName;
   }
 
-  std::string processFunctionCall(const char* localName,
-                                  const std::vector<std::string>& args,
-                                  const std::string& codeTemplate) override {
-    return functionCall(nullptr, false, localName, args, codeTemplate);
-  }
-
-  std::string processConstructorCall(const void* object,
-                                     const char* localName,
-                                     const std::vector<std::string>& args,
-                                     const std::string& codeTemplate) override {
-    return functionCall(object, false, localName, args, codeTemplate);
-  }
-
-  std::string processMethodCall(const void* object,
-                                const char* localName,
+  void processFunctionCall(const void* object,
+                                const std::string& localName,
                                 const std::vector<std::string>& args,
                                 const std::string& codeTemplate) override {
-    return functionCall(object, true, localName, args, codeTemplate);
+      fmt::dynamic_format_arg_store<fmt::format_context> fmt_args;
+
+      if (!localName.empty()) {
+          fmt_args.push_back(localName);
+      }
+
+      if (object) {
+          fmt_args.push_back(getObjectLocal(object));
+      }
+
+      for (const auto& arg : args) {
+          fmt_args.push_back(arg);
+      }
+
+      format(codeTemplate, fmt_args);
   }
 
- private:
   std::string searchForLocalVar(const void* object) const override {
-    return getObjectLocal((void*)object);
+    return getObjectLocal(object);
   }
 
-  std::string suggestLocalName(const char* localName,
-                               const void* object = nullptr) {
-    assert(localName);
+  std::string registerLocalVar(const void* object) override {
+      return suggestLocalName(object);
+  }
+
+private:
+  std::string suggestLocalName(const void* object = nullptr) {
     const auto suggested =
-        std::string{localName} + std::to_string(++_localCounter);
+        std::string{"object"} + "_" + std::to_string(++_localCounter);
     if (object) {
       _locals.emplace(object, suggested);
     }
@@ -75,34 +77,6 @@ class CodeSinkImpl : public CodeSink {
     }
 
     throw std::logic_error{"Object is unreachable."};
-  }
-
-  std::string functionCall(const void* object,
-                           bool isMethodCall,
-                           const char* localName,
-                           const std::vector<std::string>& args,
-                           const std::string& codeTemplate) {
-    std::string actualLocalName;
-
-    fmt::dynamic_format_arg_store<fmt::format_context> fmt_args;
-
-    if (localName) {
-      // TODO: fix me
-      actualLocalName = suggestLocalName(localName, object);
-      fmt_args.push_back(actualLocalName);
-    }
-
-    if (isMethodCall && object) {
-      fmt_args.push_back(getObjectLocal(object));
-    }
-
-    for (const auto& arg : args) {
-      fmt_args.push_back(arg);
-    }
-
-    format(codeTemplate, fmt_args);
-
-    return actualLocalName;
   }
 
   void format(const std::string& codeTemplate,
@@ -141,48 +115,32 @@ ScriptGenerator::ScriptGenerator(std::string moduleName,
 
 ScriptGenerator::~ScriptGenerator() = default;
 
-void ScriptGenerator::operator()(const FreeFunction& context) {
+void ScriptGenerator::operator()(const Function& context) {
+  const auto result = processResult(context.retVal);
   const auto codeTemplate = _langContext.funcProducer(
-      _module.c_str(), context.functionName, context.params.size(),
-      context.hasReturnValue, false);
+      _module.c_str(), context.name, context.params.size(),
+        !result.empty(), false);
 
   const auto args = produceArgs(context.params);
-
-  if (context.hasReturnValue) {
-    // TODO: fix me
-    _sink->processFunctionCall("nullptr", args, codeTemplate);
-  } else {
-    _sink->processFunctionCall(nullptr, args, codeTemplate);
-  }
-}
-
-void ScriptGenerator::operator()(const ClassConstructor& context) {
-  const auto codeTemplate = _langContext.funcProducer(
-      _module.c_str(), context.className, context.params.size(), true, false);
-
-  const auto args = produceArgs(context.params);
-
-  _sink->processConstructorCall(context.objectAddress, context.className, args,
-                                codeTemplate);
+  _sink->processFunctionCall(nullptr, result, args, codeTemplate);
 }
 
 void ScriptGenerator::operator()(const ClassMethod& context) {
+  const auto result = processResult(context.method.retVal);
   const auto codeTemplate = _langContext.funcProducer(
-      _module.c_str(), context.methodName, context.params.size(),
-      context.hasReturnValue, true);
+      _module.c_str(), context.method.name, context.method.params.size(),
+      !result.empty(), true);
 
-  const auto args = produceArgs(context.params);
-
-  _sink->processMethodCall(context.objectAddress, nullptr, args, codeTemplate);
+  const auto args = produceArgs(context.method.params);
+  _sink->processFunctionCall(context.objectAddress, result, args, codeTemplate);
 }
 
 void ScriptGenerator::operator()(const ClassBinaryOp& context) {
   const auto codeTemplate =
-      _langContext.binaryOpProducer(context.opName, context.hasReturnValue);
+      _langContext.binaryOpProducer(context.opName);
 
   const auto args = produceArgs({context.param});
-
-  _sink->processMethodCall(context.objectAddress, nullptr, args, codeTemplate);
+  _sink->processFunctionCall(context.objectAddress, std::string{}, args, codeTemplate);
 }
 
 std::vector<std::string> ScriptGenerator::produceArgs(
@@ -193,6 +151,15 @@ std::vector<std::string> ScriptGenerator::produceArgs(
     args.emplace_back(_langContext.paramProducer(param, *_sink));
   }
   return args;
+}
+
+std::string ScriptGenerator::processResult(const Param& param)
+{
+    if(auto* userData = std::get_if<UserDataParamPtr>(&param))
+    {
+        return (*userData)->registerLocal(*_sink);
+    }
+    return {};
 }
 
 std::string ScriptGenerator::getScript() {

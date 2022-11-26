@@ -70,17 +70,29 @@ class ActionsObservable final {
   ActionsObserverWeakPtr _observer;
 };
 
-#define GUNIT_NOTIFY_FREE_FUNCTION(...)                                       \
+#define GUNIT_NOTIFY_FREE_FUNCTION_NO_RETURN(...)                                       \
   auto scopeGuard = gunit::recorder::ActionsObservable::getInstance().notify( \
-      __FUNCTION__, __VA_ARGS__);
+      __FUNCTION__, std::nullopt,  __VA_ARGS__);
+
+#define GUNIT_NOTIFY_FREE_FUNCTION(RETURN_VALUE, ...)                                       \
+  auto scopeGuard = gunit::recorder::ActionsObservable::getInstance().notify( \
+      __FUNCTION__, RETURN_VALUE, __VA_ARGS__);
+
+#define GUNIT_NOTIFY_METHOD_NO_RETURN(...)                                              \
+  auto scopeGuard = gunit::recorder::ActionsObservable::getInstance().notify( \
+      this, __FUNCTION__, std::nullopt, __VA_ARGS__);
+
+#define GUNIT_NOTIFY_METHOD(RETURN_VALUE)                                              \
+  auto scopeGuard = gunit::recorder::ActionsObservable::getInstance().notify( \
+      this, __FUNCTION__, RETURN_VALUE, __VA_ARGS__);
+
+#define GUNIT_NOTIFY_CONSTRUCTOR_NO_ARGS                                         \
+  auto scopeGuard = gunit::recorder::ActionsObservable::getInstance().notify( \
+      __FUNCTION__, *this);
 
 #define GUNIT_NOTIFY_CONSTRUCTOR(...)                                         \
   auto scopeGuard = gunit::recorder::ActionsObservable::getInstance().notify( \
-      this, __VA_ARGS__);
-
-#define GUNIT_NOTIFY_METHOD(...)                                              \
-  auto scopeGuard = gunit::recorder::ActionsObservable::getInstance().notify( \
-      this, __FUNCTION__, gunit::recorder::ClassMethodTag{}, __VA_ARGS__);
+      __FUNCTION__, *this, __VA_ARGS__);
 
 #define GUNIT_NOTIFY_ASSIGNMENT(PARAM)                                        \
   auto scopeGuard = gunit::recorder::ActionsObservable::getInstance().notify( \

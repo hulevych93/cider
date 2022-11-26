@@ -87,7 +87,7 @@ UserDataParamVisitor::UserDataParamVisitor(CodeSink& sink) : _sink(sink) {}
 
 std::string UserDataParamVisitor::operator()(
     const UserDataParamPtr& value) const {
-  return (*value).generate(_sink);
+  return (*value).generateCode(_sink);
 }
 
 std::string produceLuaCode(const Param& param, CodeSink& sink) {

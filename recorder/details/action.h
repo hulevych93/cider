@@ -9,23 +9,15 @@
 namespace gunit {
 namespace recorder {
 
-struct FreeFunction final {
-  const char* functionName = nullptr;
+struct Function final {
+  const char* name = nullptr;
   Params params;
-  bool hasReturnValue = false;
-};
-
-struct ClassConstructor final {
-  const char* className;
-  void* objectAddress;
-  Params params;
+  Param retVal;
 };
 
 struct ClassMethod final {
   void* objectAddress;
-  const char* methodName = nullptr;
-  Params params;
-  bool hasReturnValue = false;
+  Function method;
 };
 
 enum class BinaryOpType { Assignment };
@@ -34,13 +26,10 @@ struct ClassBinaryOp final {
   void* objectAddress;
   BinaryOpType opName = BinaryOpType::Assignment;
   Param param;
-  bool hasReturnValue = false;
 };
 
-struct ClassMethodTag {};
-
 using Action =
-    std::variant<FreeFunction, ClassConstructor, ClassMethod, ClassBinaryOp>;
+    std::variant<Function, ClassMethod, ClassBinaryOp>;
 
 namespace details {
 template <typename... Types>
@@ -70,28 +59,19 @@ Params packParams(ParamsTypes&&... params) {
 
 }  // namespace details
 
-template <typename... ParamsTypes>
-Action makeAction(const char* function, ParamsTypes&&... params) {
-  return FreeFunction{
-      function, details::packParams(std::forward<ParamsTypes>(params)...)};
+template <typename ReturnType, typename... ParamsTypes>
+Action makeAction(const char* function, ReturnType&& retVal, ParamsTypes&&... params) {
+  return Function{
+        function, details::packParams(std::forward<ParamsTypes>(params)...), makeParam(std::forward<ReturnType>(retVal))};
 }
 
-template <typename... ParamsTypes>
-Action makeAction(void* object,
-                  const char* className,
-                  ParamsTypes&&... params) {
-  return ClassConstructor{
-      className, object,
-      details::packParams(std::forward<ParamsTypes>(params)...)};
-}
-
-template <typename... ParamsTypes>
+template <typename ReturnType, typename... ParamsTypes>
 Action makeAction(void* object,
                   const char* methodName,
-                  ClassMethodTag,
+                  ReturnType&& retVal,
                   ParamsTypes&&... params) {
-  return ClassMethod{object, methodName,
-                     details::packParams(std::forward<ParamsTypes>(params)...)};
+    return ClassMethod{object, methodName,
+                       details::packParams(std::forward<ParamsTypes>(params)...), makeParam(std::forward<ReturnType>(retVal))};
 }
 
 template <typename ParamType>

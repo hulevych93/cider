@@ -11,10 +11,10 @@ std::string produceAggregateCode(const models::Aggregate& aggregate,
                                  CodeSink& sink) {
   ParamVisitor visitor;
   std::string code;
-  code += "local {aggregate} = example.Aggregate()\n";
-  code += "{aggregate}.condition = " + visitor(aggregate.condition) + "\n";
-  code += "{aggregate}.number = " + visitor(aggregate.number) + "\n";
-  return sink.processLocalVar("aggregate", std::move(code));
+  code += "local {var} = example.Aggregate()\n";
+  code += "{var}.condition = " + visitor(aggregate.condition) + "\n";
+  code += "{var}.number = " + visitor(aggregate.number) + "\n";
+  return sink.processLocalVar(std::move(code));
 }
 
 }  // namespace recorder
@@ -22,7 +22,7 @@ std::string produceAggregateCode(const models::Aggregate& aggregate,
 namespace models {
 
 Aggregate function_test_aggregate(const Aggregate& arg) {
-  GUNIT_NOTIFY_FREE_FUNCTION(arg);
+  GUNIT_NOTIFY_FREE_FUNCTION(arg, arg);
   return arg;
 }
 

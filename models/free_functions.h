@@ -3,6 +3,9 @@
 namespace gunit {
 namespace models {
 
+// Function with no return
+void some_function_no_return(bool);
+
 // Recurring free function that calculates factorial
 int calculate_factorial(int value);
 

@@ -10,11 +10,11 @@ namespace recorder {
 
 using ParamCodeProducer = std::string (*)(const Param& param, CodeSink& sink);
 using FunctionCodeProducer = std::string (*)(const char* moduleName,
-                                             const char* functionName,
+                                             const char* name,
                                              size_t paramCount,
                                              bool hasReturnValue,
                                              bool object);
-using BinaryOpCodeProducer = std::string (*)(BinaryOpType, bool hasReturnValue);
+using BinaryOpCodeProducer = std::string (*)(BinaryOpType);
 
 struct LanguageContext final {
   ParamCodeProducer paramProducer;
@@ -39,8 +39,7 @@ class ScriptGenerator final {
   ScriptGenerator(ScriptGenerator&&) = default;
   ~ScriptGenerator();
 
-  void operator()(const FreeFunction& context);
-  void operator()(const ClassConstructor& context);
+  void operator()(const Function& context);
   void operator()(const ClassMethod& context);
   void operator()(const ClassBinaryOp& context);
 
@@ -51,6 +50,7 @@ class ScriptGenerator final {
 
  private:
   std::vector<std::string> produceArgs(const Params& params) const;
+  std::string processResult(const Param& param);
 
  private:
   std::string _module;

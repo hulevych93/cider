@@ -4,12 +4,12 @@ namespace gunit {
 namespace recorder {
 
 std::string produceFunctionCall(const char* moduleName,
-                                const char* functionName,
+                                const char* name,
                                 size_t paramCount,
-                                bool hasReturnValue,
-                                bool object) {
+                                const bool keepResultAsLocalVar,
+                                const bool object) {
   std::string funcTemplate;
-  if (hasReturnValue) {
+  if (keepResultAsLocalVar) {
     funcTemplate = "local {} = ";
   }
   if (object) {
@@ -18,7 +18,7 @@ std::string produceFunctionCall(const char* moduleName,
     funcTemplate += moduleName;
     funcTemplate += ".";
   }
-  funcTemplate += functionName;
+  funcTemplate += name;
   constexpr const char* ParamPlaceholer = "{}";
   funcTemplate += "(";
   for (auto i = 0u; i < paramCount; ++i) {
@@ -30,14 +30,8 @@ std::string produceFunctionCall(const char* moduleName,
   return funcTemplate;
 }
 
-std::string produceBinaryOpCall(const BinaryOpType type,
-                                const bool hasReturnValue) {
-  std::string funcTemplate;
-  if (hasReturnValue) {
-    funcTemplate = "local {} = ";
-  }
-
-  funcTemplate += "{}";
+std::string produceBinaryOpCall(const BinaryOpType type) {
+  std::string funcTemplate = "{}";
   switch (type) {
     case BinaryOpType::Assignment:
       funcTemplate += " = ";

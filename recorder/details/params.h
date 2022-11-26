@@ -41,7 +41,8 @@ class CodeSink;
 struct UserDataParam {
  public:
   virtual ~UserDataParam() = default;
-  virtual std::string generate(CodeSink& sink) const = 0;
+  virtual std::string generateCode(CodeSink& sink) const = 0;
+  virtual std::string registerLocal(CodeSink& sink) = 0;
 };
 
 template <typename Type>
@@ -59,8 +60,13 @@ struct AggregateUserDataParamImpl final : public UserDataParam {
       : _param(std::forward<Type>(param)) {}
   ~AggregateUserDataParamImpl() override = default;
 
-  std::string generate(CodeSink& sink) const override {
+  std::string generateCode(CodeSink& sink) const override {
     return produceAggregateCode(_param, sink);
+  }
+
+  std::string registerLocal(CodeSink&) override {
+      // for now no local variable
+      return {};
   }
 
  private:
@@ -81,8 +87,12 @@ struct ReferenceUserDataParamImpl final : public UserDataParam {
   ReferenceUserDataParamImpl(const void* address) : _address(address) {}
   ~ReferenceUserDataParamImpl() override = default;
 
-  std::string generate(CodeSink& sink) const override {
+  std::string generateCode(CodeSink& sink) const override {
     return sink.searchForLocalVar(_address);
+  }
+
+  std::string registerLocal(CodeSink& sink) override {
+      return sink.registerLocalVar(_address);
   }
 
  private:
@@ -175,6 +185,10 @@ Param makeParam(std::optional<Type> arg) {
     return details::makeParamImpl(std::move(arg.get()));
   }
   return Nil{};
+}
+
+inline Param makeParam(std::nullopt_t) {
+    return Nil{};
 }
 
 }  // namespace recorder

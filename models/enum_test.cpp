@@ -3,7 +3,6 @@
 #include "recorder/actions_observer.h"
 
 namespace gunit {
-
 namespace recorder {
 
 template <>
@@ -24,9 +23,25 @@ std::string produceAggregateCode(const models::SomeEnumeration& that,
 
 namespace models {
 
+SomeEnumeration function_test_enumeration_impl(const SomeEnumeration arg) {
+    return arg;
+}
+
 SomeEnumeration function_test_enumeration(const SomeEnumeration arg) {
-  GUNIT_NOTIFY_FREE_FUNCTION(arg);
-  return arg;
+    SomeEnumeration result;
+    try {
+        result = function_test_enumeration_impl(arg);
+        GUNIT_NOTIFY_FREE_FUNCTION(result, arg);
+        return result;
+    }
+    catch(const std::exception&) {
+        // ex.what() notify
+        throw;
+    }
+    catch(...) {
+        // NOTIFY some expection
+        throw;
+    }
 }
 
 }  // namespace models

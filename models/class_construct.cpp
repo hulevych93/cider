@@ -7,26 +7,26 @@ namespace gunit {
 namespace models {
 
 ClassConstruct::ClassConstruct() : _number(0), _condition(false) {
-  GUNIT_NOTIFY_CONSTRUCTOR("ClassConstruct");
+  GUNIT_NOTIFY_CONSTRUCTOR_NO_ARGS;
 }
 
 ClassConstruct::ClassConstruct(const ClassConstruct& other)
     : _number(other._number), _condition(other._condition) {
-  GUNIT_NOTIFY_CONSTRUCTOR("ClassConstruct", other);
+  GUNIT_NOTIFY_CONSTRUCTOR(other);
 }
 
 ClassConstruct::ClassConstruct(ClassConstruct&& other)
     : _number(other._number), _condition(other._condition) {
-  GUNIT_NOTIFY_CONSTRUCTOR("ClassConstruct", other);
+  GUNIT_NOTIFY_CONSTRUCTOR(other);
 }
 
 ClassConstruct::ClassConstruct(int number, bool condition)
     : _number(number), _condition(condition) {
-  GUNIT_NOTIFY_CONSTRUCTOR("ClassConstruct", number, condition);
+  GUNIT_NOTIFY_CONSTRUCTOR(number, condition);
 }
 
 void ClassConstruct::someMethod(const int newNumber) {
-  GUNIT_NOTIFY_METHOD(newNumber);
+  GUNIT_NOTIFY_METHOD_NO_RETURN(newNumber);
   _number = newNumber;
 }
 
@@ -53,7 +53,7 @@ bool ClassConstruct::operator!=(const ClassConstruct& that) const {
 }
 
 ClassConstruct function_test_class_construct(const ClassConstruct& arg) {
-  GUNIT_NOTIFY_FREE_FUNCTION(arg);
+  GUNIT_NOTIFY_FREE_FUNCTION(arg, arg);
   return arg;
 }
 

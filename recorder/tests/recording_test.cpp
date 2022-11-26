@@ -75,10 +75,10 @@ TEST_F(RecordingTestSuite, is_this_sparta_word_test) {
 }
 
 const char* function_test_aggregate_test_script =
-    R"(local aggregate1 = example.Aggregate()
-aggregate1.condition = true
-aggregate1.number = 10
-example.function_test_aggregate(aggregate1)
+    R"(local object_1 = example.Aggregate()
+object_1.condition = true
+object_1.number = 10
+example.function_test_aggregate(object_1)
 )";
 
 TEST_F(RecordingTestSuite, function_test_aggregate_test) {
@@ -122,17 +122,17 @@ TEST_F(RecordingTestSuite, class_construct_test) {
   auto session = makeLuaRecordingSession("example");
 
   models::ClassConstruct object1;
-  EXPECT_EQ("local ClassConstruct1 = example.ClassConstruct()\n",
+  EXPECT_EQ("local object_1 = example.ClassConstruct()\n",
             session->getScript());
 
   models::ClassConstruct object2(125, true);
-  EXPECT_EQ("local ClassConstruct1 = example.ClassConstruct(125, true)\n",
+  EXPECT_EQ("local object_1 = example.ClassConstruct(125, true)\n",
             session->getScript());
 }
 
 const char* class_method_test_script =
-    R"(local ClassConstruct1 = example.ClassConstruct()
-ClassConstruct1:someMethod(129)
+    R"(local object_1 = example.ClassConstruct()
+object_1:someMethod(129)
 )";
 
 TEST_F(RecordingTestSuite, class_method_test) {
@@ -145,8 +145,8 @@ TEST_F(RecordingTestSuite, class_method_test) {
 }
 
 const char* constructed_class_as_param_test_script =
-    R"(local ClassConstruct1 = example.ClassConstruct(423, false)
-example.function_test_class_construct(ClassConstruct1)
+    R"(local object_1 = example.ClassConstruct(423, false)
+local object_2 = example.function_test_class_construct(object_1)
 )";
 
 TEST_F(RecordingTestSuite, constructed_class_as_param_test) {
@@ -160,9 +160,9 @@ TEST_F(RecordingTestSuite, constructed_class_as_param_test) {
 }
 
 const char* class_is_reachable_after_copy_move_constuction_script =
-    R"(local ClassConstruct1 = example.ClassConstruct()
-local ClassConstruct2 = example.ClassConstruct(ClassConstruct1)
-ClassConstruct2:someMethod(129)
+    R"(local object_1 = example.ClassConstruct()
+local object_2 = example.ClassConstruct(object_1)
+object_2:someMethod(129)
 )";
 
 TEST_F(RecordingTestSuite, class_copy_constuction_test) {
@@ -188,10 +188,10 @@ TEST_F(RecordingTestSuite, class_move_constuction_test) {
 }
 
 const char* class_is_reachable_after_copy_move_assignment_script =
-    R"(local ClassConstruct1 = example.ClassConstruct()
-local ClassConstruct2 = example.ClassConstruct()
-ClassConstruct2 = ClassConstruct1
-ClassConstruct2:someMethod(129)
+    R"(local object_1 = example.ClassConstruct()
+local object_2 = example.ClassConstruct()
+object_2 = object_1
+object_2:someMethod(129)
 )";
 
 TEST_F(RecordingTestSuite, class_copy_assignment_test) {
