@@ -24,24 +24,21 @@ std::string produceAggregateCode(const models::SomeEnumeration& that,
 namespace models {
 
 SomeEnumeration function_test_enumeration_impl(const SomeEnumeration arg) {
-    return arg;
+  return arg;
 }
 
 SomeEnumeration function_test_enumeration(const SomeEnumeration arg) {
-    SomeEnumeration result;
-    try {
-        result = function_test_enumeration_impl(arg);
-        GUNIT_NOTIFY_FREE_FUNCTION(result, arg);
-        return result;
-    }
-    catch(const std::exception&) {
-        // ex.what() notify
-        throw;
-    }
-    catch(...) {
-        // NOTIFY some expection
-        throw;
-    }
+  try {
+    auto result = function_test_enumeration_impl(arg);
+    GUNIT_NOTIFY_FREE_FUNCTION(result, arg);
+    return result;
+  } catch (const std::exception&) {
+    // ex.what() notify
+    throw;
+  } catch (...) {
+    // NOTIFY some expection
+    throw;
+  }
 }
 
 }  // namespace models

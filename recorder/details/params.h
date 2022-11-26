@@ -53,34 +53,24 @@ namespace details {
 template <typename Type>
 struct AggregateUserDataParamImpl final : public UserDataParam {
  public:
-  using ParamType = typename std::decay_t<Type>;
+  using ParamType = typename std::remove_pointer_t<std::decay_t<Type>>;
 
  public:
   AggregateUserDataParamImpl(Type&& param)
       : _param(std::forward<Type>(param)) {}
+  AggregateUserDataParamImpl(ParamType* param) : _param(*param) {}
+
   ~AggregateUserDataParamImpl() override = default;
 
   std::string generateCode(CodeSink& sink) const override {
     return produceAggregateCode(_param, sink);
   }
 
-  std::string registerLocal(CodeSink&) override {
-      // for now no local variable
-      return {};
-  }
+  std::string registerLocal(CodeSink&) override { return {}; }
 
  private:
   ParamType _param;
 };
-
-template <typename Type,
-          typename std::enable_if_t<std::is_aggregate_v<std::decay_t<Type>> ||
-                                        std::is_enum_v<std::decay_t<Type>>,
-                                    void*> = nullptr>
-std::shared_ptr<UserDataParam> makeUserData(Type&& arg) {
-  return std::make_shared<AggregateUserDataParamImpl<Type>>(
-      std::forward<Type>(arg));
-}
 
 struct ReferenceUserDataParamImpl final : public UserDataParam {
  public:
@@ -92,24 +82,69 @@ struct ReferenceUserDataParamImpl final : public UserDataParam {
   }
 
   std::string registerLocal(CodeSink& sink) override {
-      return sink.registerLocalVar(_address);
+    return sink.registerLocalVar(_address);
   }
 
  private:
   const void* _address;
 };
 
+template <typename Type>
+using PureType = std::remove_pointer_t<std::decay_t<Type>>;
+
+template <typename Type>
+constexpr bool isAggregate =
+    std::is_aggregate_v<PureType<Type>> || std::is_enum_v<PureType<Type>>;
+
 template <typename Type,
-          typename std::enable_if_t<!std::is_aggregate_v<std::decay_t<Type>> &&
-                                        !std::is_enum_v<std::decay_t<Type>>,
-                                    void*> = nullptr>
+          typename std::enable_if_t<isAggregate<Type>, void*> = nullptr>
 std::shared_ptr<UserDataParam> makeUserData(Type&& arg) {
+  return std::make_shared<AggregateUserDataParamImpl<Type>>(
+      std::forward<Type>(arg));
+}
+
+template <typename Type,
+          typename std::enable_if_t<isAggregate<Type>, void*> = nullptr>
+std::shared_ptr<UserDataParam> makeUserData(Type* arg) {
+  return std::make_shared<AggregateUserDataParamImpl<Type>>(arg);
+}
+
+template <typename Type,
+          typename std::enable_if_t<!isAggregate<Type>, void*> = nullptr>
+std::shared_ptr<UserDataParam> makeUserData(Type& arg) {
   return std::make_shared<ReferenceUserDataParamImpl>(std::addressof(arg));
 }
 
+template <typename Type,
+          typename std::enable_if_t<!isAggregate<Type>, void*> = nullptr>
+std::shared_ptr<UserDataParam> makeUserData(Type* arg) {
+  return std::make_shared<ReferenceUserDataParamImpl>(arg);
+}
+
+template <typename Type>
+constexpr bool isGeneratorType =
+    utils::isTypeInTypeList<PureType<Type>, GeneratorTypesList>();
+
 template <typename Type>
 constexpr bool isUserData =
-    utils::isTypeNotInTypeList<std::decay_t<Type>, GeneratorTypesList>();
+    !isGeneratorType<Type> &&
+    (std::is_enum_v<PureType<Type>> || std::is_class_v<PureType<Type>>);
+
+template <typename Type>
+constexpr bool isStringConvertibleType =
+    !std::is_same_v<std::decay_t<Type>, std::string> &&
+    std::is_constructible_v<std::string, std::decay_t<Type>>;
+
+template <typename Type>
+constexpr bool isFloatConvertibleType =
+    !std::is_same_v<std::decay_t<Type>, float> &&
+    std::is_floating_point_v<std::decay_t<Type>>;
+
+template <typename Type>
+constexpr bool isIntConverbileType =
+    !std::is_same_v<std::decay_t<Type>, int> &&
+    !std::is_same_v<std::decay_t<Type>, bool> &&
+    std::is_integral_v<std::decay_t<Type>>;
 
 //` The `makeParamImpl` functions are supposed to construct correct parameter
 // types ` from wide list of possible input types. Below are sfinae functions
@@ -118,10 +153,7 @@ constexpr bool isUserData =
 //` The `UserData` is made from input data of enum and class types, which are
 // not included ` in the generators primitive types list.
 template <typename Type,
-          typename std::enable_if_t<isUserData<Type> &&
-                                        (std::is_enum_v<std::decay_t<Type>> ||
-                                         std::is_class_v<std::decay_t<Type>>),
-                                    void*> = nullptr>
+          typename std::enable_if_t<isUserData<Type>, void*> = nullptr>
 Param makeParamImpl(Type&& arg) {
   return makeUserData(std::forward<Type>(arg));
 }
@@ -129,11 +161,9 @@ Param makeParamImpl(Type&& arg) {
 //` For every param type from which std::string is constructible, but not the
 // std::string itself. ` Example, the `const char*` type is copied into
 // std::string, and becomes one of the primitive types.
-template <typename Type,
-          typename std::enable_if_t<
-              !std::is_same_v<std::decay_t<Type>, std::string> &&
-                  std::is_constructible_v<std::string, std::decay_t<Type>>,
-              void*> = nullptr>
+template <
+    typename Type,
+    typename std::enable_if_t<isStringConvertibleType<Type>, void*> = nullptr>
 Param makeParamImpl(Type arg) {
   return std::string{std::move(arg)};
 }
@@ -142,29 +172,21 @@ Param makeParamImpl(Type arg) {
 //` The `BadNumCastError` can be thrown.
 template <
     typename Type,
-    typename std::enable_if_t<!std::is_same_v<std::decay_t<Type>, float> &&
-                                  std::is_floating_point_v<std::decay_t<Type>>,
-                              void*> = nullptr>
+    typename std::enable_if_t<isFloatConvertibleType<Type>, void*> = nullptr>
 Param makeParamImpl(const Type arg) {
   return gunit::numCast<float>(arg);
 }
 
 //` Every integer type is converted into `int` with gunit::numCast.
 //` The `BadNumCastError` can be thrown.
-template <
-    typename Type,
-    typename std::enable_if_t<!std::is_same_v<std::decay_t<Type>, int> &&
-                                  !std::is_same_v<std::decay_t<Type>, bool> &&
-                                  std::is_integral_v<std::decay_t<Type>>,
-                              void*> = nullptr>
+template <typename Type,
+          typename std::enable_if_t<isIntConverbileType<Type>, void*> = nullptr>
 Param makeParamImpl(const Type arg) {
   return gunit::numCast<int>(arg);
 }
 
-//` The boolean overload is processed with this function.
-//` And also generation tags like `Nil`, `DocumentRange`, etc.
 template <typename Type,
-          typename std::enable_if_t<!isUserData<Type>, void*> = nullptr>
+          typename std::enable_if_t<isGeneratorType<Type>, void*> = nullptr>
 Param makeParamImpl(Type&& arg) {
   return std::move(arg);
 }
@@ -181,14 +203,11 @@ Param makeParam(Type&& arg) {
 
 template <typename Type>
 Param makeParam(std::optional<Type> arg) {
-  if (arg) {
-    return details::makeParamImpl(std::move(arg.get()));
-  }
-  return Nil{};
+  return arg ? details::makeParamImpl(std::move(arg.get())) : Nil{};
 }
 
 inline Param makeParam(std::nullopt_t) {
-    return Nil{};
+  return Nil{};
 }
 
 }  // namespace recorder

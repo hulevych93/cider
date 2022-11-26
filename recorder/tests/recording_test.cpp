@@ -91,6 +91,24 @@ TEST_F(RecordingTestSuite, function_test_aggregate_test) {
   EXPECT_EQ(function_test_aggregate_test_script, testScript(script));
 }
 
+const char* function_test_aggregate_ptr_test_script =
+    R"(local object_1 = example.Aggregate()
+object_1.condition = true
+object_1.number = 10
+example.function_test_aggregate_ptr(object_1)
+)";
+
+TEST_F(RecordingTestSuite, function_test_aggregate_ptr_test) {
+  auto session = makeLuaRecordingSession("example");
+
+  models::Aggregate aggregateStruct{10, true};
+  EXPECT_EQ(&aggregateStruct,
+            models::function_test_aggregate_ptr(&aggregateStruct));
+
+  auto script = session->getScript();
+  EXPECT_EQ(function_test_aggregate_ptr_test_script, testScript(script));
+}
+
 const char* function_test_enumeration_test_script =
     R"(example.function_test_enumeration(example.SomeEnumeration_second_value)
 )";
@@ -144,18 +162,33 @@ TEST_F(RecordingTestSuite, class_method_test) {
   EXPECT_EQ(class_method_test_script, testScript(session->getScript()));
 }
 
-const char* constructed_class_as_param_test_script =
+const char* function_test_class_construct_test_script =
     R"(local object_1 = example.ClassConstruct(423, false)
 local object_2 = example.function_test_class_construct(object_1)
 )";
 
-TEST_F(RecordingTestSuite, constructed_class_as_param_test) {
+TEST_F(RecordingTestSuite, function_test_class_construct_test) {
   auto session = makeLuaRecordingSession("example");
 
   models::ClassConstruct object1(423, false);
-  function_test_class_construct(object1);
+  EXPECT_EQ(object1, function_test_class_construct(object1));
 
-  EXPECT_EQ(constructed_class_as_param_test_script,
+  EXPECT_EQ(function_test_class_construct_test_script,
+            testScript(session->getScript()));
+}
+
+const char* function_test_class_construct_ptr_test_script =
+    R"(local object_1 = example.ClassConstruct(423, false)
+local object_2 = example.function_test_class_construct_ptr(object_1)
+)";
+
+TEST_F(RecordingTestSuite, function_test_class_construct_ptr_test) {
+  auto session = makeLuaRecordingSession("example");
+
+  models::ClassConstruct object1(423, false);
+  function_test_class_construct_ptr(&object1);
+
+  EXPECT_EQ(function_test_class_construct_ptr_test_script,
             testScript(session->getScript()));
 }
 
@@ -215,5 +248,36 @@ TEST_F(RecordingTestSuite, class_move_assignment_test) {
   object2.someMethod(129);
 
   EXPECT_EQ(class_is_reachable_after_copy_move_assignment_script,
+            testScript(session->getScript()));
+}
+
+const char* function_make_class_construct_obj_test_script =
+    R"(local object_1 = example.function_make_class_construct_obj()
+object_1:someMethod(2345)
+)";
+
+TEST_F(RecordingTestSuite, function_make_class_construct_obj_test) {
+  auto session = makeLuaRecordingSession("example");
+
+  auto object = models::function_make_class_construct_obj();
+  object.someMethod(2345);
+
+  EXPECT_EQ(function_make_class_construct_obj_test_script,
+            testScript(session->getScript()));
+}
+
+const char* function_make_class_construct_obj_ptr_test_script =
+    R"(local object_1 = example.function_make_class_construct_obj_ptr()
+object_1:someMethod(2345)
+)";
+
+TEST_F(RecordingTestSuite, function_make_class_construct_obj_ptr_test) {
+  auto session = makeLuaRecordingSession("example");
+
+  auto object = models::function_make_class_construct_obj_ptr();
+  object->someMethod(2345);
+  delete object;
+
+  EXPECT_EQ(function_make_class_construct_obj_ptr_test_script,
             testScript(session->getScript()));
 }

@@ -36,6 +36,7 @@ function(gunit_generate_swig)
                          COMMAND "${GUNIT_SWIG_EXECUTABLE}" -c++ -${SWIG_LANGUAGE} ${SWIG_GENERATOR_ARGS}
                         -cppext cpp "-I${CMAKE_SOURCE_DIR}"
                         -outdir "${SWIG_OUTPUT_DIR}"
+                        -w509 # Warning: Overloaded method effectively ignored
                         -o "${SWIG_OUTPUT_DIR}/${FILE_NAME}_wrap.cpp"
                         -oh "${SWIG_OUTPUT_DIR}/${FILE_NAME}_wrap.h"
                         -xmlout "${SWIG_OUTPUT_DIR}/${FILE_NAME}_wrap.xml"

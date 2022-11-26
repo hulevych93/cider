@@ -28,8 +28,7 @@ struct ClassBinaryOp final {
   Param param;
 };
 
-using Action =
-    std::variant<Function, ClassMethod, ClassBinaryOp>;
+using Action = std::variant<Function, ClassMethod, ClassBinaryOp>;
 
 namespace details {
 template <typename... Types>
@@ -60,9 +59,12 @@ Params packParams(ParamsTypes&&... params) {
 }  // namespace details
 
 template <typename ReturnType, typename... ParamsTypes>
-Action makeAction(const char* function, ReturnType&& retVal, ParamsTypes&&... params) {
-  return Function{
-        function, details::packParams(std::forward<ParamsTypes>(params)...), makeParam(std::forward<ReturnType>(retVal))};
+Action makeAction(const char* function,
+                  ReturnType&& retVal,
+                  ParamsTypes&&... params) {
+  return Function{function,
+                  details::packParams(std::forward<ParamsTypes>(params)...),
+                  makeParam(std::forward<ReturnType>(retVal))};
 }
 
 template <typename ReturnType, typename... ParamsTypes>
@@ -70,8 +72,9 @@ Action makeAction(void* object,
                   const char* methodName,
                   ReturnType&& retVal,
                   ParamsTypes&&... params) {
-    return ClassMethod{object, methodName,
-                       details::packParams(std::forward<ParamsTypes>(params)...), makeParam(std::forward<ReturnType>(retVal))};
+  return ClassMethod{object, methodName,
+                     details::packParams(std::forward<ParamsTypes>(params)...),
+                     makeParam(std::forward<ReturnType>(retVal))};
 }
 
 template <typename ParamType>

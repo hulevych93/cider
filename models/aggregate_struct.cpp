@@ -21,13 +21,44 @@ std::string produceAggregateCode(const models::Aggregate& aggregate,
 
 namespace models {
 
-Aggregate function_test_aggregate(const Aggregate& arg) {
-  GUNIT_NOTIFY_FREE_FUNCTION(arg, arg);
+namespace {
+
+Aggregate function_test_aggregate_impl(const Aggregate& arg) {
   return arg;
 }
 
-Aggregate* function_test_aggregate_ptr(Aggregate* arg) {
+Aggregate* function_test_aggregate_ptr_impl(Aggregate* arg) {
   return arg;
+}
+
+}  // namespace
+
+Aggregate function_test_aggregate(const Aggregate& arg) {
+  try {
+    auto result = function_test_aggregate_impl(arg);
+    GUNIT_NOTIFY_FREE_FUNCTION(result, arg);
+    return result;
+  } catch (const std::exception&) {
+    // ex.what() notify
+    throw;
+  } catch (...) {
+    // NOTIFY some expection
+    throw;
+  }
+}
+
+Aggregate* function_test_aggregate_ptr(Aggregate* arg) {
+  try {
+    Aggregate* result = function_test_aggregate_ptr_impl(arg);
+    GUNIT_NOTIFY_FREE_FUNCTION(result, arg);
+    return result;
+  } catch (const std::exception&) {
+    // ex.what() notify
+    throw;
+  } catch (...) {
+    // NOTIFY some expection
+    throw;
+  }
 }
 
 bool Aggregate::operator==(const Aggregate& r) const {
