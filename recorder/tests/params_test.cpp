@@ -16,8 +16,8 @@ struct TestStruct final {
 };
 
 class TestClass final {
-public:
-    TestClass() {}
+ public:
+  TestClass() {}
 };
 
 std::string produceAggregateCode(const TestStruct&, CodeSink&) {
@@ -64,24 +64,21 @@ TEST_F(ParamsTestSuite, makeValueParamUserData) {
 }
 
 TEST_F(ParamsTestSuite, makeValueParamUserDataPtr) {
-    TestEnum testEnum;
-    EXPECT_NO_THROW(
-        std::get<UserDataValueParamPtr>(makeParam(&testEnum)));
+  TestEnum testEnum;
+  EXPECT_NO_THROW(std::get<UserDataValueParamPtr>(makeParam(&testEnum)));
 
-    auto testStruct = TestStruct{};
-    EXPECT_NO_THROW(std::get<UserDataValueParamPtr>(makeParam(&testStruct)));
+  auto testStruct = TestStruct{};
+  EXPECT_NO_THROW(std::get<UserDataValueParamPtr>(makeParam(&testStruct)));
 }
 
 TEST_F(ParamsTestSuite, makeReferenceParamUserData) {
-    TestClass object;
-    EXPECT_NO_THROW(
-        std::get<UserDataReferenceParamPtr>(makeParam(object)));
+  TestClass object;
+  EXPECT_NO_THROW(std::get<UserDataReferenceParamPtr>(makeParam(object)));
 }
 
 TEST_F(ParamsTestSuite, makeReferenceParamUserDataPtr) {
-    TestClass object;
-    EXPECT_NO_THROW(
-        std::get<UserDataReferenceParamPtr>(makeParam(&object)));
+  TestClass object;
+  EXPECT_NO_THROW(std::get<UserDataReferenceParamPtr>(makeParam(&object)));
 }
 
 TEST_F(ParamsTestSuite, makeParamLongNumericBadCast) {
@@ -91,11 +88,9 @@ TEST_F(ParamsTestSuite, makeParamLongNumericBadCast) {
 }
 
 TEST_F(ParamsTestSuite, makeParamDoubleNumericBadCast) {
-    EXPECT_THROW(
-        std::get<int>(makeParam(std::numeric_limits<double>::max())),
-        BadNumCast);
+  EXPECT_THROW(std::get<int>(makeParam(std::numeric_limits<double>::max())),
+               BadNumCast);
 }
-
 
 TEST_F(ParamsTestSuite, paramVisitorFloating) {
   ParamVisitor visitor;

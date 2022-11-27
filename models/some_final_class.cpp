@@ -1,38 +1,37 @@
-#include "class_construct.h"
+#include "some_final_class.h"
 
 #include "recorder/actions_observer.h"
-#include "recorder/details/lua/lua_params.h"
 
 namespace gunit {
 namespace models {
 
-class ClassConstructImpl final {
+class SomeFinalClassImpl final {
  public:
-  ClassConstructImpl() : _number(0), _condition(false) {}
-  ClassConstructImpl(int number, bool condition)
+  SomeFinalClassImpl() : _number(0), _condition(false) {}
+  SomeFinalClassImpl(int number, bool condition)
       : _number(number), _condition(condition) {}
-  ClassConstructImpl(const ClassConstructImpl& other)
+  SomeFinalClassImpl(const SomeFinalClassImpl& other)
       : _number(other._number), _condition(other._condition) {}
-  ClassConstructImpl(ClassConstructImpl&& other)
+  SomeFinalClassImpl(SomeFinalClassImpl&& other)
       : _number(other._number), _condition(other._condition) {}
 
   void someMethod(int newNumber) { _number = newNumber; }
 
-  ClassConstructImpl& operator=(const ClassConstructImpl& other) {
+  SomeFinalClassImpl& operator=(const SomeFinalClassImpl& other) {
     _number = other._number;
     _condition = other._condition;
     return *this;
   }
-  ClassConstructImpl& operator=(ClassConstructImpl&& other) {
+  SomeFinalClassImpl& operator=(SomeFinalClassImpl&& other) {
     _number = other._number;
     _condition = other._condition;
     return *this;
   }
 
-  bool operator==(const ClassConstructImpl& that) const {
+  bool operator==(const SomeFinalClassImpl& that) const {
     return _condition == that._condition && _number == that._number;
   }
-  bool operator!=(const ClassConstructImpl& that) const {
+  bool operator!=(const SomeFinalClassImpl& that) const {
     return (*this) != that;
   }
 
@@ -41,27 +40,27 @@ class ClassConstructImpl final {
   bool _condition = false;
 };
 
-ClassConstructImpl function_make_class_construct_obj_impl() {
-  return ClassConstructImpl{4351, true};
+SomeFinalClassImpl function_make_class_construct_obj_impl() {
+  return SomeFinalClassImpl{4351, true};
 }
 
-ClassConstructImpl* function_make_class_construct_obj_ptr_impl() {
-  return new ClassConstructImpl{411, true};
+SomeFinalClassImpl* function_make_class_construct_obj_ptr_impl() {
+  return new SomeFinalClassImpl{411, true};
 }
 
-ClassConstructImpl function_test_class_construct_impl(
-    const ClassConstructImpl& arg) {
+SomeFinalClassImpl function_test_class_construct_impl(
+    const SomeFinalClassImpl& arg) {
   return arg;
 }
 
-ClassConstructImpl* function_test_class_construct_ptr_impl(
-    ClassConstructImpl* arg) {
+SomeFinalClassImpl* function_test_class_construct_impl(
+    SomeFinalClassImpl* arg) {
   return arg;
 }
 
-ClassConstruct::ClassConstruct() {
+SomeFinalClass::SomeFinalClass() {
   try {
-    _impl = std::make_shared<ClassConstructImpl>();
+    _impl = std::make_shared<SomeFinalClassImpl>();
     GUNIT_NOTIFY_CONSTRUCTOR_NO_ARGS;
   } catch (const std::exception&) {
     // ex.what() notify
@@ -72,12 +71,12 @@ ClassConstruct::ClassConstruct() {
   }
 }
 
-ClassConstruct::ClassConstruct(std::shared_ptr<ClassConstructImpl>&& impl)
+SomeFinalClass::SomeFinalClass(std::shared_ptr<SomeFinalClassImpl>&& impl)
     : _impl(std::move(impl)) {}
 
-ClassConstruct::ClassConstruct(const ClassConstruct& other) {
+SomeFinalClass::SomeFinalClass(const SomeFinalClass& other) {
   try {
-    _impl = std::make_shared<ClassConstructImpl>(*other._impl);
+    _impl = std::make_shared<SomeFinalClassImpl>(*other._impl);
     GUNIT_NOTIFY_CONSTRUCTOR(other);
   } catch (const std::exception&) {
     // ex.what() notify
@@ -88,9 +87,9 @@ ClassConstruct::ClassConstruct(const ClassConstruct& other) {
   }
 }
 
-ClassConstruct::ClassConstruct(ClassConstruct&& other) {
+SomeFinalClass::SomeFinalClass(SomeFinalClass&& other) {
   try {
-    _impl = std::make_shared<ClassConstructImpl>(std::move(*other._impl));
+    _impl = std::make_shared<SomeFinalClassImpl>(std::move(*other._impl));
     GUNIT_NOTIFY_CONSTRUCTOR(other);
   } catch (const std::exception&) {
     // ex.what() notify
@@ -101,9 +100,9 @@ ClassConstruct::ClassConstruct(ClassConstruct&& other) {
   }
 }
 
-ClassConstruct::ClassConstruct(int number, bool condition) {
+SomeFinalClass::SomeFinalClass(int number, bool condition) {
   try {
-    _impl = std::make_shared<ClassConstructImpl>(number, condition);
+    _impl = std::make_shared<SomeFinalClassImpl>(number, condition);
     GUNIT_NOTIFY_CONSTRUCTOR(number, condition);
   } catch (const std::exception&) {
     // ex.what() notify
@@ -114,7 +113,7 @@ ClassConstruct::ClassConstruct(int number, bool condition) {
   }
 }
 
-void ClassConstruct::someMethod(const int newNumber) {
+void SomeFinalClass::someMethod(const int newNumber) {
   try {
     _impl->someMethod(newNumber);
     GUNIT_NOTIFY_METHOD_NO_RETURN(newNumber);
@@ -127,7 +126,7 @@ void ClassConstruct::someMethod(const int newNumber) {
   }
 }
 
-ClassConstruct& ClassConstruct::operator=(const ClassConstruct& other) {
+SomeFinalClass& SomeFinalClass::operator=(const SomeFinalClass& other) {
   try {
     GUNIT_NOTIFY_ASSIGNMENT(other);
     (*_impl) = *other._impl;
@@ -141,7 +140,7 @@ ClassConstruct& ClassConstruct::operator=(const ClassConstruct& other) {
   return *this;
 }
 
-ClassConstruct& ClassConstruct::operator=(ClassConstruct&& other) {
+SomeFinalClass& SomeFinalClass::operator=(SomeFinalClass&& other) {
   try {
     GUNIT_NOTIFY_ASSIGNMENT(other);
     (*_impl) = std::move(*other._impl);
@@ -155,7 +154,7 @@ ClassConstruct& ClassConstruct::operator=(ClassConstruct&& other) {
   return *this;
 }
 
-bool ClassConstruct::operator==(const ClassConstruct& that) const {
+bool SomeFinalClass::operator==(const SomeFinalClass& that) const {
   try {
     return (*_impl) == *that._impl;
   } catch (const std::exception&) {
@@ -167,7 +166,7 @@ bool ClassConstruct::operator==(const ClassConstruct& that) const {
   }
 }
 
-bool ClassConstruct::operator!=(const ClassConstruct& that) const {
+bool SomeFinalClass::operator!=(const SomeFinalClass& that) const {
   try {
     return (*_impl) != *that._impl;
   } catch (const std::exception&) {
@@ -179,10 +178,10 @@ bool ClassConstruct::operator!=(const ClassConstruct& that) const {
   }
 }
 
-ClassConstruct function_test_class_construct(const ClassConstruct& arg) {
+SomeFinalClass function_test_class_construct(const SomeFinalClass& arg) {
   try {
     auto object = function_test_class_construct_impl(*arg._impl);
-    auto result = ClassConstruct(std::make_shared<ClassConstructImpl>(object));
+    auto result = SomeFinalClass(std::make_shared<SomeFinalClassImpl>(object));
     GUNIT_NOTIFY_FREE_FUNCTION(result, arg);
     return result;
   } catch (const std::exception&) {
@@ -194,11 +193,11 @@ ClassConstruct function_test_class_construct(const ClassConstruct& arg) {
   }
 }
 
-ClassConstruct* function_test_class_construct_ptr(ClassConstruct* arg) {
+SomeFinalClass* function_test_class_construct(SomeFinalClass* arg) {
   try {
-    auto object = function_test_class_construct_ptr_impl(arg->_impl.get());
+    auto object = function_test_class_construct_impl(arg->_impl.get());
     auto result =
-        new ClassConstruct(std::make_shared<ClassConstructImpl>(*object));
+        new SomeFinalClass(std::make_shared<SomeFinalClassImpl>(*object));
     GUNIT_NOTIFY_FREE_FUNCTION(result, arg);
     return result;
   } catch (const std::exception&) {
@@ -210,10 +209,10 @@ ClassConstruct* function_test_class_construct_ptr(ClassConstruct* arg) {
   }
 }
 
-ClassConstruct function_make_class_construct_obj() {
+SomeFinalClass function_make_class_construct_obj() {
   try {
     auto object = function_make_class_construct_obj_impl();
-    ClassConstruct result(std::make_shared<ClassConstructImpl>(object));
+    SomeFinalClass result(std::make_shared<SomeFinalClassImpl>(object));
     GUNIT_NOTIFY_FREE_FUNCTION_NO_ARGS(result);
     return result;
   } catch (const std::exception&) {
@@ -225,11 +224,11 @@ ClassConstruct function_make_class_construct_obj() {
   }
 }
 
-ClassConstruct* function_make_class_construct_obj_ptr() {
+SomeFinalClass* function_make_class_construct_obj_ptr() {
   try {
     auto object = function_make_class_construct_obj_ptr_impl();
     auto result =
-        new ClassConstruct(std::make_shared<ClassConstructImpl>(*object));
+        new SomeFinalClass(std::make_shared<SomeFinalClassImpl>(*object));
     GUNIT_NOTIFY_FREE_FUNCTION_NO_ARGS(result);
     return result;
   } catch (const std::exception&) {

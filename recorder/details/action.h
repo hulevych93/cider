@@ -16,14 +16,14 @@ struct Function final {
 };
 
 struct ClassMethod final {
-  void* objectAddress;
+  const void* objectAddress;
   Function method;
 };
 
 enum class BinaryOpType { Assignment };
 
 struct ClassBinaryOp final {
-  void* objectAddress;
+  const void* objectAddress;
   BinaryOpType opName = BinaryOpType::Assignment;
   Param param;
 };
@@ -68,7 +68,7 @@ Action makeAction(const char* function,
 }
 
 template <typename ReturnType, typename... ParamsTypes>
-Action makeAction(void* object,
+Action makeAction(const void* object,
                   const char* methodName,
                   ReturnType&& retVal,
                   ParamsTypes&&... params) {
@@ -78,7 +78,7 @@ Action makeAction(void* object,
 }
 
 template <typename ParamType>
-Action makeAction(void* object, BinaryOpType type, ParamType&& param) {
+Action makeAction(const void* object, BinaryOpType type, ParamType&& param) {
   return ClassBinaryOp{object, type, makeParam(std::forward<ParamType>(param))};
 }
 

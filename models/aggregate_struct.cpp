@@ -27,7 +27,7 @@ Aggregate function_test_aggregate_impl(const Aggregate& arg) {
   return arg;
 }
 
-Aggregate* function_test_aggregate_ptr_impl(Aggregate* arg) {
+Aggregate* function_test_aggregate_impl(Aggregate* arg) {
   return arg;
 }
 
@@ -47,9 +47,9 @@ Aggregate function_test_aggregate(const Aggregate& arg) {
   }
 }
 
-Aggregate* function_test_aggregate_ptr(Aggregate* arg) {
+Aggregate* function_test_aggregate(Aggregate* arg) {
   try {
-    Aggregate* result = function_test_aggregate_ptr_impl(arg);
+    Aggregate* result = function_test_aggregate_impl(arg);
     GUNIT_NOTIFY_FREE_FUNCTION(result, arg);
     return result;
   } catch (const std::exception&) {

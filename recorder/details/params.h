@@ -33,8 +33,9 @@ using GeneratorTypesList = TypeList<Nil, bool, int, float, std::string>;
 //` User action parameters are introduced by the `Param` variant.
 using Param = utils::ApplyTypeList<
     std::variant,
-    utils::ConcatTypeLists<GeneratorTypesList,
-                           utils::ToTypeList<UserDataValueParamPtr, UserDataReferenceParamPtr>>>;
+    utils::ConcatTypeLists<
+        GeneratorTypesList,
+        utils::ToTypeList<UserDataValueParamPtr, UserDataReferenceParamPtr>>>;
 using Params = std::vector<Param>;
 
 class CodeSink;
@@ -46,9 +47,9 @@ struct UserDataValueParam {
 };
 
 struct UserDataReferenceParam : UserDataValueParam {
-public:
-    virtual ~UserDataReferenceParam() = default;
-    virtual std::string registerLocal(CodeSink& sink) = 0;
+ public:
+  virtual ~UserDataReferenceParam() = default;
+  virtual std::string registerLocal(CodeSink& sink) = 0;
 };
 
 template <typename Type>

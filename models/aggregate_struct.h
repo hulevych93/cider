@@ -8,7 +8,7 @@ namespace models {
 // But when the object is used as parameter of the call we can obtain
 // actual information from it.
 
-struct Aggregate final {
+struct Aggregate {
   int number = 0;
   bool condition = false;
 
@@ -17,7 +17,7 @@ struct Aggregate final {
 
 // function to test user data as parameter and return value
 Aggregate function_test_aggregate(const Aggregate& arg);
-Aggregate* function_test_aggregate_ptr(Aggregate* arg);
+Aggregate* function_test_aggregate(Aggregate* arg);
 
 }  // namespace models
 }  // namespace gunit

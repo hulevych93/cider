@@ -5,9 +5,12 @@
 #include "scripting/interpreter.h"
 
 #include "models/aggregate_struct.h"
-#include "models/class_construct.h"
 #include "models/enum_test.h"
 #include "models/free_functions.h"
+#include "models/derived_agregate_types.h"
+#include "models/derived_class_types.h"
+#include "models/polymorphic_types.h"
+#include "models/some_final_class.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -93,22 +96,64 @@ TEST_F(RecordingTestSuite, function_test_aggregate_test) {
   EXPECT_EQ(function_test_aggregate_test_script, testScript(script));
 }
 
-const char* function_test_aggregate_ptr_test_script =
-    R"(local object_1 = example.Aggregate()
-object_1.condition = true
-object_1.number = 10
-example.function_test_aggregate_ptr(object_1)
-)";
-
 TEST_F(RecordingTestSuite, function_test_aggregate_ptr_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   models::Aggregate aggregateStruct{10, true};
   EXPECT_EQ(&aggregateStruct,
-            models::function_test_aggregate_ptr(&aggregateStruct));
+            models::function_test_aggregate(&aggregateStruct));
 
   auto script = session->getScript();
-  EXPECT_EQ(function_test_aggregate_ptr_test_script, testScript(script));
+  EXPECT_EQ(function_test_aggregate_test_script, testScript(script));
+}
+
+TEST_F(RecordingTestSuite, function_test_aggregate_with_derived_test) {
+  auto session = makeLuaRecordingSession(LuaExampleModuleName);
+
+  models::AggregateDerived aggregateStruct{10, true, 0.5};
+  EXPECT_EQ(aggregateStruct, models::function_test_aggregate(aggregateStruct));
+
+  auto script = session->getScript();
+  EXPECT_EQ(function_test_aggregate_test_script, testScript(script));
+}
+
+TEST_F(RecordingTestSuite, function_test_aggregate_ptr_with_derived_test) {
+  auto session = makeLuaRecordingSession(LuaExampleModuleName);
+
+  models::AggregateDerived aggregateStruct{10, true, 0.5};
+  models::function_test_aggregate(&aggregateStruct);
+
+  auto script = session->getScript();
+  EXPECT_EQ(function_test_aggregate_test_script, testScript(script));
+}
+
+const char* function_test_aggregate_derived_test_script =
+    R"(local object_1 = example.AggregateDerived()
+object_1.condition = true
+object_1.number = 10
+object_1.floatingNumber = 0.5
+example.function_test_aggregate_derived(object_1)
+)";
+
+TEST_F(RecordingTestSuite, function_test_aggregate_derived_test) {
+  auto session = makeLuaRecordingSession(LuaExampleModuleName);
+
+  models::AggregateDerived aggregateStruct{10, true, 0.5};
+  EXPECT_EQ(aggregateStruct,
+            models::function_test_aggregate_derived(aggregateStruct));
+
+  auto script = session->getScript();
+  EXPECT_EQ(function_test_aggregate_derived_test_script, testScript(script));
+}
+
+TEST_F(RecordingTestSuite, function_test_aggregate_derived_ptr_test) {
+  auto session = makeLuaRecordingSession(LuaExampleModuleName);
+
+  models::AggregateDerived aggregateStruct{10, true, 0.5};
+  models::function_test_aggregate_derived(&aggregateStruct);
+
+  auto script = session->getScript();
+  EXPECT_EQ(function_test_aggregate_derived_test_script, testScript(script));
 }
 
 const char* function_test_enumeration_test_script =
@@ -141,69 +186,64 @@ TEST_F(RecordingTestSuite, summ_these_two_params_test) {
 TEST_F(RecordingTestSuite, class_construct_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  models::ClassConstruct object1;
-  EXPECT_EQ("local object_1 = example.ClassConstruct()\n",
+  models::SomeFinalClass object1;
+  EXPECT_EQ("local object_1 = example.SomeFinalClass()\n",
             session->getScript());
 
-  models::ClassConstruct object2(125, true);
-  EXPECT_EQ("local object_1 = example.ClassConstruct(125, true)\n",
+  models::SomeFinalClass object2(125, true);
+  EXPECT_EQ("local object_1 = example.SomeFinalClass(125, true)\n",
             session->getScript());
 }
 
 const char* class_method_test_script =
-    R"(local object_1 = example.ClassConstruct()
+    R"(local object_1 = example.SomeFinalClass()
 object_1:someMethod(129)
 )";
 
 TEST_F(RecordingTestSuite, class_method_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  models::ClassConstruct object1;
+  models::SomeFinalClass object1;
   object1.someMethod(129);
 
   EXPECT_EQ(class_method_test_script, testScript(session->getScript()));
 }
 
 const char* function_test_class_construct_test_script =
-    R"(local object_1 = example.ClassConstruct(423, false)
+    R"(local object_1 = example.SomeFinalClass(423, false)
 local object_2 = example.function_test_class_construct(object_1)
 )";
 
 TEST_F(RecordingTestSuite, function_test_class_construct_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  models::ClassConstruct object1(423, false);
+  models::SomeFinalClass object1(423, false);
   EXPECT_EQ(object1, function_test_class_construct(object1));
 
   EXPECT_EQ(function_test_class_construct_test_script,
             testScript(session->getScript()));
 }
 
-const char* function_test_class_construct_ptr_test_script =
-    R"(local object_1 = example.ClassConstruct(423, false)
-local object_2 = example.function_test_class_construct_ptr(object_1)
-)";
-
 TEST_F(RecordingTestSuite, function_test_class_construct_ptr_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  models::ClassConstruct object1(423, false);
-  function_test_class_construct_ptr(&object1);
+  models::SomeFinalClass object1(423, false);
+  function_test_class_construct(&object1);
 
-  EXPECT_EQ(function_test_class_construct_ptr_test_script,
+  EXPECT_EQ(function_test_class_construct_test_script,
             testScript(session->getScript()));
 }
 
 const char* class_is_reachable_after_copy_move_constuction_script =
-    R"(local object_1 = example.ClassConstruct()
-local object_2 = example.ClassConstruct(object_1)
+    R"(local object_1 = example.SomeFinalClass()
+local object_2 = example.SomeFinalClass(object_1)
 object_2:someMethod(129)
 )";
 
 TEST_F(RecordingTestSuite, class_copy_constuction_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  models::ClassConstruct object1;
+  models::SomeFinalClass object1;
   auto object2 = object1;
   object2.someMethod(129);
 
@@ -214,7 +254,7 @@ TEST_F(RecordingTestSuite, class_copy_constuction_test) {
 TEST_F(RecordingTestSuite, class_move_constuction_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  models::ClassConstruct object1;
+  models::SomeFinalClass object1;
   auto object2 = std::move(object1);
   object2.someMethod(129);
 
@@ -223,8 +263,8 @@ TEST_F(RecordingTestSuite, class_move_constuction_test) {
 }
 
 const char* class_is_reachable_after_copy_move_assignment_script =
-    R"(local object_1 = example.ClassConstruct()
-local object_2 = example.ClassConstruct()
+    R"(local object_1 = example.SomeFinalClass()
+local object_2 = example.SomeFinalClass()
 object_2 = object_1
 object_2:someMethod(129)
 )";
@@ -232,8 +272,8 @@ object_2:someMethod(129)
 TEST_F(RecordingTestSuite, class_copy_assignment_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  models::ClassConstruct object1;
-  models::ClassConstruct object2;
+  models::SomeFinalClass object1;
+  models::SomeFinalClass object2;
   object2 = object1;
   object2.someMethod(129);
 
@@ -244,8 +284,8 @@ TEST_F(RecordingTestSuite, class_copy_assignment_test) {
 TEST_F(RecordingTestSuite, class_move_assignment_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  models::ClassConstruct object1;
-  models::ClassConstruct object2;
+  models::SomeFinalClass object1;
+  models::SomeFinalClass object2;
   object2 = std::move(object1);
   object2.someMethod(129);
 
@@ -282,4 +322,86 @@ TEST_F(RecordingTestSuite, function_make_class_construct_obj_ptr_test) {
 
   EXPECT_EQ(function_make_class_construct_obj_ptr_test_script,
             testScript(session->getScript()));
+}
+
+const char* some_interface_test_script =
+    R"(local object_1 = example.StringInterface('abc')
+object_1:isEmpty()
+)";
+
+TEST_F(RecordingTestSuite, some_interface_test) {
+  auto session = makeLuaRecordingSession(LuaExampleModuleName);
+
+  models::StringInterface object{"abc"};
+  object.isEmpty();
+
+  EXPECT_EQ(some_interface_test_script, testScript(session->getScript()));
+}
+
+TEST_F(RecordingTestSuite, some_interface_test_ptr) {
+  auto session = makeLuaRecordingSession(LuaExampleModuleName);
+
+  models::StringInterface* object = new models::StringInterface{"abc"};
+  object->isEmpty();
+  delete object;
+
+  EXPECT_EQ(some_interface_test_script, testScript(session->getScript()));
+}
+
+const char* some_other_interface_test_script =
+    R"(local object_1 = example.OtherStringInterface(false)
+object_1:isEmpty()
+)";
+
+TEST_F(RecordingTestSuite, some_other_interface_test_ptr) {
+  auto session = makeLuaRecordingSession(LuaExampleModuleName);
+
+  models::StringInterface* object = new models::OtherStringInterface{false};
+  object->isEmpty();
+  delete object;
+
+  EXPECT_EQ(some_other_interface_test_script, testScript(session->getScript()));
+}
+
+const char* make_some_interface_test_script =
+    R"(local object_1 = example.makeSomeInterface('false')
+object_1:isEmpty()
+)";
+
+TEST_F(RecordingTestSuite, make_some_interface_test) {
+    auto session = makeLuaRecordingSession(LuaExampleModuleName);
+
+    models::SomeInterface* object = models::makeSomeInterface("false");
+    object->isEmpty();
+    delete object;
+
+    EXPECT_EQ(make_some_interface_test_script, testScript(session->getScript()));
+}
+
+const char* derived_class_types_test_script =
+    R"(local object_1 = example.SomeDerived('false')
+object_1:sayGoodbye(2)
+)";
+
+TEST_F(RecordingTestSuite, derived_class_types_test) {
+    auto session = makeLuaRecordingSession(LuaExampleModuleName);
+
+    models::SomeDerived object("false");
+    object.sayGoodbye(2);
+
+    EXPECT_EQ(derived_class_types_test_script, testScript(session->getScript()));
+}
+
+const char* some_base_class_types_test_script =
+    R"(local object_1 = example.SomeBase('true')
+object_1:sayHello()
+)";
+
+TEST_F(RecordingTestSuite, some_base_class_types_test) {
+    auto session = makeLuaRecordingSession(LuaExampleModuleName);
+
+    models::SomeBase object("true");
+    object.sayHello();
+
+    EXPECT_EQ(some_base_class_types_test_script, testScript(session->getScript()));
 }
