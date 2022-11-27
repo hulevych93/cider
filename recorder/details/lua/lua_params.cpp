@@ -86,7 +86,7 @@ std::string ParamVisitor::operator()(const std::string& value) const {
 UserDataParamVisitor::UserDataParamVisitor(CodeSink& sink) : _sink(sink) {}
 
 std::string UserDataParamVisitor::operator()(
-    const UserDataParamPtr& value) const {
+    const UserDataValueParamPtr& value) const {
   return (*value).generateCode(_sink);
 }
 

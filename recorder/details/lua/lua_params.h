@@ -36,7 +36,7 @@ class UserDataParamVisitor final : public ParamVisitor {
 
   using ParamVisitor::operator();
 
-  std::string operator()(const UserDataParamPtr& value) const;
+  std::string operator()(const UserDataValueParamPtr& value) const;
 
  private:
   CodeSink& _sink;

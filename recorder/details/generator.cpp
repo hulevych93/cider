@@ -160,7 +160,7 @@ std::vector<std::string> ScriptGenerator::produceArgs(
 }
 
 std::string ScriptGenerator::processResult(const Param& param) {
-  if (auto* userData = std::get_if<UserDataParamPtr>(&param)) {
+  if (auto* userData = std::get_if<UserDataReferenceParamPtr>(&param)) {
     return (*userData)->registerLocal(*_sink);
   }
   return {};

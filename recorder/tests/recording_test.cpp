@@ -33,8 +33,10 @@ class RecordingTestSuite : public testing::Test {
   }
 };
 
+constexpr const char* LuaExampleModuleName = "example";
+
 TEST_F(RecordingTestSuite, script_session_clears_test) {
-  auto session = makeLuaRecordingSession("example");
+  auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   EXPECT_EQ(120, models::calculate_factorial(5));
   EXPECT_EQ("example.calculate_factorial(5)\n", session->getScript());
@@ -50,7 +52,7 @@ example.calculate_factorial(6)
 )";
 
 TEST_F(RecordingTestSuite, calculate_factorial_test) {
-  auto session = makeLuaRecordingSession("example");
+  auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   EXPECT_EQ(120, models::calculate_factorial(5));
   EXPECT_EQ(720, models::calculate_factorial(6));
@@ -65,7 +67,7 @@ example.is_this_sparta_word('sparta')
 )";
 
 TEST_F(RecordingTestSuite, is_this_sparta_word_test) {
-  auto session = makeLuaRecordingSession("example");
+  auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   EXPECT_FALSE(models::is_this_sparta_word("something"));
   EXPECT_TRUE(models::is_this_sparta_word("sparta"));
@@ -82,7 +84,7 @@ example.function_test_aggregate(object_1)
 )";
 
 TEST_F(RecordingTestSuite, function_test_aggregate_test) {
-  auto session = makeLuaRecordingSession("example");
+  auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   models::Aggregate aggregateStruct{10, true};
   EXPECT_EQ(aggregateStruct, models::function_test_aggregate(aggregateStruct));
@@ -99,7 +101,7 @@ example.function_test_aggregate_ptr(object_1)
 )";
 
 TEST_F(RecordingTestSuite, function_test_aggregate_ptr_test) {
-  auto session = makeLuaRecordingSession("example");
+  auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   models::Aggregate aggregateStruct{10, true};
   EXPECT_EQ(&aggregateStruct,
@@ -114,7 +116,7 @@ const char* function_test_enumeration_test_script =
 )";
 
 TEST_F(RecordingTestSuite, function_test_enumeration_test) {
-  auto session = makeLuaRecordingSession("example");
+  auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   models::SomeEnumeration arg = models::SomeEnumeration::second_value;
   EXPECT_EQ(arg, models::function_test_enumeration(arg));
@@ -128,7 +130,7 @@ const char* summ_these_two_params_test_script =
 )";
 
 TEST_F(RecordingTestSuite, summ_these_two_params_test) {
-  auto session = makeLuaRecordingSession("example");
+  auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   EXPECT_EQ(22, models::summ_these_two_params(7, 15u));
 
@@ -137,7 +139,7 @@ TEST_F(RecordingTestSuite, summ_these_two_params_test) {
 }
 
 TEST_F(RecordingTestSuite, class_construct_test) {
-  auto session = makeLuaRecordingSession("example");
+  auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   models::ClassConstruct object1;
   EXPECT_EQ("local object_1 = example.ClassConstruct()\n",
@@ -154,7 +156,7 @@ object_1:someMethod(129)
 )";
 
 TEST_F(RecordingTestSuite, class_method_test) {
-  auto session = makeLuaRecordingSession("example");
+  auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   models::ClassConstruct object1;
   object1.someMethod(129);
@@ -168,7 +170,7 @@ local object_2 = example.function_test_class_construct(object_1)
 )";
 
 TEST_F(RecordingTestSuite, function_test_class_construct_test) {
-  auto session = makeLuaRecordingSession("example");
+  auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   models::ClassConstruct object1(423, false);
   EXPECT_EQ(object1, function_test_class_construct(object1));
@@ -183,7 +185,7 @@ local object_2 = example.function_test_class_construct_ptr(object_1)
 )";
 
 TEST_F(RecordingTestSuite, function_test_class_construct_ptr_test) {
-  auto session = makeLuaRecordingSession("example");
+  auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   models::ClassConstruct object1(423, false);
   function_test_class_construct_ptr(&object1);
@@ -199,7 +201,7 @@ object_2:someMethod(129)
 )";
 
 TEST_F(RecordingTestSuite, class_copy_constuction_test) {
-  auto session = makeLuaRecordingSession("example");
+  auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   models::ClassConstruct object1;
   auto object2 = object1;
@@ -210,7 +212,7 @@ TEST_F(RecordingTestSuite, class_copy_constuction_test) {
 }
 
 TEST_F(RecordingTestSuite, class_move_constuction_test) {
-  auto session = makeLuaRecordingSession("example");
+  auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   models::ClassConstruct object1;
   auto object2 = std::move(object1);
@@ -228,7 +230,7 @@ object_2:someMethod(129)
 )";
 
 TEST_F(RecordingTestSuite, class_copy_assignment_test) {
-  auto session = makeLuaRecordingSession("example");
+  auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   models::ClassConstruct object1;
   models::ClassConstruct object2;
@@ -240,7 +242,7 @@ TEST_F(RecordingTestSuite, class_copy_assignment_test) {
 }
 
 TEST_F(RecordingTestSuite, class_move_assignment_test) {
-  auto session = makeLuaRecordingSession("example");
+  auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   models::ClassConstruct object1;
   models::ClassConstruct object2;
@@ -257,7 +259,7 @@ object_1:someMethod(2345)
 )";
 
 TEST_F(RecordingTestSuite, function_make_class_construct_obj_test) {
-  auto session = makeLuaRecordingSession("example");
+  auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   auto object = models::function_make_class_construct_obj();
   object.someMethod(2345);
@@ -272,7 +274,7 @@ object_1:someMethod(2345)
 )";
 
 TEST_F(RecordingTestSuite, function_make_class_construct_obj_ptr_test) {
-  auto session = makeLuaRecordingSession("example");
+  auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   auto object = models::function_make_class_construct_obj_ptr();
   object->someMethod(2345);

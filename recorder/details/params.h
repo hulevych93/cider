@@ -15,10 +15,11 @@
 namespace gunit {
 namespace recorder {
 
-//` The `UserDataParam` is any user defined type to be passed as parameter to
-// user action.
-struct UserDataParam;
-using UserDataParamPtr = std::shared_ptr<UserDataParam>;
+struct UserDataValueParam;
+using UserDataValueParamPtr = std::shared_ptr<UserDataValueParam>;
+
+struct UserDataReferenceParam;
+using UserDataReferenceParamPtr = std::shared_ptr<UserDataReferenceParam>;
 
 //` The `Nil` is the tag type for lua 'nil' param generation.
 struct Nil final {
@@ -33,16 +34,21 @@ using GeneratorTypesList = TypeList<Nil, bool, int, float, std::string>;
 using Param = utils::ApplyTypeList<
     std::variant,
     utils::ConcatTypeLists<GeneratorTypesList,
-                           utils::ToTypeList<UserDataParamPtr>>>;
+                           utils::ToTypeList<UserDataValueParamPtr, UserDataReferenceParamPtr>>>;
 using Params = std::vector<Param>;
 
 class CodeSink;
 
-struct UserDataParam {
+struct UserDataValueParam {
  public:
-  virtual ~UserDataParam() = default;
+  virtual ~UserDataValueParam() = default;
   virtual std::string generateCode(CodeSink& sink) const = 0;
-  virtual std::string registerLocal(CodeSink& sink) = 0;
+};
+
+struct UserDataReferenceParam : UserDataValueParam {
+public:
+    virtual ~UserDataReferenceParam() = default;
+    virtual std::string registerLocal(CodeSink& sink) = 0;
 };
 
 template <typename Type>
@@ -51,31 +57,29 @@ std::string produceAggregateCode(const Type&, CodeSink& sink);
 namespace details {
 
 template <typename Type>
-struct AggregateUserDataParamImpl final : public UserDataParam {
+struct AggregateUserDataValueParamImpl final : public UserDataValueParam {
  public:
   using ParamType = typename std::remove_pointer_t<std::decay_t<Type>>;
 
  public:
-  AggregateUserDataParamImpl(Type&& param)
+  AggregateUserDataValueParamImpl(Type&& param)
       : _param(std::forward<Type>(param)) {}
-  AggregateUserDataParamImpl(ParamType* param) : _param(*param) {}
+  AggregateUserDataValueParamImpl(ParamType* param) : _param(*param) {}
 
-  ~AggregateUserDataParamImpl() override = default;
+  ~AggregateUserDataValueParamImpl() override = default;
 
   std::string generateCode(CodeSink& sink) const override {
     return produceAggregateCode(_param, sink);
   }
 
-  std::string registerLocal(CodeSink&) override { return {}; }
-
  private:
   ParamType _param;
 };
 
-struct ReferenceUserDataParamImpl final : public UserDataParam {
+struct ReferenceUserDataValueParamImpl final : public UserDataReferenceParam {
  public:
-  ReferenceUserDataParamImpl(const void* address) : _address(address) {}
-  ~ReferenceUserDataParamImpl() override = default;
+  ReferenceUserDataValueParamImpl(const void* address) : _address(address) {}
+  ~ReferenceUserDataValueParamImpl() override = default;
 
   std::string generateCode(CodeSink& sink) const override {
     return sink.searchForLocalVar(_address);
@@ -98,27 +102,27 @@ constexpr bool isAggregate =
 
 template <typename Type,
           typename std::enable_if_t<isAggregate<Type>, void*> = nullptr>
-std::shared_ptr<UserDataParam> makeUserData(Type&& arg) {
-  return std::make_shared<AggregateUserDataParamImpl<Type>>(
+std::shared_ptr<UserDataValueParam> makeUserData(Type&& arg) {
+  return std::make_shared<AggregateUserDataValueParamImpl<Type>>(
       std::forward<Type>(arg));
 }
 
 template <typename Type,
           typename std::enable_if_t<isAggregate<Type>, void*> = nullptr>
-std::shared_ptr<UserDataParam> makeUserData(Type* arg) {
-  return std::make_shared<AggregateUserDataParamImpl<Type>>(arg);
+std::shared_ptr<UserDataValueParam> makeUserData(Type* arg) {
+  return std::make_shared<AggregateUserDataValueParamImpl<Type>>(arg);
 }
 
 template <typename Type,
           typename std::enable_if_t<!isAggregate<Type>, void*> = nullptr>
-std::shared_ptr<UserDataParam> makeUserData(Type& arg) {
-  return std::make_shared<ReferenceUserDataParamImpl>(std::addressof(arg));
+std::shared_ptr<UserDataReferenceParam> makeUserData(Type& arg) {
+  return std::make_shared<ReferenceUserDataValueParamImpl>(std::addressof(arg));
 }
 
 template <typename Type,
           typename std::enable_if_t<!isAggregate<Type>, void*> = nullptr>
-std::shared_ptr<UserDataParam> makeUserData(Type* arg) {
-  return std::make_shared<ReferenceUserDataParamImpl>(arg);
+std::shared_ptr<UserDataReferenceParam> makeUserData(Type* arg) {
+  return std::make_shared<ReferenceUserDataValueParamImpl>(arg);
 }
 
 template <typename Type>
