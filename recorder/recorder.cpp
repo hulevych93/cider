@@ -29,14 +29,13 @@ class ScriptRecordSessionImpl final : public ScriptRecordSession,
           std::visit(_generator, entry.action);
         }
       }
-    } catch (const ScriptGenerationError&) {
-      //... Throw?
+      reset();
+      return _generator.getScript();
+    } catch (...) {
+        reset();
+        _generator.discard();
+        throw;
     }
-
-    _log.clear();
-    _nestingLevel = 0u;
-    _action_id = 1u;
-    return _generator.getScript();
   }
 
  private:
@@ -49,6 +48,12 @@ class ScriptRecordSessionImpl final : public ScriptRecordSession,
   }
 
   void onActionEnds(const action_id) override { --_nestingLevel; }
+
+  void reset() {
+      _log.clear();
+      _nestingLevel = 0u;
+      _action_id = 1u;
+  }
 
  private:
   std::deque<ActionEntry> _log;

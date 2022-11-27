@@ -47,6 +47,7 @@ class ScriptGenerator final {
   // the generator and ` it becomes ready to further usage. ` Throws:
   //`ScriptGenerationError`.
   std::string getScript();
+  void discard();
 
  private:
   std::vector<std::string> produceArgs(const Params& params) const;

@@ -170,5 +170,9 @@ std::string ScriptGenerator::getScript() {
   return static_cast<CodeSinkImpl&>(*_sink).getScript();
 }
 
+void ScriptGenerator::discard(){
+    static_cast<CodeSinkImpl&>(*_sink).getScript();
+}
+
 }  // namespace recorder
 }  // namespace gunit

@@ -8,7 +8,6 @@
 namespace gunit {
 namespace recorder {
 
-// TODO: fix id
 using action_id = size_t;
 constexpr action_id null_action_id = 0u;
 

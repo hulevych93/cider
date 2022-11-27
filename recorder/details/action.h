@@ -31,6 +31,7 @@ struct ClassBinaryOp final {
 using Action = std::variant<Function, ClassMethod, ClassBinaryOp>;
 
 namespace details {
+
 template <typename... Types>
 struct ParamUnpacker;
 
