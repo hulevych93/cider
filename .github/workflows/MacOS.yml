@@ -32,8 +32,8 @@ jobs:
           mkdir lcov
           cd lcov
           wget "https://github.com/linux-test-project/lcov/archive/refs/tags/v1.16.tar.gz"
-          tar -xzf "lcov-1.16.tar.gz"
-          cd "lcov-1.16"
+          tar -xzf "v1.16.tar.gz"
+          cd "v1.16"
           sudo make install
           
     - name: Configure CMake
