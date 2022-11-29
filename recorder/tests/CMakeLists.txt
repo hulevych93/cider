@@ -7,6 +7,7 @@ include_directories(.
 )
 
 add_executable(recorder_test ${LIST_OUT})
+add_test(NAME "recorder_test" COMMAND recorder_test)
 
 target_link_libraries(recorder_test
     recorder

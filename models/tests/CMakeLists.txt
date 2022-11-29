@@ -7,6 +7,7 @@ include_directories(.
 )
 
 add_executable(models_test ${LIST_OUT})
+add_test(NAME "models_test" COMMAND models_test)
 
 target_link_libraries(models_test
     models

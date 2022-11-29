@@ -12,6 +12,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include_directories(${CMAKE_SOURCE_DIR})
 
+enable_testing()
+
 add_subdirectory(thirdparty/gtest)
 add_subdirectory(thirdparty/fmt)
 add_subdirectory(thirdparty/swig)
