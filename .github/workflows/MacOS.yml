@@ -6,11 +6,11 @@ on:
       configuration:
         description: 'Configuration'     
         required: true
-        default: 'Release' 
+        default: 'RELEASE' 
         type: choice
         options:
-        - Debug
-        - Release
+        - DEBUG
+        - RELEASE
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
