@@ -27,6 +27,16 @@ jobs:
     steps:
     - uses: actions/checkout@v3
       
+    - name: Prepare lcov tool
+      run: |
+          VERSION="1.14"
+          mkdir Iconv
+          cd Iconv
+          wget "https://github.com/linux-test-project/lcov/releases/download/v1.14/lcov-$VERSION.tar.gz"
+          tar -xzf "lcov-$VERSION.tar.gz"
+          cd "lcov-$VERSION"
+          sudo make install
+          
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
@@ -40,16 +50,6 @@ jobs:
       # Run ctests
       working-directory: ${{github.workspace}}/build
       run: ctest
-      
-    - name: Prepare lcov tool
-      run: |
-          VERSION="1.14"
-          mkdir Iconv
-          cd Iconv
-          wget "https://github.com/linux-test-project/lcov/releases/download/v1.14/lcov-$VERSION.tar.gz"
-          tar -xzf "lcov-$VERSION.tar.gz"
-          cd "lcov-$VERSION"
-          sudo make install
           
     - name: Coveralls
       uses: coverallsapp/github-action@master
