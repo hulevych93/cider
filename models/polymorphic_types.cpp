@@ -52,10 +52,10 @@ void OtherStringInterface::setImpl(
 }
 
 SomeInterface* makeSomeInterface(const char* str) {
-    auto impl = std::make_shared<StringInterfaceImpl>(str);
-    auto result = new StringInterface(impl);
-    GUNIT_NOTIFY_FREE_FUNCTION(result, str);
-    return result;
+  auto impl = std::make_shared<StringInterfaceImpl>(str);
+  auto result = new StringInterface(impl);
+  GUNIT_NOTIFY_FREE_FUNCTION(result, str);
+  return result;
 }
 
 }  // namespace models

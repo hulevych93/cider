@@ -5,10 +5,10 @@
 #include "scripting/interpreter.h"
 
 #include "models/aggregate_struct.h"
-#include "models/enum_test.h"
-#include "models/free_functions.h"
 #include "models/derived_agregate_types.h"
 #include "models/derived_class_types.h"
+#include "models/enum_test.h"
+#include "models/free_functions.h"
 #include "models/polymorphic_types.h"
 #include "models/some_final_class.h"
 
@@ -369,13 +369,13 @@ object_1:isEmpty()
 )";
 
 TEST_F(RecordingTestSuite, make_some_interface_test) {
-    auto session = makeLuaRecordingSession(LuaExampleModuleName);
+  auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-    models::SomeInterface* object = models::makeSomeInterface("false");
-    object->isEmpty();
-    delete object;
+  models::SomeInterface* object = models::makeSomeInterface("false");
+  object->isEmpty();
+  delete object;
 
-    EXPECT_EQ(make_some_interface_test_script, testScript(session->getScript()));
+  EXPECT_EQ(make_some_interface_test_script, testScript(session->getScript()));
 }
 
 const char* derived_class_types_test_script =
@@ -384,12 +384,12 @@ object_1:sayGoodbye(2)
 )";
 
 TEST_F(RecordingTestSuite, derived_class_types_test) {
-    auto session = makeLuaRecordingSession(LuaExampleModuleName);
+  auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-    models::SomeDerived object("false");
-    object.sayGoodbye(2);
+  models::SomeDerived object("false");
+  object.sayGoodbye(2);
 
-    EXPECT_EQ(derived_class_types_test_script, testScript(session->getScript()));
+  EXPECT_EQ(derived_class_types_test_script, testScript(session->getScript()));
 }
 
 const char* some_base_class_types_test_script =
@@ -398,10 +398,11 @@ object_1:sayHello()
 )";
 
 TEST_F(RecordingTestSuite, some_base_class_types_test) {
-    auto session = makeLuaRecordingSession(LuaExampleModuleName);
+  auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-    models::SomeBase object("true");
-    object.sayHello();
+  models::SomeBase object("true");
+  object.sayHello();
 
-    EXPECT_EQ(some_base_class_types_test_script, testScript(session->getScript()));
+  EXPECT_EQ(some_base_class_types_test_script,
+            testScript(session->getScript()));
 }

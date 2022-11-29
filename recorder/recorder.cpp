@@ -32,9 +32,9 @@ class ScriptRecordSessionImpl final : public ScriptRecordSession,
       reset();
       return _generator.getScript();
     } catch (...) {
-        reset();
-        _generator.discard();
-        throw;
+      reset();
+      _generator.discard();
+      throw;
     }
   }
 
@@ -50,9 +50,9 @@ class ScriptRecordSessionImpl final : public ScriptRecordSession,
   void onActionEnds(const action_id) override { --_nestingLevel; }
 
   void reset() {
-      _log.clear();
-      _nestingLevel = 0u;
-      _action_id = 1u;
+    _log.clear();
+    _nestingLevel = 0u;
+    _action_id = 1u;
   }
 
  private:
