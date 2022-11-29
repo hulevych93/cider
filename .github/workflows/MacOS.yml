@@ -50,6 +50,10 @@ jobs:
       # Run ctests
       working-directory: ${{github.workspace}}/build
       run: ctest
+      
+    - name: Get coverage
+      # Build your program with the given configuration
+      run: cmake --build ${{github.workspace}}/build --target coverage
           
     - name: Coveralls
       uses: coverallsapp/github-action@master
