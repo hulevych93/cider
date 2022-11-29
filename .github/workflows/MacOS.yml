@@ -40,3 +40,19 @@ jobs:
       # Run ctests
       working-directory: ${{github.workspace}}/build
       run: ctest
+      
+    - name: Prepare lcov tool
+      run: |
+          VERSION="1.14"
+          mkdir Iconv
+          cd Iconv
+          wget "https://github.com/linux-test-project/lcov/releases/download/v1.14/lcov-$VERSION.tar.gz"
+          tar -xzf "lcov-$VERSION.tar.gz"
+          cd "lcov-$VERSION"
+          sudo make install
+          
+    - name: Coveralls
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        path-to-lcov: ${{github.workspace}}/build/coverage.info
