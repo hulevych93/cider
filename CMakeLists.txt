@@ -20,6 +20,15 @@ add_subdirectory(thirdparty/swig)
 add_subdirectory(thirdparty/lua)
 add_subdirectory(thirdparty/boost)
 
+include(cmake/3rd/coverage.cmake)
+append_coverage_compiler_flags()
+
 add_subdirectory(models)
 add_subdirectory(recorder)
 add_subdirectory(scripting)
+
+setup_target_for_coverage_lcov(
+        NAME coverage
+        EXECUTABLE ctest
+        DEPENDENCIES models_test recorder_test
+        EXCLUDE "models/*")
