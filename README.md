@@ -1,5 +1,4 @@
 # gunit
-C++ unit testing framework
 
 ### CI and tests coverage
 
