@@ -27,6 +27,15 @@ jobs:
     steps:
     - uses: actions/checkout@v3
       
+    - name: Prepare lcov tool
+      run: |
+          mkdir lcov
+          cd lcov
+          wget "https://github.com/linux-test-project/lcov/archive/refs/tags/v1.16.tar.gz"
+          tar -xzf "v1.16.tar.gz"
+          cd "lcov-1.16"
+          sudo make install
+          
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
@@ -40,3 +49,13 @@ jobs:
       # Run ctests
       working-directory: ${{github.workspace}}/build
       run: ctest
+      
+    - name: Get coverage
+      # Build your program with the given configuration
+      run: cmake --build ${{github.workspace}}/build --target coverage
+          
+    - name: Coveralls
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        path-to-lcov: ${{github.workspace}}/build/coverage.info
