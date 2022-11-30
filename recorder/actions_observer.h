@@ -52,13 +52,9 @@ class ActionsObservable final {
   template <typename... Args>
   ActionScopeGuard notify(Args&&... args) {
     if (auto observer = _observer.lock()) {
-      try {
-        const auto Id =
-            observer->onActionBegins(makeAction(std::forward<Args>(args)...));
-        return ActionScopeGuard{Id, observer.get()};
-      } catch (const BadNumCast&) {
-        //...
-      }
+      const auto Id =
+          observer->onActionBegins(makeAction(std::forward<Args>(args)...));
+      return ActionScopeGuard{Id, observer.get()};
     }
     return ActionScopeGuard{null_action_id, nullptr};
   }

@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "action.h"
+#include "recorder/recorder.h"
 
 #include <memory>
 #include <string>
@@ -20,15 +21,6 @@ struct LanguageContext final {
   ParamCodeProducer paramProducer;
   FunctionCodeProducer funcProducer;
   BinaryOpCodeProducer binaryOpProducer;
-};
-
-struct ScriptGenerationError final : public std::exception {
-  explicit ScriptGenerationError(const char* msg);
-
-  const char* what() const _NOEXCEPT override { return _error.c_str(); }
-
- private:
-  std::string _error;
 };
 
 //` The `ScriptGenerator` class is intended for generating Lua script.

@@ -5,6 +5,15 @@
 namespace gunit {
 namespace recorder {
 
+struct ScriptGenerationError final : public std::exception {
+  explicit ScriptGenerationError(const char* msg);
+
+  const char* what() const _NOEXCEPT override { return _error.c_str(); }
+
+ private:
+  std::string _error;
+};
+
 class ScriptRecordSession {
  public:
   virtual ~ScriptRecordSession() = default;

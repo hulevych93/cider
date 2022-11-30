@@ -34,6 +34,7 @@ TEST_F(ParamsTestSuite, makeParamBool) {
 
 TEST_F(ParamsTestSuite, makeParamNil) {
   EXPECT_NO_THROW(std::get<Nil>(makeParam(Nil{})));
+  EXPECT_NO_THROW(std::get<Nil>(makeParam(std::nullopt)));
 }
 
 TEST_F(ParamsTestSuite, makeParamIntegral) {
@@ -123,4 +124,26 @@ TEST_F(ParamsTestSuite, paramVisitorBoolean) {
 
   ASSERT_EQ("true", visitor(true));
   ASSERT_EQ("false", visitor(false));
+}
+
+TEST_F(ParamsTestSuite, paramVisitorNil) {
+  ParamVisitor visitor;
+
+  ASSERT_EQ("nil", visitor(Nil{}));
+}
+
+TEST_F(ParamsTestSuite, stringParamEscapeTest) {
+  ParamVisitor visitor;
+
+  ASSERT_EQ("\'str\\n\'", visitor("str\n"));
+  ASSERT_EQ("\'str\\'\'", visitor("str\'"));
+  ASSERT_EQ("\'str\\r\'", visitor("str\r"));
+  ASSERT_EQ("\'str\\t\'", visitor("str\t"));
+  ASSERT_EQ("\'str\\\"\'", visitor("str\""));
+  ASSERT_EQ("\'str\\\\\\\\\'", visitor("str\\\\"));
+  ASSERT_EQ("\'str\\a\'", visitor("str\a"));
+  ASSERT_EQ("\'str\\b\'", visitor("str\b"));
+  ASSERT_EQ("\'str\\v\'", visitor("str\v"));
+  ASSERT_EQ("\'str\\f\'", visitor("str\f"));
+  ASSERT_EQ("\'str\\e\'", visitor("str\e"));
 }

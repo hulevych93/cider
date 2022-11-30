@@ -2,8 +2,6 @@
 
 #include <lua.hpp>
 
-#include <iostream>
-
 namespace gunit {
 namespace scripting {
 
@@ -14,12 +12,8 @@ LuaStateUPtr get_lua() {
 }
 
 bool executeScript(lua_State* L, const char* script) {
-  auto isSuccess = luaL_loadstring(L, script) == LUA_OK &&
-                   lua_pcall(L, 0, LUA_MULTRET, 0) == LUA_OK;
-  if (!isSuccess) {
-    std::cout << "Script execution error: " << lua_tostring(L, -1);
-  }
-  return isSuccess;
+  return luaL_loadstring(L, script) == LUA_OK &&
+         lua_pcall(L, 0, LUA_MULTRET, 0) == LUA_OK;
 }
 
 }  // namespace scripting

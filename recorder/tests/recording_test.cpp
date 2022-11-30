@@ -49,6 +49,14 @@ TEST_F(RecordingTestSuite, script_session_clears_test) {
             testScript(session->getScript()));
 }
 
+TEST_F(RecordingTestSuite, bad_num_cast_script_test) {
+  auto session = makeLuaRecordingSession(LuaExampleModuleName);
+
+  EXPECT_THROW(models::summ_these_two_params(
+                   0, std::numeric_limits<unsigned int>::max()),
+               BadNumCast);
+}
+
 const char* calculate_factorial_test_script =
     R"(example.calculate_factorial(5)
 example.calculate_factorial(6)
