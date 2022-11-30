@@ -57,6 +57,16 @@ TEST_F(RecordingTestSuite, bad_num_cast_script_test) {
                BadNumCast);
 }
 
+TEST_F(RecordingTestSuite, unreachable_object_error) {
+  models::SomeFinalClass object;
+
+  auto session = makeLuaRecordingSession(LuaExampleModuleName);
+
+  object.someMethod(23);
+
+  EXPECT_THROW(session->getScript(), ScriptGenerationError);
+}
+
 const char* calculate_factorial_test_script =
     R"(example.calculate_factorial(5)
 example.calculate_factorial(6)

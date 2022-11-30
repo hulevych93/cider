@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "action.h"
+#include "recorder/details/action.h"
 #include "recorder/recorder.h"
 
 #include <memory>
@@ -18,9 +18,9 @@ using FunctionCodeProducer = std::string (*)(const char* moduleName,
 using BinaryOpCodeProducer = std::string (*)(BinaryOpType);
 
 struct LanguageContext final {
-  ParamCodeProducer paramProducer;
-  FunctionCodeProducer funcProducer;
-  BinaryOpCodeProducer binaryOpProducer;
+  ParamCodeProducer paramProducer = nullptr;
+  FunctionCodeProducer funcProducer = nullptr;
+  BinaryOpCodeProducer binaryOpProducer = nullptr;
 };
 
 //` The `ScriptGenerator` class is intended for generating Lua script.

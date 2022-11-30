@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "actions_observer.h"
+#include "recorder/actions_observer.h"
 
 namespace gunit {
 namespace recorder {

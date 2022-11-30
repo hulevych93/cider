@@ -9,7 +9,7 @@ namespace recorder {
 template <>
 std::string produceAggregateCode(const models::AggregateDerived& aggregate,
                                  CodeSink& sink) {
-  ParamVisitor visitor;
+  lua::ParamVisitor visitor;
   std::string code;
   code += "local {var} = example.AggregateDerived()\n";
   code += "{var}.condition = " + visitor(aggregate.condition) + "\n";

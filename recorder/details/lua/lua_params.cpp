@@ -4,6 +4,7 @@
 
 namespace gunit {
 namespace recorder {
+namespace lua {
 
 namespace {
 
@@ -77,11 +78,11 @@ std::string ParamVisitor::operator()(const float value) const {
 
 std::string ParamVisitor::operator()(const char* param) const {
   return (*this)(std::string{param});
-}
+}  // LCOV_EXCL_LINE
 
 std::string ParamVisitor::operator()(const std::string& value) const {
   return std::string{"'" + escape(value) + "'"};
-}
+}  // LCOV_EXCL_LINE
 
 UserDataParamVisitor::UserDataParamVisitor(CodeSink& sink) : _sink(sink) {}
 
@@ -90,9 +91,10 @@ std::string UserDataParamVisitor::operator()(
   return (*value).generateCode(_sink);
 }
 
-std::string produceLuaCode(const Param& param, CodeSink& sink) {
+std::string produceParamCode(const Param& param, CodeSink& sink) {
   return std::visit(UserDataParamVisitor{sink}, param);
 }
 
+}  // namespace lua
 }  // namespace recorder
 }  // namespace gunit

@@ -10,6 +10,8 @@ namespace recorder {
 
 class CodeSink;
 
+namespace lua {
+
 //` The `ParamVisitor` produces code chunks to be used as arguments during
 //` code generation.
 struct ParamVisitor {
@@ -42,7 +44,8 @@ class UserDataParamVisitor final : public ParamVisitor {
   CodeSink& _sink;
 };
 
-std::string produceLuaCode(const Param& param, CodeSink& sink);
+std::string produceParamCode(const Param& param, CodeSink& sink);
 
+}  // namespace lua
 }  // namespace recorder
 }  // namespace gunit

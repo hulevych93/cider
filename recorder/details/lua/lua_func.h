@@ -5,7 +5,7 @@
 
 namespace gunit {
 namespace recorder {
-
+namespace lua {
 std::string produceFunctionCall(const char* moduleName,
                                 const char* name,
                                 size_t paramCount,
@@ -14,5 +14,6 @@ std::string produceFunctionCall(const char* moduleName,
 
 std::string produceBinaryOpCall(BinaryOpType);
 
+}  // namespace lua
 }  // namespace recorder
 }  // namespace gunit

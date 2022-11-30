@@ -10,7 +10,7 @@
 #include "utils/numeric_cast.h"
 #include "utils/type_utils.h"
 
-#include "sink.h"
+#include "recorder/details/sink.h"
 
 namespace gunit {
 namespace recorder {

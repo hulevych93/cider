@@ -1,7 +1,7 @@
 ﻿#pragma once
 
-#include "params.h"
-#include "sink.h"
+#include "recorder/details/params.h"
+#include "recorder/details/sink.h"
 
 #include <optional>
 #include <variant>
@@ -66,7 +66,7 @@ Action makeAction(const char* function,
   return Function{function,
                   details::packParams(std::forward<ParamsTypes>(params)...),
                   makeParam(std::forward<ReturnType>(retVal))};
-}
+}  // LCOV_EXCL_LINE
 
 template <typename ReturnType, typename... ParamsTypes>
 Action makeAction(const void* object,
@@ -76,12 +76,12 @@ Action makeAction(const void* object,
   return ClassMethod{object, methodName,
                      details::packParams(std::forward<ParamsTypes>(params)...),
                      makeParam(std::forward<ReturnType>(retVal))};
-}
+}  // LCOV_EXCL_LINE
 
 template <typename ParamType>
 Action makeAction(const void* object, BinaryOpType type, ParamType&& param) {
   return ClassBinaryOp{object, type, makeParam(std::forward<ParamType>(param))};
-}
+}  // LCOV_EXCL_LINE
 
 }  // namespace recorder
 }  // namespace gunit

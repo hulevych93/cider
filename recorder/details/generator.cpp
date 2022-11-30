@@ -70,7 +70,7 @@ class CodeSinkImpl : public CodeSink {
         _locals.emplace(object, suggested);
         return suggested;
       }
-      return it->second;
+      throw ScriptGenerationError{"Object can't be registered twice"};
     }
 
     return std::string{"object"} + "_" + std::to_string(++_localCounter);
@@ -82,8 +82,8 @@ class CodeSinkImpl : public CodeSink {
       return localIt->second;
     }
 
-    throw std::logic_error{"Object is unreachable."};
-  }
+    throw ScriptGenerationError{"Object is unreachable."};
+  }  // LCOV_EXCL_LINE
 
   void format(const std::string& codeTemplate,
               const fmt::dynamic_format_arg_store<fmt::format_context>& args) {
@@ -108,6 +108,33 @@ class CodeSinkImpl : public CodeSink {
   size_t _localCounter = 0u;
 };
 
+std::string nullParamProcessor(const Param&, CodeSink&) {
+  throw ScriptGenerationError{
+      "nullParamProcessor for script generator is set."};
+}  // LCOV_EXCL_LINE
+
+std::string nullFuncProcessor(const char*, const char*, size_t, bool, bool) {
+  throw ScriptGenerationError{"nullFuncProcessor for script generator is set."};
+}  // LCOV_EXCL_LINE
+
+std::string nullBinaryOpProcessor(BinaryOpType) {
+  throw ScriptGenerationError{
+      "nullBinaryOpProcessor for script generator is set."};
+}  // LCOV_EXCL_LINE
+
+LanguageContext fixLanguageContext(LanguageContext context) {
+  if (!context.funcProducer) {
+    context.funcProducer = nullFuncProcessor;
+  }
+  if (!context.paramProducer) {
+    context.paramProducer = nullParamProcessor;
+  }
+  if (!context.binaryOpProducer) {
+    context.binaryOpProducer = nullBinaryOpProcessor;
+  }
+  return context;
+}
+
 }  // namespace
 
 ScriptGenerationError::ScriptGenerationError(const char* msg)
@@ -116,7 +143,7 @@ ScriptGenerationError::ScriptGenerationError(const char* msg)
 ScriptGenerator::ScriptGenerator(std::string moduleName,
                                  const LanguageContext context)
     : _module(std::move(moduleName)),
-      _langContext(context),
+      _langContext(fixLanguageContext(context)),
       _sink(std::make_unique<CodeSinkImpl>()) {}
 
 ScriptGenerator::~ScriptGenerator() = default;

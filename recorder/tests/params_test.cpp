@@ -91,10 +91,15 @@ TEST_F(ParamsTestSuite, makeParamLongNumericBadCast) {
 TEST_F(ParamsTestSuite, makeParamDoubleNumericBadCast) {
   EXPECT_THROW(std::get<int>(makeParam(std::numeric_limits<double>::max())),
                BadNumCast);
+  try {
+    std::get<int>(makeParam(std::numeric_limits<double>::max()));
+  } catch (const BadNumCast& err) {
+    EXPECT_NE("", err.what());
+  }
 }
 
 TEST_F(ParamsTestSuite, paramVisitorFloating) {
-  ParamVisitor visitor;
+  lua::ParamVisitor visitor;
   const auto oldLocale = std::setlocale(LC_NUMERIC, nullptr);
   // Some platforms may not have the "De_de" locale.
   if (std::setlocale(LC_NUMERIC, "DE_de.utf-8")) {
@@ -106,34 +111,34 @@ TEST_F(ParamsTestSuite, paramVisitorFloating) {
 }
 
 TEST_F(ParamsTestSuite, paramVisitorInteger) {
-  ParamVisitor visitor;
+  lua::ParamVisitor visitor;
 
   ASSERT_EQ("12", visitor(12u));
   ASSERT_EQ("12", visitor(12));
 }
 
 TEST_F(ParamsTestSuite, paramVisitorString) {
-  ParamVisitor visitor;
+  lua::ParamVisitor visitor;
 
   ASSERT_EQ("\'str\'", visitor(std::string{"str"}));
   ASSERT_EQ("\'str\'", visitor("str"));
 }
 
 TEST_F(ParamsTestSuite, paramVisitorBoolean) {
-  ParamVisitor visitor;
+  lua::ParamVisitor visitor;
 
   ASSERT_EQ("true", visitor(true));
   ASSERT_EQ("false", visitor(false));
 }
 
 TEST_F(ParamsTestSuite, paramVisitorNil) {
-  ParamVisitor visitor;
+  lua::ParamVisitor visitor;
 
   ASSERT_EQ("nil", visitor(Nil{}));
 }
 
 TEST_F(ParamsTestSuite, stringParamEscapeTest) {
-  ParamVisitor visitor;
+  lua::ParamVisitor visitor;
 
   ASSERT_EQ("\'str\\n\'", visitor("str\n"));
   ASSERT_EQ("\'str\\'\'", visitor("str\'"));

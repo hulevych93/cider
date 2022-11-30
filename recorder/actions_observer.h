@@ -1,9 +1,6 @@
 ﻿#pragma once
 
-#include "details/action.h"
-
-#include "utils/numeric_cast.h"
-#include "utils/type_utils.h"
+#include "recorder/details/action.h"
 
 namespace gunit {
 namespace recorder {
