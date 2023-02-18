@@ -28,11 +28,15 @@ using namespace gunit;
 
 class RecordingTestSuite : public testing::Test {
  public:
-  static std::string testScript(const std::string& script) {
+  static void testScript(const char* expectedScript,
+                         ScriptRecordSessionPtr& session) {
+    const auto script = session->getScript();
+    session.reset();
+
     auto lState = get_lua();
     luaopen_example(lState.get());
+    EXPECT_EQ(expectedScript, script);
     EXPECT_TRUE(executeScript(lState.get(), script.c_str()));
-    return script;
   }
 };
 
@@ -45,12 +49,12 @@ TEST_F(RecordingTestSuite, script_session_clears_test) {
   EXPECT_EQ("example.calculate_factorial(5)\n", session->getScript());
 
   EXPECT_EQ(720, models::calculate_factorial(6));
-  EXPECT_EQ("example.calculate_factorial(6)\n",
-            testScript(session->getScript()));
+  EXPECT_EQ("example.calculate_factorial(6)\n", session->getScript());
 }
 
 TEST_F(RecordingTestSuite, bad_num_cast_script_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
+  (void)session;
 
   EXPECT_THROW(models::summ_these_two_params(
                    0, std::numeric_limits<unsigned int>::max()),
@@ -78,8 +82,8 @@ TEST_F(RecordingTestSuite, calculate_factorial_test) {
   EXPECT_EQ(120, models::calculate_factorial(5));
   EXPECT_EQ(720, models::calculate_factorial(6));
 
-  auto script = session->getScript();
-  EXPECT_EQ(calculate_factorial_test_script, testScript(script));
+  SCOPED_TRACE("calculate_factorial_test_script");
+  testScript(calculate_factorial_test_script, session);
 }
 
 const char* is_this_sparta_word_test_script =
@@ -93,8 +97,8 @@ TEST_F(RecordingTestSuite, is_this_sparta_word_test) {
   EXPECT_FALSE(models::is_this_sparta_word("something"));
   EXPECT_TRUE(models::is_this_sparta_word("sparta"));
 
-  auto script = session->getScript();
-  EXPECT_EQ(is_this_sparta_word_test_script, testScript(script));
+  SCOPED_TRACE("is_this_sparta_word_test_script");
+  testScript(is_this_sparta_word_test_script, session);
 }
 
 const char* function_test_aggregate_test_script =
@@ -110,8 +114,8 @@ TEST_F(RecordingTestSuite, function_test_aggregate_test) {
   models::Aggregate aggregateStruct{10, true};
   EXPECT_EQ(aggregateStruct, models::function_test_aggregate(aggregateStruct));
 
-  auto script = session->getScript();
-  EXPECT_EQ(function_test_aggregate_test_script, testScript(script));
+  SCOPED_TRACE("function_test_aggregate_test_script");
+  testScript(function_test_aggregate_test_script, session);
 }
 
 TEST_F(RecordingTestSuite, function_test_aggregate_ptr_test) {
@@ -121,8 +125,8 @@ TEST_F(RecordingTestSuite, function_test_aggregate_ptr_test) {
   EXPECT_EQ(&aggregateStruct,
             models::function_test_aggregate(&aggregateStruct));
 
-  auto script = session->getScript();
-  EXPECT_EQ(function_test_aggregate_test_script, testScript(script));
+  SCOPED_TRACE("function_test_aggregate_test_script");
+  testScript(function_test_aggregate_test_script, session);
 }
 
 TEST_F(RecordingTestSuite, function_test_aggregate_with_derived_test) {
@@ -131,8 +135,8 @@ TEST_F(RecordingTestSuite, function_test_aggregate_with_derived_test) {
   models::AggregateDerived aggregateStruct{10, true, 0.5};
   EXPECT_EQ(aggregateStruct, models::function_test_aggregate(aggregateStruct));
 
-  auto script = session->getScript();
-  EXPECT_EQ(function_test_aggregate_test_script, testScript(script));
+  SCOPED_TRACE("function_test_aggregate_test_script");
+  testScript(function_test_aggregate_test_script, session);
 }
 
 TEST_F(RecordingTestSuite, function_test_aggregate_ptr_with_derived_test) {
@@ -141,8 +145,8 @@ TEST_F(RecordingTestSuite, function_test_aggregate_ptr_with_derived_test) {
   models::AggregateDerived aggregateStruct{10, true, 0.5};
   models::function_test_aggregate(&aggregateStruct);
 
-  auto script = session->getScript();
-  EXPECT_EQ(function_test_aggregate_test_script, testScript(script));
+  SCOPED_TRACE("function_test_aggregate_test_script");
+  testScript(function_test_aggregate_test_script, session);
 }
 
 const char* function_test_aggregate_derived_test_script =
@@ -160,8 +164,8 @@ TEST_F(RecordingTestSuite, function_test_aggregate_derived_test) {
   EXPECT_EQ(aggregateStruct,
             models::function_test_aggregate_derived(aggregateStruct));
 
-  auto script = session->getScript();
-  EXPECT_EQ(function_test_aggregate_derived_test_script, testScript(script));
+  SCOPED_TRACE("function_test_aggregate_derived_test_script");
+  testScript(function_test_aggregate_derived_test_script, session);
 }
 
 TEST_F(RecordingTestSuite, function_test_aggregate_derived_ptr_test) {
@@ -170,8 +174,8 @@ TEST_F(RecordingTestSuite, function_test_aggregate_derived_ptr_test) {
   models::AggregateDerived aggregateStruct{10, true, 0.5};
   models::function_test_aggregate_derived(&aggregateStruct);
 
-  auto script = session->getScript();
-  EXPECT_EQ(function_test_aggregate_derived_test_script, testScript(script));
+  SCOPED_TRACE("function_test_aggregate_derived_test_script");
+  testScript(function_test_aggregate_derived_test_script, session);
 }
 
 const char* function_test_enumeration_test_script =
@@ -184,8 +188,8 @@ TEST_F(RecordingTestSuite, function_test_enumeration_test) {
   models::SomeEnumeration arg = models::SomeEnumeration::second_value;
   EXPECT_EQ(arg, models::function_test_enumeration(arg));
 
-  auto script = session->getScript();
-  EXPECT_EQ(function_test_enumeration_test_script, testScript(script));
+  SCOPED_TRACE("function_test_enumeration_test_script");
+  testScript(function_test_enumeration_test_script, session);
 }
 
 const char* summ_these_two_params_test_script =
@@ -197,8 +201,8 @@ TEST_F(RecordingTestSuite, summ_these_two_params_test) {
 
   EXPECT_EQ(22, models::summ_these_two_params(7, 15u));
 
-  auto script = session->getScript();
-  EXPECT_EQ(summ_these_two_params_test_script, testScript(script));
+  SCOPED_TRACE("summ_these_two_params_test_script");
+  testScript(summ_these_two_params_test_script, session);
 }
 
 TEST_F(RecordingTestSuite, class_construct_test) {
@@ -224,7 +228,8 @@ TEST_F(RecordingTestSuite, class_method_test) {
   models::SomeFinalClass object1;
   object1.someMethod(129);
 
-  EXPECT_EQ(class_method_test_script, testScript(session->getScript()));
+  SCOPED_TRACE("class_method_test_script");
+  testScript(class_method_test_script, session);
 }
 
 const char* function_test_class_construct_test_script =
@@ -238,8 +243,8 @@ TEST_F(RecordingTestSuite, function_test_class_construct_test) {
   models::SomeFinalClass object1(423, false);
   EXPECT_EQ(object1, function_test_class_construct(object1));
 
-  EXPECT_EQ(function_test_class_construct_test_script,
-            testScript(session->getScript()));
+  SCOPED_TRACE("function_test_class_construct_test_script");
+  testScript(function_test_class_construct_test_script, session);
 }
 
 TEST_F(RecordingTestSuite, function_test_class_construct_ptr_test) {
@@ -248,8 +253,8 @@ TEST_F(RecordingTestSuite, function_test_class_construct_ptr_test) {
   models::SomeFinalClass object1(423, false);
   function_test_class_construct(&object1);
 
-  EXPECT_EQ(function_test_class_construct_test_script,
-            testScript(session->getScript()));
+  SCOPED_TRACE("function_test_class_construct_test_script");
+  testScript(function_test_class_construct_test_script, session);
 }
 
 const char* class_is_reachable_after_copy_move_constuction_script =
@@ -265,8 +270,8 @@ TEST_F(RecordingTestSuite, class_copy_constuction_test) {
   auto object2 = object1;
   object2.someMethod(129);
 
-  EXPECT_EQ(class_is_reachable_after_copy_move_constuction_script,
-            testScript(session->getScript()));
+  SCOPED_TRACE("class_is_reachable_after_copy_move_constuction_script");
+  testScript(class_is_reachable_after_copy_move_constuction_script, session);
 }
 
 TEST_F(RecordingTestSuite, class_move_constuction_test) {
@@ -276,8 +281,8 @@ TEST_F(RecordingTestSuite, class_move_constuction_test) {
   auto object2 = std::move(object1);
   object2.someMethod(129);
 
-  EXPECT_EQ(class_is_reachable_after_copy_move_constuction_script,
-            testScript(session->getScript()));
+  SCOPED_TRACE("class_is_reachable_after_copy_move_constuction_script");
+  testScript(class_is_reachable_after_copy_move_constuction_script, session);
 }
 
 const char* class_is_reachable_after_copy_move_assignment_script =
@@ -295,8 +300,8 @@ TEST_F(RecordingTestSuite, class_copy_assignment_test) {
   object2 = object1;
   object2.someMethod(129);
 
-  EXPECT_EQ(class_is_reachable_after_copy_move_assignment_script,
-            testScript(session->getScript()));
+  SCOPED_TRACE("class_is_reachable_after_copy_move_assignment_script");
+  testScript(class_is_reachable_after_copy_move_assignment_script, session);
 }
 
 TEST_F(RecordingTestSuite, class_move_assignment_test) {
@@ -307,8 +312,8 @@ TEST_F(RecordingTestSuite, class_move_assignment_test) {
   object2 = std::move(object1);
   object2.someMethod(129);
 
-  EXPECT_EQ(class_is_reachable_after_copy_move_assignment_script,
-            testScript(session->getScript()));
+  SCOPED_TRACE("class_is_reachable_after_copy_move_assignment_script");
+  testScript(class_is_reachable_after_copy_move_assignment_script, session);
 }
 
 const char* function_make_class_construct_obj_test_script =
@@ -322,8 +327,8 @@ TEST_F(RecordingTestSuite, function_make_class_construct_obj_test) {
   auto object = models::function_make_class_construct_obj();
   object.someMethod(2345);
 
-  EXPECT_EQ(function_make_class_construct_obj_test_script,
-            testScript(session->getScript()));
+  SCOPED_TRACE("function_make_class_construct_obj_test_script");
+  testScript(function_make_class_construct_obj_test_script, session);
 }
 
 const char* function_make_class_construct_obj_ptr_test_script =
@@ -338,8 +343,8 @@ TEST_F(RecordingTestSuite, function_make_class_construct_obj_ptr_test) {
   object->someMethod(2345);
   delete object;
 
-  EXPECT_EQ(function_make_class_construct_obj_ptr_test_script,
-            testScript(session->getScript()));
+  SCOPED_TRACE("function_make_class_construct_obj_ptr_test_script");
+  testScript(function_make_class_construct_obj_ptr_test_script, session);
 }
 
 const char* some_interface_test_script =
@@ -353,7 +358,8 @@ TEST_F(RecordingTestSuite, some_interface_test) {
   models::StringInterface object{"abc"};
   object.isEmpty();
 
-  EXPECT_EQ(some_interface_test_script, testScript(session->getScript()));
+  SCOPED_TRACE("some_interface_test_script");
+  testScript(some_interface_test_script, session);
 }
 
 TEST_F(RecordingTestSuite, some_interface_test_ptr) {
@@ -363,7 +369,8 @@ TEST_F(RecordingTestSuite, some_interface_test_ptr) {
   object->isEmpty();
   delete object;
 
-  EXPECT_EQ(some_interface_test_script, testScript(session->getScript()));
+  SCOPED_TRACE("some_interface_test_script");
+  testScript(some_interface_test_script, session);
 }
 
 const char* some_other_interface_test_script =
@@ -378,7 +385,8 @@ TEST_F(RecordingTestSuite, some_other_interface_test_ptr) {
   object->isEmpty();
   delete object;
 
-  EXPECT_EQ(some_other_interface_test_script, testScript(session->getScript()));
+  SCOPED_TRACE("some_other_interface_test_script");
+  testScript(some_other_interface_test_script, session);
 }
 
 const char* make_some_interface_test_script =
@@ -393,7 +401,8 @@ TEST_F(RecordingTestSuite, make_some_interface_test) {
   object->isEmpty();
   delete object;
 
-  EXPECT_EQ(make_some_interface_test_script, testScript(session->getScript()));
+  SCOPED_TRACE("make_some_interface_test_script");
+  testScript(make_some_interface_test_script, session);
 }
 
 const char* derived_class_types_test_script =
@@ -407,7 +416,8 @@ TEST_F(RecordingTestSuite, derived_class_types_test) {
   models::SomeDerived object("false");
   object.sayGoodbye(2);
 
-  EXPECT_EQ(derived_class_types_test_script, testScript(session->getScript()));
+  SCOPED_TRACE("derived_class_types_test_script");
+  testScript(derived_class_types_test_script, session);
 }
 
 const char* some_base_class_types_test_script =
@@ -421,6 +431,6 @@ TEST_F(RecordingTestSuite, some_base_class_types_test) {
   models::SomeBase object("true");
   object.sayHello();
 
-  EXPECT_EQ(some_base_class_types_test_script,
-            testScript(session->getScript()));
+  SCOPED_TRACE("some_base_class_types_test_script");
+  testScript(some_base_class_types_test_script, session);
 }
