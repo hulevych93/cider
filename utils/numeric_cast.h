@@ -12,7 +12,7 @@ class BadNumCast final : public std::exception {
     _error += what;
   }
 
-  const char* what() const _NOEXCEPT override { return _error.c_str(); }
+  const char* what() const noexcept override { return _error.c_str(); }
 
  private:
   std::string _error;

@@ -14,8 +14,14 @@ set(SRC_DIR         ${GUNIT_SWIG_BUILD_DIR})
 gunit_3rd_party_common_cmake_options(CMAKE_OPTS)
 
 list(APPEND CMAKE_OPTS
+    -DWITH_PCRE=OFF
     -DCMAKE_INSTALL_PREFIX=${GUNIT_SWIG_PREFIX}
 )
+
+find_package(BISON)
+if(NOT BISON_FOUND)
+    message(FATAL_ERROR "Please, install BISON to be able to build SWIG")
+endif()
 
 function(gunit_generate_swig)
     set(OPTIONS EXTERNAL_RUNTIME)

@@ -2,6 +2,8 @@
 
 #include "recorder/actions_observer.h"
 
+#include <string.h>
+
 namespace gunit {
 namespace models {
 

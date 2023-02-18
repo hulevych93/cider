@@ -15,5 +15,6 @@ target_link_libraries(recorder_test
     scripting
     ${GTest_LIBRARIES}
     ${Fmt_LIBRARIES}
-    ${Lua_LIBRARIES})
-
+    ${Lua_LIBRARIES}
+    ${PLATFORM_LIBRARIES}
+)

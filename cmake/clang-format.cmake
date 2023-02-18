@@ -2,9 +2,6 @@
 
 if(NOT CLANGFORMAT_EXECUTABLE)
     find_program(CLANGFORMAT_EXECUTABLE "clang-format")
-    if(NOT CLANGFORMAT_EXECUTABLE)
-      message("ClangFormat: ${CLANGFORMAT_EXECUTABLE} not found...")
-    endif()
 endif()
 
 function(gunit_run_clang_format)

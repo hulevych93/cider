@@ -15,4 +15,6 @@ target_link_libraries(models_test
     scripting
     ${Fmt_LIBRARIES}
     ${GTest_LIBRARIES}
-    ${Lua_LIBRARIES})
+    ${Lua_LIBRARIES}
+    ${PLATFORM_LIBRARIES}
+)
