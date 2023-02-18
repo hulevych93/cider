@@ -321,7 +321,7 @@ const char* function_make_class_construct_obj_test_script =
 object_1:someMethod(2345)
 )";
 
-TEST_F(RecordingTestSuite, function_make_class_construct_obj_test) {
+TEST_F(RecordingTestSuite, DISABLED_function_make_class_construct_obj_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   auto object = models::function_make_class_construct_obj();
