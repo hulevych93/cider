@@ -57,3 +57,7 @@ include(${GUNIT_CMAKE_DIR}/sources.cmake)
 include(${GUNIT_CMAKE_DIR}/thirdparty.cmake)
 include(${GUNIT_CMAKE_DIR}/clang-format.cmake)
 
+if(UNIX)
+    set(PLATFORM_LIBRARIES dl pthread)
+endif()
+

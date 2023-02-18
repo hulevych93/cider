@@ -38,11 +38,6 @@ if(CMAKE_HOST_WIN32)
     endif()
 endif()
 
-set(COMPILER_FLAGS)
-if(UNIX AND NOT APPLE)
-    set(COMPILER_FLAGS cflags=${CMAKE_C_FLAGS} cxxflags=${CMAKE_CXX_FLAGS})
-endif()
-
 set(BJAM_COMMAND "${SRC_DIR}/b2${GUNIT_HOST_EXECUTABLE_SUFFIX}")
 
 set(BUILD_COMMAND_BASE
@@ -56,7 +51,6 @@ set(BUILD_COMMAND_BASE
         toolset=${BUILD_TOOLSET}-${BUILD_TOOLSET_VERSION}
         variant=${BUILD_VARIANT}
         threading=multi
-        ${COMPILER_FLAGS}
 )
 
 ExternalProject_Add(
