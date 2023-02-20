@@ -77,7 +77,7 @@ SomeFinalClass::SomeFinalClass(std::shared_ptr<SomeFinalClassImpl>&& impl)
 SomeFinalClass::SomeFinalClass(const SomeFinalClass& other) {
   try {
     _impl = std::make_shared<SomeFinalClassImpl>(*other._impl);
-    GUNIT_NOTIFY_CONSTRUCTOR(other);
+    GUNIT_NOTIFY_CONSTRUCTOR(other._impl.get());
   } catch (const std::exception&) {
     // ex.what() notify
     throw;
@@ -89,8 +89,7 @@ SomeFinalClass::SomeFinalClass(const SomeFinalClass& other) {
 
 SomeFinalClass::SomeFinalClass(SomeFinalClass&& other) {
   try {
-    _impl = std::make_shared<SomeFinalClassImpl>(std::move(*other._impl));
-    GUNIT_NOTIFY_CONSTRUCTOR(other);
+    _impl = std::move(other._impl);
   } catch (const std::exception&) {
     // ex.what() notify
     throw;
@@ -128,7 +127,7 @@ void SomeFinalClass::someMethod(const int newNumber) {
 
 SomeFinalClass& SomeFinalClass::operator=(const SomeFinalClass& other) {
   try {
-    GUNIT_NOTIFY_ASSIGNMENT(other);
+    GUNIT_NOTIFY_ASSIGNMENT(other._impl.get());
     (*_impl) = *other._impl;
   } catch (const std::exception&) {
     // ex.what() notify
@@ -142,7 +141,7 @@ SomeFinalClass& SomeFinalClass::operator=(const SomeFinalClass& other) {
 
 SomeFinalClass& SomeFinalClass::operator=(SomeFinalClass&& other) {
   try {
-    GUNIT_NOTIFY_ASSIGNMENT(other);
+    GUNIT_NOTIFY_ASSIGNMENT(other._impl.get());
     (*_impl) = std::move(*other._impl);
   } catch (const std::exception&) {
     // ex.what() notify
@@ -182,7 +181,7 @@ SomeFinalClass function_test_class_construct(const SomeFinalClass& arg) {
   try {
     auto object = function_test_class_construct_impl(*arg._impl);
     auto result = SomeFinalClass(std::make_shared<SomeFinalClassImpl>(object));
-    GUNIT_NOTIFY_FREE_FUNCTION(result, arg);
+    GUNIT_NOTIFY_FREE_FUNCTION(result._impl.get(), arg._impl.get());
     return result;
   } catch (const std::exception&) {
     // ex.what() notify
@@ -198,7 +197,7 @@ SomeFinalClass* function_test_class_construct(SomeFinalClass* arg) {
     auto object = function_test_class_construct_impl(arg->_impl.get());
     auto result =
         new SomeFinalClass(std::make_shared<SomeFinalClassImpl>(*object));
-    GUNIT_NOTIFY_FREE_FUNCTION(result, arg);
+    GUNIT_NOTIFY_FREE_FUNCTION(result->_impl.get(), arg->_impl.get());
     return result;
   } catch (const std::exception&) {
     // ex.what() notify
@@ -213,7 +212,7 @@ SomeFinalClass function_make_class_construct_obj() {
   try {
     auto object = function_make_class_construct_obj_impl();
     SomeFinalClass result(std::make_shared<SomeFinalClassImpl>(object));
-    GUNIT_NOTIFY_FREE_FUNCTION_NO_ARGS(result);
+    GUNIT_NOTIFY_FREE_FUNCTION_NO_ARGS(result._impl.get());
     return result;
   } catch (const std::exception&) {
     // ex.what() notify
@@ -229,7 +228,7 @@ SomeFinalClass* function_make_class_construct_obj_ptr() {
     auto object = function_make_class_construct_obj_ptr_impl();
     auto result =
         new SomeFinalClass(std::make_shared<SomeFinalClassImpl>(*object));
-    GUNIT_NOTIFY_FREE_FUNCTION_NO_ARGS(result);
+    GUNIT_NOTIFY_FREE_FUNCTION_NO_ARGS(result->_impl.get());
     return result;
   } catch (const std::exception&) {
     // ex.what() notify

@@ -257,7 +257,7 @@ TEST_F(RecordingTestSuite, function_test_class_construct_ptr_test) {
   testScript(function_test_class_construct_test_script, session);
 }
 
-const char* class_is_reachable_after_copy_move_constuction_script =
+const char* class_is_reachable_after_copy_constuction_script =
     R"(local object_1 = example.SomeFinalClass()
 local object_2 = example.SomeFinalClass(object_1)
 object_2:someMethod(129)
@@ -271,8 +271,13 @@ TEST_F(RecordingTestSuite, class_copy_constuction_test) {
   object2.someMethod(129);
 
   SCOPED_TRACE("class_is_reachable_after_copy_move_constuction_script");
-  testScript(class_is_reachable_after_copy_move_constuction_script, session);
+  testScript(class_is_reachable_after_copy_constuction_script, session);
 }
+
+const char* class_is_reachable_after_move_constuction_script =
+    R"(local object_1 = example.SomeFinalClass()
+object_1:someMethod(129)
+)";
 
 TEST_F(RecordingTestSuite, class_move_constuction_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
@@ -282,10 +287,10 @@ TEST_F(RecordingTestSuite, class_move_constuction_test) {
   object2.someMethod(129);
 
   SCOPED_TRACE("class_is_reachable_after_copy_move_constuction_script");
-  testScript(class_is_reachable_after_copy_move_constuction_script, session);
+  testScript(class_is_reachable_after_move_constuction_script, session);
 }
 
-const char* class_is_reachable_after_copy_move_assignment_script =
+const char* class_is_reachable_after_copy_assignment_script =
     R"(local object_1 = example.SomeFinalClass()
 local object_2 = example.SomeFinalClass()
 object_2 = object_1
@@ -301,8 +306,16 @@ TEST_F(RecordingTestSuite, class_copy_assignment_test) {
   object2.someMethod(129);
 
   SCOPED_TRACE("class_is_reachable_after_copy_move_assignment_script");
-  testScript(class_is_reachable_after_copy_move_assignment_script, session);
+  testScript(class_is_reachable_after_copy_assignment_script, session);
 }
+
+const char* class_is_reachable_after_copy_move_assignment_script =
+    R"(local object_1 = example.SomeFinalClass()
+local object_2 = example.SomeFinalClass()
+object_2 = object_1
+object_2:someMethod(129)
+)";
+
 
 TEST_F(RecordingTestSuite, class_move_assignment_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
@@ -321,7 +334,7 @@ const char* function_make_class_construct_obj_test_script =
 object_1:someMethod(2345)
 )";
 
-TEST_F(RecordingTestSuite, DISABLED_function_make_class_construct_obj_test) {
+TEST_F(RecordingTestSuite, function_make_class_construct_obj_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   auto object = models::function_make_class_construct_obj();

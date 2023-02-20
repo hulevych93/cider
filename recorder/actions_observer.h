@@ -76,27 +76,27 @@ class ActionsObservable final {
 
 #define GUNIT_NOTIFY_METHOD_NO_RETURN(...)                                    \
   auto scopeGuard = gunit::recorder::ActionsObservable::getInstance().notify( \
-      this, __FUNCTION__, std::nullopt, __VA_ARGS__);
+      _impl.get(), __FUNCTION__, std::nullopt, __VA_ARGS__);
 
 #define GUNIT_NOTIFY_METHOD_NO_ARGS(RETURN_VALUE)                             \
   auto scopeGuard = gunit::recorder::ActionsObservable::getInstance().notify( \
-      this, __FUNCTION__, RETURN_VALUE);
+      _impl.get(), __FUNCTION__, RETURN_VALUE);
 
 #define GUNIT_NOTIFY_METHOD(...)                                              \
   auto scopeGuard = gunit::recorder::ActionsObservable::getInstance().notify( \
-      this, __FUNCTION__, __VA_ARGS__);
+      _impl.get(), __FUNCTION__, __VA_ARGS__);
 
 #define GUNIT_NOTIFY_CONSTRUCTOR(...)                                         \
   auto scopeGuard = gunit::recorder::ActionsObservable::getInstance().notify( \
-      __FUNCTION__, this, __VA_ARGS__);
+      __FUNCTION__, _impl.get(), __VA_ARGS__);
 
 #define GUNIT_NOTIFY_CONSTRUCTOR_NO_ARGS                                      \
   auto scopeGuard = gunit::recorder::ActionsObservable::getInstance().notify( \
-      __FUNCTION__, this);
+      __FUNCTION__, _impl.get());
 
 #define GUNIT_NOTIFY_ASSIGNMENT(PARAM)                                        \
   auto scopeGuard = gunit::recorder::ActionsObservable::getInstance().notify( \
-      this, gunit::recorder::BinaryOpType::Assignment, PARAM);
+      _impl.get(), gunit::recorder::BinaryOpType::Assignment, PARAM);
 
 }  // namespace recorder
 }  // namespace gunit
