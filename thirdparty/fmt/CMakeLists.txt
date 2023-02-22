@@ -11,7 +11,7 @@ set(Fmt_LIBRARIES)
 
 foreach(TMP_Fmt_LIB_BASE IN LISTS Fmt_COMPONENTS)
     string(TOUPPER "${TMP_Fmt_LIB_BASE}" TMP_Fmt_LIB_BASE_UPPER)
-    prv_def_3rd_party_lib_name("Fmt"
+    prv_def_3rd_party_lib_path("Fmt"
                                ${TMP_Fmt_LIB_BASE}
                                GUNIT_FMT_${TMP_Fmt_LIB_BASE_UPPER}_LIB
                                FALSE)

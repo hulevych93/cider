@@ -76,7 +76,19 @@ endif()
 
 gunit_export_var(GUNIT_3RD_PARTY_LIB_DIR_SUFFIX ${GUNIT_3RD_PARTY_LIB_DIR_SUFFIX})
 
-function(prv_def_3rd_party_lib_name COMPONENT_NAME BASE_NAME FULL_LIB_NAME_OUT BUILD_AS_SHARED)
+function(prv_def_3rd_party_lib_name BASE_NAME FULL_LIB_NAME_OUT BUILD_AS_SHARED)
+    if(BUILD_AS_SHARED)
+        set(SUFFIX "${GUNIT_SHARED_LIB_NAME_SUFFIX}")
+    else()
+        set(SUFFIX "${GUNIT_STATIC_LIB_NAME_SUFFIX}")
+    endif()
+
+    set(FULL_LIB_NAME "${GUNIT_LIB_NAME_PREFIX}${BASE_NAME}${SUFFIX}")
+    set(${FULL_LIB_NAME_OUT} ${FULL_LIB_NAME} PARENT_SCOPE)
+endfunction()
+
+
+function(prv_def_3rd_party_lib_path COMPONENT_NAME BASE_NAME FULL_LIB_NAME_OUT BUILD_AS_SHARED)
     if(BUILD_AS_SHARED)
         set(SUFFIX "${GUNIT_SHARED_LIB_NAME_SUFFIX}")
     else()

@@ -11,7 +11,7 @@ set(Lua_LIBRARIES)
 
 foreach(TMP_Lua_LIB_BASE IN LISTS Lua_COMPONENTS)
     string(TOUPPER "${TMP_Lua_LIB_BASE}" TMP_Lua_LIB_BASE_UPPER)
-    prv_def_3rd_party_lib_name("Lua"
+    prv_def_3rd_party_lib_path("Lua"
                                ${TMP_Lua_LIB_BASE}
                                GUNIT_LUA_${TMP_Lua_LIB_BASE_UPPER}_LIB
                                FALSE)

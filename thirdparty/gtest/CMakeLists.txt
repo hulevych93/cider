@@ -11,7 +11,7 @@ set(GTest_LIBRARIES)
 
 foreach(TMP_GTEST_LIB_BASE IN LISTS GTest_COMPONENTS)
     string(TOUPPER "${TMP_GTEST_LIB_BASE}" TMP_GTEST_LIB_BASE_UPPER)
-    prv_def_3rd_party_lib_name("GTest"
+    prv_def_3rd_party_lib_path("GTest"
                                ${TMP_GTEST_LIB_BASE}
                                GUNIT_GTEST_${TMP_GTEST_LIB_BASE_UPPER}_LIB
                                FALSE)

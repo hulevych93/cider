@@ -316,7 +316,6 @@ object_2 = object_1
 object_2:someMethod(129)
 )";
 
-
 TEST_F(RecordingTestSuite, class_move_assignment_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
