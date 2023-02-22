@@ -1,9 +1,4 @@
 name: MacOS
-
-on:
-  push:
-    branches:
-      - default
       
   workflow_dispatch:
     inputs:
