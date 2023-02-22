@@ -19,6 +19,7 @@ add_subdirectory(thirdparty/fmt)
 add_subdirectory(thirdparty/swig)
 add_subdirectory(thirdparty/lua)
 add_subdirectory(thirdparty/boost)
+add_subdirectory(thirdparty/cppast)
 
 if(GUNIT_ENABLE_COVERAGE)
     if(NOT "${CMAKE_BUILD_TYPE}" STREQUAL "DEBUG")
@@ -31,6 +32,7 @@ endif()
 add_subdirectory(models)
 add_subdirectory(recorder)
 add_subdirectory(scripting)
+add_subdirectory(tools/gunit)
 
 if(GUNIT_ENABLE_COVERAGE)
   setup_target_for_coverage_lcov(

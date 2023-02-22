@@ -13,7 +13,8 @@ foreach(TMP_GTEST_LIB_BASE IN LISTS GTest_COMPONENTS)
     string(TOUPPER "${TMP_GTEST_LIB_BASE}" TMP_GTEST_LIB_BASE_UPPER)
     prv_def_3rd_party_lib_name("GTest"
                                ${TMP_GTEST_LIB_BASE}
-                               GUNIT_GTEST_${TMP_GTEST_LIB_BASE_UPPER}_LIB)
+                               GUNIT_GTEST_${TMP_GTEST_LIB_BASE_UPPER}_LIB
+                               FALSE)
 
     list(APPEND GTest_LIBRARIES "${GUNIT_GTEST_${TMP_GTEST_LIB_BASE_UPPER}_LIB}")
 endforeach()
@@ -39,6 +40,7 @@ ExternalProject_Add(
     STAMP_DIR               ${GUNIT_GTEST_PREFIX}/stamp
     # Download
     DOWNLOAD_DIR            ${GUNIT_3RD_PARTY_DOWNLOAD_DIR}
+    DOWNLOAD_EXTRACT_TIMESTAMP 0
     URL                     https://github.com/google/googletest/archive/release-1.10.0.tar.gz
     URL_MD5                 "ecd1fa65e7de707cd5c00bdac56022cd"
     # Configure

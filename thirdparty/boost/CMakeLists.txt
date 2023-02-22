@@ -60,6 +60,7 @@ ExternalProject_Add(
     STAMP_DIR           ${GUNIT_BOOST_INSTALL_PREFIX}/stamp
     # Download
     DOWNLOAD_DIR        ${GUNIT_3RD_PARTY_DOWNLOAD_DIR}
+    DOWNLOAD_EXTRACT_TIMESTAMP 0
     URL                 https://sourceforge.net/projects/boost/files/boost/1.70.0/boost_1_70_0.tar.bz2/download
     URL_MD5            "242ecc63507711d6706b9b0c0d0c7d4f"
     # Configure

@@ -68,6 +68,7 @@ ExternalProject_Add(
     STAMP_DIR               ${GUNIT_SWIG_PREFIX}/stamp
     # Download
     DOWNLOAD_DIR            ${GUNIT_3RD_PARTY_DOWNLOAD_DIR}
+    DOWNLOAD_EXTRACT_TIMESTAMP 0
     URL                     https://github.com/swig/swig/archive/refs/tags/v4.1.0.tar.gz
     URL_MD5                 "794433378154eb61270a3ac127d9c5f3"
     # Configure

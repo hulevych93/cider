@@ -13,7 +13,8 @@ foreach(TMP_Fmt_LIB_BASE IN LISTS Fmt_COMPONENTS)
     string(TOUPPER "${TMP_Fmt_LIB_BASE}" TMP_Fmt_LIB_BASE_UPPER)
     prv_def_3rd_party_lib_name("Fmt"
                                ${TMP_Fmt_LIB_BASE}
-                               GUNIT_FMT_${TMP_Fmt_LIB_BASE_UPPER}_LIB)
+                               GUNIT_FMT_${TMP_Fmt_LIB_BASE_UPPER}_LIB
+                               FALSE)
 
     list(APPEND Fmt_LIBRARIES "${GUNIT_FMT_${TMP_Fmt_LIB_BASE_UPPER}_LIB}")
 endforeach()
@@ -37,6 +38,7 @@ ExternalProject_Add(
     STAMP_DIR               ${GUNIT_FMT_PREFIX}/stamp
     # Download
     DOWNLOAD_DIR            ${GUNIT_3RD_PARTY_DOWNLOAD_DIR}
+    DOWNLOAD_EXTRACT_TIMESTAMP 0
     URL                     https://github.com/fmtlib/fmt/archive/refs/tags/9.0.0.tar.gz
     URL_MD5                 "d56c8b0612b049bb1854f07c8b133f3c"
     # Configure

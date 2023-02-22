@@ -13,7 +13,8 @@ foreach(TMP_Lua_LIB_BASE IN LISTS Lua_COMPONENTS)
     string(TOUPPER "${TMP_Lua_LIB_BASE}" TMP_Lua_LIB_BASE_UPPER)
     prv_def_3rd_party_lib_name("Lua"
                                ${TMP_Lua_LIB_BASE}
-                               GUNIT_LUA_${TMP_Lua_LIB_BASE_UPPER}_LIB)
+                               GUNIT_LUA_${TMP_Lua_LIB_BASE_UPPER}_LIB
+                               FALSE)
 
     list(APPEND Lua_LIBRARIES "${GUNIT_LUA_${TMP_Lua_LIB_BASE_UPPER}_LIB}")
 endforeach()
@@ -37,6 +38,7 @@ ExternalProject_Add(
     STAMP_DIR               ${GUNIT_LUA_PREFIX}/stamp
     # Download
     DOWNLOAD_DIR            ${GUNIT_3RD_PARTY_DOWNLOAD_DIR}
+    DOWNLOAD_EXTRACT_TIMESTAMP 0
     URL                     https://drive.google.com/uc?export=download&id=1xC3C4-TW2RTNqrYHGVcNr32lNbjXKqVQ
     URL_MD5                 "e505b44513201ee8401f0c056e0ec8fa"
     # Configure
