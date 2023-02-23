@@ -52,8 +52,6 @@ ExternalProject_Add(
     TMP_DIR                 ${TMP_DIR}
     STAMP_DIR               ${GUNIT_CPPAST_PREFIX}/stamp
     # Download
-    DOWNLOAD_DIR            ${GUNIT_3RD_PARTY_DOWNLOAD_DIR}
-    DOWNLOAD_EXTRACT_TIMESTAMP 0
     GIT_REPOSITORY          https://github.com/foonathan/cppast.git
     GIT_TAG                 3fb7c24
     # Configure

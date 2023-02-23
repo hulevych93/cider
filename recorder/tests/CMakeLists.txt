@@ -11,6 +11,7 @@ add_test(NAME "recorder_test" COMMAND recorder_test)
 
 target_link_libraries(recorder_test
     recorder
+    models_wrap
     models
     scripting
     ${GTest_LIBRARIES}
