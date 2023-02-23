@@ -4,13 +4,13 @@
 
 #include "scripting/interpreter.h"
 
-#include "models/aggregate_struct.h"
-#include "models/derived_agregate_types.h"
-#include "models/derived_class_types.h"
-#include "models/enum_test.h"
-#include "models/free_functions.h"
-#include "models/polymorphic_types.h"
-#include "models/some_final_class.h"
+#include "gunit-models/aggregate_struct.h"
+#include "gunit-models/derived_agregate_types.h"
+#include "gunit-models/derived_class_types.h"
+#include "gunit-models/enum_test.h"
+#include "gunit-models/free_functions.h"
+#include "gunit-models/polymorphic_types.h"
+#include "gunit-models/some_final_class.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,6 +24,7 @@ int luaopen_example(lua_State* L);
 
 using namespace gunit::recorder;
 using namespace gunit::scripting;
+using namespace gunit::models;
 using namespace gunit;
 
 class RecordingTestSuite : public testing::Test {
@@ -31,7 +32,6 @@ class RecordingTestSuite : public testing::Test {
   static void testScript(const char* expectedScript,
                          ScriptRecordSessionPtr& session) {
     const auto script = session->getScript();
-    session.reset();
 
     auto lState = get_lua();
     luaopen_example(lState.get());
@@ -45,10 +45,10 @@ constexpr const char* LuaExampleModuleName = "example";
 TEST_F(RecordingTestSuite, script_session_clears_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  EXPECT_EQ(120, models::calculate_factorial(5));
+  EXPECT_EQ(120, generated::calculate_factorial(5));
   EXPECT_EQ("example.calculate_factorial(5)\n", session->getScript());
 
-  EXPECT_EQ(720, models::calculate_factorial(6));
+  EXPECT_EQ(720, generated::calculate_factorial(6));
   EXPECT_EQ("example.calculate_factorial(6)\n", session->getScript());
 }
 
@@ -56,13 +56,13 @@ TEST_F(RecordingTestSuite, bad_num_cast_script_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
   (void)session;
 
-  EXPECT_THROW(models::summ_these_two_params(
+  EXPECT_THROW(generated::summ_these_two_params(
                    0, std::numeric_limits<unsigned int>::max()),
                BadNumCast);
 }
 
 TEST_F(RecordingTestSuite, unreachable_object_error) {
-  models::SomeFinalClass object;
+  generated::SomeFinalClass object;
 
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
@@ -79,8 +79,8 @@ example.calculate_factorial(6)
 TEST_F(RecordingTestSuite, calculate_factorial_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  EXPECT_EQ(120, models::calculate_factorial(5));
-  EXPECT_EQ(720, models::calculate_factorial(6));
+  EXPECT_EQ(120, generated::calculate_factorial(5));
+  EXPECT_EQ(720, generated::calculate_factorial(6));
 
   SCOPED_TRACE("calculate_factorial_test_script");
   testScript(calculate_factorial_test_script, session);
@@ -94,8 +94,8 @@ example.is_this_sparta_word('sparta')
 TEST_F(RecordingTestSuite, is_this_sparta_word_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  EXPECT_FALSE(models::is_this_sparta_word("something"));
-  EXPECT_TRUE(models::is_this_sparta_word("sparta"));
+  EXPECT_FALSE(generated::is_this_sparta_word("something"));
+  EXPECT_TRUE(generated::is_this_sparta_word("sparta"));
 
   SCOPED_TRACE("is_this_sparta_word_test_script");
   testScript(is_this_sparta_word_test_script, session);
@@ -111,8 +111,8 @@ example.function_test_aggregate(object_1)
 TEST_F(RecordingTestSuite, function_test_aggregate_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  models::Aggregate aggregateStruct{10, true};
-  EXPECT_EQ(aggregateStruct, models::function_test_aggregate(aggregateStruct));
+  Aggregate aggregateStruct{10, true};
+  EXPECT_EQ(aggregateStruct, generated::function_test_aggregate(aggregateStruct));
 
   SCOPED_TRACE("function_test_aggregate_test_script");
   testScript(function_test_aggregate_test_script, session);
@@ -121,9 +121,9 @@ TEST_F(RecordingTestSuite, function_test_aggregate_test) {
 TEST_F(RecordingTestSuite, function_test_aggregate_ptr_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  models::Aggregate aggregateStruct{10, true};
+  Aggregate aggregateStruct{10, true};
   EXPECT_EQ(&aggregateStruct,
-            models::function_test_aggregate(&aggregateStruct));
+            generated::function_test_aggregate(&aggregateStruct));
 
   SCOPED_TRACE("function_test_aggregate_test_script");
   testScript(function_test_aggregate_test_script, session);
@@ -132,8 +132,8 @@ TEST_F(RecordingTestSuite, function_test_aggregate_ptr_test) {
 TEST_F(RecordingTestSuite, function_test_aggregate_with_derived_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  models::AggregateDerived aggregateStruct{10, true, 0.5};
-  EXPECT_EQ(aggregateStruct, models::function_test_aggregate(aggregateStruct));
+  AggregateDerived aggregateStruct{10, true, 0.5};
+  EXPECT_EQ(aggregateStruct, generated::function_test_aggregate(aggregateStruct));
 
   SCOPED_TRACE("function_test_aggregate_test_script");
   testScript(function_test_aggregate_test_script, session);
@@ -142,8 +142,8 @@ TEST_F(RecordingTestSuite, function_test_aggregate_with_derived_test) {
 TEST_F(RecordingTestSuite, function_test_aggregate_ptr_with_derived_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  models::AggregateDerived aggregateStruct{10, true, 0.5};
-  models::function_test_aggregate(&aggregateStruct);
+  AggregateDerived aggregateStruct{10, true, 0.5};
+  generated::function_test_aggregate(&aggregateStruct);
 
   SCOPED_TRACE("function_test_aggregate_test_script");
   testScript(function_test_aggregate_test_script, session);
@@ -160,9 +160,9 @@ example.function_test_aggregate_derived(object_1)
 TEST_F(RecordingTestSuite, function_test_aggregate_derived_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  models::AggregateDerived aggregateStruct{10, true, 0.5};
+  AggregateDerived aggregateStruct{10, true, 0.5};
   EXPECT_EQ(aggregateStruct,
-            models::function_test_aggregate_derived(aggregateStruct));
+            generated::function_test_aggregate_derived(aggregateStruct));
 
   SCOPED_TRACE("function_test_aggregate_derived_test_script");
   testScript(function_test_aggregate_derived_test_script, session);
@@ -171,8 +171,8 @@ TEST_F(RecordingTestSuite, function_test_aggregate_derived_test) {
 TEST_F(RecordingTestSuite, function_test_aggregate_derived_ptr_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  models::AggregateDerived aggregateStruct{10, true, 0.5};
-  models::function_test_aggregate_derived(&aggregateStruct);
+  AggregateDerived aggregateStruct{10, true, 0.5};
+  generated::function_test_aggregate_derived(&aggregateStruct);
 
   SCOPED_TRACE("function_test_aggregate_derived_test_script");
   testScript(function_test_aggregate_derived_test_script, session);
@@ -185,8 +185,8 @@ const char* function_test_enumeration_test_script =
 TEST_F(RecordingTestSuite, function_test_enumeration_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  models::SomeEnumeration arg = models::SomeEnumeration::second_value;
-  EXPECT_EQ(arg, models::function_test_enumeration(arg));
+  SomeEnumeration arg = SomeEnumeration::second_value;
+  EXPECT_EQ(arg, generated::function_test_enumeration(arg));
 
   SCOPED_TRACE("function_test_enumeration_test_script");
   testScript(function_test_enumeration_test_script, session);
@@ -199,7 +199,7 @@ const char* summ_these_two_params_test_script =
 TEST_F(RecordingTestSuite, summ_these_two_params_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  EXPECT_EQ(22, models::summ_these_two_params(7, 15u));
+  EXPECT_EQ(22, generated::summ_these_two_params(7, 15u));
 
   SCOPED_TRACE("summ_these_two_params_test_script");
   testScript(summ_these_two_params_test_script, session);
@@ -208,11 +208,11 @@ TEST_F(RecordingTestSuite, summ_these_two_params_test) {
 TEST_F(RecordingTestSuite, class_construct_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  models::SomeFinalClass object1;
+  generated::SomeFinalClass object1;
   EXPECT_EQ("local object_1 = example.SomeFinalClass()\n",
             session->getScript());
 
-  models::SomeFinalClass object2(125, true);
+  generated::SomeFinalClass object2(125, true);
   EXPECT_EQ("local object_1 = example.SomeFinalClass(125, true)\n",
             session->getScript());
 }
@@ -225,7 +225,7 @@ object_1:someMethod(129)
 TEST_F(RecordingTestSuite, class_method_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  models::SomeFinalClass object1;
+  generated::SomeFinalClass object1;
   object1.someMethod(129);
 
   SCOPED_TRACE("class_method_test_script");
@@ -240,7 +240,7 @@ local object_2 = example.function_test_class_construct(object_1)
 TEST_F(RecordingTestSuite, function_test_class_construct_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  models::SomeFinalClass object1(423, false);
+  generated::SomeFinalClass object1(423, false);
   EXPECT_EQ(object1, function_test_class_construct(object1));
 
   SCOPED_TRACE("function_test_class_construct_test_script");
@@ -250,7 +250,7 @@ TEST_F(RecordingTestSuite, function_test_class_construct_test) {
 TEST_F(RecordingTestSuite, function_test_class_construct_ptr_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  models::SomeFinalClass object1(423, false);
+  generated::SomeFinalClass object1(423, false);
   function_test_class_construct(&object1);
 
   SCOPED_TRACE("function_test_class_construct_test_script");
@@ -266,7 +266,7 @@ object_2:someMethod(129)
 TEST_F(RecordingTestSuite, class_copy_constuction_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  models::SomeFinalClass object1;
+  generated::SomeFinalClass object1;
   auto object2 = object1;
   object2.someMethod(129);
 
@@ -282,7 +282,7 @@ object_1:someMethod(129)
 TEST_F(RecordingTestSuite, class_move_constuction_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  models::SomeFinalClass object1;
+  generated::SomeFinalClass object1;
   auto object2 = std::move(object1);
   object2.someMethod(129);
 
@@ -300,8 +300,8 @@ object_2:someMethod(129)
 TEST_F(RecordingTestSuite, class_copy_assignment_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  models::SomeFinalClass object1;
-  models::SomeFinalClass object2;
+  generated::SomeFinalClass object1;
+  generated::SomeFinalClass object2;
   object2 = object1;
   object2.someMethod(129);
 
@@ -319,8 +319,8 @@ object_2:someMethod(129)
 TEST_F(RecordingTestSuite, class_move_assignment_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  models::SomeFinalClass object1;
-  models::SomeFinalClass object2;
+  generated::SomeFinalClass object1;
+  generated::SomeFinalClass object2;
   object2 = std::move(object1);
   object2.someMethod(129);
 
@@ -336,7 +336,7 @@ object_1:someMethod(2345)
 TEST_F(RecordingTestSuite, function_make_class_construct_obj_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  auto object = models::function_make_class_construct_obj();
+  auto object = generated::function_make_class_construct_obj();
   object.someMethod(2345);
 
   SCOPED_TRACE("function_make_class_construct_obj_test_script");
@@ -351,7 +351,7 @@ object_1:someMethod(2345)
 TEST_F(RecordingTestSuite, function_make_class_construct_obj_ptr_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  auto object = models::function_make_class_construct_obj_ptr();
+  auto object = generated::function_make_class_construct_obj_ptr();
   object->someMethod(2345);
   delete object;
 
@@ -367,7 +367,7 @@ object_1:isEmpty()
 TEST_F(RecordingTestSuite, some_interface_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  models::StringInterface object{"abc"};
+  generated::StringInterface object{"abc"};
   object.isEmpty();
 
   SCOPED_TRACE("some_interface_test_script");
@@ -377,7 +377,7 @@ TEST_F(RecordingTestSuite, some_interface_test) {
 TEST_F(RecordingTestSuite, some_interface_test_ptr) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  models::StringInterface* object = new models::StringInterface{"abc"};
+  generated::StringInterface* object = new generated::StringInterface{"abc"};
   object->isEmpty();
   delete object;
 
@@ -393,7 +393,7 @@ object_1:isEmpty()
 TEST_F(RecordingTestSuite, some_other_interface_test_ptr) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  models::StringInterface* object = new models::OtherStringInterface{false};
+  generated::StringInterface* object = new generated::OtherStringInterface{false};
   object->isEmpty();
   delete object;
 
@@ -409,7 +409,7 @@ object_1:isEmpty()
 TEST_F(RecordingTestSuite, make_some_interface_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  models::SomeInterface* object = models::makeSomeInterface("false");
+  generated::SomeInterface* object = generated::makeSomeInterface("false");
   object->isEmpty();
   delete object;
 
@@ -425,7 +425,7 @@ object_1:sayGoodbye(2)
 TEST_F(RecordingTestSuite, derived_class_types_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  models::SomeDerived object("false");
+  generated::SomeDerived object("false");
   object.sayGoodbye(2);
 
   SCOPED_TRACE("derived_class_types_test_script");
@@ -440,7 +440,7 @@ object_1:sayHello()
 TEST_F(RecordingTestSuite, some_base_class_types_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  models::SomeBase object("true");
+  generated::SomeBase object("true");
   object.sayHello();
 
   SCOPED_TRACE("some_base_class_types_test_script");

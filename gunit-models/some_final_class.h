@@ -1,9 +1,10 @@
 #pragma once
 
-#include <memory>
+#include "models/some_final_class.h"
 
 namespace gunit {
 namespace models {
+namespace generated {
 
 class SomeFinalClass final {
  public:
@@ -20,18 +21,18 @@ class SomeFinalClass final {
   bool operator==(const SomeFinalClass& that) const;
   bool operator!=(const SomeFinalClass& that) const;
 
-private:
- int _number = 0;
- bool _condition = false;
+  SomeFinalClass(std::shared_ptr<models::SomeFinalClass>&& impl);
+
+  // private:
+  std::shared_ptr<models::SomeFinalClass> _impl;
 };
 
-// function to test private constructed user data as parameter and return value
 SomeFinalClass function_test_class_construct(const SomeFinalClass& arg);
 SomeFinalClass* function_test_class_construct(SomeFinalClass* arg);
 
-// function to test object construction inside api call
 SomeFinalClass function_make_class_construct_obj();
 SomeFinalClass* function_make_class_construct_obj_ptr();
 
-}  // namespace models
-}  // namespace gunit
+} // namespace generated
+} // namespace models
+} // namespace gunit

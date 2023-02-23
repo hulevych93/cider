@@ -6,22 +6,15 @@
 namespace gunit {
 namespace models {
 
-class SomeBaseImpl;
-
 class SomeBase {
  public:
   SomeBase(const char* str);
 
   std::string sayHello() const;
 
-  SomeBase(std::shared_ptr<SomeBaseImpl> impl);
-  void setImpl(std::shared_ptr<SomeBaseImpl> impl);
-
  private:
-  std::shared_ptr<SomeBaseImpl> _impl;
+  std::string _impl;
 };
-
-class SomeDerivedImpl;
 
 class SomeDerived final : public SomeBase {
  public:
@@ -29,11 +22,8 @@ class SomeDerived final : public SomeBase {
 
   std::string sayGoodbye(int times) const;
 
-  SomeDerived(std::shared_ptr<SomeDerivedImpl> impl);
-  void setImpl(std::shared_ptr<SomeDerivedImpl> impl);
-
- private:
-  std::shared_ptr<SomeDerivedImpl> _impl;
+private:
+  std::string _impl;
 };
 
 }  // namespace models
