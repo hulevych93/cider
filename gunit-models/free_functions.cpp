@@ -61,6 +61,6 @@ int summ_these_two_params(int first, unsigned long second) {
   }
 }
 
-} // namespace generated
-} // namespace models
-} // namespace gunit
+}  // namespace generated
+}  // namespace models
+}  // namespace gunit

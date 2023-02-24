@@ -9,6 +9,6 @@ namespace generated {
 AggregateDerived function_test_aggregate_derived(const AggregateDerived& arg);
 AggregateDerived* function_test_aggregate_derived(AggregateDerived* arg);
 
-} // namespace generated
-} // namespace models
-} // namespace gunit
+}  // namespace generated
+}  // namespace models
+}  // namespace gunit

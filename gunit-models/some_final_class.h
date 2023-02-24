@@ -33,6 +33,6 @@ SomeFinalClass* function_test_class_construct(SomeFinalClass* arg);
 SomeFinalClass function_make_class_construct_obj();
 SomeFinalClass* function_make_class_construct_obj_ptr();
 
-} // namespace generated
-} // namespace models
-} // namespace gunit
+}  // namespace generated
+}  // namespace models
+}  // namespace gunit

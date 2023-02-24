@@ -19,7 +19,7 @@ std::string produceAggregateCode(const models::SomeEnumeration& that,
   return {};
 }
 
-} // namespace recorder
+}  // namespace recorder
 
 namespace models {
 namespace generated {
@@ -38,6 +38,6 @@ SomeEnumeration function_test_enumeration(const SomeEnumeration arg) {
   }
 }
 
-} // namespace generated
-} // namespace models
-} // namespace gunit
+}  // namespace generated
+}  // namespace models
+}  // namespace gunit

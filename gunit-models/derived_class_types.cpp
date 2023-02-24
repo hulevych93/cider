@@ -43,6 +43,6 @@ void SomeDerived::setImpl(std::shared_ptr<models::SomeDerived> impl) {
   _impl = impl;
 }
 
-} // namespace generated
-} // namespace models
-} // namespace gunit
+}  // namespace generated
+}  // namespace models
+}  // namespace gunit

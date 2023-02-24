@@ -128,7 +128,8 @@ bool SomeFinalClass::operator!=(const SomeFinalClass& that) const {
 SomeFinalClass function_test_class_construct(const SomeFinalClass& arg) {
   try {
     auto object = models::function_test_class_construct(*arg._impl);
-    auto result = SomeFinalClass(std::make_shared<models::SomeFinalClass>(object));
+    auto result =
+        SomeFinalClass(std::make_shared<models::SomeFinalClass>(object));
     GUNIT_NOTIFY_FREE_FUNCTION(result._impl.get(), arg._impl.get());
     return result;
   } catch (const std::exception&) {
@@ -187,6 +188,6 @@ SomeFinalClass* function_make_class_construct_obj_ptr() {
   }
 }
 
-} // namespace generated
-} // namespace models
-} // namespace gunit
+}  // namespace generated
+}  // namespace models
+}  // namespace gunit

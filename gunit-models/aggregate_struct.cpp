@@ -17,7 +17,7 @@ std::string produceAggregateCode(const models::Aggregate& aggregate,
   return sink.processLocalVar(std::move(code));
 }
 
-} // namespace recorder
+}  // namespace recorder
 
 namespace models {
 namespace generated {
@@ -50,6 +50,6 @@ Aggregate* function_test_aggregate(Aggregate* arg) {
   }
 }
 
-} // namespace generated
-} // namespace models
-} // namespace gunit
+}  // namespace generated
+}  // namespace models
+}  // namespace gunit

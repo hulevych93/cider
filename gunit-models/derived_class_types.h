@@ -32,6 +32,6 @@ class SomeDerived final : public SomeBase {
   std::shared_ptr<models::SomeDerived> _impl;
 };
 
-} // namespace generated
-} // namespace models
-} // namespace gunit
+}  // namespace generated
+}  // namespace models
+}  // namespace gunit

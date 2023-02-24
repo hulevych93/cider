@@ -15,7 +15,7 @@ class SomeInterface {
   SomeInterface(std::shared_ptr<models::SomeInterface> impl);
   void setImpl(std::shared_ptr<models::SomeInterface> impl);
 
-private:
+ private:
   std::shared_ptr<models::SomeInterface> _impl;
 };
 
@@ -44,6 +44,6 @@ class OtherStringInterface final : public StringInterface {
 
 SomeInterface* makeSomeInterface(const char* str);
 
-} // namespace generated
-} // namespace models
-} // namespace gunit
+}  // namespace generated
+}  // namespace models
+}  // namespace gunit

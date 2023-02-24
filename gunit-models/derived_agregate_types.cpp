@@ -49,6 +49,6 @@ AggregateDerived* function_test_aggregate_derived(AggregateDerived* arg) try {
   throw;
 }
 
-} // namespace generated
-} // namespace models
-} // namespace gunit
+}  // namespace generated
+}  // namespace models
+}  // namespace gunit

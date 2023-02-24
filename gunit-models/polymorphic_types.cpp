@@ -24,7 +24,7 @@ void StringInterface::setImpl(std::shared_ptr<models::StringInterface> impl) {
   _impl = impl;
 }
 
-StringInterface::StringInterface(const char* str)   {
+StringInterface::StringInterface(const char* str) {
   _impl = std::make_shared<models::StringInterface>(str);
   GUNIT_NOTIFY_CONSTRUCTOR(str);
 }
@@ -50,12 +50,13 @@ void OtherStringInterface::setImpl(
 }
 
 SomeInterface* makeSomeInterface(const char* str) {
-  auto impl = std::shared_ptr<models::SomeInterface>(models::makeSomeInterface(str));
+  auto impl =
+      std::shared_ptr<models::SomeInterface>(models::makeSomeInterface(str));
   auto result = new SomeInterface(impl);
   GUNIT_NOTIFY_FREE_FUNCTION(impl.get(), str);
   return result;
 }
 
-} // namespace generated
-} // namespace models
-} // namespace gunit
+}  // namespace generated
+}  // namespace models
+}  // namespace gunit

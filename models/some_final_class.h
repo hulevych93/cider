@@ -20,9 +20,9 @@ class SomeFinalClass final {
   bool operator==(const SomeFinalClass& that) const;
   bool operator!=(const SomeFinalClass& that) const;
 
-private:
- int _number = 0;
- bool _condition = false;
+ private:
+  int _number = 0;
+  bool _condition = false;
 };
 
 // function to test private constructed user data as parameter and return value

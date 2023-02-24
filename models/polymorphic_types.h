@@ -17,8 +17,8 @@ class StringInterface : public SomeInterface {
   StringInterface(const char* str);
   bool isEmpty() const override;
 
-private:
- std::string _impl;
+ private:
+  std::string _impl;
 };
 
 class OtherStringInterface final : public StringInterface {

@@ -112,7 +112,8 @@ TEST_F(RecordingTestSuite, function_test_aggregate_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   Aggregate aggregateStruct{10, true};
-  EXPECT_EQ(aggregateStruct, generated::function_test_aggregate(aggregateStruct));
+  EXPECT_EQ(aggregateStruct,
+            generated::function_test_aggregate(aggregateStruct));
 
   SCOPED_TRACE("function_test_aggregate_test_script");
   testScript(function_test_aggregate_test_script, session);
@@ -133,7 +134,8 @@ TEST_F(RecordingTestSuite, function_test_aggregate_with_derived_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   AggregateDerived aggregateStruct{10, true, 0.5};
-  EXPECT_EQ(aggregateStruct, generated::function_test_aggregate(aggregateStruct));
+  EXPECT_EQ(aggregateStruct,
+            generated::function_test_aggregate(aggregateStruct));
 
   SCOPED_TRACE("function_test_aggregate_test_script");
   testScript(function_test_aggregate_test_script, session);
@@ -393,7 +395,8 @@ object_1:isEmpty()
 TEST_F(RecordingTestSuite, some_other_interface_test_ptr) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  generated::StringInterface* object = new generated::OtherStringInterface{false};
+  generated::StringInterface* object =
+      new generated::OtherStringInterface{false};
   object->isEmpty();
   delete object;
 

@@ -3,13 +3,11 @@
 namespace gunit {
 namespace models {
 
-AggregateDerived function_test_aggregate_derived(
-    const AggregateDerived& arg) {
+AggregateDerived function_test_aggregate_derived(const AggregateDerived& arg) {
   return arg;
 }
 
-AggregateDerived* function_test_aggregate_derived(
-    AggregateDerived* arg) {
+AggregateDerived* function_test_aggregate_derived(AggregateDerived* arg) {
   return arg;
 }
 

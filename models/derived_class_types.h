@@ -22,7 +22,7 @@ class SomeDerived final : public SomeBase {
 
   std::string sayGoodbye(int times) const;
 
-private:
+ private:
   std::string _impl;
 };
 
