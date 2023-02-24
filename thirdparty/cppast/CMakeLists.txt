@@ -54,6 +54,7 @@ ExternalProject_Add(
     # Download
     GIT_REPOSITORY          https://github.com/foonathan/cppast.git
     GIT_TAG                 3fb7c24
+    UPDATE_DISCONNECTED     1
     # Configure
     SOURCE_DIR              ${SRC_DIR}
     CMAKE_ARGS              ${CMAKE_OPTS}

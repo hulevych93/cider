@@ -18,8 +18,9 @@ add_subdirectory(thirdparty/gtest)
 add_subdirectory(thirdparty/fmt)
 add_subdirectory(thirdparty/swig)
 add_subdirectory(thirdparty/lua)
-add_subdirectory(thirdparty/boost)
+add_subdirectory(thirdparty/boost) #TODO get rid off boost
 add_subdirectory(thirdparty/cppast)
+add_subdirectory(thirdparty/cxxopts)
 
 if(GUNIT_ENABLE_COVERAGE)
     if(NOT "${CMAKE_BUILD_TYPE}" STREQUAL "DEBUG")

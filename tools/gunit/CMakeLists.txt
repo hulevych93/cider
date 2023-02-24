@@ -2,6 +2,7 @@ gunit_project(gunit-tool)
 
 include_directories(.
     ${CppAst_INCLUDE_DIRS}
+    ${CxxOpts_INCLUDE_DIRS}
 )
 
 add_executable(gunit main.cpp)
