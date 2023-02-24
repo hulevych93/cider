@@ -3,6 +3,9 @@
 namespace gunit {
 namespace models {
 
+// Function with no return and no args
+void some_function_no_return_no_args();
+
 // Function with no return
 void some_function_no_return(bool arg);
 

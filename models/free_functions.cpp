@@ -4,6 +4,7 @@
 
 namespace gunit {
 namespace models {
+void some_function_no_return_no_args() {}
 
 void some_function_no_return(bool) {}
 
