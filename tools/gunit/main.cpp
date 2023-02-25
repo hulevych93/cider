@@ -178,12 +178,12 @@ void printConstructorNotify(std::ostream& os, const bool hasNoArgs) {
   if (hasNoArgs) {
     os << "_NO_ARGS";
   }
-  os << "(";
 }
 
 void printBaseClassesConstructors(
     std::ostream& os,
-    const detail::iteratable_intrusive_list<cpp_base_class>& bases) {
+    const detail::iteratable_intrusive_list<cpp_base_class>& bases,
+    const char* scope) {
   if (bases.empty()) {
     return;
   }
@@ -196,7 +196,7 @@ void printBaseClassesConstructors(
     } else {
       first = false;
     }
-    os << base.name() << "(nullptr)";
+    os << base.name() << "(std::shared_ptr<" << scope << "::" << base.name() << ">())";
   }
 }
 
@@ -212,8 +212,11 @@ void printConstructorBody(std::ostream& os,
   os << ");\n";
 
   printConstructorNotify(os, params.empty());
-  printParams(os, params, false);
-  os << ");\n";
+  if(!params.empty()) {
+      os << "(";
+      printParams(os, params, false);
+      os << ");\n";
+  }
 
   os << CatchBlock << "}\n";
 }
@@ -249,6 +252,16 @@ void printClass(std::ostream& os,
     }
     printBaseClasses(os, e.bases());
     os << " {\n";
+    os << "public:\n";
+    os << e.name() << "(std::shared_ptr<" << scope << "::" << e.name() << "> impl) \n";
+    printBaseClassesConstructors(os, e.bases(), scope);
+    if(!e.bases().empty()) {
+        os << ", ";
+    } else {
+        os << ": ";
+    }
+    os << "_impl(std::move(impl))\n {}\n";
+    os << "void setImpl(std::shared_ptr<" << scope << "::" << e.name() << "> impl)\n { _impl = std::move(impl); }\n";
   } else {
     if (!isPrivate) {
       os << "private:\n";
@@ -298,6 +311,9 @@ struct CodeGenerator {
   }
 
   void handleClass(const cpp_class& e, const bool enter) {
+      if(e.class_kind() != cpp_class_kind::class_t) { //TODO: rework
+          return; }
+
     if (enter) {
       m_class = std::addressof(e);
     } else {
@@ -315,7 +331,7 @@ struct CodeGenerator {
 
  protected:
   NamespacesStack m_namespaces;
-  const cpp_class* m_class;  // TODO: stack to support nested classes
+  const cpp_class* m_class = nullptr;  // TODO: stack to support nested classes
 
   std::ostream& m_out;
 };
@@ -333,7 +349,11 @@ struct HeaderCodeGenerator final : CodeGenerator {
   }
 
   void handleClass(const cpp_class& e, const bool enter) {
+    if(e.class_kind() != cpp_class_kind::class_t) { //TODO: rework
+        return; }
+
     CodeGenerator::handleClass(e, enter);
+
     if (enter) {
       m_namespaces(m_out);
     }
@@ -341,11 +361,15 @@ struct HeaderCodeGenerator final : CodeGenerator {
   }
 
   void handleConstructor(const cpp_constructor& e) {
+    if(m_class == nullptr) { return; }
+
     assert(m_class->name() == e.name());
     printConstructorDecl(m_out, e, false);
   }
 
   void handleAccess(const cpp_entity& e) {
+    if(m_class == nullptr) { return; }
+
     assert(e.kind() == cpp_entity_kind::access_specifier_t);
     if (m_access != e.name()) {
       m_access = e.name();
@@ -362,6 +386,8 @@ struct HeaderCodeGenerator final : CodeGenerator {
   }
 
   void handleMemberFunction(const cpp_member_function& e) {
+    if(m_class == nullptr) { return; }
+
     m_namespaces(m_out);
 
     printFunctionDecl(m_out, e, nullptr, true);
@@ -386,11 +412,13 @@ struct SourceCodeGenerator final : CodeGenerator {
   }
 
   void handleConstructor(const cpp_constructor& e) {
+      if(m_class == nullptr) { return; }
+
     assert(m_class->name() == e.name());
     m_namespaces(m_out);
 
     printConstructorDecl(m_out, e, true);
-    printBaseClassesConstructors(m_out, m_class->bases());
+    printBaseClassesConstructors(m_out, m_class->bases(), m_namespaces.top());
     printConstructorBody(m_out, e, m_namespaces.top());
 
     m_out << std::endl;
@@ -406,6 +434,8 @@ struct SourceCodeGenerator final : CodeGenerator {
   }
 
   void handleMemberFunction(const cpp_member_function& e) {
+    if(m_class == nullptr) { return; }
+
     m_namespaces(m_out);
 
     printFunctionDecl(m_out, e, m_class->name().c_str(), false);
@@ -444,8 +474,6 @@ void process_file(GeneratorType& generator, const cpp_file& file) {
             static_cast<const cpp_member_function&>(e));
         break;
       default:
-        std::cout << "Entity {" << to_string(e.kind()) << ", " << e.name()
-                  << "} is not processed" << std::endl;
         break;
     }
   });
