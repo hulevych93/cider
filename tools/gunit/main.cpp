@@ -158,65 +158,64 @@ void printFunctionBody(std::ostream& os,
 }
 
 void printConstructorDecl(std::ostream& os,
-                      const cpp_constructor& e,
-                      const bool definition = false) {
-    if(definition) {
-        os << e.name() << "::";
-    }
-    os << e.name() << "(";
-    const auto& params = e.parameters();
-    printParams(os, params, true);
-    os << ")";
-    if (!definition) {
-        os << ";";
-    }
-    os << "\n";
+                          const cpp_constructor& e,
+                          const bool definition = false) {
+  if (definition) {
+    os << e.name() << "::";
+  }
+  os << e.name() << "(";
+  const auto& params = e.parameters();
+  printParams(os, params, true);
+  os << ")";
+  if (!definition) {
+    os << ";";
+  }
+  os << "\n";
 }
 
-void printConstructorNotify(std::ostream& os,
-                         const bool hasNoArgs) {
-    os << "GUNIT_NOTIFY_CONSTRUCTOR";
-    if (hasNoArgs) {
-        os << "_NO_ARGS";
-    }
-    os << "(";
+void printConstructorNotify(std::ostream& os, const bool hasNoArgs) {
+  os << "GUNIT_NOTIFY_CONSTRUCTOR";
+  if (hasNoArgs) {
+    os << "_NO_ARGS";
+  }
+  os << "(";
 }
 
 void printBaseClassesConstructors(
     std::ostream& os,
     const detail::iteratable_intrusive_list<cpp_base_class>& bases) {
-    if (bases.empty()) {
-        return;
-    }
+  if (bases.empty()) {
+    return;
+  }
 
-    os << ": ";
-    auto first = true;
-    for (const auto& base : bases) {
-        if (!first) {
-            os << ", ";
-        } else {
-            first = false;
-        }
-        os << base.name() << "(nullptr)";
+  os << ": ";
+  auto first = true;
+  for (const auto& base : bases) {
+    if (!first) {
+      os << ", ";
+    } else {
+      first = false;
     }
+    os << base.name() << "(nullptr)";
+  }
 }
 
 void printConstructorBody(std::ostream& os,
                           const cpp_constructor& e,
                           const char* scope) {
-    os << "{\n";
-    os << "try {\n";
-    os << "_impl = std::make_shared<" << scope << "::" << e.name() << ">(";
+  os << "{\n";
+  os << "try {\n";
+  os << "_impl = std::make_shared<" << scope << "::" << e.name() << ">(";
 
-    const auto& params = e.parameters();
-    printParams(os, params, false);
-    os << ");\n";
+  const auto& params = e.parameters();
+  printParams(os, params, false);
+  os << ");\n";
 
-    printConstructorNotify(os, params.empty());
-    printParams(os, params, false);
-    os << ");\n";
+  printConstructorNotify(os, params.empty());
+  printParams(os, params, false);
+  os << ");\n";
 
-    os << CatchBlock << "}\n";
+  os << CatchBlock << "}\n";
 }
 
 void printBaseClasses(
@@ -300,9 +299,9 @@ struct CodeGenerator {
 
   void handleClass(const cpp_class& e, const bool enter) {
     if (enter) {
-        m_class = std::addressof(e);
+      m_class = std::addressof(e);
     } else {
-        m_class = nullptr;
+      m_class = nullptr;
     }
   }
 
@@ -341,8 +340,8 @@ struct HeaderCodeGenerator final : CodeGenerator {
   }
 
   void handleConstructor(const cpp_constructor& e) {
-      assert(m_class->name() == e.name());
-      printConstructorDecl(m_out, e, false);
+    assert(m_class->name() == e.name());
+    printConstructorDecl(m_out, e, false);
   }
 
   void handleAccess(const cpp_entity& e) {
@@ -386,14 +385,14 @@ struct SourceCodeGenerator final : CodeGenerator {
   }
 
   void handleConstructor(const cpp_constructor& e) {
-      assert(m_class->name() == e.name());
-      m_namespaces(m_out);
+    assert(m_class->name() == e.name());
+    m_namespaces(m_out);
 
-      printConstructorDecl(m_out, e, true);
-      printBaseClassesConstructors(m_out, m_class->bases());
-      printConstructorBody(m_out, e, m_namespaces.top());
+    printConstructorDecl(m_out, e, true);
+    printBaseClassesConstructors(m_out, m_class->bases());
+    printConstructorBody(m_out, e, m_namespaces.top());
 
-      m_out << std::endl;
+    m_out << std::endl;
   }
 
   void handleFreeFunction(const cpp_function& e) {

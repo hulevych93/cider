@@ -35,11 +35,12 @@ add_subdirectory(gunit-models)
 add_subdirectory(recorder)
 add_subdirectory(scripting)
 add_subdirectory(tools/gunit)
+add_subdirectory(tests)
 
 if(GUNIT_ENABLE_COVERAGE)
   setup_target_for_coverage_lcov(
         NAME coverage
         EXECUTABLE ctest
-        DEPENDENCIES models_test recorder_test
+        DEPENDENCIES models_test recorder_test tests
         EXCLUDE "models/*" "${BUILD_FILES_DIR}/*" "${GUNIT_GEN_DIR}/*" "${BASE_DIRECTORY}/*/v1/*")
 endif()
