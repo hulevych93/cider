@@ -327,6 +327,7 @@ struct HeaderCodeGenerator final : CodeGenerator {
   void onFileBegin(const cpp_file& file) {
     m_out << GeneratedFileHeader << "\n\n";
     m_out << "#pragma once\n\n";
+    m_out << "#include <memory>\n\n";
 
     m_out << "#include \"" << file.name() << "\"\n\n";
   }
