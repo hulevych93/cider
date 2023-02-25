@@ -12,6 +12,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <stack>
 
 using namespace cppast;
 
@@ -70,12 +71,13 @@ void printParams(
   }
 }
 
-void printNamespace(std::ostream& os, const cpp_entity& e, const bool enter) {
-  assert(e.kind() == cpp_entity_kind::namespace_t);
+void printNamespace(std::ostream& os,
+                    const std::string& scope,
+                    const bool enter) {
   if (enter) {
-    os << "namespace " << e.name() << " {\n";
+    os << "namespace " << scope << " {\n";
   } else {
-    os << "} // namespace " << e.name() << "\n";
+    os << "} // namespace " << scope << "\n";
   }
 }
 
@@ -102,12 +104,10 @@ void printFunctionNotify(std::ostream& os,
   }
 }
 
-void printQualifiers(std::ostream&, const cpp_function&) {}
-
 template <typename FunctionType>
 void printFunctionDecl(std::ostream& os,
-                       const char* scope,
                        const FunctionType& e,
+                       const char* scope,
                        const bool semicolon = false) {
   os << to_string(e.return_type()) << " ";
   if (scope != nullptr) {
@@ -117,23 +117,33 @@ void printFunctionDecl(std::ostream& os,
   const auto& params = e.parameters();
   printParams(os, params, true);
   os << ")";
-  if (semicolon) {
-    os << ";\n";
+  if constexpr (std::is_same_v<cpp_member_function, FunctionType>) {
+    if (is_const(e.cv_qualifier())) {
+      os << " const";
+    }
   }
+  if (semicolon) {
+    os << ";";
+  }
+  os << "\n";
 }
 
 template <typename FunctionType>
 void printFunctionBody(std::ostream& os,
                        const FunctionType& e,
-                       const char* scope,
-                       const bool member) {
+                       const bool member,
+                       const char* scope = nullptr) {
   os << "{\n";
   os << "try {\n";
   const auto hasReturn = hasReturnValue(e);
   if (hasReturn) {
     os << "auto result = ";
   }
-  os << scope << "::" << e.name() << "(";
+  if constexpr (std::is_same_v<cpp_member_function, FunctionType>) {
+    os << "_impl->" << e.name() << "(";
+  } else {
+    os << scope << "::" << e.name() << "(";
+  }
   const auto& params = e.parameters();
   printParams(os, params, false);
   os << ");\n";
@@ -147,24 +157,172 @@ void printFunctionBody(std::ostream& os,
   os << CatchBlock << "}\n";
 }
 
-struct CustomNamespaceScope final {
-  void operator()(std::ostream& os, const bool enter) {
-    if (enter && !m_insideNamespace) {
-      os << "namespace " << GeneratedNamespaceName << " {\n\n";
-      m_insideNamespace = true;
+void printConstructorDecl(std::ostream& os,
+                      const cpp_constructor& e,
+                      const bool definition = false) {
+    if(definition) {
+        os << e.name() << "::";
     }
-    if (!enter && m_insideNamespace) {
-      os << "} // namespace " << GeneratedNamespaceName << std::endl;
-      m_insideNamespace = false;
+    os << e.name() << "(";
+    const auto& params = e.parameters();
+    printParams(os, params, true);
+    os << ")";
+    if (!definition) {
+        os << ";";
+    }
+    os << "\n";
+}
+
+void printConstructorNotify(std::ostream& os,
+                         const bool hasNoArgs) {
+    os << "GUNIT_NOTIFY_CONSTRUCTOR";
+    if (hasNoArgs) {
+        os << "_NO_ARGS";
+    }
+    os << "(";
+}
+
+void printBaseClassesConstructors(
+    std::ostream& os,
+    const detail::iteratable_intrusive_list<cpp_base_class>& bases) {
+    if (bases.empty()) {
+        return;
+    }
+
+    os << ": ";
+    auto first = true;
+    for (const auto& base : bases) {
+        if (!first) {
+            os << ", ";
+        } else {
+            first = false;
+        }
+        os << base.name() << "(nullptr)";
+    }
+}
+
+void printConstructorBody(std::ostream& os,
+                          const cpp_constructor& e,
+                          const char* scope) {
+    os << "{\n";
+    os << "try {\n";
+    os << "_impl = std::make_shared<" << scope << "::" << e.name() << ">(";
+
+    const auto& params = e.parameters();
+    printParams(os, params, false);
+    os << ");\n";
+
+    printConstructorNotify(os, params.empty());
+    printParams(os, params, false);
+    os << ");\n";
+
+    os << CatchBlock << "}\n";
+}
+
+void printBaseClasses(
+    std::ostream& os,
+    const detail::iteratable_intrusive_list<cpp_base_class>& bases) {
+  if (bases.empty()) {
+    return;
+  }
+
+  os << ": ";
+  auto first = true;
+  for (const auto& base : bases) {
+    if (!first) {
+      os << ", ";
+    } else {
+      first = false;
+    }
+    os << to_string(base.access_specifier()) << " " << base.name() << " ";
+  }
+}
+
+void printClass(std::ostream& os,
+                const cpp_class& e,
+                const char* scope,
+                const bool isPrivate,
+                const bool enter) {
+  if (enter) {
+    os << "class " << e.name() << " ";
+    if (e.is_final()) {
+      os << "final ";
+    }
+    printBaseClasses(os, e.bases());
+    os << " {\n";
+  } else {
+    if (!isPrivate) {
+      os << "private:\n";
+    }
+    os << "std::shared_ptr<" << scope << "::" << e.name() << "> _impl;\n";
+    os << "}; // class " << e.name() << "\n\n";
+  }
+}
+
+struct NamespacesStack final {
+  void operator()(std::ostream& os) {
+    if (!m_inside) {
+      os << "namespace " << GeneratedNamespaceName << " {\n\n";
+      m_inside = true;
     }
   }
 
+  void push(std::ostream& os, const std::string& scope) {
+    m_namespaces.push(scope);
+    assert(!m_inside);
+    printNamespace(os, m_namespaces.top(), true);
+  }
+
+  void pop(std::ostream& os) {
+    if (m_inside) {
+      os << "} // namespace " << GeneratedNamespaceName << std::endl;
+      m_inside = false;
+    }
+    printNamespace(os, m_namespaces.top(), false);
+    m_namespaces.pop();
+  }
+
+  const char* top() const {
+    return !m_namespaces.empty() ? m_namespaces.top().c_str() : nullptr;
+  }
+
  private:
-  bool m_insideNamespace = false;
+  std::stack<std::string> m_namespaces;
+  bool m_inside = false;
 };
 
-struct HeaderCodeGenerator final {
-  HeaderCodeGenerator(std::ostream& out) : m_out(out) {}
+struct CodeGenerator {
+  explicit CodeGenerator(std::ostream& out) : m_out(out) {}
+
+  void handleAccess(const cpp_entity& e) {
+    assert(e.kind() == cpp_entity_kind::access_specifier_t);
+  }
+
+  void handleClass(const cpp_class& e, const bool enter) {
+    if (enter) {
+        m_class = std::addressof(e);
+    } else {
+        m_class = nullptr;
+    }
+  }
+
+  void handleNamespace(const cpp_entity& e, const bool enter) {
+    if (enter) {
+      m_namespaces.push(m_out, e.name());
+    } else {
+      m_namespaces.pop(m_out);
+    }
+  }
+
+ protected:
+  NamespacesStack m_namespaces;
+  const cpp_class* m_class;  // TODO: stack to support nested classes
+
+  std::ostream& m_out;
+};
+
+struct HeaderCodeGenerator final : CodeGenerator {
+  HeaderCodeGenerator(std::ostream& out) : CodeGenerator(out) {}
   ~HeaderCodeGenerator() = default;
 
   void onFileBegin(const cpp_file& file) {
@@ -174,47 +332,50 @@ struct HeaderCodeGenerator final {
     m_out << "#include \"" << file.name() << "\"\n\n";
   }
 
-  void handleInclude(const cpp_entity& e) {
-    assert(e.kind() == cpp_entity_kind::include_directive_t);
-  }
-
   void handleClass(const cpp_class& e, const bool enter) {
-    //    m_scope(m_out, true);
-    //    if (enter) {
-    //      m_out << "class " << e.name() << std::endl;
-    //    } else {
-    //      m_out << "}; // class " << e.name() << std::endl;
-    //    }
+    CodeGenerator::handleClass(e, enter);
+    if (enter) {
+      m_namespaces(m_out);
+    }
+    printClass(m_out, e, m_namespaces.top(), m_access == "private", enter);
   }
 
-  void handleNamespace(const cpp_entity& e, const bool enter) {
-    if (!enter) {
-      m_scope(m_out, false);
+  void handleConstructor(const cpp_constructor& e) {
+      assert(m_class->name() == e.name());
+      printConstructorDecl(m_out, e, false);
+  }
+
+  void handleAccess(const cpp_entity& e) {
+    assert(e.kind() == cpp_entity_kind::access_specifier_t);
+    if (m_access != e.name()) {
+      m_access = e.name();
+      m_out << e.name() << ":\n";
     }
-    printNamespace(m_out, e, enter);
   }
 
   void handleFreeFunction(const cpp_function& e) {
-    m_scope(m_out, true);
-    printFunctionDecl(m_out, nullptr, e, true);
+    m_namespaces(m_out);
+
+    printFunctionDecl(m_out, e, nullptr, true);
+
     m_out << std::endl;
   }
 
-  void handleMemberFunction(const cpp_member_function_base& e) {
-    m_scope(m_out, true);
-    //    printFunctionDecl(m_out, e, true);
-    //    m_out << std::endl;
+  void handleMemberFunction(const cpp_member_function& e) {
+    m_namespaces(m_out);
+
+    printFunctionDecl(m_out, e, nullptr, true);
+
+    m_out << std::endl;
   }
 
  private:
-  CustomNamespaceScope m_scope;
-  std::ostream& m_out;
+  std::string m_access;
 };
 
-struct SourceCodeGenerator final {
+struct SourceCodeGenerator final : CodeGenerator {
   SourceCodeGenerator(const std::string& headerFile, std::ostream& out)
-      : m_header(headerFile), m_out(out) {}
-
+      : CodeGenerator(out), m_header(headerFile) {}
   ~SourceCodeGenerator() = default;
 
   void onFileBegin(const cpp_file&) {
@@ -224,52 +385,37 @@ struct SourceCodeGenerator final {
     m_out << "#include <recorder/actions_observer.h>\n\n";
   }
 
-  void handleInclude(const cpp_entity& e) {
-    assert(e.kind() == cpp_entity_kind::include_directive_t);
-  }
+  void handleConstructor(const cpp_constructor& e) {
+      assert(m_class->name() == e.name());
+      m_namespaces(m_out);
 
-  void handleClass(const cpp_class& e, const bool enter) {
-    if (enter) {
-      m_refClassname = e.name();
-    } else {
-      m_refClassname.clear();
-    }
-  }
+      printConstructorDecl(m_out, e, true);
+      printBaseClassesConstructors(m_out, m_class->bases());
+      printConstructorBody(m_out, e, m_namespaces.top());
 
-  void handleNamespace(const cpp_entity& e, const bool enter) {
-    if (enter) {
-      m_refNamespace = e.name();
-    } else {
-      m_scope(m_out, false);
-    }
-    printNamespace(m_out, e, enter);
+      m_out << std::endl;
   }
 
   void handleFreeFunction(const cpp_function& e) {
-    m_scope(m_out, true);
+    m_namespaces(m_out);
 
-    printFunctionDecl(m_out, nullptr, e, false);
-    printFunctionBody(m_out, e, m_refNamespace.c_str(), false);
+    printFunctionDecl(m_out, e, nullptr, false);
+    printFunctionBody(m_out, e, false, m_namespaces.top());
 
     m_out << std::endl;
   }
 
-  void handleMemberFunction(const cpp_member_function_base& e) {
-    m_scope(m_out, true);
+  void handleMemberFunction(const cpp_member_function& e) {
+    m_namespaces(m_out);
 
-    printFunctionDecl(m_out, m_refClassname.c_str(), e, false);
-    printFunctionBody(m_out, e, m_refClassname.c_str(), true);
+    printFunctionDecl(m_out, e, m_class->name().c_str(), false);
+    printFunctionBody(m_out, e, true);
 
     m_out << std::endl;
   }
 
  private:
-  CustomNamespaceScope m_scope;
-  std::string m_refNamespace;
-  std::string m_refClassname;
-
-  std::string m_header;
-  std::ostream& m_out;
+  const std::string m_header;
 };
 
 template <typename GeneratorType>
@@ -281,23 +427,25 @@ void process_file(GeneratorType& generator, const cpp_file& file) {
       case cpp_entity_kind::namespace_t:
         generator.handleNamespace(e, enter);
         break;
-      case ::cpp_entity_kind::include_directive_t:
-        generator.handleInclude(e);
-        break;
       case ::cpp_entity_kind::function_t:
         generator.handleFreeFunction(static_cast<const cpp_function&>(e));
         break;
       case ::cpp_entity_kind::class_t:
         generator.handleClass(static_cast<const cpp_class&>(e), enter);
         break;
-      case ::cpp_entity_kind::base_class_t:
-        generator.handleClass(static_cast<const cpp_base_class&>(e), enter);
+      case ::cpp_entity_kind::constructor_t:
+        generator.handleConstructor(static_cast<const cpp_constructor&>(e));
+        break;
+      case ::cpp_entity_kind::access_specifier_t:
+        generator.handleAccess(e);
         break;
       case ::cpp_entity_kind::member_function_t:
         generator.handleMemberFunction(
-            static_cast<const cpp_member_function_base&>(e));
+            static_cast<const cpp_member_function&>(e));
         break;
       default:
+        std::cout << "Entity {" << to_string(e.kind()) << ", " << e.name()
+                  << "} is not processed" << std::endl;
         break;
     }
   });
