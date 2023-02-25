@@ -1,8 +1,8 @@
 /* Copyright(C) 2023 Hulevych */
 
 #include <cppast/cpp_function.hpp>
-#include <cppast/cpp_member_function.hpp>
 #include <cppast/cpp_function_type.hpp>
+#include <cppast/cpp_member_function.hpp>
 #include <cppast/detail/assert.hpp>
 #include <cppast/libclang_parser.hpp>
 #include <cppast/visitor.hpp>
@@ -24,7 +24,7 @@ void print_error(const std::string& msg) {
   std::cerr << msg << '\n';
 }
 
-template<typename FunctionType>
+template <typename FunctionType>
 bool hasReturnValue(const FunctionType& e) {
   const auto& type = e.return_type();
   if (type.kind() == cpp_type_kind::builtin_t) {
@@ -83,31 +83,37 @@ void printFunctionNotify(std::ostream& os,
                          const bool member,
                          const bool hasNoReturn,
                          const bool hasNoArgs) {
-    os << "GUNIT_NOTIFY_";
-    if (member) {
-        os << "METHOD";
-    } else {
-        os << "FREE_FUNCTION";
-    }
-    if (hasNoArgs) {
-        os << "_NO_ARGS";
-    }
-    if (hasNoReturn) {
-        os << "(std::nullopt";
-    } else {
-        os << "(result";
-    }
-    if (!hasNoArgs) {
-        os << ", ";
-    }
+  os << "GUNIT_NOTIFY_";
+  if (member) {
+    os << "METHOD";
+  } else {
+    os << "FREE_FUNCTION";
+  }
+  if (hasNoArgs) {
+    os << "_NO_ARGS";
+  }
+  if (hasNoReturn) {
+    os << "(std::nullopt";
+  } else {
+    os << "(result";
+  }
+  if (!hasNoArgs) {
+    os << ", ";
+  }
 }
 
-template<typename FunctionType>
+void printQualifiers(std::ostream&, const cpp_function&) {}
+
+template <typename FunctionType>
 void printFunctionDecl(std::ostream& os,
+                       const char* scope,
                        const FunctionType& e,
                        const bool semicolon = false) {
-  os << to_string(e.return_type());
-  os << " " << e.name() << "(";
+  os << to_string(e.return_type()) << " ";
+  if (scope != nullptr) {
+    os << scope << "::";
+  }
+  os << e.name() << "(";
   const auto& params = e.parameters();
   printParams(os, params, true);
   os << ")";
@@ -116,7 +122,7 @@ void printFunctionDecl(std::ostream& os,
   }
 }
 
-template<typename FunctionType>
+template <typename FunctionType>
 void printFunctionBody(std::ostream& os,
                        const FunctionType& e,
                        const char* scope,
@@ -173,31 +179,31 @@ struct HeaderCodeGenerator final {
   }
 
   void handleClass(const cpp_class& e, const bool enter) {
-    m_scope(m_out, true);
-    if (enter) {
-      m_out << "class " << e.name() << std::endl;
-    } else {
-      m_out << "}; // class " << e.name() << std::endl;
-    }
+    //    m_scope(m_out, true);
+    //    if (enter) {
+    //      m_out << "class " << e.name() << std::endl;
+    //    } else {
+    //      m_out << "}; // class " << e.name() << std::endl;
+    //    }
   }
 
   void handleNamespace(const cpp_entity& e, const bool enter) {
-    printNamespace(m_out, e, enter);
     if (!enter) {
       m_scope(m_out, false);
     }
+    printNamespace(m_out, e, enter);
   }
 
   void handleFreeFunction(const cpp_function& e) {
     m_scope(m_out, true);
-    printFunctionDecl(m_out, e, true);
+    printFunctionDecl(m_out, nullptr, e, true);
     m_out << std::endl;
   }
 
   void handleMemberFunction(const cpp_member_function_base& e) {
     m_scope(m_out, true);
-    printFunctionDecl(m_out, e, true);
-    m_out << std::endl;
+    //    printFunctionDecl(m_out, e, true);
+    //    m_out << std::endl;
   }
 
  private:
@@ -223,27 +229,26 @@ struct SourceCodeGenerator final {
   }
 
   void handleClass(const cpp_class& e, const bool enter) {
-    m_scope(m_out, true);
     if (enter) {
-      m_out << "class " << e.name() << std::endl;
+      m_refClassname = e.name();
     } else {
-      m_out << "}; // class " << e.name() << std::endl;
+      m_refClassname.clear();
     }
   }
 
   void handleNamespace(const cpp_entity& e, const bool enter) {
-    printNamespace(m_out, e, enter);
     if (enter) {
       m_refNamespace = e.name();
     } else {
       m_scope(m_out, false);
     }
+    printNamespace(m_out, e, enter);
   }
 
   void handleFreeFunction(const cpp_function& e) {
     m_scope(m_out, true);
 
-    printFunctionDecl(m_out, e, false);
+    printFunctionDecl(m_out, nullptr, e, false);
     printFunctionBody(m_out, e, m_refNamespace.c_str(), false);
 
     m_out << std::endl;
@@ -252,8 +257,8 @@ struct SourceCodeGenerator final {
   void handleMemberFunction(const cpp_member_function_base& e) {
     m_scope(m_out, true);
 
-    printFunctionDecl(m_out, e, false);
-    printFunctionBody(m_out, e, m_refNamespace.c_str(), true);
+    printFunctionDecl(m_out, m_refClassname.c_str(), e, false);
+    printFunctionBody(m_out, e, m_refClassname.c_str(), true);
 
     m_out << std::endl;
   }
@@ -261,6 +266,7 @@ struct SourceCodeGenerator final {
  private:
   CustomNamespaceScope m_scope;
   std::string m_refNamespace;
+  std::string m_refClassname;
 
   std::string m_header;
   std::ostream& m_out;
@@ -269,32 +275,32 @@ struct SourceCodeGenerator final {
 template <typename GeneratorType>
 void process_file(GeneratorType& generator, const cpp_file& file) {
   generator.onFileBegin(file);
-  visit(
-      file,
-      [&](const cpp_entity& e, visitor_info info) {
-        const auto enter = info.event == visitor_info::container_entity_enter;
-        switch (e.kind()) {
-          case cpp_entity_kind::namespace_t:
-            generator.handleNamespace(e, enter);
-            break;
-          case ::cpp_entity_kind::include_directive_t:
-            generator.handleInclude(e);
-            break;
-          case ::cpp_entity_kind::function_t:
-            generator.handleFreeFunction(static_cast<const cpp_function&>(e));
-            break;
-          case ::cpp_entity_kind::class_t:
-          case ::cpp_entity_kind::base_class_t:
-            //generator.handleClass(static_cast<const cpp_class&>(e), enter);
-            break;
-          case ::cpp_entity_kind::member_function_t:
-            generator.handleMemberFunction(
-                static_cast<const cpp_member_function_base&>(e));
-            break;
-          default:
-            break;
-        }
-      });
+  visit(file, [&](const cpp_entity& e, visitor_info info) {
+    const auto enter = info.event == visitor_info::container_entity_enter;
+    switch (e.kind()) {
+      case cpp_entity_kind::namespace_t:
+        generator.handleNamespace(e, enter);
+        break;
+      case ::cpp_entity_kind::include_directive_t:
+        generator.handleInclude(e);
+        break;
+      case ::cpp_entity_kind::function_t:
+        generator.handleFreeFunction(static_cast<const cpp_function&>(e));
+        break;
+      case ::cpp_entity_kind::class_t:
+        generator.handleClass(static_cast<const cpp_class&>(e), enter);
+        break;
+      case ::cpp_entity_kind::base_class_t:
+        generator.handleClass(static_cast<const cpp_base_class&>(e), enter);
+        break;
+      case ::cpp_entity_kind::member_function_t:
+        generator.handleMemberFunction(
+            static_cast<const cpp_member_function_base&>(e));
+        break;
+      default:
+        break;
+    }
+  });
 }
 
 std::unique_ptr<cpp_file> parse_file(const libclang_compile_config& config,

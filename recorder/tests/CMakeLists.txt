@@ -9,9 +9,11 @@ include_directories(.
 add_executable(recorder_test ${LIST_OUT})
 add_test(NAME "recorder_test" COMMAND recorder_test)
 
-prv_collect_sources(${CMAKE_BINARY_DIR}/gen SRC_OUT)
-add_library(gunit-gen-models ${SRC_OUT})
-add_dependencies(gunit-gen-models gunit)
+if(TEST_GENERATOR)
+    prv_collect_sources(${CMAKE_BINARY_DIR}/gen SRC_OUT)
+    add_library(gunit-gen-models ${SRC_OUT})
+    add_dependencies(gunit-gen-models gunit)
+endif()
 
 target_link_libraries(recorder_test
     recorder
