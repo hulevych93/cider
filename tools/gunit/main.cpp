@@ -14,6 +14,8 @@
 #include <iostream>
 #include <stack>
 
+#include <assert.h>
+
 #include "options.h"
 #include "printers.h"
 
