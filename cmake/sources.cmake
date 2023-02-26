@@ -7,8 +7,7 @@ function(prv_collect_src SOURCE_FOLDER SRC_LIST_OUT)
     file(GLOB_RECURSE SRC_LIST
             "${SOURCE_FOLDER}/*.cpp"
             "${SOURCE_FOLDER}/*.h"
-            "${SOURCE_FOLDER}/*.hpp"
-            "${SOURCE_FOLDER}/*.swig")
+            "${SOURCE_FOLDER}/*.hpp")
 
     set(LIST_FILTERED)
     foreach(SOURCE ${SRC_LIST})
@@ -33,11 +32,6 @@ endfunction()
 
 function(gunit_collect_src LIST_OUT)
     prv_collect_src(${PROJECT_SOURCE_DIR} TMP_SRC_LIST ${ARGN})
-    set(${LIST_OUT} ${TMP_SRC_LIST} PARENT_SCOPE)
-endfunction()
-
-function(gunit_collect_only_cpp LIST_OUT)
-    prv_collect_src(TMP_SRC_LIST ".swig" ".h" ".hpp")
     set(${LIST_OUT} ${TMP_SRC_LIST} PARENT_SCOPE)
 endfunction()
 

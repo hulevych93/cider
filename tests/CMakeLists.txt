@@ -5,6 +5,7 @@ gunit_collect_src(LIST_OUT)
 include_directories(.
     ${GTest_INCLUDE_DIRS}
     ${Boost_INCLUDE_DIRS}
+    ${CMAKE_BINARY_DIR}
 )
 
 add_executable(tests ${LIST_OUT})
@@ -31,15 +32,15 @@ if(TEST_GENERATOR)
 
     set(GEN_SRC_FILES)
     foreach(HDR ${HDRS_OUT})
-        gunit_generate(${HDR} "${CMAKE_BINARY_DIR}/gen")
+        gunit_generate(${HDR} "${CMAKE_BINARY_DIR}/gunit-models")
 
         get_filename_component(FILE_NAME "${HDR}" NAME_WE)
-        list(APPEND GEN_SRC_FILES "${CMAKE_BINARY_DIR}/gen/${FILE_NAME}.h")
-        list(APPEND GEN_SRC_FILES "${CMAKE_BINARY_DIR}/gen/${FILE_NAME}.cpp")
+        list(APPEND GEN_SRC_FILES "${CMAKE_BINARY_DIR}/gunit-models/${FILE_NAME}.h")
+        list(APPEND GEN_SRC_FILES "${CMAKE_BINARY_DIR}/gunit-models/${FILE_NAME}.cpp")
     endforeach()
 
-    add_library(gunit-gen-models ${GEN_SRC_FILES})
-    add_dependencies(gunit-gen-models gunit)
+    add_library(gunit-models ${GEN_SRC_FILES})
+    add_dependencies(gunit-models gunit)
 endif()
 
 target_link_libraries(tests

@@ -12,6 +12,8 @@
 #include "gunit-models/polymorphic_types.h"
 #include "gunit-models/some_final_class.h"
 
+#include "recorder/details/lua/lua_params.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -26,6 +28,49 @@ using namespace gunit::recorder;
 using namespace gunit::scripting;
 using namespace gunit::models;
 using namespace gunit;
+
+namespace gunit {
+namespace recorder {
+
+template <>
+std::string produceAggregateCode(const models::Aggregate& aggregate,
+                                 CodeSink& sink) {
+  lua::ParamVisitor visitor;
+  std::string code;
+  code += "local {var} = example.Aggregate()\n";
+  code += "{var}.condition = " + visitor(aggregate.condition) + "\n";
+  code += "{var}.number = " + visitor(aggregate.number) + "\n";
+  return sink.processLocalVar(std::move(code));
+}
+
+template <>
+std::string produceAggregateCode(const models::AggregateDerived& aggregate,
+                                 CodeSink& sink) {
+  lua::ParamVisitor visitor;
+  std::string code;
+  code += "local {var} = example.AggregateDerived()\n";
+  code += "{var}.condition = " + visitor(aggregate.condition) + "\n";
+  code += "{var}.number = " + visitor(aggregate.number) + "\n";
+  code += "{var}.floatingNumber = " + visitor(aggregate.floatingNumber) + "\n";
+  return sink.processLocalVar(std::move(code));
+}
+
+template <>
+std::string produceAggregateCode(const models::SomeEnumeration& that,
+                                 CodeSink&) {
+  switch (that) {
+    case models::SomeEnumeration::first_value:
+      return "example.SomeEnumeration_first_value";
+      break;
+    case models::SomeEnumeration::second_value:
+      return "example.SomeEnumeration_second_value";
+      break;
+  }
+  return {};
+}
+
+}  // namespace recorder
+}  // namespace gunit
 
 class RecordingTestSuite : public testing::Test {
  public:
@@ -45,10 +90,10 @@ constexpr const char* LuaExampleModuleName = "example";
 TEST_F(RecordingTestSuite, script_session_clears_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  EXPECT_EQ(120, generated::calculate_factorial(5));
+  EXPECT_EQ(120, gunit_hook::calculate_factorial(5));
   EXPECT_EQ("example.calculate_factorial(5)\n", session->getScript());
 
-  EXPECT_EQ(720, generated::calculate_factorial(6));
+  EXPECT_EQ(720, gunit_hook::calculate_factorial(6));
   EXPECT_EQ("example.calculate_factorial(6)\n", session->getScript());
 }
 
@@ -56,13 +101,13 @@ TEST_F(RecordingTestSuite, bad_num_cast_script_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
   (void)session;
 
-  EXPECT_THROW(generated::summ_these_two_params(
+  EXPECT_THROW(gunit_hook::summ_these_two_params(
                    0, std::numeric_limits<unsigned int>::max()),
                BadNumCast);
 }
 
 TEST_F(RecordingTestSuite, unreachable_object_error) {
-  generated::SomeFinalClass object;
+  gunit_hook::SomeFinalClass object;
 
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
@@ -79,8 +124,8 @@ example.calculate_factorial(6)
 TEST_F(RecordingTestSuite, calculate_factorial_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  EXPECT_EQ(120, generated::calculate_factorial(5));
-  EXPECT_EQ(720, generated::calculate_factorial(6));
+  EXPECT_EQ(120, gunit_hook::calculate_factorial(5));
+  EXPECT_EQ(720, gunit_hook::calculate_factorial(6));
 
   SCOPED_TRACE("calculate_factorial_test_script");
   testScript(calculate_factorial_test_script, session);
@@ -94,8 +139,8 @@ example.is_this_sparta_word('sparta')
 TEST_F(RecordingTestSuite, is_this_sparta_word_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  EXPECT_FALSE(generated::is_this_sparta_word("something"));
-  EXPECT_TRUE(generated::is_this_sparta_word("sparta"));
+  EXPECT_FALSE(gunit_hook::is_this_sparta_word("something"));
+  EXPECT_TRUE(gunit_hook::is_this_sparta_word("sparta"));
 
   SCOPED_TRACE("is_this_sparta_word_test_script");
   testScript(is_this_sparta_word_test_script, session);
@@ -113,7 +158,7 @@ TEST_F(RecordingTestSuite, function_test_aggregate_test) {
 
   Aggregate aggregateStruct{10, true};
   EXPECT_EQ(aggregateStruct,
-            generated::function_test_aggregate(aggregateStruct));
+            gunit_hook::function_test_aggregate(aggregateStruct));
 
   SCOPED_TRACE("function_test_aggregate_test_script");
   testScript(function_test_aggregate_test_script, session);
@@ -124,7 +169,7 @@ TEST_F(RecordingTestSuite, function_test_aggregate_ptr_test) {
 
   Aggregate aggregateStruct{10, true};
   EXPECT_EQ(&aggregateStruct,
-            generated::function_test_aggregate(&aggregateStruct));
+            gunit_hook::function_test_aggregate(&aggregateStruct));
 
   SCOPED_TRACE("function_test_aggregate_test_script");
   testScript(function_test_aggregate_test_script, session);
@@ -135,7 +180,7 @@ TEST_F(RecordingTestSuite, function_test_aggregate_with_derived_test) {
 
   AggregateDerived aggregateStruct{10, true, 0.5};
   EXPECT_EQ(aggregateStruct,
-            generated::function_test_aggregate(aggregateStruct));
+            gunit_hook::function_test_aggregate(aggregateStruct));
 
   SCOPED_TRACE("function_test_aggregate_test_script");
   testScript(function_test_aggregate_test_script, session);
@@ -145,7 +190,7 @@ TEST_F(RecordingTestSuite, function_test_aggregate_ptr_with_derived_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   AggregateDerived aggregateStruct{10, true, 0.5};
-  generated::function_test_aggregate(&aggregateStruct);
+  gunit_hook::function_test_aggregate(&aggregateStruct);
 
   SCOPED_TRACE("function_test_aggregate_test_script");
   testScript(function_test_aggregate_test_script, session);
@@ -164,7 +209,7 @@ TEST_F(RecordingTestSuite, function_test_aggregate_derived_test) {
 
   AggregateDerived aggregateStruct{10, true, 0.5};
   EXPECT_EQ(aggregateStruct,
-            generated::function_test_aggregate_derived(aggregateStruct));
+            gunit_hook::function_test_aggregate_derived(aggregateStruct));
 
   SCOPED_TRACE("function_test_aggregate_derived_test_script");
   testScript(function_test_aggregate_derived_test_script, session);
@@ -174,7 +219,7 @@ TEST_F(RecordingTestSuite, function_test_aggregate_derived_ptr_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   AggregateDerived aggregateStruct{10, true, 0.5};
-  generated::function_test_aggregate_derived(&aggregateStruct);
+  gunit_hook::function_test_aggregate_derived(&aggregateStruct);
 
   SCOPED_TRACE("function_test_aggregate_derived_test_script");
   testScript(function_test_aggregate_derived_test_script, session);
@@ -188,7 +233,7 @@ TEST_F(RecordingTestSuite, function_test_enumeration_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   SomeEnumeration arg = SomeEnumeration::second_value;
-  EXPECT_EQ(arg, generated::function_test_enumeration(arg));
+  EXPECT_EQ(arg, gunit_hook::function_test_enumeration(arg));
 
   SCOPED_TRACE("function_test_enumeration_test_script");
   testScript(function_test_enumeration_test_script, session);
@@ -201,7 +246,7 @@ const char* summ_these_two_params_test_script =
 TEST_F(RecordingTestSuite, summ_these_two_params_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  EXPECT_EQ(22, generated::summ_these_two_params(7, 15u));
+  EXPECT_EQ(22, gunit_hook::summ_these_two_params(7, 15u));
 
   SCOPED_TRACE("summ_these_two_params_test_script");
   testScript(summ_these_two_params_test_script, session);
@@ -210,11 +255,11 @@ TEST_F(RecordingTestSuite, summ_these_two_params_test) {
 TEST_F(RecordingTestSuite, class_construct_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  generated::SomeFinalClass object1;
+  gunit_hook::SomeFinalClass object1;
   EXPECT_EQ("local object_1 = example.SomeFinalClass()\n",
             session->getScript());
 
-  generated::SomeFinalClass object2(125, true);
+  gunit_hook::SomeFinalClass object2(125, true);
   EXPECT_EQ("local object_1 = example.SomeFinalClass(125, true)\n",
             session->getScript());
 }
@@ -227,7 +272,7 @@ object_1:someMethod(129)
 TEST_F(RecordingTestSuite, class_method_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  generated::SomeFinalClass object1;
+  gunit_hook::SomeFinalClass object1;
   object1.someMethod(129);
 
   SCOPED_TRACE("class_method_test_script");
@@ -242,7 +287,7 @@ local object_2 = example.function_test_class_construct(object_1)
 TEST_F(RecordingTestSuite, function_test_class_construct_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  generated::SomeFinalClass object1(423, false);
+  SomeFinalClass object1(423, false);
   EXPECT_EQ(object1, function_test_class_construct(object1));
 
   SCOPED_TRACE("function_test_class_construct_test_script");
@@ -252,7 +297,7 @@ TEST_F(RecordingTestSuite, function_test_class_construct_test) {
 TEST_F(RecordingTestSuite, function_test_class_construct_ptr_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  generated::SomeFinalClass object1(423, false);
+  SomeFinalClass object1(423, false);
   function_test_class_construct(&object1);
 
   SCOPED_TRACE("function_test_class_construct_test_script");
@@ -268,7 +313,7 @@ object_2:someMethod(129)
 TEST_F(RecordingTestSuite, class_copy_constuction_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  generated::SomeFinalClass object1;
+  gunit_hook::SomeFinalClass object1;
   auto object2 = object1;
   object2.someMethod(129);
 
@@ -284,7 +329,7 @@ object_1:someMethod(129)
 TEST_F(RecordingTestSuite, class_move_constuction_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  generated::SomeFinalClass object1;
+  gunit_hook::SomeFinalClass object1;
   auto object2 = std::move(object1);
   object2.someMethod(129);
 
@@ -302,8 +347,8 @@ object_2:someMethod(129)
 TEST_F(RecordingTestSuite, class_copy_assignment_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  generated::SomeFinalClass object1;
-  generated::SomeFinalClass object2;
+  gunit_hook::SomeFinalClass object1;
+  gunit_hook::SomeFinalClass object2;
   object2 = object1;
   object2.someMethod(129);
 
@@ -321,8 +366,8 @@ object_2:someMethod(129)
 TEST_F(RecordingTestSuite, class_move_assignment_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  generated::SomeFinalClass object1;
-  generated::SomeFinalClass object2;
+  gunit_hook::SomeFinalClass object1;
+  gunit_hook::SomeFinalClass object2;
   object2 = std::move(object1);
   object2.someMethod(129);
 
@@ -338,7 +383,7 @@ object_1:someMethod(2345)
 TEST_F(RecordingTestSuite, function_make_class_construct_obj_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  auto object = generated::function_make_class_construct_obj();
+  auto object = gunit_hook::function_make_class_construct_obj();
   object.someMethod(2345);
 
   SCOPED_TRACE("function_make_class_construct_obj_test_script");
@@ -353,7 +398,7 @@ object_1:someMethod(2345)
 TEST_F(RecordingTestSuite, function_make_class_construct_obj_ptr_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  auto object = generated::function_make_class_construct_obj_ptr();
+  auto object = gunit_hook::function_make_class_construct_obj_ptr();
   object->someMethod(2345);
   delete object;
 
@@ -369,7 +414,7 @@ object_1:isEmpty()
 TEST_F(RecordingTestSuite, some_interface_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  generated::StringInterface object{"abc"};
+  gunit_hook::StringInterface object{"abc"};
   object.isEmpty();
 
   SCOPED_TRACE("some_interface_test_script");
@@ -379,7 +424,7 @@ TEST_F(RecordingTestSuite, some_interface_test) {
 TEST_F(RecordingTestSuite, some_interface_test_ptr) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  generated::StringInterface* object = new generated::StringInterface{"abc"};
+  gunit_hook::StringInterface* object = new gunit_hook::StringInterface{"abc"};
   object->isEmpty();
   delete object;
 
@@ -395,8 +440,8 @@ object_1:isEmpty()
 TEST_F(RecordingTestSuite, some_other_interface_test_ptr) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  generated::StringInterface* object =
-      new generated::OtherStringInterface{false};
+  gunit_hook::StringInterface* object =
+      new gunit_hook::OtherStringInterface{false};
   object->isEmpty();
   delete object;
 
@@ -412,7 +457,7 @@ object_1:isEmpty()
 TEST_F(RecordingTestSuite, make_some_interface_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  generated::SomeInterface* object = generated::makeSomeInterface("false");
+  SomeInterface* object = gunit_hook::makeSomeInterface("false");
   object->isEmpty();
   delete object;
 
@@ -428,7 +473,7 @@ object_1:sayGoodbye(2)
 TEST_F(RecordingTestSuite, derived_class_types_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  generated::SomeDerived object("false");
+  gunit_hook::SomeDerived object("false");
   object.sayGoodbye(2);
 
   SCOPED_TRACE("derived_class_types_test_script");
@@ -443,7 +488,7 @@ object_1:sayHello()
 TEST_F(RecordingTestSuite, some_base_class_types_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  generated::SomeBase object("true");
+  gunit_hook::SomeBase object("true");
   object.sayHello();
 
   SCOPED_TRACE("some_base_class_types_test_script");

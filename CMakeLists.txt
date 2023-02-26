@@ -31,7 +31,6 @@ if(GUNIT_ENABLE_COVERAGE)
 endif()
 
 add_subdirectory(models)
-add_subdirectory(gunit-models)
 add_subdirectory(recorder)
 add_subdirectory(scripting)
 add_subdirectory(tools/gunit)
