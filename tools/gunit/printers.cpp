@@ -4,6 +4,7 @@
 #include <cppast/cpp_function.hpp>
 #include <cppast/cpp_function_type.hpp>
 #include <cppast/cpp_member_function.hpp>
+#include <cppast/cpp_member_variable.hpp>
 
 #include <cppast/detail/assert.hpp>
 
@@ -35,21 +36,21 @@ bool hasReturnValue(const FunctionType& e) {
 
 }  // namespace
 
-// void eraseScope(std::string& value) {
-//     auto scopePos = value.find_last_of("::");
-//     if(scopePos != std::string::npos) {
-//         value = value.substr(scopePos + 1);
-//     }
-// }
+void eraseScope(std::string& value) {
+  auto scopePos = value.find_last_of("::");
+  if (scopePos != std::string::npos) {
+    value = value.substr(scopePos + 1);
+  }
+  value = std::string{GeneratedNamespaceName} + "::" + value;
+}
 
 void printParamType(std::ostream& os,
-                    const cpp_entity_index& idx,
+                    const cpp_entity_index&,
                     const cpp_type& type) {
   auto value = to_string(type);
-  //    auto scopePos = value.find_last_of("::");
-  //    if(scopePos != std::string::npos) {
-  //        value = value.substr(scopePos + 1);
-  //    }
+  if (type.kind() == cpp_type_kind::user_defined_t) {
+    // eraseScope(value);
+  }
   os << value;
 }
 
@@ -311,6 +312,30 @@ void printClass(std::ostream& os,
     os << "std::shared_ptr<" << scope << "::" << e.name() << "> _impl;\n";
     os << "}; // class " << e.name() << "\n\n";
   }
+}
+
+void printStruct(std::ostream& os,
+                 const cppast::cpp_class& e,
+                 const bool enter) {
+  if (enter) {
+    os << "struct " << e.name() << " ";
+    if (e.is_final()) {
+      os << "final ";
+    }
+    printBaseClasses(os, e.bases());
+    os << " {\n";
+  } else {
+    os << "}; // struct " << e.name() << "\n\n";
+  }
+}
+
+void printVariableDecl(std::ostream& os,
+                       const cppast::cpp_entity_index& idx,
+                       const cppast::cpp_member_variable& e) {
+  printParamType(os, idx, e.type());
+  os << " ";
+  os << e.name();
+  os << ";\n";
 }
 
 }  // namespace tool

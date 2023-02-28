@@ -11,9 +11,5 @@ Aggregate* function_test_aggregate(Aggregate* arg) {
   return arg;
 }
 
-bool Aggregate::operator==(const Aggregate& r) const {
-  return condition == r.condition && number == r.number;
-}
-
 }  // namespace models
 }  // namespace gunit

@@ -5,6 +5,7 @@
 #include <cppast/cpp_function.hpp>
 #include <cppast/cpp_function_type.hpp>
 #include <cppast/cpp_member_function.hpp>
+#include <cppast/cpp_member_variable.hpp>
 #include <cppast/libclang_parser.hpp>
 #include <cppast/visitor.hpp>
 
@@ -64,6 +65,9 @@ void process_file(GeneratorType& generator, const cpp_file& file) {
         generator.handleMemberFunction(
             static_cast<const cpp_member_function&>(e));
         break;
+      case ::cpp_entity_kind::member_variable_t:
+        generator.handleMemberVariable(
+            static_cast<const cpp_member_variable&>(e));
       default:
         break;
     }

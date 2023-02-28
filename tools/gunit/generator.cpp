@@ -23,15 +23,15 @@ void generator::handleAccess(const cpp_entity& e) {
 }
 
 void generator::handleClass(const cpp_class& e, const bool enter) {
-  if (e.class_kind() != cpp_class_kind::class_t) {  // TODO: rework
-    return;
-  }
-
   if (enter) {
     m_class = std::addressof(e);
   } else {
     m_class = nullptr;
   }
+}
+
+void generator::handleMemberVariable(const cppast::cpp_member_variable&) {
+  // nothing to do
 }
 
 void generator::handleNamespace(const cpp_entity& e, const bool enter) {
@@ -47,32 +47,27 @@ header_generator::header_generator(std::ostream& out,
     : generator(out, idx) {}
 
 void header_generator::handleClass(const cpp_class& e, const bool enter) {
-  if (e.class_kind() != cpp_class_kind::class_t) {  // TODO: rework
-    return;
-  }
-
   generator::handleClass(e, enter);
 
   if (enter) {
+    m_access = e.class_kind() == cpp_class_kind::class_t ? "private" : "public";
+
     m_namespaces(m_out);
   }
-  printClass(m_out, e, m_namespaces.top(), m_access == "private", enter);
+
+  if (e.class_kind() == cpp_class_kind::class_t) {
+    printClass(m_out, e, m_namespaces.top(), m_access == "private", enter);
+  } else {
+    printStruct(m_out, e, enter);
+  }
 }
 
 void header_generator::handleConstructor(const cpp_constructor& e) {
-  if (m_class == nullptr) {
-    return;
-  }
-
   assert(m_class->name() == e.name());
   printConstructorDecl(m_out, m_idx, e, false);
 }
 
 void header_generator::handleAccess(const cpp_entity& e) {
-  if (m_class == nullptr) {
-    return;
-  }
-
   assert(e.kind() == cpp_entity_kind::access_specifier_t);
   if (m_access != e.name()) {
     m_access = e.name();
@@ -89,13 +84,22 @@ void header_generator::handleFreeFunction(const cpp_function& e) {
 }
 
 void header_generator::handleMemberFunction(const cpp_member_function& e) {
-  if (m_class == nullptr) {
+  m_namespaces(m_out);
+
+  printFunctionDecl(m_out, m_idx, e, nullptr, true);
+
+  m_out << std::endl;
+}
+
+void header_generator::handleMemberVariable(
+    const cppast::cpp_member_variable& e) {
+  if (m_access != "public") {
     return;
   }
 
   m_namespaces(m_out);
 
-  printFunctionDecl(m_out, m_idx, e, nullptr, true);
+  printVariableDecl(m_out, m_idx, e);
 
   m_out << std::endl;
 }
@@ -105,10 +109,6 @@ source_generator::source_generator(std::ostream& out,
     : generator(out, idx) {}
 
 void source_generator::handleConstructor(const cpp_constructor& e) {
-  if (m_class == nullptr) {
-    return;
-  }
-
   assert(m_class->name() == e.name());
   m_namespaces(m_out);
 
@@ -129,10 +129,6 @@ void source_generator::handleFreeFunction(const cpp_function& e) {
 }
 
 void source_generator::handleMemberFunction(const cpp_member_function& e) {
-  if (m_class == nullptr) {
-    return;
-  }
-
   m_namespaces(m_out);
 
   printFunctionDecl(m_out, m_idx, e, m_class->name().c_str(), false);

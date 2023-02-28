@@ -3,15 +3,15 @@
 namespace gunit {
 namespace models {
 
-SomeBase::SomeBase(const char* str) : _impl(str) {}
+BaseClass::BaseClass(const char* str) : _impl(str) {}
 
-std::string SomeBase::sayHello() const {
+std::string BaseClass::sayHello() const {
   return _impl + ", hello!";
 }
 
-SomeDerived::SomeDerived(const char* str) : SomeBase(str), _impl(str) {}
+DerivedClass::DerivedClass(const char* str) : BaseClass(str), _impl(str) {}
 
-std::string SomeDerived::sayGoodbye(int times) const {
+std::string DerivedClass::sayGoodbye(int times) const {
   auto result = _impl;
   for (int i = 0; i < times; ++i)
     result += ", goodbye!";

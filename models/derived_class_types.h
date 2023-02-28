@@ -6,9 +6,9 @@
 namespace gunit {
 namespace models {
 
-class SomeBase {
+class BaseClass {
  public:
-  SomeBase(const char* str);
+  BaseClass(const char* str);
 
   std::string sayHello() const;
 
@@ -16,9 +16,9 @@ class SomeBase {
   std::string _impl;
 };
 
-class SomeDerived final : public SomeBase {
+class DerivedClass final : public BaseClass {
  public:
-  SomeDerived(const char* str);
+  DerivedClass(const char* str);
 
   std::string sayGoodbye(int times) const;
 

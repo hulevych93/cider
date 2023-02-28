@@ -6,6 +6,10 @@
 
 #include "namespaces_stack.h"
 
+namespace cppast {
+class cpp_member_variable;
+}  // namespace cppast
+
 namespace gunit {
 namespace tool {
 
@@ -15,6 +19,7 @@ struct generator {
   void handleAccess(const cppast::cpp_entity& e);
   void handleClass(const cppast::cpp_class& e, const bool enter);
   void handleNamespace(const cppast::cpp_entity& e, const bool enter);
+  void handleMemberVariable(const cppast::cpp_member_variable& e);
 
  protected:
   namespaces_stack m_namespaces;
@@ -34,9 +39,10 @@ struct header_generator final : public generator {
   void handleAccess(const cppast::cpp_entity& e);
   void handleFreeFunction(const cppast::cpp_function& e);
   void handleMemberFunction(const cppast::cpp_member_function& e);
+  void handleMemberVariable(const cppast::cpp_member_variable& e);
 
  private:
-  std::string m_access;
+  std::string m_access = "public";
 };
 
 struct source_generator final : public generator {

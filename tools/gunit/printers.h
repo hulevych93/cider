@@ -5,6 +5,10 @@
 #include <cppast/cppast_fwd.hpp>
 #include <cppast/detail/intrusive_list.hpp>
 
+namespace cppast {
+class cpp_member_variable;
+}  // namespace cppast
+
 namespace gunit {
 namespace tool {
 
@@ -64,6 +68,10 @@ void printBaseClassesConstructors(
         bases,
     const char* scope);
 
+void printVariableDecl(std::ostream& os,
+                       const cppast::cpp_entity_index& idx,
+                       const cppast::cpp_member_variable& e);
+
 void printConstructorBody(std::ostream& os,
                           const cppast::cpp_entity_index& idx,
                           const cppast::cpp_constructor& e,
@@ -79,6 +87,10 @@ void printClass(std::ostream& os,
                 const char* scope,
                 const bool isPrivate,
                 const bool enter);
+
+void printStruct(std::ostream& os,
+                 const cppast::cpp_class& e,
+                 const bool enter);
 
 }  // namespace tool
 }  // namespace gunit

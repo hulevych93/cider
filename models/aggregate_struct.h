@@ -11,8 +11,6 @@ namespace models {
 struct Aggregate {
   int number = 0;
   bool condition = false;
-
-  bool operator==(const Aggregate& r) const;
 };
 
 // function to test user data as parameter and return value

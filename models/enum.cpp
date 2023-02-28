@@ -1,4 +1,4 @@
-#include "enum_test.h"
+#include "enum.h"
 
 namespace gunit {
 namespace models {

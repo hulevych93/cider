@@ -23,7 +23,7 @@ function(gunit_generate FILE OUTPUT_DIR)
     get_filename_component(FILE_NAME "${FILE}" NAME_WE)
     get_filename_component(GUNIT_DIRECTORY ${GUNIT_EXECUTABLE} DIRECTORY)
     add_custom_command(OUTPUT "${OUTPUT_DIR}/${FILE_NAME}.h" "${OUTPUT_DIR}/${FILE_NAME}.cpp"
-                       COMMAND "${GUNIT_EXECUTABLE}" --out_dir=${OUTPUT_DIR} --file=${FILE}
+                       COMMAND "${GUNIT_EXECUTABLE}" --out_dir=${OUTPUT_DIR} --file=${FILE} 2>/dev/null
                        WORKING_DIRECTORY ${GUNIT_DIRECTORY}
                        COMMENT "Generating gunit wrapper files...")
 endfunction()
