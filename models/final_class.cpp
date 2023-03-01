@@ -6,6 +6,7 @@ namespace models {
 FinalClass::FinalClass() : _number(0), _condition(false) {}
 FinalClass::FinalClass(int number, bool condition)
     : _number(number), _condition(condition) {}
+
 FinalClass::FinalClass(const FinalClass& other)
     : _number(other._number), _condition(other._condition) {}
 FinalClass::FinalClass(FinalClass&& other)
@@ -20,6 +21,7 @@ FinalClass& FinalClass::operator=(const FinalClass& other) {
   _condition = other._condition;
   return *this;
 }
+
 FinalClass& FinalClass::operator=(FinalClass&& other) {
   _number = other._number;
   _condition = other._condition;

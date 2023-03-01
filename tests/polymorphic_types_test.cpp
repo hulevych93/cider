@@ -58,7 +58,7 @@ object_1:isEmpty()
 TEST_F(TestSuite, make_some_interface_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  SomeInterface* object = gunit_hook::makeSomeInterface("false");
+  gunit_hook::SomeInterface* object = gunit_hook::makeSomeInterface("false");
   object->isEmpty();
   delete object;
 
