@@ -27,6 +27,7 @@ class FinalClass final {
 
 // function to test private constructed user data as parameter and return value
 FinalClass function_test_class_construct(const FinalClass& arg);
+FinalClass* function_test_class_construct_same_pointer_return(FinalClass* arg);
 FinalClass* function_test_class_construct(FinalClass* arg);
 
 // function to test object construction inside api call

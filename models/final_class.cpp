@@ -47,8 +47,12 @@ FinalClass function_test_class_construct(const FinalClass& arg) {
   return arg;
 }
 
-FinalClass* function_test_class_construct(FinalClass* arg) {
+FinalClass* function_test_class_construct_same_pointer_return(FinalClass* arg) {
   return arg;
+}
+
+FinalClass* function_test_class_construct(FinalClass* arg) {
+  return new FinalClass{*arg};
 }
 
 }  // namespace models

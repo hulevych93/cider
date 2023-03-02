@@ -7,12 +7,14 @@ using namespace gunit::models;
 using namespace gunit::tests;
 using namespace gunit;
 
+struct DerivedClassTypesTest : TestSuite {};
+
 const char* derived_class_types_test_script =
     R"(local object_1 = example.DerivedClass('false')
 object_1:sayGoodbye(2)
 )";
 
-TEST_F(TestSuite, derived_class_types_test) {
+TEST_F(DerivedClassTypesTest, derived_class_types_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   gunit_hook::DerivedClass object("false");
@@ -27,7 +29,7 @@ const char* some_base_class_types_test_script =
 object_1:sayHello()
 )";
 
-TEST_F(TestSuite, some_base_class_types_test) {
+TEST_F(DerivedClassTypesTest, some_base_class_types_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   gunit_hook::BaseClass object("true");

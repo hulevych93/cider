@@ -7,12 +7,14 @@ using namespace gunit::models;
 using namespace gunit::tests;
 using namespace gunit;
 
+struct FreeFunctionsTest : TestSuite {};
+
 const char* calculate_factorial_test_script =
     R"(example.calculate_factorial(5)
 example.calculate_factorial(6)
 )";
 
-TEST_F(TestSuite, calculate_factorial_test) {
+TEST_F(FreeFunctionsTest, calculate_factorial_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   EXPECT_EQ(120, gunit_hook::calculate_factorial(5));
@@ -27,7 +29,7 @@ const char* is_this_sparta_word_test_script =
 example.is_this_sparta_word('sparta')
 )";
 
-TEST_F(TestSuite, is_this_sparta_word_test) {
+TEST_F(FreeFunctionsTest, is_this_sparta_word_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   EXPECT_FALSE(gunit_hook::is_this_sparta_word("something"));
@@ -41,7 +43,7 @@ const char* summ_these_two_params_test_script =
     R"(example.summ_these_two_params(7, 15)
 )";
 
-TEST_F(TestSuite, summ_these_two_params_test) {
+TEST_F(FreeFunctionsTest, summ_these_two_params_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   EXPECT_EQ(22, gunit_hook::summ_these_two_params(7, 15u));
@@ -50,7 +52,7 @@ TEST_F(TestSuite, summ_these_two_params_test) {
   testScript(summ_these_two_params_test_script, session);
 }
 
-TEST_F(TestSuite, script_session_clears_test) {
+TEST_F(FreeFunctionsTest, script_session_clears_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   EXPECT_EQ(120, gunit_hook::calculate_factorial(5));
@@ -60,7 +62,7 @@ TEST_F(TestSuite, script_session_clears_test) {
   EXPECT_EQ("example.calculate_factorial(6)\n", session->getScript());
 }
 
-TEST_F(TestSuite, bad_num_cast_script_test) {
+TEST_F(FreeFunctionsTest, bad_num_cast_script_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
   (void)session;
 

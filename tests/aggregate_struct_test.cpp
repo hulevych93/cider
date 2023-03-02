@@ -7,6 +7,8 @@ using namespace gunit::models;
 using namespace gunit::tests;
 using namespace gunit;
 
+struct AggregateStructTest : TestSuite {};
+
 static const char* function_test_aggregate_test_script =
     R"(local object_1 = example.Aggregate()
 object_1.condition = true
@@ -14,7 +16,7 @@ object_1.number = 10
 example.function_test_aggregate(object_1)
 )";
 
-TEST_F(TestSuite, function_test_aggregate_test) {
+TEST_F(AggregateStructTest, function_test_aggregate_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   gunit_hook::Aggregate aggregateStruct{10, true};
@@ -24,7 +26,7 @@ TEST_F(TestSuite, function_test_aggregate_test) {
   testScript(function_test_aggregate_test_script, session);
 }
 
-TEST_F(TestSuite, function_test_aggregate_ptr_test) {
+TEST_F(AggregateStructTest, function_test_aggregate_ptr_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   gunit_hook::Aggregate aggregateStruct{10, true};

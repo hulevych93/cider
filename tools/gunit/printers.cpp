@@ -35,7 +35,8 @@ std::optional<OperatorType> isOperator(const cppast::cpp_member_function& e) {
     const auto& params = e.parameters();
     for (const auto& param : params) {
       if (param.type().kind() == cpp_type_kind::reference_t) {
-        const auto& reference = static_cast<const cpp_reference_type&>(param.type());
+        const auto& reference =
+            static_cast<const cpp_reference_type&>(param.type());
         return reference.reference_kind() == cpp_reference::cpp_ref_lvalue
                    ? OperatorType::copyAssignment
                    : OperatorType::moveAssignment;
@@ -43,6 +44,18 @@ std::optional<OperatorType> isOperator(const cppast::cpp_member_function& e) {
     }
   }
   return std::nullopt;
+}
+
+bool isMoveContructor(const cppast::cpp_constructor& e) {
+  const auto& params = e.parameters();
+  for (const auto& param : params) {
+    if (param.type().kind() == cpp_type_kind::reference_t) {
+      const auto& reference =
+          static_cast<const cpp_reference_type&>(param.type());
+      return reference.reference_kind() == cpp_reference::cpp_ref_rvalue;
+    }
+  }
+  return false;
 }
 
 template <typename FunctionType>
@@ -157,7 +170,7 @@ void printReturnStatement(std::ostream& os,
 void printConstructorNotify(std::ostream& os, const bool hasNoArgs) {
   os << "GUNIT_NOTIFY_CONSTRUCTOR";
   if (hasNoArgs) {
-    os << "_NO_ARGS";
+    os << "_NO_ARGS\n";
   }
 }
 
@@ -254,7 +267,8 @@ void printParamsVal(
     std::ostream& os,
     const MetadataStorage& metadata,
     const cpp_entity_index& idx,
-    const detail::iteratable_intrusive_list<cpp_function_parameter>& params) {
+    const detail::iteratable_intrusive_list<cpp_function_parameter>& params,
+    const bool needDereference = true) {
   auto first = true;
   for (const auto& param : params) {
     if (!first) {
@@ -270,7 +284,9 @@ void printParamsVal(
           os << "reinterpret_cast<" + to_string(param.type()) + ">(";
           os << param.name() << ")";
         } else {
-          printDereference(os, param.type());
+          if (needDereference) {
+            printDereference(os, param.type());
+          }
           os << param.name();
           printMethodCallOperator(os, param.type());
           os << "_impl.get()";
@@ -330,7 +346,7 @@ void printFunctionDecl(std::ostream& os,
   const auto& params = e.parameters();
   printParamsDecl(os, metadata, idx, params);
   os << ")";
-  if constexpr (std::is_same_v<cpp_member_function_base, FunctionType>) {
+  if constexpr (std::is_same_v<cpp_member_function, FunctionType>) {
     if (is_const(e.cv_qualifier())) {
       os << " const";
     }
@@ -372,6 +388,7 @@ void printFunctionBody(std::ostream& os,
   const auto hasImplemetation =
       hasImpl(e.return_type(), metadata, pureReturnTypeName);
   std::optional<std::string> returnName;
+  std::optional<std::string> notificationName;  // TODO
   if (hasReturnValue(e)) {
     if (hasImplemetation) {
       os << "auto impl = ";
@@ -379,6 +396,7 @@ void printFunctionBody(std::ostream& os,
       printAutoTypeDecl(os, e.return_type());
       os << " result = ";
       returnName = "result";
+      notificationName = returnName;
     }
   }
   if constexpr (std::is_same_v<cpp_member_function, FunctionType>) {
@@ -392,20 +410,21 @@ void printFunctionBody(std::ostream& os,
 
   if (hasImplemetation) {
     os << "auto result = ";
+    returnName = "result";
     printNewOperator(os, e.return_type());
     auto value = pureReturnTypeName;
     eraseScope(value);
     os << value;
     if (e.return_type().kind() == cpp_type_kind::pointer_t) {
       os << "(std::shared_ptr<" << pureReturnTypeName << ">(impl));\n";
+      notificationName = "result->_impl.get()";
     } else {
       os << "(std::make_shared<" << pureReturnTypeName << ">(impl));\n";
+      notificationName = "result._impl.get()";
     }
-
-    returnName = "result";
   }
 
-  printFunctionNotify(os, member, returnName, params.empty());
+  printFunctionNotify(os, member, notificationName, params.empty());
 
   printParamsVal(os, metadata, idx, params);
   os << ");\n";
@@ -420,6 +439,7 @@ void printOperatorBody(std::ostream& os,
                        const cppast::cpp_member_function& e) {
   os << "{\n";
   os << "try {\n";
+  auto returnThis = false;  // TODO
   const auto& params = e.parameters();
   if (type == OperatorType::Equals) {
     os << "return (*_impl) == *";
@@ -429,8 +449,30 @@ void printOperatorBody(std::ostream& os,
     os << "return (*_impl) != *";
     os << params.begin()->name();
     os << "._impl;\n";
+  } else if (type == OperatorType::copyAssignment) {
+    os << "GUNIT_NOTIFY_ASSIGNMENT(";
+    os << params.begin()->name();
+    os << "._impl.get());\n";
+
+    os << "(*_impl) = *";
+    os << params.begin()->name();
+    os << "._impl;\n";
+    returnThis = true;
+  } else if (type == OperatorType::moveAssignment) {
+    os << "GUNIT_NOTIFY_ASSIGNMENT(";
+    os << params.begin()->name();
+    os << "._impl.get());\n";
+
+    os << "(*_impl) = std::move(*";
+    os << params.begin()->name();
+    os << "._impl);\n";
+    returnThis = true;
   }
-  os << CatchBlock << "}\n";
+  os << CatchBlock;
+  if (returnThis) {
+    os << "return *this;\n";
+  }
+  os << "}\n";
 }
 
 void printFunctionBody(std::ostream& os,
@@ -493,11 +535,32 @@ void printBaseClassesConstructors(
   }
 }
 
-void printConstructorBody(std::ostream& os,
-                          const MetadataStorage& metadata,
-                          const cpp_entity_index& idx,
-                          const cpp_constructor& e,
-                          const char* scope) {
+void printBaseClassesSetImpl(
+    std::ostream& os,
+    const MetadataStorage& metadata,
+    const detail::iteratable_intrusive_list<cpp_base_class>& bases) {
+  if (bases.empty()) {
+    return;
+  }
+
+  auto first = true;
+  for (const auto& base : bases) {
+    if (!first) {
+      os << ", ";
+    } else {
+      first = false;
+    }
+    os << base.name() << "::setImpl(_impl);\n";
+  }
+}
+
+void printCopyConstructorBody(
+    std::ostream& os,
+    const MetadataStorage& metadata,
+    const cpp_entity_index& idx,
+    const cpp_constructor& e,
+    const detail::iteratable_intrusive_list<cpp_base_class>& bases,
+    const char* scope) {
   os << "{\n";
   os << "try {\n";
   os << "_impl = std::make_shared<" << scope << "::" << e.name() << ">(";
@@ -509,11 +572,39 @@ void printConstructorBody(std::ostream& os,
   printConstructorNotify(os, params.empty());
   if (!params.empty()) {
     os << "(";
-    printParamsVal(os, metadata, idx, params);
+    printParamsVal(os, metadata, idx, params, false);
     os << ");\n";
   }
 
+  printBaseClassesSetImpl(os, metadata, bases);
+
   os << CatchBlock << "}\n";
+}
+
+void printMoveConstructorBody(std::ostream& os, const cpp_constructor& e) {
+  os << "{\n";
+  os << "try {\n";
+  os << "_impl = std::move(";
+
+  const auto& params = e.parameters();
+  os << params.begin()->name();
+  os << "._impl);\n";
+
+  os << CatchBlock << "}\n";
+}
+
+void printConstructorBody(
+    std::ostream& os,
+    const MetadataStorage& metadata,
+    const cpp_entity_index& idx,
+    const cpp_constructor& e,
+    const detail::iteratable_intrusive_list<cpp_base_class>& bases,
+    const char* scope) {
+  if (isMoveContructor(e)) {
+    printMoveConstructorBody(os, e);
+  } else {
+    printCopyConstructorBody(os, metadata, idx, e, bases, scope);
+  }
 }
 
 void printClass(std::ostream& os,

@@ -96,7 +96,8 @@ void source_generator::handleConstructor(const cpp_constructor& e) {
   printConstructorDecl(m_out, m_metadata, m_idx, e, true);
   printBaseClassesConstructors(m_out, m_metadata, m_class->bases(),
                                m_namespaces.top());
-  printConstructorBody(m_out, m_metadata, m_idx, e, m_namespaces.top());
+  printConstructorBody(m_out, m_metadata, m_idx, e, m_class->bases(),
+                       m_namespaces.top());
 
   m_out << std::endl;
 }

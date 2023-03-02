@@ -7,12 +7,14 @@ using namespace gunit::models;
 using namespace gunit::tests;
 using namespace gunit;
 
+struct PolymorphicTypesTest : TestSuite {};
+
 const char* some_interface_test_script =
     R"(local object_1 = example.StringInterface('abc')
 object_1:isEmpty()
 )";
 
-TEST_F(TestSuite, some_interface_test) {
+TEST_F(PolymorphicTypesTest, some_interface_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   gunit_hook::StringInterface object{"abc"};
@@ -22,7 +24,7 @@ TEST_F(TestSuite, some_interface_test) {
   testScript(some_interface_test_script, session);
 }
 
-TEST_F(TestSuite, some_interface_test_ptr) {
+TEST_F(PolymorphicTypesTest, some_interface_test_ptr) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   gunit_hook::StringInterface* object = new gunit_hook::StringInterface{"abc"};
@@ -38,7 +40,7 @@ const char* some_other_interface_test_script =
 object_1:isEmpty()
 )";
 
-TEST_F(TestSuite, DISABLED_some_other_interface_test_ptr) {
+TEST_F(PolymorphicTypesTest, some_other_interface_test_ptr) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   gunit_hook::StringInterface* object =
@@ -55,7 +57,7 @@ const char* make_some_interface_test_script =
 object_1:isEmpty()
 )";
 
-TEST_F(TestSuite, make_some_interface_test) {
+TEST_F(PolymorphicTypesTest, make_some_interface_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   gunit_hook::SomeInterface* object = gunit_hook::makeSomeInterface("false");

@@ -64,11 +64,14 @@ void printVariableDecl(std::ostream& os,
                        const cppast::cpp_entity_index& idx,
                        const cppast::cpp_member_variable& e);
 
-void printConstructorBody(std::ostream& os,
-                          const MetadataStorage& metadata,
-                          const cppast::cpp_entity_index& idx,
-                          const cppast::cpp_constructor& e,
-                          const char* scope);
+void printConstructorBody(
+    std::ostream& os,
+    const MetadataStorage& metadata,
+    const cppast::cpp_entity_index& idx,
+    const cppast::cpp_constructor& e,
+    const cppast::detail::iteratable_intrusive_list<cppast::cpp_base_class>&
+        bases,
+    const char* scope);
 
 void printClass(std::ostream& os,
                 const MetadataStorage& metadata,
