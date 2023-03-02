@@ -199,7 +199,6 @@ void printFunctionNotify(std::ostream& os,
 
 void printParamType(std::ostream& os,
                     const MetadataStorage& metadata,
-                    const cpp_entity_index& idx,
                     const cpp_type& type) {
   auto value = to_string(type);
   if (isUserData(type, metadata)) {  // check that pointer to user defined type!
@@ -211,7 +210,6 @@ void printParamType(std::ostream& os,
 void printParamsDecl(
     std::ostream& os,
     const MetadataStorage& metadata,
-    const cpp_entity_index& idx,
     const detail::iteratable_intrusive_list<cpp_function_parameter>& params) {
   auto first = true;
   for (const auto& param : params) {
@@ -221,7 +219,7 @@ void printParamsDecl(
       first = false;
     }
 
-    printParamType(os, metadata, idx, param.type());
+    printParamType(os, metadata, param.type());
     os << " ";
 
     assert(!param.name().empty());
@@ -266,7 +264,6 @@ void printDereference(std::ostream& os, const cpp_type& type) {
 void printParamsVal(
     std::ostream& os,
     const MetadataStorage& metadata,
-    const cpp_entity_index& idx,
     const detail::iteratable_intrusive_list<cpp_function_parameter>& params,
     const bool needDereference = true) {
   auto first = true;
@@ -333,18 +330,17 @@ void printNamespace(std::ostream& os,
 template <typename FunctionType>
 void printFunctionDecl(std::ostream& os,
                        const MetadataStorage& metadata,
-                       const cpp_entity_index& idx,
                        const FunctionType& e,
                        const char* scope,
                        const bool semicolon) {
-  printParamType(os, metadata, idx, e.return_type());
+  printParamType(os, metadata, e.return_type());
   os << " ";
   if (scope != nullptr) {
     os << scope << "::";
   }
   os << e.name() << "(";
   const auto& params = e.parameters();
-  printParamsDecl(os, metadata, idx, params);
+  printParamsDecl(os, metadata, params);
   os << ")";
   if constexpr (std::is_same_v<cpp_member_function, FunctionType>) {
     if (is_const(e.cv_qualifier())) {
@@ -359,26 +355,23 @@ void printFunctionDecl(std::ostream& os,
 
 void printFunctionDecl(std::ostream& os,
                        const MetadataStorage& metadata,
-                       const cpp_entity_index& idx,
                        const cpp_function& e,
                        const char* scope,
                        const bool semicolon) {
-  printFunctionDecl<>(os, metadata, idx, e, scope, semicolon);
+  printFunctionDecl<>(os, metadata, e, scope, semicolon);
 }
 
 void printFunctionDecl(std::ostream& os,
                        const MetadataStorage& metadata,
-                       const cpp_entity_index& idx,
                        const cpp_member_function& e,
                        const char* scope,
                        const bool semicolon) {
-  printFunctionDecl<>(os, metadata, idx, e, scope, semicolon);
+  printFunctionDecl<>(os, metadata, e, scope, semicolon);
 }
 
 template <typename FunctionType>
 void printFunctionBody(std::ostream& os,
                        const MetadataStorage& metadata,
-                       const cpp_entity_index& idx,
                        const FunctionType& e,
                        const bool member,
                        const char* scope) {
@@ -405,7 +398,7 @@ void printFunctionBody(std::ostream& os,
     os << scope << "::" << e.name() << "(";
   }
   const auto& params = e.parameters();
-  printParamsVal(os, metadata, idx, params);
+  printParamsVal(os, metadata, params);
   os << ");\n";
 
   if (hasImplemetation) {
@@ -426,7 +419,7 @@ void printFunctionBody(std::ostream& os,
 
   printFunctionNotify(os, member, notificationName, params.empty());
 
-  printParamsVal(os, metadata, idx, params);
+  printParamsVal(os, metadata, params);
   os << ");\n";
 
   printReturnStatement(os, e.return_type(), returnName, metadata);
@@ -477,27 +470,24 @@ void printOperatorBody(std::ostream& os,
 
 void printFunctionBody(std::ostream& os,
                        const MetadataStorage& metadata,
-                       const cppast::cpp_entity_index& idx,
                        const cppast::cpp_function& e,
                        const char* scope) {
-  printFunctionBody<>(os, metadata, idx, e, false, scope);
+  printFunctionBody<>(os, metadata, e, false, scope);
 }
 
 void printFunctionBody(std::ostream& os,
                        const MetadataStorage& metadata,
-                       const cppast::cpp_entity_index& idx,
                        const cppast::cpp_member_function& e,
                        const char* scope) {
   if (auto operatorType = isOperator(e)) {
     printOperatorBody(os, operatorType.value(), e);
   } else {
-    printFunctionBody<>(os, metadata, idx, e, true, scope);
+    printFunctionBody<>(os, metadata, e, true, scope);
   }
 }
 
 void printConstructorDecl(std::ostream& os,
                           const MetadataStorage& metadata,
-                          const cpp_entity_index& idx,
                           const cpp_constructor& e,
                           const bool definition) {
   if (definition) {
@@ -505,7 +495,7 @@ void printConstructorDecl(std::ostream& os,
   }
   os << e.name() << "(";
   const auto& params = e.parameters();
-  printParamsDecl(os, metadata, idx, params);
+  printParamsDecl(os, metadata, params);
   os << ")";
   if (!definition) {
     os << ";";
@@ -557,7 +547,6 @@ void printBaseClassesSetImpl(
 void printCopyConstructorBody(
     std::ostream& os,
     const MetadataStorage& metadata,
-    const cpp_entity_index& idx,
     const cpp_constructor& e,
     const detail::iteratable_intrusive_list<cpp_base_class>& bases,
     const char* scope) {
@@ -566,13 +555,13 @@ void printCopyConstructorBody(
   os << "_impl = std::make_shared<" << scope << "::" << e.name() << ">(";
 
   const auto& params = e.parameters();
-  printParamsVal(os, metadata, idx, params);
+  printParamsVal(os, metadata, params);
   os << ");\n";
 
   printConstructorNotify(os, params.empty());
   if (!params.empty()) {
     os << "(";
-    printParamsVal(os, metadata, idx, params, false);
+    printParamsVal(os, metadata, params, false);
     os << ");\n";
   }
 
@@ -596,14 +585,13 @@ void printMoveConstructorBody(std::ostream& os, const cpp_constructor& e) {
 void printConstructorBody(
     std::ostream& os,
     const MetadataStorage& metadata,
-    const cpp_entity_index& idx,
     const cpp_constructor& e,
     const detail::iteratable_intrusive_list<cpp_base_class>& bases,
     const char* scope) {
   if (isMoveContructor(e)) {
     printMoveConstructorBody(os, e);
   } else {
-    printCopyConstructorBody(os, metadata, idx, e, bases, scope);
+    printCopyConstructorBody(os, metadata, e, bases, scope);
   }
 }
 
@@ -655,9 +643,8 @@ void printStruct(std::ostream& os,
 
 void printVariableDecl(std::ostream& os,
                        const MetadataStorage& metadata,
-                       const cppast::cpp_entity_index& idx,
                        const cppast::cpp_member_variable& e) {
-  printParamType(os, metadata, idx, e.type());
+  printParamType(os, metadata, e.type());
   os << " ";
   os << e.name();
   os << ";\n";

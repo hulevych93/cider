@@ -18,10 +18,8 @@ using namespace cppast;
 namespace gunit {
 namespace tool {
 
-generator::generator(std::ostream& out,
-                     const MetadataStorage& metadata,
-                     const cpp_entity_index& idx)
-    : m_out(out), m_metadata(metadata), m_idx(idx) {}
+generator::generator(std::ostream& out, const MetadataStorage& metadata)
+    : m_out(out), m_metadata(metadata) {}
 
 void generator::handleClass(const cpp_class& e, const bool enter) {
   if (enter) {
@@ -40,9 +38,8 @@ void generator::handleNamespace(const cpp_entity& e, const bool enter) {
 }
 
 header_generator::header_generator(std::ostream& out,
-                                   const MetadataStorage& metadata,
-                                   const cpp_entity_index& idx)
-    : generator(out, metadata, idx) {}
+                                   const MetadataStorage& metadata)
+    : generator(out, metadata) {}
 
 void header_generator::handleClass(const cpp_class& e, const bool enter) {
   generator::handleClass(e, enter);
@@ -59,13 +56,13 @@ void header_generator::handleClass(const cpp_class& e, const bool enter) {
 }
 
 void header_generator::handleConstructor(const cpp_constructor& e) {
-  printConstructorDecl(m_out, m_metadata, m_idx, e, false);
+  printConstructorDecl(m_out, m_metadata, e, false);
 }
 
 void header_generator::handleFreeFunction(const cpp_function& e) {
   m_namespaces(m_out);
 
-  printFunctionDecl(m_out, m_metadata, m_idx, e, nullptr, true);
+  printFunctionDecl(m_out, m_metadata, e, nullptr, true);
 
   m_out << std::endl;
 }
@@ -73,7 +70,7 @@ void header_generator::handleFreeFunction(const cpp_function& e) {
 void header_generator::handleMemberFunction(const cpp_member_function& e) {
   m_namespaces(m_out);
 
-  printFunctionDecl(m_out, m_metadata, m_idx, e, nullptr, true);
+  printFunctionDecl(m_out, m_metadata, e, nullptr, true);
 
   m_out << std::endl;
 }
@@ -82,21 +79,20 @@ void header_generator::handleMemberVariable(
     const cppast::cpp_member_variable& e) {
   m_namespaces(m_out);
 
-  printVariableDecl(m_out, m_metadata, m_idx, e);
+  printVariableDecl(m_out, m_metadata, e);
 }
 
 source_generator::source_generator(std::ostream& out,
-                                   const MetadataStorage& metadata,
-                                   const cpp_entity_index& idx)
-    : generator(out, metadata, idx) {}
+                                   const MetadataStorage& metadata)
+    : generator(out, metadata) {}
 
 void source_generator::handleConstructor(const cpp_constructor& e) {
   m_namespaces(m_out);
 
-  printConstructorDecl(m_out, m_metadata, m_idx, e, true);
+  printConstructorDecl(m_out, m_metadata, e, true);
   printBaseClassesConstructors(m_out, m_metadata, m_class->bases(),
                                m_namespaces.top());
-  printConstructorBody(m_out, m_metadata, m_idx, e, m_class->bases(),
+  printConstructorBody(m_out, m_metadata, e, m_class->bases(),
                        m_namespaces.top());
 
   m_out << std::endl;
@@ -105,8 +101,8 @@ void source_generator::handleConstructor(const cpp_constructor& e) {
 void source_generator::handleFreeFunction(const cpp_function& e) {
   m_namespaces(m_out);
 
-  printFunctionDecl(m_out, m_metadata, m_idx, e, nullptr, false);
-  printFunctionBody(m_out, m_metadata, m_idx, e, m_namespaces.top());
+  printFunctionDecl(m_out, m_metadata, e, nullptr, false);
+  printFunctionBody(m_out, m_metadata, e, m_namespaces.top());
 
   m_out << std::endl;
 }
@@ -114,9 +110,8 @@ void source_generator::handleFreeFunction(const cpp_function& e) {
 void source_generator::handleMemberFunction(const cpp_member_function& e) {
   m_namespaces(m_out);
 
-  printFunctionDecl(m_out, m_metadata, m_idx, e, m_class->name().c_str(),
-                    false);
-  printFunctionBody(m_out, m_metadata, m_idx, e);
+  printFunctionDecl(m_out, m_metadata, e, m_class->name().c_str(), false);
+  printFunctionBody(m_out, m_metadata, e);
 
   m_out << std::endl;
 }
@@ -159,10 +154,9 @@ void process_file(ast_handler& handler, const cpp_file& file) {
 
 void printHeader(const std::string& outputFile,
                  const MetadataStorage& metadata,
-                 const cppast::cpp_entity_index& idx,
                  const cppast::cpp_file& file) {
   std::ofstream headerStream(outputFile + ".h");
-  header_generator header(headerStream, metadata, idx);
+  header_generator header(headerStream, metadata);
 
   headerStream << GeneratedFileHeader << "\n\n";
   headerStream << "#pragma once\n\n";
@@ -174,10 +168,9 @@ void printHeader(const std::string& outputFile,
 
 void printSource(const std::string& outputFile,
                  const MetadataStorage& metadata,
-                 const cppast::cpp_entity_index& idx,
                  const cppast::cpp_file& file) {
   std::ofstream sourceStream(outputFile + ".cpp");
-  source_generator source(sourceStream, metadata, idx);
+  source_generator source(sourceStream, metadata);
 
   sourceStream << GeneratedFileHeader << "\n\n";
   sourceStream << "#include \"" << outputFile + ".h"

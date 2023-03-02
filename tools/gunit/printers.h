@@ -22,33 +22,28 @@ void printNamespace(std::ostream& os,
 
 void printFunctionDecl(std::ostream& os,
                        const MetadataStorage& metadata,
-                       const cppast::cpp_entity_index& idx,
                        const cppast::cpp_function& e,
                        const char* scope,
                        const bool semicolon = false);
 
 void printFunctionDecl(std::ostream& os,
                        const MetadataStorage& metadata,
-                       const cppast::cpp_entity_index& idx,
                        const cppast::cpp_member_function& e,
                        const char* scope,
                        const bool semicolon = false);
 
 void printFunctionBody(std::ostream& os,
                        const MetadataStorage& metadata,
-                       const cppast::cpp_entity_index& idx,
                        const cppast::cpp_function& e,
                        const char* scope = nullptr);
 
 void printFunctionBody(std::ostream& os,
                        const MetadataStorage& metadata,
-                       const cppast::cpp_entity_index& idx,
                        const cppast::cpp_member_function& e,
                        const char* scope = nullptr);
 
 void printConstructorDecl(std::ostream& os,
                           const MetadataStorage& metadata,
-                          const cppast::cpp_entity_index& idx,
                           const cppast::cpp_constructor& e,
                           const bool definition = false);
 
@@ -61,13 +56,11 @@ void printBaseClassesConstructors(
 
 void printVariableDecl(std::ostream& os,
                        const MetadataStorage& metadata,
-                       const cppast::cpp_entity_index& idx,
                        const cppast::cpp_member_variable& e);
 
 void printConstructorBody(
     std::ostream& os,
     const MetadataStorage& metadata,
-    const cppast::cpp_entity_index& idx,
     const cppast::cpp_constructor& e,
     const cppast::detail::iteratable_intrusive_list<cppast::cpp_base_class>&
         bases,

@@ -28,12 +28,12 @@ void print_help(const cxxopts::Options& options) {
 std::unique_ptr<cpp_file> parse_file(const libclang_compile_config& config,
                                      const diagnostic_logger& logger,
                                      const std::string& filename,
-                                     const cpp_entity_index& idx,
                                      bool fatal_error) {
   // the parser is used to parse the entity
   // there can be multiple parser implementations
   libclang_parser parser(type_safe::ref(logger));
   // parse the file
+  cpp_entity_index idx;
   auto file = parser.parse(idx, filename, config);
   if (fatal_error && parser.error())
     return nullptr;
@@ -67,9 +67,8 @@ int main(int argc, char* argv[]) {
       if (options.count("verbose"))
         logger.set_verbose(true);
 
-      cpp_entity_index idx;
       auto file = parse_file(config, logger, options["file"].as<std::string>(),
-                             idx, options.count("fatal_errors") == 1);
+                             options.count("fatal_errors") == 1);
       if (!file)
         return 2;
 
@@ -80,8 +79,8 @@ int main(int argc, char* argv[]) {
       metadata_collector collector(metadata);
       process_file(collector, *file);
 
-      printHeader(outFilePath, metadata, idx, *file);
-      printSource(outFilePath, metadata, idx, *file);
+      printHeader(outFilePath, metadata, *file);
+      printSource(outFilePath, metadata, *file);
     }
   } catch (const std::exception& ex) {
     print_error(std::string("[fatal parsing error] ") + ex.what());
