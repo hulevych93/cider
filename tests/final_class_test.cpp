@@ -12,10 +12,10 @@ struct FinalClassTest : TestSuite {};
 TEST_F(FinalClassTest, class_construct_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  gunit_hook::FinalClass object1;
+  hook::FinalClass object1;
   EXPECT_EQ("local object_1 = example.FinalClass()\n", session->getScript());
 
-  gunit_hook::FinalClass object2(125, true);
+  hook::FinalClass object2(125, true);
   EXPECT_EQ("local object_1 = example.FinalClass(125, true)\n",
             session->getScript());
 }
@@ -28,7 +28,7 @@ object_1:someMethod(129)
 TEST_F(FinalClassTest, class_method_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  gunit_hook::FinalClass object1;
+  hook::FinalClass object1;
   object1.someMethod(129);
 
   SCOPED_TRACE("class_method_test_script");
@@ -43,8 +43,8 @@ local object_2 = example.function_test_class_construct(object_1)
 TEST_F(FinalClassTest, function_test_class_construct_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  gunit_hook::FinalClass object1(423, false);
-  EXPECT_EQ(object1, gunit_hook::function_test_class_construct(object1));
+  hook::FinalClass object1(423, false);
+  EXPECT_EQ(object1, hook::function_test_class_construct(object1));
 
   SCOPED_TRACE("function_test_class_construct_test_script");
   testScript(function_test_class_construct_test_script, session);
@@ -53,8 +53,8 @@ TEST_F(FinalClassTest, function_test_class_construct_test) {
 TEST_F(FinalClassTest, function_test_class_construct_ptr_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  gunit_hook::FinalClass object1(423, false);
-  gunit_hook::function_test_class_construct(&object1);
+  hook::FinalClass object1(423, false);
+  hook::function_test_class_construct(&object1);
 
   SCOPED_TRACE("function_test_class_construct_test_script");
   testScript(function_test_class_construct_test_script, session);
@@ -70,8 +70,8 @@ TEST_F(
     DISABLED_function_test_class_construct_same_pointer_return_test_script_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  gunit_hook::FinalClass object1(423, false);
-  gunit_hook::function_test_class_construct_same_pointer_return(
+  hook::FinalClass object1(423, false);
+  hook::function_test_class_construct_same_pointer_return(
       &object1);  // return same object ptr inside new lua object instance What
                   // TO DO?
 
@@ -89,7 +89,7 @@ object_2:someMethod(129)
 TEST_F(FinalClassTest, class_copy_constuction_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  gunit_hook::FinalClass object1;
+  hook::FinalClass object1;
   auto object2 = object1;
   object2.someMethod(129);
 
@@ -105,7 +105,7 @@ object_1:someMethod(129)
 TEST_F(FinalClassTest, class_move_constuction_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  gunit_hook::FinalClass object1;
+  hook::FinalClass object1;
   auto object2 = std::move(object1);
   object2.someMethod(129);
 
@@ -123,8 +123,8 @@ object_2:someMethod(129)
 TEST_F(FinalClassTest, class_copy_assignment_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  gunit_hook::FinalClass object1;
-  gunit_hook::FinalClass object2;
+  hook::FinalClass object1;
+  hook::FinalClass object2;
   object2 = object1;
   object2.someMethod(129);
 
@@ -142,8 +142,8 @@ object_2:someMethod(129)
 TEST_F(FinalClassTest, class_move_assignment_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  gunit_hook::FinalClass object1;
-  gunit_hook::FinalClass object2;
+  hook::FinalClass object1;
+  hook::FinalClass object2;
   object2 = std::move(object1);
   object2.someMethod(129);
 
@@ -159,7 +159,7 @@ object_1:someMethod(2345)
 TEST_F(FinalClassTest, function_make_class_construct_obj_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  auto object = gunit_hook::function_make_class_construct_obj();
+  auto object = hook::function_make_class_construct_obj();
   object.someMethod(2345);
 
   SCOPED_TRACE("function_make_class_construct_obj_test_script");
@@ -174,7 +174,7 @@ object_1:someMethod(2345)
 TEST_F(FinalClassTest, function_make_class_construct_obj_ptr_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  auto object = gunit_hook::function_make_class_construct_obj_ptr();
+  auto object = hook::function_make_class_construct_obj_ptr();
   object->someMethod(2345);
   delete object;
 
@@ -183,7 +183,7 @@ TEST_F(FinalClassTest, function_make_class_construct_obj_ptr_test) {
 }
 
 TEST_F(FinalClassTest, unreachable_object_error) {
-  gunit_hook::FinalClass object;
+  hook::FinalClass object;
 
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 

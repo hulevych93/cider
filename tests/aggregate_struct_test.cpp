@@ -19,8 +19,8 @@ example.function_test_aggregate(object_1)
 TEST_F(AggregateStructTest, function_test_aggregate_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  gunit_hook::Aggregate aggregateStruct{10, true};
-  gunit_hook::function_test_aggregate(aggregateStruct);
+  hook::Aggregate aggregateStruct{10, true};
+  hook::function_test_aggregate(aggregateStruct);
 
   SCOPED_TRACE("function_test_aggregate_test_script");
   testScript(function_test_aggregate_test_script, session);
@@ -29,8 +29,8 @@ TEST_F(AggregateStructTest, function_test_aggregate_test) {
 TEST_F(AggregateStructTest, function_test_aggregate_ptr_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  gunit_hook::Aggregate aggregateStruct{10, true};
-  gunit_hook::function_test_aggregate(&aggregateStruct);
+  hook::Aggregate aggregateStruct{10, true};
+  hook::function_test_aggregate(&aggregateStruct);
 
   SCOPED_TRACE("function_test_aggregate_test_script");
   testScript(function_test_aggregate_test_script, session);

@@ -17,7 +17,7 @@ object_1:sayGoodbye(2)
 TEST_F(DerivedClassTypesTest, derived_class_types_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  gunit_hook::DerivedClass object("false");
+  hook::DerivedClass object("false");
   object.sayGoodbye(2);
 
   SCOPED_TRACE("derived_class_types_test_script");
@@ -32,7 +32,7 @@ object_1:sayHello()
 TEST_F(DerivedClassTypesTest, some_base_class_types_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  gunit_hook::BaseClass object("true");
+  hook::BaseClass object("true");
   object.sayHello();
 
   SCOPED_TRACE("some_base_class_types_test_script");

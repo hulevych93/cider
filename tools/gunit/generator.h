@@ -16,7 +16,9 @@ namespace gunit {
 namespace tool {
 
 struct generator : ast_handler {
-  generator(std::ostream& out, const MetadataStorage& metadata);
+  generator(std::ostream& out,
+            std::string genScope,
+            const MetadataStorage& metadata);
 
   void handleClass(const cppast::cpp_class& e, const bool enter) override;
   void handleNamespace(const cppast::cpp_entity& e, const bool enter) override;
@@ -31,8 +33,8 @@ struct generator : ast_handler {
 };
 
 struct header_generator final : public generator {
-  header_generator(std::ostream& out, const MetadataStorage& metadata);
-  ~header_generator() = default;
+  using generator::generator;
+  ~header_generator() override = default;
 
   void handleClass(const cppast::cpp_class& e, bool enter) override;
   void handleConstructor(const cppast::cpp_constructor& e) override;
@@ -42,22 +44,24 @@ struct header_generator final : public generator {
 };
 
 struct source_generator final : public generator {
-  source_generator(std::ostream& out, const MetadataStorage& metadata);
-  ~source_generator() = default;
+  using generator::generator;
+  ~source_generator() override = default;
 
   void handleConstructor(const cppast::cpp_constructor& e) override;
   void handleFreeFunction(const cppast::cpp_function& e) override;
   void handleMemberFunction(const cppast::cpp_member_function& e) override;
 };
 
-void process_file(ast_handler& handler, const cppast::cpp_file& file);
+void handleFile(ast_handler& handler, const cppast::cpp_file& file);
 
 void printHeader(const std::string& outputFile,
                  const MetadataStorage& metadata,
+                 const std::string& genScope,
                  const cppast::cpp_file& file);
 
 void printSource(const std::string& outputFile,
                  const MetadataStorage& metadata,
+                 const std::string& genScope,
                  const cppast::cpp_file& file);
 
 }  // namespace tool

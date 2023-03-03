@@ -17,7 +17,7 @@ TEST_F(EnumTest, function_test_enumeration_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   SomeEnumeration arg = SomeEnumeration::second_value;
-  EXPECT_EQ(arg, gunit_hook::function_test_enumeration(arg));
+  EXPECT_EQ(arg, hook::function_test_enumeration(arg));
 
   SCOPED_TRACE("function_test_enumeration_test_script");
   testScript(function_test_enumeration_test_script, session);

@@ -7,9 +7,12 @@
 namespace gunit {
 namespace tool {
 
+namespaces_stack::namespaces_stack(std::string generatorScope)
+    : m_genScope(std::move(generatorScope)) {}
+
 void namespaces_stack::operator()(std::ostream& os) {
   if (!m_inside) {
-    os << "namespace " << GeneratedNamespaceName << " {\n\n";
+    os << "namespace " << m_genScope << " {\n\n";
     m_inside = true;
   }
 }
@@ -22,7 +25,7 @@ void namespaces_stack::push(std::ostream& os, const std::string& scope) {
 
 void namespaces_stack::pop(std::ostream& os) {
   if (m_inside) {
-    os << "} // namespace " << GeneratedNamespaceName << std::endl;
+    os << "} // namespace " << m_genScope << std::endl;
     m_inside = false;
   }
   assert(!m_namespaces.empty());
@@ -45,6 +48,10 @@ std::string namespaces_stack::scope() const {
     scope += space;
   }
   return scope;
+}
+
+const std::string& namespaces_stack::genScope() const {
+  return m_genScope;
 }
 
 }  // namespace tool

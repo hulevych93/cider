@@ -22,7 +22,10 @@ Options getOptions() {
         ("file", "the file that is being parsed (last positional argument)",
          value<std::string>())
         ("out_dir", "the directory which is used for output files generation",
-         value<std::string>()->default_value("."));
+         value<std::string>()->default_value("."))
+        ("namespace", "the namespace which is used for output entities generation",
+         value<std::string>()->default_value("gunit3"));
+
         option_list.add_options("compilation")
         ("database_dir", "set the directory where a 'compile_commands.json' file is located containing build information",
             value<std::string>())

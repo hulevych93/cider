@@ -77,10 +77,11 @@ int main(int argc, char* argv[]) {
 
       MetadataStorage metadata;
       metadata_collector collector(metadata);
-      process_file(collector, *file);
+      handleFile(collector, *file);
 
-      printHeader(outFilePath, metadata, *file);
-      printSource(outFilePath, metadata, *file);
+      const auto genScope = options["namespace"].as<std::string>();
+      printHeader(outFilePath, metadata, genScope, *file);
+      printSource(outFilePath, metadata, genScope, *file);
     }
   } catch (const std::exception& ex) {
     print_error(std::string("[fatal parsing error] ") + ex.what());

@@ -17,7 +17,7 @@ object_1:isEmpty()
 TEST_F(PolymorphicTypesTest, some_interface_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  gunit_hook::StringInterface object{"abc"};
+  hook::StringInterface object{"abc"};
   object.isEmpty();
 
   SCOPED_TRACE("some_interface_test_script");
@@ -27,7 +27,7 @@ TEST_F(PolymorphicTypesTest, some_interface_test) {
 TEST_F(PolymorphicTypesTest, some_interface_test_ptr) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  gunit_hook::StringInterface* object = new gunit_hook::StringInterface{"abc"};
+  hook::StringInterface* object = new hook::StringInterface{"abc"};
   object->isEmpty();
   delete object;
 
@@ -43,8 +43,7 @@ object_1:isEmpty()
 TEST_F(PolymorphicTypesTest, some_other_interface_test_ptr) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  gunit_hook::StringInterface* object =
-      new gunit_hook::OtherStringInterface{false};
+  hook::StringInterface* object = new hook::OtherStringInterface{false};
   object->isEmpty();
   delete object;
 
@@ -60,7 +59,7 @@ object_1:isEmpty()
 TEST_F(PolymorphicTypesTest, make_some_interface_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  gunit_hook::SomeInterface* object = gunit_hook::makeSomeInterface("false");
+  hook::SomeInterface* object = hook::makeSomeInterface("false");
   object->isEmpty();
   delete object;
 
