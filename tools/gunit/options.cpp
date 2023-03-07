@@ -21,6 +21,8 @@ Options getOptions() {
         ("fatal_errors", "abort program when a parser error occurs, instead of doing error correction")
         ("file", "the file that is being parsed (last positional argument)",
          value<std::string>())
+        ("files", "the files that are being parsed(paths separated by ; or :)",
+             value<std::string>())
         ("out_dir", "the directory which is used for output files generation",
          value<std::string>()->default_value("."))
         ("namespace", "the namespace which is used for output entities generation",

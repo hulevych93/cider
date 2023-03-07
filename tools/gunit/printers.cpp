@@ -10,6 +10,8 @@
 
 #include <cppast/detail/assert.hpp>
 
+#include <assert.h>
+
 using namespace cppast;
 
 namespace gunit {
