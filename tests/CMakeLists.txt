@@ -54,6 +54,14 @@ gunit_generate("${HDRS_OUT}" ${GEN_DIR})
 add_library(gunit-models ${GEN_SRC_FILES})
 add_dependencies(gunit-models gunit)
 
+if(CLANGFORMAT_EXECUTABLE)
+ foreach(OUT_FILE ${GEN_SRC_FILES})
+  add_custom_command(TARGET gunit-models
+                   PRE_BUILD
+                   COMMAND ${CLANGFORMAT_EXECUTABLE} -style=Chromium -i ${OUT_FILE})
+ endforeach()
+endif()
+
 target_link_libraries(tests
     recorder
     gunit-models

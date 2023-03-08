@@ -83,5 +83,16 @@ void printStruct(std::ostream& os,
                  const cppast::cpp_class& e,
                  const bool enter);
 
+void printHeader(std::ostream& os,
+                 const MetadataStorage& metadata,
+                 const std::string& genScope,
+                 const cppast::cpp_file& file);
+
+void printSource(std::ostream& os,
+                 const MetadataStorage& metadata,
+                 const std::string& genScope,
+                 const std::string& outputFile,
+                 const cppast::cpp_file& file);
+
 }  // namespace tool
 }  // namespace gunit

@@ -27,5 +27,9 @@ bool hasImpl(const cppast::cpp_type& type,
              const MetadataStorage& metadata,
              std::string& name);
 
+void replaceScope(const std::string& newScope, std::string& value);
+
+void handleFile(ast_handler& handler, const cppast::cpp_file& file);
+
 }  // namespace tool
 }  // namespace gunit

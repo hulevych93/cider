@@ -5,12 +5,14 @@
 #include <cxxopts.hpp>
 
 #include <filesystem>
+#include <fstream>
 
 #include "ast_handler.h"
 #include "generator.h"
 #include "namespaces_stack.h"
 #include "options.h"
 #include "printers.h"
+#include "utils.h"
 
 using namespace cppast;
 using namespace gunit::tool;
@@ -26,7 +28,7 @@ void print_help(const cxxopts::Options& options) {
 }
 
 template <typename Functor>
-void parse_files(const libclang_compile_config& config,
+auto parse_files(const libclang_compile_config& config,
                  const diagnostic_logger& logger,
                  const std::vector<std::string>& files,
                  const bool fatal_error,
@@ -96,21 +98,31 @@ int main(int argc, char* argv[]) {
       if (options.count("verbose"))
         logger.set_verbose(true);
 
-      MetadataStorage metadata;
-      metadata_collector collector(metadata);
+      cpp_entity_index idx;
+      cppast::simple_file_parser<cppast::libclang_parser> parser(
+          type_safe::ref(idx), type_safe::ref(logger));
+      for (const auto& file : files) {
+        parser.parse(file, config);
+        if (options.count("fatal_errors") == 1 && parser.error()) {
+          return 1;
+        }
+      }
 
-      auto handler = [&](const cppast::cpp_file& file) {
+      const auto& result = parser.files();
+      const auto& metadata = collectMetadata(result);
+
+      for (const auto& file : result) {
         const auto outFilePath =
             getOutputFilePathWithoutExtension(file.name(), options);
 
-        handleFile(collector, file);
-
         const auto genScope = options["namespace"].as<std::string>();
-        printHeader(outFilePath, metadata, genScope, file);
-        printSource(outFilePath, metadata, genScope, file);
-      };
-      parse_files(config, logger, files, options.count("fatal_errors") == 1,
-                  std::move(handler));
+
+        std::ofstream headerStream(outFilePath + ".h");
+        printHeader(headerStream, metadata, genScope, file);
+
+        std::ofstream sourceStream(outFilePath + ".cpp");
+        printSource(sourceStream, metadata, genScope, outFilePath, file);
+      }
     }
   } catch (const std::exception& ex) {
     print_error(std::string("[fatal parsing error] ") + ex.what());

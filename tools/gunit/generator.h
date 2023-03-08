@@ -52,17 +52,5 @@ struct source_generator final : public generator {
   void handleMemberFunction(const cppast::cpp_member_function& e) override;
 };
 
-void handleFile(ast_handler& handler, const cppast::cpp_file& file);
-
-void printHeader(const std::string& outputFile,
-                 const MetadataStorage& metadata,
-                 const std::string& genScope,
-                 const cppast::cpp_file& file);
-
-void printSource(const std::string& outputFile,
-                 const MetadataStorage& metadata,
-                 const std::string& genScope,
-                 const cppast::cpp_file& file);
-
 }  // namespace tool
 }  // namespace gunit

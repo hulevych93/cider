@@ -81,7 +81,7 @@ bool isUserDefined(const cpp_type& type, std::string& name) {
 bool isUserData(const cpp_type& type, const MetadataStorage& metadata) {
   std::string name;
   if (isUserDefined(type, name)) {
-    return metadata.find(name) != metadata.end();
+    return metadata.classes.find(name) != metadata.classes.end();
   }
   return false;
 }
@@ -89,8 +89,8 @@ bool isUserData(const cpp_type& type, const MetadataStorage& metadata) {
 bool isAggregate(const cpp_type& type, const MetadataStorage& metadata) {
   std::string name;
   if (isUserDefined(type, name)) {
-    auto it = metadata.find(name);
-    if (it != metadata.end()) {
+    auto it = metadata.classes.find(name);
+    if (it != metadata.classes.end()) {
       const auto& classMetadata = it->second;
       return !classMetadata.hasAnyMethods;
     }
@@ -102,13 +102,21 @@ bool hasImpl(const cpp_type& type,
              const MetadataStorage& metadata,
              std::string& name) {
   if (isUserDefined(type, name)) {
-    auto it = metadata.find(name);
-    if (it != metadata.end()) {
+    auto it = metadata.classes.find(name);
+    if (it != metadata.classes.end()) {
       const auto& classMetadata = it->second;
       return classMetadata.hasAnyMethods;
     }
   }
   return false;
+}
+
+void replaceScope(const std::string& newScope, std::string& value) {
+  auto scopePos = value.find_last_of("::");
+  if (scopePos != std::string::npos) {
+    value = value.substr(scopePos + 1);
+    value = newScope + "::" + value;
+  }
 }
 
 }  // namespace tool

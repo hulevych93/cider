@@ -12,6 +12,8 @@ namespace tool {
 struct ast_handler {
   virtual ~ast_handler() = default;
 
+  virtual void handleFile(const cppast::cpp_file& /*e*/, const bool /*enter*/) {
+  }
   virtual void handleNamespace(const cppast::cpp_entity& /*e*/,
                                const bool /*enter*/) {}
   virtual void handleClass(const cppast::cpp_class& /*e*/, bool /*enter*/) {}

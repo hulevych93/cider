@@ -2,11 +2,16 @@
 
 #include <cppast/cpp_class.hpp>
 #include <cppast/cpp_entity_kind.hpp>
+#include <cppast/cpp_file.hpp>
 #include <cppast/cpp_function.hpp>
 #include <cppast/cpp_function_type.hpp>
 #include <cppast/cpp_member_function.hpp>
 
+#include "utils.h"
+
 #include <assert.h>
+
+using namespace cppast;
 
 namespace gunit {
 namespace tool {
@@ -20,6 +25,22 @@ static class NullBuffer : public std::streambuf {
 
 static std::ostream null_stream(&null_buffer);
 
+void collectParamType(std::unordered_set<std::string>& os,
+                      const cpp_type& type) {
+  std::string name;
+  if (isUserDefined(type, name)) {
+    os.emplace(name);
+  }
+}
+
+void collectParamTypes(
+    std::unordered_set<std::string>& os,
+    const detail::iteratable_intrusive_list<cpp_function_parameter>& params) {
+  for (const auto& param : params) {
+    collectParamType(os, param.type());
+  }
+}
+
 }  // namespace
 
 void metadata_collector::handleNamespace(const cppast::cpp_entity& e,
@@ -31,34 +52,83 @@ void metadata_collector::handleNamespace(const cppast::cpp_entity& e,
   }
 }
 
-void metadata_collector::handleClass(const cppast::cpp_class& e, bool enter) {
+void metadata_collector::handleFile(const cppast::cpp_file& e,
+                                    const bool enter) {
   if (enter) {
-    assert(!m_current.has_value());
-    m_current = ClassMetadata{};
+    assert(!m_file.has_value());
+    m_file = FileMetadata{};
+    m_file->name = e.name();
   } else {
-    assert(m_current.has_value());
-    m_storage.emplace(m_namespaces.scope() + "::" + e.name(),
-                      m_current.value());
-    m_current.reset();
+    assert(m_file.has_value());
+    m_storage.files.emplace(e.name(), m_file.value());
+    m_file.reset();
   }
 }
 
-void metadata_collector::handleConstructor(const cppast::cpp_constructor&) {
-  assert(m_current.has_value());
-  m_current->hasUserConstructors = true;
-  m_current->hasAnyMethods = true;
+void metadata_collector::handleClass(const cppast::cpp_class& e, bool enter) {
+  if (enter) {
+    assert(!m_class.has_value());
+    m_class = ClassMetadata{};
+    m_class->name = e.name();
+    m_class->file = m_file->name;
+    m_file->exports.emplace(m_namespaces.scope() + "::" + e.name());
+  } else {
+    assert(m_class.has_value());
+    m_storage.classes.emplace(m_namespaces.scope() + "::" + e.name(),
+                              m_class.value());
+    m_class.reset();
+  }
+}
+
+void metadata_collector::handleConstructor(const cppast::cpp_constructor& e) {
+  assert(m_class.has_value());
+  m_class->hasUserConstructors = true;
+  m_class->hasAnyMethods = true;
+
+  collectParamTypes(m_file->imports, e.parameters());
 }
 
 void metadata_collector::handleMemberFunction(
-    const cppast::cpp_member_function&) {
-  assert(m_current.has_value());
-  m_current->hasAnyMethods = true;
+    const cppast::cpp_member_function& e) {
+  assert(m_class.has_value());
+  m_class->hasAnyMethods = true;
+
+  collectParamTypes(m_file->imports, e.parameters());
+  collectParamType(m_file->imports, e.return_type());
+}
+
+void metadata_collector::handleFreeFunction(const cppast::cpp_function& e) {
+  collectParamTypes(m_file->imports, e.parameters());
+  collectParamType(m_file->imports, e.return_type());
 }
 
 void metadata_collector::handleMemberVariable(
-    const cppast::cpp_member_variable&) {
-  assert(m_current.has_value());
-  m_current->hasAnyFields = true;
+    const cppast::cpp_member_variable& e) {
+  assert(m_class.has_value());
+  m_class->hasAnyFields = true;
+}
+
+void metadata_collector::finish() {
+  auto& files = m_storage.files;
+  for (auto& fileIt : files) {
+    auto& file = fileIt.second;
+    for (const auto& exportClass : file.exports) {
+      file.imports.erase(exportClass);
+    }
+  }
+}
+
+MetadataStorage collectMetadata(
+    const cppast::detail::iteratable_intrusive_list<cppast::cpp_file>& files) {
+  MetadataStorage metadata;
+  metadata_collector collector(metadata);
+
+  for (const auto& file : files) {
+    handleFile(collector, file);
+  }
+
+  collector.finish();
+  return metadata;
 }
 
 }  // namespace tool
