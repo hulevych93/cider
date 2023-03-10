@@ -52,6 +52,7 @@ if(NOT DEFINED GUNIT_THIRDPARTY_TARGET_NAME)
     add_custom_target(${GUNIT_THIRDPARTY_TARGET_NAME})
 endif()
 
+include(${GUNIT_CMAKE_DIR}/gunit.cmake)
 include(${GUNIT_CMAKE_DIR}/vars.cmake)
 include(${GUNIT_CMAKE_DIR}/sources.cmake)
 include(${GUNIT_CMAKE_DIR}/thirdparty.cmake)

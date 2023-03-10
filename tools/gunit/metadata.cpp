@@ -41,6 +41,14 @@ void collectParamTypes(
   }
 }
 
+void collectBasesTypes(
+    std::unordered_set<std::string>& os,
+    const detail::iteratable_intrusive_list<cpp_base_class>& bases) {
+  for (const auto& base : bases) {
+    collectParamType(os, base.type());
+  }
+}
+
 }  // namespace
 
 void metadata_collector::handleNamespace(const cppast::cpp_entity& e,
@@ -72,6 +80,7 @@ void metadata_collector::handleClass(const cppast::cpp_class& e, bool enter) {
     m_class->name = e.name();
     m_class->file = m_file->name;
     m_file->exports.emplace(m_namespaces.scope() + "::" + e.name());
+    collectBasesTypes(m_file->imports, e.bases());
   } else {
     assert(m_class.has_value());
     m_storage.classes.emplace(m_namespaces.scope() + "::" + e.name(),

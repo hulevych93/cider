@@ -12,6 +12,7 @@
 #include "namespaces_stack.h"
 #include "options.h"
 #include "printers.h"
+#include "swig.h"
 #include "utils.h"
 
 using namespace cppast;
@@ -108,10 +109,25 @@ int main(int argc, char* argv[]) {
         }
       }
 
-      const auto& result = parser.files();
-      const auto& metadata = collectMetadata(result);
+      const auto& files = parser.files();
+      const auto& metadata = collectMetadata(files);
 
-      for (const auto& file : result) {
+      if (options.count("swig")) {
+        const auto moduleName = options["swig"].as<std::string>();
+        if (moduleName.empty()) {
+          print_error("missing swig module name argument");
+        }
+
+        const auto outSwigFilePath =
+            getOutputFilePathWithoutExtension(moduleName, options);
+
+        std::ofstream swigStream(outSwigFilePath + ".swig");
+        printSwig(swigStream, moduleName, metadata, files);
+
+        return 0;
+      }
+
+      for (const auto& file : files) {
         const auto outFilePath =
             getOutputFilePathWithoutExtension(file.name(), options);
 

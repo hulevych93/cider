@@ -25,40 +25,39 @@ endif()
 
 function(gunit_generate_swig)
     set(OPTIONS EXTERNAL_RUNTIME)
-    set(ONE_VALUE_ARGS LANGUAGE FLAGS OUTPUT_DIR)
-    set(MULTI_VALUE_ARGS GENERATOR_ARGS DEFINES SWIG_FILES)
+    set(ONE_VALUE_ARGS LANGUAGE FLAGS OUTPUT_DIR DEPENDS FILE)
+    set(MULTI_VALUE_ARGS GENERATOR_ARGS DEFINES)
 
     cmake_parse_arguments(SWIG "${OPTIONS}" "${ONE_VALUE_ARGS}" "${MULTI_VALUE_ARGS}" ${ARGN})
-    gunit_add_cmake_deps(${SWIG_SWIG_FILES})
 
     # This ensures that there is no files from previous cmake runs.
     file(REMOVE_RECURSE "${SWIG_OUTPUT_DIR}")
     file(MAKE_DIRECTORY "${SWIG_OUTPUT_DIR}")
 
-    foreach(FILE ${SWIG_SWIG_FILES})
-        get_filename_component(FILE_NAME "${FILE}" NAME_WE)
-        get_filename_component(SWIG_DIRECTORY ${GUNIT_SWIG_EXECUTABLE} DIRECTORY)
-        add_custom_command(OUTPUT "${SWIG_OUTPUT_DIR}/${FILE_NAME}_wrap.cpp" "${SWIG_OUTPUT_DIR}/${FILE_NAME}_wrap.h"
-                         COMMAND "${GUNIT_SWIG_EXECUTABLE}" -c++ -${SWIG_LANGUAGE} ${SWIG_GENERATOR_ARGS}
-                        -cppext cpp "-I${CMAKE_SOURCE_DIR}"
-                        -outdir "${SWIG_OUTPUT_DIR}"
-                        -w509 # Warning: Overloaded method effectively ignored
-                        -o "${SWIG_OUTPUT_DIR}/${FILE_NAME}_wrap.cpp"
-                        -oh "${SWIG_OUTPUT_DIR}/${FILE_NAME}_wrap.h"
-                        -xmlout "${SWIG_OUTPUT_DIR}/${FILE_NAME}_wrap.xml"
-                        ${SWIG_DEFINES}
-                        ${FILE}
-                WORKING_DIRECTORY ${SWIG_DIRECTORY}
-                COMMENT "Generating swig wrapper files...")
+    get_filename_component(FILE_NAME "${SWIG_FILE}" NAME_WE)
+    get_filename_component(SWIG_DIRECTORY ${GUNIT_SWIG_EXECUTABLE} DIRECTORY)
 
-        if(SWIG_EXTERNAL_RUNTIME)
-            add_custom_command(OUTPUT "${SWIG_OUTPUT_DIR}/swig${SWIG_LANGUAGE}run.h"
-                    COMMAND "${GUNIT_SWIG_EXECUTABLE}" -c++ -${SWIG_LANGUAGE} ${SWIG_FLAGS} -cppext cpp
-                            -external-runtime "${SWIG_OUTPUT_DIR}/swig${SWIG_LANGUAGE}run.h"
-                    WORKING_DIRECTORY ${SWIG_DIRECTORY}
-                    COMMENT "Generating swig runtime headers...")
-        endif()
-    endforeach()
+    add_custom_command(OUTPUT "${SWIG_OUTPUT_DIR}/${FILE_NAME}_wrap.cpp" "${SWIG_OUTPUT_DIR}/${FILE_NAME}_wrap.h"
+                       COMMAND "${GUNIT_SWIG_EXECUTABLE}" -c++ -${SWIG_LANGUAGE} ${SWIG_GENERATOR_ARGS}
+                      -cppext cpp "-I${CMAKE_SOURCE_DIR}"
+                      -outdir "${SWIG_OUTPUT_DIR}"
+                      -w509 # Warning: Overloaded method effectively ignored
+                      -o "${SWIG_OUTPUT_DIR}/${FILE_NAME}_wrap.cpp"
+                      -oh "${SWIG_OUTPUT_DIR}/${FILE_NAME}_wrap.h"
+                      -xmlout "${SWIG_OUTPUT_DIR}/${FILE_NAME}_wrap.xml"
+                      ${SWIG_DEFINES}
+                      ${SWIG_FILE}
+              WORKING_DIRECTORY ${SWIG_DIRECTORY}
+              DEPENDS ${SWIG_DEPENDS}
+              COMMENT "Generating swig wrapper files...")
+
+    if(SWIG_EXTERNAL_RUNTIME)
+      add_custom_command(OUTPUT "${SWIG_OUTPUT_DIR}/swig${SWIG_LANGUAGE}run.h"
+                COMMAND "${GUNIT_SWIG_EXECUTABLE}" -c++ -${SWIG_LANGUAGE} ${SWIG_FLAGS} -cppext cpp
+                        -external-runtime "${SWIG_OUTPUT_DIR}/swig${SWIG_LANGUAGE}run.h"
+                  WORKING_DIRECTORY ${SWIG_DIRECTORY}
+                  COMMENT "Generating swig runtime headers...")
+      endif()
 endfunction()
 
 ExternalProject_Add(

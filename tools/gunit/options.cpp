@@ -17,6 +17,7 @@ Options getOptions() {
     option_list.add_options()
         ("h,help", "display this help and exit")
         ("version", "display version information and exit")
+        ("swig", "generate only swig wrapper with given module name", value<std::string>())
         ("v,verbose", "be verbose when parsing")
         ("fatal_errors", "abort program when a parser error occurs, instead of doing error correction")
         ("file", "the file that is being parsed (last positional argument)",
