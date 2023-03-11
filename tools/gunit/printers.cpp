@@ -423,6 +423,67 @@ void printConstructorDecl(std::ostream& os,
   os << "\n";
 }
 
+void printGeneratedMethods(std::ostream& os,
+                           const MetadataStorage& metadata,
+                           const cppast::cpp_class& e,
+                           const char* scope,
+                           const bool definition) {
+  auto classMetaIt =
+      metadata.classes.find(std::string{scope} + "::" + e.name());
+  if (classMetaIt != metadata.classes.end()) {
+    auto classMeta = classMetaIt->second;
+
+    if (!classMeta.hasUserConstructors) {
+      if (definition) {
+        os << e.name() << "::";
+      }
+      os << e.name() << "()";
+      if (definition) {
+        os << " {\n";
+        os << "try {\n";
+        os << "_impl = std::make_shared<" << scope << "::" << e.name()
+           << ">();\n";
+        os << "GUNIT_NOTIFY_CONSTRUCTOR_NO_ARGS\n";
+        os << CatchBlock;
+        os << "}\n";
+      } else {
+        os << ";\n";
+      }
+    }
+
+    if (!classMeta.hasCopyConstructor) {
+      if (definition) {
+        os << e.name() << "::";
+      }
+      os << e.name() << "(const " << e.name() << "& other)";
+      if (definition) {
+        const auto& bases = e.bases();
+
+        auto first = true;
+        for (const auto& base : bases) {
+          if (!first) {
+            os << ", ";
+          } else {
+            os << ": ";
+            first = false;
+          }
+          os << base.name() << "(other)";
+        }
+
+        os << " {\n";
+        os << "try {\n";
+        os << "_impl = std::make_shared<" << scope << "::" << e.name()
+           << ">(*other._impl.get());\n";
+        os << "GUNIT_NOTIFY_CONSTRUCTOR(other._impl.get())\n";
+        os << CatchBlock;
+        os << "}\n";
+      } else {
+        os << ";\n";
+      }
+    }
+  }
+}
+
 void printBaseClassesConstructors(
     std::ostream& os,
     const MetadataStorage& metadata,
@@ -465,7 +526,7 @@ void printBaseClassesSetImpl(
   }
 }
 
-void printCopyConstructorBody(
+void printGeneralConstructorBody(
     std::ostream& os,
     const MetadataStorage& metadata,
     const cpp_constructor& e,
@@ -512,7 +573,7 @@ void printConstructorBody(
   if (isMoveContructor(e)) {
     printMoveConstructorBody(os, e);
   } else {
-    printCopyConstructorBody(os, metadata, e, bases, scope);
+    printGeneralConstructorBody(os, metadata, e, bases, scope);
   }
 }
 

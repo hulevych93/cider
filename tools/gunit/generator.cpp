@@ -10,6 +10,7 @@
 #include <cppast/visitor.hpp>
 
 #include "printers.h"
+#include "utils.h"
 
 using namespace cppast;
 
@@ -47,6 +48,10 @@ void header_generator::handleClass(const cpp_class& e, const bool enter) {
   if (e.class_kind() == cpp_class_kind::class_t) {
     printClass(m_out, m_metadata, e, m_namespaces.genScope().c_str(),
                m_namespaces.top(), enter);
+    if (enter && !isAbstract(e, m_namespaces.scope().c_str(), m_metadata)) {
+      printGeneratedMethods(m_out, m_metadata, e, m_namespaces.scope().c_str(),
+                            false);
+    }
   } else {
     printStruct(m_out, m_metadata, e, enter);
   }
@@ -80,6 +85,18 @@ void header_generator::handleMemberVariable(
   m_namespaces(m_out);
 
   printVariableDecl(m_out, m_metadata, e, m_namespaces.genScope().c_str());
+}
+
+void source_generator::handleClass(const cppast::cpp_class& e, bool enter) {
+  generator::handleClass(e, enter);
+
+  if (enter && e.class_kind() == cpp_class_kind::class_t &&
+      !isAbstract(e, m_namespaces.scope().c_str(), m_metadata)) {
+    m_namespaces(m_out);
+    printGeneratedMethods(m_out, m_metadata, e, m_namespaces.scope().c_str(),
+                          true);
+    m_out << std::endl;
+  }
 }
 
 void source_generator::handleConstructor(const cpp_constructor& e) {

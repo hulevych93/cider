@@ -7,11 +7,23 @@
 namespace gunit {
 namespace tool {
 
-enum OperatorType { copyAssignment, moveAssignment, Equals, NotEquals };
+enum OperatorType {
+  undefined,
+  copyAssignment,
+  moveAssignment,
+  Equals,
+  NotEquals
+};
 
 std::optional<OperatorType> isOperator(const cppast::cpp_member_function& e);
 
 bool isMoveContructor(const cppast::cpp_constructor& e);
+
+bool isCopyContructor(const cppast::cpp_constructor& e);
+
+bool isMoveAssignmentOperator(const cppast::cpp_member_function& e);
+
+bool isCopyAssignmentOperator(const cppast::cpp_member_function& e);
 
 bool hasReturnValue(const cppast::cpp_function& e);
 
@@ -22,6 +34,10 @@ bool isUserDefined(const cppast::cpp_type& type, std::string& name);
 bool isUserData(const cppast::cpp_type& type, const MetadataStorage& metadata);
 
 bool isAggregate(const cppast::cpp_type& type, const MetadataStorage& metadata);
+
+bool isAbstract(const cppast::cpp_class& e,
+                const char* scope,
+                const MetadataStorage& metadata);
 
 bool hasImpl(const cppast::cpp_type& type,
              const MetadataStorage& metadata,

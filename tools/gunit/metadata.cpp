@@ -91,8 +91,14 @@ void metadata_collector::handleClass(const cppast::cpp_class& e, bool enter) {
 
 void metadata_collector::handleConstructor(const cppast::cpp_constructor& e) {
   assert(m_class.has_value());
-  m_class->hasUserConstructors = true;
+
+  const bool isCopy = isCopyContructor(e);
+  const bool isMove = isMoveContructor(e);
+
+  m_class->hasUserConstructors |= (!isCopy && !isMove);
   m_class->hasAnyMethods = true;
+  m_class->hasCopyConstructor |= isCopy;
+  m_class->hasMoveConstructor |= isMove;
 
   collectParamTypes(m_file->imports, e.parameters());
 }
@@ -101,6 +107,13 @@ void metadata_collector::handleMemberFunction(
     const cppast::cpp_member_function& e) {
   assert(m_class.has_value());
   m_class->hasAnyMethods = true;
+  m_class->hasCopyAssignmentOperator |= isCopyAssignmentOperator(e);
+  m_class->hasMoveAssignmentOperator |= isMoveAssignmentOperator(e);
+
+  if (e.is_virtual()) {
+    const auto& info = e.virtual_info().value();
+    m_class->isAbstract |= info.is_set(cppast::cpp_virtual_flags::pure);
+  }
 
   collectParamTypes(m_file->imports, e.parameters());
   collectParamType(m_file->imports, e.return_type());

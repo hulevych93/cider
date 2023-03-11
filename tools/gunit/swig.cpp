@@ -23,17 +23,19 @@ void swig_generator::finish() {
     files.emplace_back(file);
   }
 
-  std::sort(files.begin(), files.end(),
+  std::sort(files.rbegin(), files.rend(),
             [](const FileMetadata& m1, const FileMetadata& m2) {
-              if (m1.name == m2.name) {
-                return false;
-              }
-              for (const auto& imp : m1.imports) {
-                if (m2.exports.find(imp) != m2.exports.end()) {
-                  return false;
+              for (const auto& imp : m1.exports) {
+                if (m2.imports.find(imp) != m2.imports.end()) {
+                  return true;
                 }
               }
-              return true;
+              for (const auto& imp : m2.exports) {
+                if (m1.imports.find(imp) != m1.imports.end()) {
+                  return true;
+                }
+              }
+              return false;
             });
 
   for (const auto& file : files) {

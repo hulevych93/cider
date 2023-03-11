@@ -31,16 +31,41 @@ std::optional<OperatorType> isOperator(const cpp_member_function& e) {
   return std::nullopt;
 }
 
-bool isMoveContructor(const cpp_constructor& e) {
+bool isCopyMoveContructor(const cpp_constructor& e, const cpp_reference kind) {
   const auto& params = e.parameters();
-  for (const auto& param : params) {
-    if (param.type().kind() == cpp_type_kind::reference_t) {
-      const auto& reference =
-          static_cast<const cpp_reference_type&>(param.type());
-      return reference.reference_kind() == cpp_reference::cpp_ref_rvalue;
+  if (params.begin() == params.end()) {
+    return false;
+  }
+  if (++params.begin() != params.end()) {
+    return false;
+  }
+  const auto& param = *params.begin();
+  if (param.type().kind() == cpp_type_kind::reference_t) {
+    const auto& reference =
+        static_cast<const cpp_reference_type&>(param.type());
+    if (to_string(reference).find(e.name()) != std::string::npos) {
+      return reference.reference_kind() == kind;
     }
   }
   return false;
+}
+
+bool isMoveContructor(const cpp_constructor& e) {
+  return isCopyMoveContructor(e, cpp_reference::cpp_ref_rvalue);
+}
+
+bool isCopyContructor(const cppast::cpp_constructor& e) {
+  return isCopyMoveContructor(e, cpp_reference::cpp_ref_lvalue);
+}
+
+bool isMoveAssignmentOperator(const cppast::cpp_member_function& e) {
+  return isOperator(e).value_or(OperatorType::undefined) ==
+         OperatorType::moveAssignment;
+}
+
+bool isCopyAssignmentOperator(const cppast::cpp_member_function& e) {
+  return isOperator(e).value_or(OperatorType::undefined) ==
+         OperatorType::copyAssignment;
 }
 
 template <typename FunctionType>
@@ -117,6 +142,17 @@ void replaceScope(const std::string& newScope, std::string& value) {
     value = value.substr(scopePos + 1);
     value = newScope + "::" + value;
   }
+}
+
+bool isAbstract(const cpp_class& e,
+                const char* scope,
+                const MetadataStorage& metadata) {
+  auto it = metadata.classes.find(std::string{scope} + "::" + e.name());
+  if (it != metadata.classes.end()) {
+    const auto& classMetadata = it->second;
+    return classMetadata.isAbstract;
+  }
+  return false;
 }
 
 }  // namespace tool

@@ -21,15 +21,16 @@ struct ClassMetadata final {
   std::string name;
   std::string file;
 
+  bool isAbstract = false;     // e.g. has any pure virtual methods
   bool hasAnyMethods = false;  // (e.g. public ones)
   bool hasAnyFields = false;   // (e.g. public ones)
+
   bool hasUserConstructors =
       false;  // (e.g. will compiler generate default one)
-
-  // bool hasCopyConstructor = false;
-  // bool hasMoveConstructor = false;
-  // bool hasCopyOperator = false;
-  // bool hasMoveOperator = false;
+  bool hasCopyConstructor = false;
+  bool hasMoveConstructor = false;
+  bool hasCopyAssignmentOperator = false;
+  bool hasMoveAssignmentOperator = false;
 };
 
 struct FileMetadata final {

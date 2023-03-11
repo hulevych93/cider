@@ -44,6 +44,12 @@ void printFunctionBody(std::ostream& os,
                        const char* genScope,
                        const char* scope = nullptr);
 
+void printGeneratedMethods(std::ostream& os,
+                           const MetadataStorage& metadata,
+                           const cppast::cpp_class& e,
+                           const char* scope,
+                           const bool definition);
+
 void printConstructorDecl(std::ostream& os,
                           const MetadataStorage& metadata,
                           const cppast::cpp_constructor& e,
