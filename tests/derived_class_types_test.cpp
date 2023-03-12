@@ -1,6 +1,6 @@
 #include "utils/test_suite.h"
 
-#include "gunit-models/derived_class_types.h"
+#include "derived_class_types.h"
 
 using namespace gunit::recorder;
 using namespace gunit::models;

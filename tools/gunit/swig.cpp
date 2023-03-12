@@ -2,6 +2,7 @@
 
 #include <cppast/cpp_file.hpp>
 
+#include "options.h"
 #include "utils.h"
 
 using namespace cppast;
@@ -10,9 +11,10 @@ namespace gunit {
 namespace tool {
 
 swig_generator::swig_generator(std::ostream& out,
+                               const std::string& outPath,
                                const std::string& module,
                                const MetadataStorage& metadata)
-    : m_out(out), m_module(module), m_metadata(metadata) {
+    : m_out(out), m_outPath(outPath), m_module(module), m_metadata(metadata) {
   m_out << "%module " << m_module << "\n";
 }
 
@@ -39,17 +41,20 @@ void swig_generator::finish() {
             });
 
   for (const auto& file : files) {
-    m_out << "%{ #include \"" << file.name << "\" %}\n";
-    m_out << "%include \"" << file.name << "\"\n";
+    const auto& path = getOutputFilePathWithoutExtension(file.name, m_outPath);
+
+    m_out << "%{ #include \"" << path << ".h\" %}\n";
+    m_out << "%include \"" << path << ".h\"\n";
   }
 }
 
 void printSwig(
     std::ostream& os,
+    const std::string& outPath,
     const std::string& moduleName,
     const MetadataStorage& metadata,
     const cppast::detail::iteratable_intrusive_list<cppast::cpp_file>& files) {
-  swig_generator swig_gen(os, moduleName, metadata);
+  swig_generator swig_gen(os, outPath, moduleName, metadata);
   for (const auto& file : files) {
     handleFile(swig_gen, file);
   }

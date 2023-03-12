@@ -1,6 +1,6 @@
 #include "utils/test_suite.h"
 
-#include "gunit-models/polymorphic_types.h"
+#include "polymorphic_types.h"
 
 using namespace gunit::recorder;
 using namespace gunit::models;

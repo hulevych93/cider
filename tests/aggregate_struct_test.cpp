@@ -1,6 +1,6 @@
 #include "utils/test_suite.h"
 
-#include "gunit-models/aggregate_struct.h"
+#include "aggregate_struct.h"
 
 using namespace gunit::recorder;
 using namespace gunit::models;

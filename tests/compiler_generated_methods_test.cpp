@@ -1,6 +1,6 @@
 #include "utils/test_suite.h"
 
-#include "gunit-models/compiler_generated_methods.h"
+#include "compiler_generated_methods.h"
 
 using namespace gunit::recorder;
 using namespace gunit::models;

@@ -20,9 +20,10 @@ cxxopts::Options getOptions();
 cppast::libclang_compile_config buildConfig(
     const cxxopts::ParseResult& options);
 
-std::string getOutputFilePathWithoutExtension(
-    const std::string& inputFilePath,
-    const cxxopts::ParseResult& options);
+std::string getOutputFilePath(const cxxopts::ParseResult& options);
+
+std::string getOutputFilePathWithoutExtension(const std::string& inputFilePath,
+                                              const std::string& outDir);
 
 }  // namespace tool
 }  // namespace gunit

@@ -1,6 +1,6 @@
 #include "utils/test_suite.h"
 
-#include "gunit-models/final_class.h"
+#include "final_class.h"
 
 using namespace gunit::recorder;
 using namespace gunit::models;

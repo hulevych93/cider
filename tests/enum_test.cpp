@@ -1,6 +1,6 @@
 #include "utils/test_suite.h"
 
-#include "gunit-models/enum.h"
+#include "enum.h"
 
 using namespace gunit::recorder;
 using namespace gunit::models;

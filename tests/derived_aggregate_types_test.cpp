@@ -1,7 +1,7 @@
 #include "utils/test_suite.h"
 
-#include "gunit-models/aggregate_struct.h"
-#include "gunit-models/derived_agregate_types.h"
+#include "aggregate_struct.h"
+#include "derived_agregate_types.h"
 
 using namespace gunit::recorder;
 using namespace gunit::models;

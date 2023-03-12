@@ -1,6 +1,6 @@
 #include "utils/test_suite.h"
 
-#include "gunit-models/crossfile_types.h"
+#include "crossfile_types.h"
 
 using namespace gunit::recorder;
 using namespace gunit::models;

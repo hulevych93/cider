@@ -3,9 +3,9 @@
 #include "recorder/details/lua/lua_params.h"
 #include "scripting/interpreter.h"
 
-#include "gunit-models/aggregate_struct.h"
-#include "gunit-models/derived_agregate_types.h"
-#include "gunit-models/enum.h"
+#include "aggregate_struct.h"
+#include "derived_agregate_types.h"
+#include "enum.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,6 +23,7 @@ namespace tests {
 void TestSuite::testScript(const char* expectedScript,
                            recorder::ScriptRecordSessionPtr& session) {
   const auto script = session->getScript();
+  session.reset();
 
   auto lState = scripting::get_lua();
   luaopen_example(lState.get());

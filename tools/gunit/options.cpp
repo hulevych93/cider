@@ -134,19 +134,22 @@ cppast::libclang_compile_config buildConfig(const ParseResult& options) {
   return config;
 }
 
-std::string getOutputFilePathWithoutExtension(
-    const std::string& inputFilePath,
-    const cxxopts::ParseResult& options) {
+std::string getOutputFilePathWithoutExtension(const std::string& inputFilePath,
+                                              const std::string& outDir) {
   std::filesystem::path outFilePath;
   const auto fileName = std::filesystem::path(inputFilePath).stem();
+  const std::filesystem::path outDirPath = outDir;
+  if (std::filesystem::is_directory(outDirPath)) {
+    outFilePath = outDirPath / fileName;
+  }
+  return outFilePath.string();
+}
+
+std::string getOutputFilePath(const cxxopts::ParseResult& options) {
   const auto outDir =
       std::filesystem::path(options["out_dir"].as<std::string>());
   std::filesystem::create_directories(outDir);
-  if (std::filesystem::is_directory(outDir)) {
-    outFilePath =
-        std::filesystem::path(options["out_dir"].as<std::string>()) / fileName;
-  }
-  return outFilePath.string();
+  return outDir.string();
 }
 
 }  // namespace tool

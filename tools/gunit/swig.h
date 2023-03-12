@@ -19,6 +19,7 @@ class MetadataStorage;
 
 struct swig_generator final : ast_handler {
   swig_generator(std::ostream& out,
+                 const std::string& outPath,
                  const std::string& module,
                  const MetadataStorage& metadata);
   ~swig_generator() = default;
@@ -27,12 +28,14 @@ struct swig_generator final : ast_handler {
 
  private:
   std::ostream& m_out;
+  std::string m_outPath;
   std::string m_module;
   const MetadataStorage& m_metadata;
 };
 
 void printSwig(
     std::ostream& os,
+    const std::string& outPath,
     const std::string& moduleName,
     const MetadataStorage& metadata,
     const cppast::detail::iteratable_intrusive_list<cppast::cpp_file>& files);

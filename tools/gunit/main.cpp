@@ -111,6 +111,7 @@ int main(int argc, char* argv[]) {
 
       const auto& files = parser.files();
       const auto& metadata = collectMetadata(files);
+      const auto& outDir = getOutputFilePath(options);
 
       if (options.count("swig")) {
         const auto moduleName = options["swig"].as<std::string>();
@@ -119,17 +120,15 @@ int main(int argc, char* argv[]) {
         }
 
         const auto outSwigFilePath =
-            getOutputFilePathWithoutExtension(moduleName, options);
+            getOutputFilePathWithoutExtension(moduleName, outDir);
 
         std::ofstream swigStream(outSwigFilePath + ".swig");
-        printSwig(swigStream, moduleName, metadata, files);
-
-        return 0;
+        printSwig(swigStream, outDir, moduleName, metadata, files);
       }
 
       for (const auto& file : files) {
         const auto outFilePath =
-            getOutputFilePathWithoutExtension(file.name(), options);
+            getOutputFilePathWithoutExtension(file.name(), outDir);
 
         const auto genScope = options["namespace"].as<std::string>();
 

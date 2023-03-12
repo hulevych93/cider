@@ -1,6 +1,6 @@
 #include "utils/test_suite.h"
 
-#include "gunit-models/free_functions.h"
+#include "free_functions.h"
 
 using namespace gunit::recorder;
 using namespace gunit::models;
