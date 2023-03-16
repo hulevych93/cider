@@ -21,6 +21,9 @@ struct ast_handler {
   virtual void handleMemberFunction(const cppast::cpp_member_function& /*e*/) {}
   virtual void handleMemberVariable(const cppast::cpp_member_variable& /*e*/) {}
   virtual void handleFreeFunction(const cppast::cpp_function& /*e*/) {}
+  virtual void handleEnumValue(const cppast::cpp_enum_value& /*e*/) {}
+  virtual void handleEnum(const cppast::cpp_enum& /*e*/, const bool /*enter*/) {
+  }
 };
 
 }  // namespace tool

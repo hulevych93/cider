@@ -41,6 +41,7 @@ struct FileMetadata final {
 };
 
 struct MetadataStorage final {
+  std::unordered_set<std::string> enums;
   std::unordered_map<std::string, ClassMetadata> classes;
   std::unordered_map<std::string, FileMetadata> files;
 };
@@ -56,6 +57,7 @@ struct metadata_collector final : ast_handler {
   void handleFreeFunction(const cppast::cpp_function& e) override;
   void handleMemberVariable(const cppast::cpp_member_variable& e) override;
   void handleNamespace(const cppast::cpp_entity& e, const bool enter) override;
+  void handleEnum(const cppast::cpp_enum& e, const bool enter) override;
 
   void finish();
 

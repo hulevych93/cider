@@ -84,6 +84,13 @@ void printClass(std::ostream& os,
                 const char* scope,
                 const bool enter);
 
+void printEnum(std::ostream& os,
+               const cppast::cpp_enum& e,
+               const bool enter);
+
+void printEnumValue(std::ostream& os,
+                    const cppast::cpp_enum_value& e);
+
 void printStruct(std::ostream& os,
                  const MetadataStorage& metadata,
                  const cppast::cpp_class& e,

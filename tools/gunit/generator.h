@@ -41,6 +41,8 @@ struct header_generator final : public generator {
   void handleMemberFunction(const cppast::cpp_member_function& e) override;
   void handleMemberVariable(const cppast::cpp_member_variable& e) override;
   void handleFreeFunction(const cppast::cpp_function& e) override;
+  void handleEnumValue(const cppast::cpp_enum_value& e) override;
+  void handleEnum(const cppast::cpp_enum& e, const bool enter) override;
 };
 
 struct source_generator final : public generator {

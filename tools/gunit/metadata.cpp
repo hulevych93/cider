@@ -2,6 +2,7 @@
 
 #include <cppast/cpp_class.hpp>
 #include <cppast/cpp_entity_kind.hpp>
+#include <cppast/cpp_enum.hpp>
 #include <cppast/cpp_file.hpp>
 #include <cppast/cpp_function.hpp>
 #include <cppast/cpp_function_type.hpp>
@@ -57,6 +58,13 @@ void metadata_collector::handleNamespace(const cppast::cpp_entity& e,
     m_namespaces.push(null_stream, e.name());
   } else {
     m_namespaces.pop(null_stream);
+  }
+}
+
+void metadata_collector::handleEnum(const cppast::cpp_enum& e,
+                                    const bool enter) {
+  if (enter) {
+    m_storage.enums.emplace(m_namespaces.scope() + "::" + e.name());
   }
 }
 

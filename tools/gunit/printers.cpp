@@ -4,6 +4,7 @@
 #include "utils.h"
 
 #include <cppast/cpp_class.hpp>
+#include <cppast/cpp_enum.hpp>
 #include <cppast/cpp_expression.hpp>
 #include <cppast/cpp_file.hpp>
 #include <cppast/cpp_function.hpp>
@@ -191,7 +192,7 @@ void printParamsVal(
     if (!param.name().empty()) {
       if (isUserData(param.type(), metadata)) {
         if (isAggregate(param.type(), metadata)) {
-          os << "reinterpret_cast<" + to_string(param.type()) + ">(";
+          os << "(" + to_string(param.type()) + ")(";
           os << param.name() << ")";
         } else {
           if (needDereference) {
@@ -225,6 +226,18 @@ void printBaseClasses(
       first = false;
     }
     os << to_string(base.access_specifier()) << " " << base.name() << " ";
+  }
+}
+
+void printExpression(std::ostream& os, const cpp_expression& value) {
+  if (value.kind() == cppast::cpp_expression_kind::literal_t) {
+    const auto& literal =
+        static_cast<const cppast::cpp_literal_expression&>(value);
+    os << " = " << literal.value();
+  } else if (value.kind() == cppast::cpp_expression_kind::unexposed_t) {
+    const auto& expression =
+        static_cast<const cppast::cpp_unexposed_expression&>(value);
+    os << " = " << expression.expression().as_string();
   }
 }
 
@@ -624,6 +637,34 @@ void printStruct(std::ostream& os,
   }
 }
 
+void printEnum(std::ostream& os,
+               const cppast::cpp_enum& e,
+               const bool enter) {
+  if (enter) {
+    os << "enum ";
+    if (e.is_scoped()) {
+      os << "class ";
+    }
+    os << e.name();
+    if(e.has_explicit_type()) {
+        os << " : ";
+        os << to_string(e.underlying_type());
+    }
+    os << " {\n";
+  } else {
+    os << "};// enum " << e.name() << "\n\n";
+  }
+}
+
+void printEnumValue(std::ostream& os,
+                    const cppast::cpp_enum_value& e) {
+  os << e.name();
+  if (const auto& value = e.value()) {
+    printExpression(os, value.value());
+    os << ", ";
+  }
+}
+
 void printVariableDecl(std::ostream& os,
                        const MetadataStorage& metadata,
                        const cppast::cpp_member_variable& e,
@@ -632,16 +673,7 @@ void printVariableDecl(std::ostream& os,
   os << " ";
   os << e.name();
   if (const auto& defaultValue = e.default_value()) {
-    const auto& value = defaultValue.value();
-    if (value.kind() == cppast::cpp_expression_kind::literal_t) {
-      const auto& literal =
-          static_cast<const cppast::cpp_literal_expression&>(value);
-      os << " = " << literal.value();
-    } else if (value.kind() == cppast::cpp_expression_kind::unexposed_t) {
-      const auto& expression =
-          static_cast<const cppast::cpp_unexposed_expression&>(value);
-      os << " = " << expression.expression().as_string();
-    }
+    printExpression(os, defaultValue.value());
   }
   os << ";\n";
 }

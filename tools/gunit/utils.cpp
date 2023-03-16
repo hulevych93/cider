@@ -106,7 +106,8 @@ bool isUserDefined(const cpp_type& type, std::string& name) {
 bool isUserData(const cpp_type& type, const MetadataStorage& metadata) {
   std::string name;
   if (isUserDefined(type, name)) {
-    return metadata.classes.find(name) != metadata.classes.end();
+    return metadata.classes.find(name) != metadata.classes.end() ||
+           metadata.enums.find(name) != metadata.enums.end();
   }
   return false;
 }
@@ -119,6 +120,7 @@ bool isAggregate(const cpp_type& type, const MetadataStorage& metadata) {
       const auto& classMetadata = it->second;
       return !classMetadata.hasAnyMethods;
     }
+    return metadata.enums.find(name) != metadata.enums.end();
   }
   return false;
 }

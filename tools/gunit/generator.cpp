@@ -2,11 +2,13 @@
 
 #include <cppast/cpp_class.hpp>
 #include <cppast/cpp_entity_kind.hpp>
+#include <cppast/cpp_enum.hpp>
 #include <cppast/cpp_file.hpp>
 #include <cppast/cpp_function.hpp>
 #include <cppast/cpp_function_type.hpp>
 #include <cppast/cpp_member_function.hpp>
 #include <cppast/cpp_member_variable.hpp>
+
 #include <cppast/visitor.hpp>
 
 #include "printers.h"
@@ -69,6 +71,18 @@ void header_generator::handleFreeFunction(const cpp_function& e) {
                     nullptr, true);
 
   m_out << std::endl;
+}
+
+void header_generator::handleEnumValue(const cppast::cpp_enum_value& e) {
+  printEnumValue(m_out, e);
+}
+
+void header_generator::handleEnum(const cppast::cpp_enum& e, const bool enter) {
+  if (enter) {
+    m_namespaces(m_out);
+  }
+
+  printEnum(m_out, e, enter);
 }
 
 void header_generator::handleMemberFunction(const cpp_member_function& e) {
@@ -162,6 +176,13 @@ void handleFile(ast_handler& handler, const cpp_file& file) {
       case ::cpp_entity_kind::member_variable_t:
         handler.handleMemberVariable(
             static_cast<const cpp_member_variable&>(e));
+        break;
+      case ::cpp_entity_kind::enum_t:
+        handler.handleEnum(static_cast<const cpp_enum&>(e), enter);
+        break;
+      case ::cpp_entity_kind::enum_value_t:
+        handler.handleEnumValue(static_cast<const cpp_enum_value&>(e));
+        break;
       default:
         break;
     }

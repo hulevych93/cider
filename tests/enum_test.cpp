@@ -16,7 +16,7 @@ const char* function_test_enumeration_test_script =
 TEST_F(EnumTest, function_test_enumeration_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-  SomeEnumeration arg = SomeEnumeration::second_value;
+  hook::SomeEnumeration arg = hook::SomeEnumeration::second_value;
   EXPECT_EQ(arg, hook::function_test_enumeration(arg));
 
   SCOPED_TRACE("function_test_enumeration_test_script");
