@@ -637,18 +637,16 @@ void printStruct(std::ostream& os,
   }
 }
 
-void printEnum(std::ostream& os,
-               const cppast::cpp_enum& e,
-               const bool enter) {
+void printEnum(std::ostream& os, const cppast::cpp_enum& e, const bool enter) {
   if (enter) {
     os << "enum ";
     if (e.is_scoped()) {
       os << "class ";
     }
     os << e.name();
-    if(e.has_explicit_type()) {
-        os << " : ";
-        os << to_string(e.underlying_type());
+    if (e.has_explicit_type()) {
+      os << " : ";
+      os << to_string(e.underlying_type());
     }
     os << " {\n";
   } else {
@@ -656,8 +654,7 @@ void printEnum(std::ostream& os,
   }
 }
 
-void printEnumValue(std::ostream& os,
-                    const cppast::cpp_enum_value& e) {
+void printEnumValue(std::ostream& os, const cppast::cpp_enum_value& e) {
   os << e.name();
   if (const auto& value = e.value()) {
     printExpression(os, value.value());

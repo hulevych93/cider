@@ -1,6 +1,8 @@
 gunit_project(tests)
 
-gunit_collect_src(LIST_OUT)
+gunit_collect_src(LIST_OUT "models")
+
+add_subdirectory(models)
 
 include_directories(.
     ${Lua_INCLUDE_DIRS}
@@ -16,7 +18,7 @@ add_test(NAME "tests" COMMAND tests)
 set(GEN_DIR ${GUNIT_GEN_DIR})
 set(SWIG_MODULE_NAME "example")
 
-prv_collect_src(${CMAKE_SOURCE_DIR}/models HDRS_OUT ".swig" ".cpp")
+prv_collect_src(${PROJECT_SOURCE_DIR}/models HDRS_OUT ".swig" ".cpp")
 
 set(GEN_SRC_FILES)
 foreach(HDR ${HDRS_OUT})
@@ -28,7 +30,7 @@ endforeach()
 gunit_tool_generate(${SWIG_MODULE_NAME} "${HDRS_OUT}" ${GEN_DIR})
 
 add_library(gunit-models ${GEN_SRC_FILES})
-add_dependencies(gunit-models gunit)
+add_dependencies(gunit-models gen_swig)
 
 gunit_generate_swig(LANGUAGE lua
                     EXTERNAL_RUNTIME
@@ -54,7 +56,6 @@ target_link_libraries(tests
     models
     scripting
     ${GTest_LIBRARIES}
-    ${Fmt_LIBRARIES}
     ${Lua_LIBRARIES}
     ${PLATFORM_LIBRARIES}
 )

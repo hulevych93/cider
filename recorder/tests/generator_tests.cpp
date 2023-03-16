@@ -3,8 +3,8 @@
 #include "recorder/details/generator.h"
 #include "recorder/details/session.h"
 
-#include "details/lua/lua_func.h"
-#include "details/lua/lua_params.h"
+#include "recorder/details/lua/lua_func.h"
+#include "recorder/details/lua/lua_params.h"
 
 #include <clocale>
 

@@ -30,7 +30,6 @@ if(GUNIT_ENABLE_COVERAGE)
   append_coverage_compiler_flags()
 endif()
 
-add_subdirectory(models)
 add_subdirectory(recorder)
 add_subdirectory(scripting)
 add_subdirectory(tools/gunit)
