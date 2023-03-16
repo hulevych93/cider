@@ -14,6 +14,7 @@ include_directories(.
 
 add_executable(tests ${LIST_OUT})
 add_test(NAME "tests" COMMAND tests)
+add_dependencies(tests ${GUNIT_THIRDPARTY_TARGET_NAME})
 
 set(GEN_DIR ${GUNIT_GEN_DIR})
 set(SWIG_MODULE_NAME "example")
