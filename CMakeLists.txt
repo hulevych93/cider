@@ -40,5 +40,5 @@ if(GUNIT_ENABLE_COVERAGE)
         NAME coverage
         EXECUTABLE ctest
         DEPENDENCIES recorder_test tests
-        EXCLUDE "models/*" "${BUILD_FILES_DIR}/*" "${GUNIT_GEN_DIR}/*" "${BASE_DIRECTORY}/*/v1/*")
+        EXCLUDE "tools/*" "tests/models/*" "${BUILD_FILES_DIR}/*" "${GUNIT_GEN_DIR}/*" "${BASE_DIRECTORY}/*/v1/*" "/Applications/*")
 endif()
