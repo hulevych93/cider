@@ -45,6 +45,15 @@ if(APPLE)
     list(APPEND CMAKE_OPTS
     -DLLVM_CONFIG_BINARY=${LLVM_PREFIX_BREW}/bin/llvm-config
     )
+elseif(UNIX)
+    execute_process(COMMAND which llvm-config
+                    OUTPUT_VARIABLE LLVM_EXECUTABLE
+                    OUTPUT_STRIP_TRAILING_WHITESPACE
+                    COMMAND_ERROR_IS_FATAL ANY
+    )
+    list(APPEND CMAKE_OPTS
+    -DLLVM_CONFIG_BINARY=${LLVM_EXECUTABLE}
+    )
 endif()
 
 ExternalProject_Add(

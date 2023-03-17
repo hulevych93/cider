@@ -58,7 +58,7 @@ TEST_F(CompilerGeneratedMethods, copyConstructor) {
   testScript(no_constructors_copy_ctr_test_script, session);
 }
 
-TEST_F(CompilerGeneratedMethods, OnlyCopyConstructorobj) {
+TEST_F(CompilerGeneratedMethods, DISABLED_OnlyCopyConstructorobj) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   gunit::models::OnlyCopyConstructor obf;

@@ -31,7 +31,7 @@ jobs:
       run: sudo apt install bison
       
     - name: Install LLVM
-      run: sudo apt install llvm
+      run: sudo apt install llvm-dev
       
     - name: Install libclang
       run: sudo apt install libclang-10-dev

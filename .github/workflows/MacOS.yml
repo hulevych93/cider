@@ -6,7 +6,7 @@ on:
       configuration:
         description: 'Configuration'     
         required: true
-        default: 'RELEASE' 
+        default: 'DEBUG' 
         type: choice
         options:
         - DEBUG
