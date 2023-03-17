@@ -17,21 +17,20 @@ template <typename Functor>
 void traverse(FilesList& files,
               const FilesList::const_iterator iter,
               Functor&& func) {
-    const auto& file = *iter;
-    for (const auto& imp : file.imports) {
-        auto it =
-            std::find_if(files.begin(), files.end(), [imp](const auto& m) {
-                return m.exports.find(imp) != m.exports.end();
-            });
-        if (it != files.end()) {
-            traverse(files, it, func);
-        }
+  const auto& file = *iter;
+  for (const auto& imp : file.imports) {
+    auto it = std::find_if(files.begin(), files.end(), [imp](const auto& m) {
+      return m.exports.find(imp) != m.exports.end();
+    });
+    if (it != files.end()) {
+      traverse(files, it, func);
     }
-    func(*iter);
-    files.erase(iter);
+  }
+  func(*iter);
+  files.erase(iter);
 }
 
-} // namespace
+}  // namespace
 
 namespace gunit {
 namespace tool {
@@ -59,8 +58,8 @@ void swig_generator::finish() {
 
   auto it = files.begin();
   while (!files.empty()) {
-      traverse(files, it, printFile);
-      it = files.begin();
+    traverse(files, it, printFile);
+    it = files.begin();
   }
 }
 
