@@ -23,6 +23,7 @@ gunit_export_var(PLATFORM_LIBRARIES ${PLATFORM_LIBRARIES} ${LIBCLANG_LIBRARY})
 
 gunit_export_var(CppAst_INCLUDE_DIRS ${CppAst_INCLUDE_DIRS})
 gunit_export_var(CppAst_LIBRARIES ${CppAst_LIBRARIES})
+gunit_export_var(CppAst_LIB_DIR ${CppAst_LIB_DIR})
 
 set(TMP_DIR         ${GUNIT_3RD_PARTY_TMP_DIR})
 set(SRC_DIR         ${GUNIT_CPPAST_BUILD_DIR})
@@ -83,6 +84,7 @@ ExternalProject_Add_Step(cppast
 ExternalProject_Add_Step(cppast
     install_runtime
     DEPENDEES after_install
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${GUNIT_LIBRARY_OUTPUT_DIRECTORY}"
     COMMAND ${CMAKE_COMMAND} -E copy "${CppAst_LIBRARIES}" "${GUNIT_LIBRARY_OUTPUT_DIRECTORY}"
 )
 

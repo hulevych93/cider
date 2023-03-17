@@ -12,3 +12,4 @@ target_link_directories(gunit PRIVATE ${CppAst_LIB_DIR})
 
 target_link_libraries(gunit PUBLIC ${CppAst_LIBRARIES} ${PLATFORM_LIBRARIES})
 
+set_target_properties(gunit PROPERTIES BUILD_RPATH "${CppAst_LIB_DIR}")
