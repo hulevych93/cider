@@ -64,6 +64,7 @@ void metadata_collector::handleNamespace(const cppast::cpp_entity& e,
 void metadata_collector::handleEnum(const cppast::cpp_enum& e,
                                     const bool enter) {
   if (enter) {
+    m_file->exports.emplace(m_namespaces.scope() + "::" + e.name());
     m_storage.enums.emplace(m_namespaces.scope() + "::" + e.name());
   }
 }

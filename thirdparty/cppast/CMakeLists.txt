@@ -43,7 +43,7 @@ if(APPLE)
     )
     list(APPEND CMAKE_OPTS
     -DLLVM_CONFIG_BINARY=${LLVM_PREFIX_BREW}/bin/llvm-config
-)
+    )
 endif()
 
 ExternalProject_Add(
@@ -78,6 +78,12 @@ ExternalProject_Add_Step(cppast
     DEPENDEES install
     COMMAND ${CMAKE_COMMAND} -E copy "${GUNIT_CPPAST_BUILD_DIR}/_deps/type_safe-src/external/debug_assert/debug_assert.hpp" "${CppAst_INCLUDE_DIRS}/debug_assert.hpp"
     COMMAND ${CMAKE_COMMAND} -E copy "${GUNIT_CPPAST_BUILD_DIR}/external/tpl/${GUNIT_CPPAST_TINY_PROCESS_LIB_NAME}" "${CppAst_LIB_DIR}/${GUNIT_CPPAST_TINY_PROCESS_LIB_NAME}"
+)
+
+ExternalProject_Add_Step(cppast
+    install_runtime
+    DEPENDEES after_install
+    COMMAND ${CMAKE_COMMAND} -E copy "${CppAst_LIBRARIES}" "${GUNIT_LIBRARY_OUTPUT_DIRECTORY}"
 )
 
 add_dependencies(${GUNIT_THIRDPARTY_TARGET_NAME} cppast)

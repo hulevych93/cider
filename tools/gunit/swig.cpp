@@ -5,7 +5,33 @@
 #include "options.h"
 #include "utils.h"
 
+#include <list>
+
 using namespace cppast;
+
+namespace {
+
+using FilesList = std::list<gunit::tool::FileMetadata>;
+
+template <typename Functor>
+void traverse(FilesList& files,
+              const FilesList::const_iterator iter,
+              Functor&& func) {
+    const auto& file = *iter;
+    for (const auto& imp : file.imports) {
+        auto it =
+            std::find_if(files.begin(), files.end(), [imp](const auto& m) {
+                return m.exports.find(imp) != m.exports.end();
+            });
+        if (it != files.end()) {
+            traverse(files, it, func);
+        }
+    }
+    func(*iter);
+    files.erase(iter);
+}
+
+} // namespace
 
 namespace gunit {
 namespace tool {
@@ -19,32 +45,22 @@ swig_generator::swig_generator(std::ostream& out,
 }
 
 void swig_generator::finish() {
-  std::vector<FileMetadata> files;
-  files.reserve(m_metadata.files.size());
+  FilesList files;
   for (const auto& [name, file] : m_metadata.files) {
     files.emplace_back(file);
   }
 
-  std::sort(files.rbegin(), files.rend(),
-            [](const FileMetadata& m1, const FileMetadata& m2) {
-              for (const auto& imp : m1.exports) {
-                if (m2.imports.find(imp) != m2.imports.end()) {
-                  return true;
-                }
-              }
-              for (const auto& imp : m2.exports) {
-                if (m1.imports.find(imp) != m1.imports.end()) {
-                  return true;
-                }
-              }
-              return false;
-            });
-
-  for (const auto& file : files) {
+  const auto printFile = [&](const FileMetadata& file) {
     const auto& path = getOutputFilePathWithoutExtension(file.name, m_outPath);
 
     m_out << "%{ #include \"" << path << ".h\" %}\n";
     m_out << "%include \"" << path << ".h\"\n";
+  };
+
+  auto it = files.begin();
+  while (!files.empty()) {
+      traverse(files, it, printFile);
+      it = files.begin();
   }
 }
 

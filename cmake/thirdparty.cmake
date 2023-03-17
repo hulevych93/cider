@@ -148,7 +148,7 @@ function(gunit_3rd_party_common_cmake_options VAR)
 
         list(APPEND RESULT "-DCMAKE_INSTALL_NAME_DIR=@rpath")
         list(APPEND RESULT -DCMAKE_BUILD_WITH_INSTALL_NAME_DIR=TRUE)
-    elseif(UNIX AND NOT EMSCRIPTEN)
+    elseif(UNIX)
         # Same logic as above for linux.
         list(APPEND RESULT "-DCMAKE_INSTALL_RPATH=$ORIGIN/../lib")
         list(APPEND RESULT -DCMAKE_BUILD_WITH_INSTALL_RPATH=TRUE)
