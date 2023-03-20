@@ -23,7 +23,8 @@ struct ClassMetadata final {
 
   bool isAbstract = false;     // e.g. has any pure virtual methods
   bool hasAnyMethods = false;  // (e.g. public ones)
-  bool hasAnyFields = false;   // (e.g. public ones)
+
+  std::unordered_set<std::string> fieldNames;   // (e.g. public ones)
 
   bool hasUserConstructors =
       false;  // (e.g. will compiler generate default one)
@@ -35,6 +36,7 @@ struct ClassMetadata final {
 
 struct FileMetadata final {
   std::string name;
+  bool hasAggregatesOrEnums = false;
 
   std::unordered_set<std::string> exports;
   std::unordered_set<std::string> imports;

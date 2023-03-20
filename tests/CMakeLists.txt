@@ -30,6 +30,8 @@ endforeach()
 
 gunit_tool_generate(${SWIG_MODULE_NAME} "${HDRS_OUT}" ${GEN_DIR})
 
+list(APPEND GEN_SRC_FILES "${GEN_DIR}/${SWIG_MODULE_NAME}_lua.cpp")
+
 add_library(gunit-models ${GEN_SRC_FILES})
 add_dependencies(gunit-models gen_swig)
 

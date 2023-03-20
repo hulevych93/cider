@@ -115,14 +115,18 @@ bool isUserData(const cpp_type& type, const MetadataStorage& metadata) {
 bool isAggregate(const cpp_type& type, const MetadataStorage& metadata) {
   std::string name;
   if (isUserDefined(type, name)) {
-    auto it = metadata.classes.find(name);
-    if (it != metadata.classes.end()) {
-      const auto& classMetadata = it->second;
-      return !classMetadata.hasAnyMethods;
-    }
-    return metadata.enums.find(name) != metadata.enums.end();
+    return isAggregate(name, metadata);
   }
   return false;
+}
+
+bool isAggregate(const std::string& name, const MetadataStorage& metadata) {
+  auto it = metadata.classes.find(name);
+  if (it != metadata.classes.end()) {
+    const auto& classMetadata = it->second;
+    return !classMetadata.hasAnyMethods;
+  }
+  return metadata.enums.find(name) != metadata.enums.end();
 }
 
 bool hasImpl(const cpp_type& type,
@@ -156,6 +160,5 @@ bool isAbstract(const cpp_class& e,
   }
   return false;
 }
-
 }  // namespace tool
 }  // namespace gunit

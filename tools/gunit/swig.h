@@ -6,7 +6,6 @@
 #include "ast_handler.h"
 
 #include <iostream>
-#include <unordered_set>
 
 namespace cppast {
 class cpp_member_variable;

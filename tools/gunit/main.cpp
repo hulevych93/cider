@@ -9,6 +9,7 @@
 
 #include "ast_handler.h"
 #include "generator.h"
+#include "lua.h"
 #include "namespaces_stack.h"
 #include "options.h"
 #include "printers.h"
@@ -124,6 +125,18 @@ int main(int argc, char* argv[]) {
 
         std::ofstream swigStream(outSwigFilePath + ".swig");
         printSwig(swigStream, outDir, moduleName, metadata, files);
+
+        if (options.count("lua")) {
+          const auto outLuaFilePath =
+              getOutputFilePathWithoutExtension(moduleName, outDir);
+
+          std::ofstream luaStream(outLuaFilePath + "_lua.cpp");
+          lua_generator luaGen{luaStream, outDir, moduleName, metadata};
+
+          for (const auto& file : files) {
+            handleFile(luaGen, file);
+          }
+        }
       }
 
       for (const auto& file : files) {

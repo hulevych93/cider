@@ -19,6 +19,7 @@ function(gunit_tool_generate MODULE_NAME FILES OUTPUT_DIR)
     endforeach()
 
     set_source_files_properties(${GEN_DIR}/${MODULE_NAME}.swig PROPERTIES GENERATED TRUE)
+    set_source_files_properties(${GEN_DIR}/${MODULE_NAME}_lua.cpp PROPERTIES GENERATED TRUE)
 
     set(OUT_PARAM)
     gunit_join_list(FILES ":" OUT_PARAM)
@@ -26,7 +27,7 @@ function(gunit_tool_generate MODULE_NAME FILES OUTPUT_DIR)
     get_filename_component(GUNIT_DIRECTORY ${GUNIT_EXECUTABLE} DIRECTORY)
     add_custom_target(gen_swig
                        COMMAND "${GUNIT_EXECUTABLE}" --out_dir=${OUTPUT_DIR}
-                       --files=${OUT_PARAM} --swig=${MODULE_NAME} --namespace=hook 2>/dev/null
+                       --files=${OUT_PARAM} --swig=${MODULE_NAME} --lua --namespace=hook 2>/dev/null
                        WORKING_DIRECTORY ${GUNIT_DIRECTORY}
                        DEPENDS gunit
                        COMMENT "Generating gunit files...")

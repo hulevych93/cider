@@ -34,6 +34,7 @@ bool isUserDefined(const cppast::cpp_type& type, std::string& name);
 bool isUserData(const cppast::cpp_type& type, const MetadataStorage& metadata);
 
 bool isAggregate(const cppast::cpp_type& type, const MetadataStorage& metadata);
+bool isAggregate(const std::string& name, const MetadataStorage& metadata);
 
 bool isAbstract(const cppast::cpp_class& e,
                 const char* scope,

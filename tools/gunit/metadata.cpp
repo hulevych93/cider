@@ -7,6 +7,7 @@
 #include <cppast/cpp_function.hpp>
 #include <cppast/cpp_function_type.hpp>
 #include <cppast/cpp_member_function.hpp>
+#include <cppast/cpp_member_variable.hpp>
 
 #include "utils.h"
 
@@ -66,6 +67,7 @@ void metadata_collector::handleEnum(const cppast::cpp_enum& e,
   if (enter) {
     m_file->exports.emplace(m_namespaces.scope() + "::" + e.name());
     m_storage.enums.emplace(m_namespaces.scope() + "::" + e.name());
+    m_file->hasAggregatesOrEnums = true;
   }
 }
 
@@ -136,7 +138,8 @@ void metadata_collector::handleFreeFunction(const cppast::cpp_function& e) {
 void metadata_collector::handleMemberVariable(
     const cppast::cpp_member_variable& e) {
   assert(m_class.has_value());
-  m_class->hasAnyFields = true;
+  m_class->fieldNames.emplace(e.name());
+  m_file->hasAggregatesOrEnums = true;  // TODO
 }
 
 void metadata_collector::finish() {

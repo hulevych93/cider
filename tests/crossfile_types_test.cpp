@@ -11,8 +11,8 @@ struct CrossfileTest : TestSuite {};
 
 const char* function_test_aggregate_in_other_file_test_script =
     R"(local object_1 = example.Aggregate()
-object_1.condition = false
 object_1.number = 0
+object_1.condition = false
 example.function_test_aggregate_in_other_file(object_1)
 )";
 
