@@ -15,4 +15,6 @@ function(gunit_run_clang_format)
 endfunction()
 
 # run clang-formatting
+if(APPLE)
 gunit_run_clang_format()
+endif()

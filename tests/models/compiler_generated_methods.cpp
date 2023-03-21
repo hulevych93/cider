@@ -7,9 +7,9 @@ void NoConstructors::doo() {
   ++m_data;
 }
 
-OnlyCopyConstructor::~OnlyCopyConstructor() {}
+OnlyDestructor::~OnlyDestructor() {}
 
-void OnlyCopyConstructor::doo() {
+void OnlyDestructor::doo() {
   ++m_data;
 }
 

@@ -8,6 +8,8 @@
 #include <optional>
 #include <unordered_map>
 #include <unordered_set>
+#include <set>
+
 #include "namespaces_stack.h"
 
 namespace cppast {
@@ -24,7 +26,7 @@ struct ClassMetadata final {
   bool isAbstract = false;     // e.g. has any pure virtual methods
   bool hasAnyMethods = false;  // (e.g. public ones)
 
-  std::unordered_set<std::string> fieldNames;   // (e.g. public ones)
+  std::set<std::string> fieldNames;  // (e.g. public ones)
 
   bool hasUserConstructors =
       false;  // (e.g. will compiler generate default one)

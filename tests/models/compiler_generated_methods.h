@@ -11,9 +11,9 @@ class NoConstructors final {
   int m_data = 0;
 };
 
-class OnlyCopyConstructor final {
+class OnlyDestructor final {
  public:
-  ~OnlyCopyConstructor();
+  ~OnlyDestructor();
 
   void doo();
 
