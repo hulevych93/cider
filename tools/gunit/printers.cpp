@@ -464,7 +464,8 @@ void printGeneratedMethods(std::ostream& os,
       }
     }
 
-    if (!classMeta.hasCopyConstructor) {
+    if (!classMeta.hasCopyConstructor && !classMeta.hasMoveConstructor &&
+        !classMeta.hasMoveAssignmentOperator) {
       if (definition) {
         os << e.name() << "::";
       }
@@ -489,6 +490,47 @@ void printGeneratedMethods(std::ostream& os,
            << ">(*other._impl.get());\n";
         os << "GUNIT_NOTIFY_CONSTRUCTOR(other._impl.get())\n";
         os << CatchBlock;
+        os << "}\n";
+      } else {
+        os << ";\n";
+      }
+    }
+
+    if (!classMeta.hasMoveConstructor && !classMeta.hasCopyAssignmentOperator &&
+        !classMeta.hasMoveAssignmentOperator) {
+      os << e.name() << "& ";
+      if (definition) {
+        os << e.name() << "::";
+      }
+      os << "operator=(const " << e.name() << "& other)";
+      if (definition) {
+        os << "{\n";
+        os << "try {\n";
+        os << "GUNIT_NOTIFY_ASSIGNMENT(other._impl.get());\n";
+        os << "(*_impl) = *other._impl;\n";
+        os << CatchBlock;
+        os << "return *this;\n";
+        os << "}\n";
+      } else {
+        os << ";\n";
+      }
+    }
+
+    if ((!classMeta.hasCopyAssignmentOperator &&
+         !classMeta.hasMoveAssignmentOperator) &&
+        !classMeta.hasMoveConstructor && !classMeta.hasCopyConstructor) {
+      os << e.name() << "& ";
+      if (definition) {
+        os << e.name() << "::";
+      }
+      os << "operator=(" << e.name() << "&& other)";
+      if (definition) {
+        os << "{\n";
+        os << "try {\n";
+        os << "GUNIT_NOTIFY_ASSIGNMENT(other._impl.get());\n";
+        os << "(*_impl) = std::move(*other._impl);\n";
+        os << CatchBlock;
+        os << "return *this;\n";
         os << "}\n";
       } else {
         os << ";\n";
