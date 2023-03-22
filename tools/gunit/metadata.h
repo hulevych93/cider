@@ -6,9 +6,9 @@
 #include "ast_handler.h"
 
 #include <optional>
+#include <set>
 #include <unordered_map>
 #include <unordered_set>
-#include <set>
 
 #include "namespaces_stack.h"
 

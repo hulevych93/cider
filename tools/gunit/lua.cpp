@@ -21,77 +21,76 @@ static class NullBuffer : public std::streambuf {
 
 static std::ostream null_stream(&null_buffer);
 
-void printAggregateField(std::ostream& os,
-                         const std::string& name) {
-    os << "code += \"{var}." + name;
-    os << " = \" + visitor(aggregate." + name + ")";
-    os << R"(+ "\n";)" << "\n";
+void printAggregateField(std::ostream& os, const std::string& name) {
+  os << "code += \"{var}." + name;
+  os << " = \" + visitor(aggregate." + name + ")";
+  os << R"(+ "\n";)"
+     << "\n";
 }
 
 void printBaseClassesAggregateFields(
     std::ostream& os,
     const MetadataStorage& metadata,
     const detail::iteratable_intrusive_list<cpp_base_class>& bases,
-    const std::string& scope)
-{
-    for(const auto& base : bases) {
-        const auto it = metadata.classes.find(scope + "::" + base.name());
-        if(it != metadata.classes.end()) {
-            const auto& fields = it->second.fieldNames;
-            for(const auto& field : fields) {
-                printAggregateField(os, field);
-            }
-        }
+    const std::string& scope) {
+  for (const auto& base : bases) {
+    const auto it = metadata.classes.find(scope + "::" + base.name());
+    if (it != metadata.classes.end()) {
+      const auto& fields = it->second.fieldNames;
+      for (const auto& field : fields) {
+        printAggregateField(os, field);
+      }
     }
+  }
 }
 
 void printAggregateProducer(std::ostream& os,
                             const MetadataStorage& metadata,
-                   const std::string& module,
-                 const std::string& scope,
-                   const cpp_class& e,
-                   const bool enter) {
-    if (enter) {
-        os << "template <>\n";
-        os << "std::string produceAggregateCode(const "
-           << scope + "::" + e.name() << "& aggregate, ";
-        os << "CodeSink& sink) {\n";
-        os << "lua::ParamVisitor visitor;\n";
-        os << "std::string code;\n";
-        os << "code += \"local {var} = " + module + "." + e.name() + R"(()\n";)" << "\n";
-        printBaseClassesAggregateFields(os, metadata, e.bases(), scope);
-    } else {
-        os << "return sink.processLocalVar(std::move(code));\n";
-        os << "}\n\n";
-    }
+                            const std::string& module,
+                            const std::string& scope,
+                            const cpp_class& e,
+                            const bool enter) {
+  if (enter) {
+    os << "template <>\n";
+    os << "std::string produceAggregateCode(const " << scope + "::" + e.name()
+       << "& aggregate, ";
+    os << "CodeSink& sink) {\n";
+    os << "lua::ParamVisitor visitor;\n";
+    os << "std::string code;\n";
+    os << "code += \"local {var} = " + module + "." + e.name() + R"(()\n";)"
+       << "\n";
+    printBaseClassesAggregateFields(os, metadata, e.bases(), scope);
+  } else {
+    os << "return sink.processLocalVar(std::move(code));\n";
+    os << "}\n\n";
+  }
 }
 
 void printEnumProducer(std::ostream& os,
-                            const std::string& scope,
-                            const std::string& name,
-                            const bool enter) {
-    if (enter) {
-        os << "template <>\n";
-        os << "std::string produceAggregateCode(const "
-              << scope + "::" + name << "& aggregate, ";
-        os << "CodeSink&) {\n";
-        os << "switch (aggregate) {\n";
-    } else {
-        os << "}\n";
-        os << "return {};\n";
-        os << "}\n\n";
-    }
+                       const std::string& scope,
+                       const std::string& name,
+                       const bool enter) {
+  if (enter) {
+    os << "template <>\n";
+    os << "std::string produceAggregateCode(const " << scope + "::" + name
+       << "& aggregate, ";
+    os << "CodeSink&) {\n";
+    os << "switch (aggregate) {\n";
+  } else {
+    os << "}\n";
+    os << "return {};\n";
+    os << "}\n\n";
+  }
 }
 
 void printEnumField(std::ostream& os,
                     const std::string& module,
                     const std::string& enumName,
                     const std::string& scope,
-                         const std::string& name) {
-    os << "case " << scope + "::" << name << ":\n";
-    os << "return \"" + module + "." + enumName + "_" + name
-          << "\";\n";
-    os << "break;\n";
+                    const std::string& name) {
+  os << "case " << scope + "::" << name << ":\n";
+  os << "return \"" + module + "." + enumName + "_" + name << "\";\n";
+  os << "break;\n";
 }
 
 }  // namespace
@@ -123,11 +122,12 @@ void lua_generator::handleClass(const cppast::cpp_class& e, bool enter) {
     return;
   }
 
-  printAggregateProducer(m_out, m_metadata, m_module, m_namespaces.scope(), e, enter);
+  printAggregateProducer(m_out, m_metadata, m_module, m_namespaces.scope(), e,
+                         enter);
 }
 
 void lua_generator::handleMemberVariable(const cppast::cpp_member_variable& e) {
-    printAggregateField(m_out, e.name());
+  printAggregateField(m_out, e.name());
 }
 
 void lua_generator::handleNamespace(const cpp_entity& e, const bool enter) {
@@ -139,11 +139,12 @@ void lua_generator::handleNamespace(const cpp_entity& e, const bool enter) {
 }
 
 void lua_generator::handleEnumValue(const cppast::cpp_enum_value& e) {
-    printEnumField(m_out, m_module, m_namespaces.top(), m_namespaces.scope(), e.name());
+  printEnumField(m_out, m_module, m_namespaces.top(), m_namespaces.scope(),
+                 e.name());
 }
 
 void lua_generator::handleEnum(const cppast::cpp_enum& e, const bool enter) {
-    printEnumProducer(m_out, m_namespaces.scope(), e.name(), enter);
+  printEnumProducer(m_out, m_namespaces.scope(), e.name(), enter);
 
   if (enter) {
     m_namespaces.push(null_stream, e.name());

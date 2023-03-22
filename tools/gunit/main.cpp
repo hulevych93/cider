@@ -6,6 +6,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <thread>
 
 #include "ast_handler.h"
 #include "generator.h"
@@ -87,70 +88,76 @@ int main(int argc, char* argv[]) {
       return 0;
     }
 
-    const auto& files = getFiles(options);
-    if (files.empty()) {
+    const auto& paths = getFiles(options);
+    if (paths.empty()) {
       print_error("missing file(s) argument");
       return 1;
-    } else {
-      // the compile config stores compilation flags
-      const libclang_compile_config config = buildConfig(options);
+    }
 
-      // the logger is used to print diagnostics
-      stderr_diagnostic_logger logger;
-      if (options.count("verbose"))
-        logger.set_verbose(true);
+    std::thread([]() {
+      std::this_thread::sleep_for(std::chrono::seconds(10));
+      print_error("process guard timeout... terminating...");
+      std::terminate();
+    }).detach();
 
-      cpp_entity_index idx;
-      cppast::simple_file_parser<cppast::libclang_parser> parser(
-          type_safe::ref(idx), type_safe::ref(logger));
-      for (const auto& file : files) {
-        parser.parse(file, config);
-        if (options.count("fatal_errors") == 1 && parser.error()) {
-          return 1;
-        }
+    // the compile config stores compilation flags
+    const libclang_compile_config config = buildConfig(options);
+
+    // the logger is used to print diagnostics
+    stderr_diagnostic_logger logger;
+    if (options.count("verbose"))
+      logger.set_verbose(true);
+
+    cpp_entity_index idx;
+    cppast::simple_file_parser<cppast::libclang_parser> parser(
+        type_safe::ref(idx), type_safe::ref(logger));
+    for (const auto& path : paths) {
+      parser.parse(path, config);
+      if (options.count("fatal_errors") == 1 && parser.error()) {
+        return 1;
+      }
+    }
+
+    const auto& files = parser.files();
+    const auto& metadata = collectMetadata(files);
+    const auto& outDir = getOutputFilePath(options);
+
+    if (options.count("swig")) {
+      const auto moduleName = options["swig"].as<std::string>();
+      if (moduleName.empty()) {
+        print_error("missing swig module name argument");
       }
 
-      const auto& files = parser.files();
-      const auto& metadata = collectMetadata(files);
-      const auto& outDir = getOutputFilePath(options);
+      const auto outSwigFilePath =
+          getOutputFilePathWithoutExtension(moduleName, outDir);
 
-      if (options.count("swig")) {
-        const auto moduleName = options["swig"].as<std::string>();
-        if (moduleName.empty()) {
-          print_error("missing swig module name argument");
-        }
+      std::ofstream swigStream(outSwigFilePath + ".swig");
+      printSwig(swigStream, outDir, moduleName, metadata, files);
 
-        const auto outSwigFilePath =
+      if (options.count("lua")) {
+        const auto outLuaFilePath =
             getOutputFilePathWithoutExtension(moduleName, outDir);
 
-        std::ofstream swigStream(outSwigFilePath + ".swig");
-        printSwig(swigStream, outDir, moduleName, metadata, files);
+        std::ofstream luaStream(outLuaFilePath + "_lua.cpp");
+        lua_generator luaGen{luaStream, outDir, moduleName, metadata};
 
-        if (options.count("lua")) {
-          const auto outLuaFilePath =
-              getOutputFilePathWithoutExtension(moduleName, outDir);
-
-          std::ofstream luaStream(outLuaFilePath + "_lua.cpp");
-          lua_generator luaGen{luaStream, outDir, moduleName, metadata};
-
-          for (const auto& file : files) {
-            handleFile(luaGen, file);
-          }
+        for (const auto& file : files) {
+          handleFile(luaGen, file);
         }
       }
+    }
 
-      for (const auto& file : files) {
-        const auto outFilePath =
-            getOutputFilePathWithoutExtension(file.name(), outDir);
+    for (const auto& file : files) {
+      const auto outFilePath =
+          getOutputFilePathWithoutExtension(file.name(), outDir);
 
-        const auto genScope = options["namespace"].as<std::string>();
+      const auto genScope = options["namespace"].as<std::string>();
 
-        std::ofstream headerStream(outFilePath + ".h");
-        printHeader(headerStream, metadata, genScope, file);
+      std::ofstream headerStream(outFilePath + ".h");
+      printHeader(headerStream, metadata, genScope, file);
 
-        std::ofstream sourceStream(outFilePath + ".cpp");
-        printSource(sourceStream, metadata, genScope, outFilePath, file);
-      }
+      std::ofstream sourceStream(outFilePath + ".cpp");
+      printSource(sourceStream, metadata, genScope, outFilePath, file);
     }
   } catch (const std::exception& ex) {
     print_error(std::string("[fatal parsing error] ") + ex.what());

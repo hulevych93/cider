@@ -79,7 +79,6 @@ local object_2 = example.OnlyDestructor(object_1)
 object_2:doo()
 )";
 
-
 TEST_F(CompilerGeneratedMethods, moveConstructorOnlyDestructor) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
