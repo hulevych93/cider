@@ -1,3 +1,4 @@
+
 #include "utils/test_suite.h"
 
 #include "compiler_generated_methods.h"
@@ -40,6 +41,25 @@ TEST_F(CompilerGeneratedMethods, moveConstructorNoConstructors) {
   SCOPED_TRACE("no_constructors_move_ctr_test_script");
   testScript(no_constructors_move_ctr_test_script, session);
 }
+
+//const char* no_constructors_move_assgn_test_script =
+//    R"(local object_1 = example.NoConstructors()
+//local object_2 = example.NoConstructors()
+//object_2 = object_1
+//object_2:doo()
+//)";
+
+//TEST_F(CompilerGeneratedMethods, moveAssignNoConstructors) {
+//  auto session = makeLuaRecordingSession(LuaExampleModuleName);
+
+//  hook::NoConstructors object;
+//  hook::NoConstructors object2;
+//  object2 = std::move(object);
+//  object2.doo();
+
+//  SCOPED_TRACE("no_constructors_move_assgn_test_script");
+//  testScript(no_constructors_move_assgn_test_script, session);
+//}
 
 const char* no_constructors_copy_ctr_test_script =
     R"(local object_1 = example.NoConstructors()
@@ -106,4 +126,35 @@ TEST_F(CompilerGeneratedMethods, copyConstructorOnlyDestructor) {
 
   SCOPED_TRACE("only_destructor_copy_ctr_test_script");
   testScript(only_destructor_copy_ctr_test_script, session);
+}
+
+const char* default_and_move_ctr_test_script =
+    R"(local object_1 = example.DefaultAndMoveConstructor()
+object_1:doo()
+)";
+
+TEST_F(CompilerGeneratedMethods, defaultConstructorDefaultAndMoveConstructor) {
+  auto session = makeLuaRecordingSession(LuaExampleModuleName);
+
+  hook::DefaultAndMoveConstructor object;
+  object.doo();
+
+  SCOPED_TRACE("default_and_move_ctr_test_script");
+  testScript(default_and_move_ctr_test_script, session);
+}
+
+const char* move_default_and_move_ctr_test_script =
+    R"(local object_1 = example.DefaultAndMoveConstructor()
+object_1:doo()
+)";
+
+TEST_F(CompilerGeneratedMethods, moveConstructorDefaultAndMoveConstructor) {
+  auto session = makeLuaRecordingSession(LuaExampleModuleName);
+
+  hook::DefaultAndMoveConstructor object;
+  hook::DefaultAndMoveConstructor object2(std::move(object));
+  object2.doo();
+
+  SCOPED_TRACE("move_default_and_move_ctr_test_script");
+  testScript(move_default_and_move_ctr_test_script, session);
 }
