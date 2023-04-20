@@ -1,6 +1,6 @@
 #pragma once
 
-namespace gunit {
+namespace cider {
 namespace models {
 
 // Function with no return and no args
@@ -19,4 +19,4 @@ bool is_this_sparta_word(const char* value);
 int summ_these_two_params(int first, unsigned long second);
 
 }  // namespace models
-}  // namespace gunit
+}  // namespace cider

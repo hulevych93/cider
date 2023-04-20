@@ -1,6 +1,6 @@
 #include "aggregate_struct.h"
 
-namespace gunit {
+namespace cider {
 namespace models {
 
 Aggregate function_test_aggregate(const Aggregate& arg) {
@@ -12,4 +12,4 @@ Aggregate* function_test_aggregate(Aggregate* arg) {
 }
 
 }  // namespace models
-}  // namespace gunit
+}  // namespace cider

@@ -2,7 +2,7 @@
 
 #include "recorder/actions_observer.h"
 
-namespace gunit {
+namespace cider {
 namespace recorder {
 
 struct ScriptGenerationError final : public std::exception {
@@ -24,4 +24,4 @@ using ScriptRecordSessionPtr = std::shared_ptr<ScriptRecordSession>;
 ScriptRecordSessionPtr makeLuaRecordingSession(const std::string& moduleName);
 
 }  // namespace recorder
-}  // namespace gunit
+}  // namespace cider

@@ -24,8 +24,8 @@ foreach(OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
 endforeach()
 
-if(NOT DEFINED GUNIT_ROOT_DIR)
-    message(FATAL_ERROR "Please, define GUNIT_ROOT_DIR cmake variable.")
+if(NOT DEFINED CIDER_ROOT_DIR)
+    message(FATAL_ERROR "Please, define CIDER_ROOT_DIR cmake variable.")
 endif()
 
 # The `BUILD_FILES_ROOT` is the directory where all the
@@ -42,22 +42,22 @@ if((NOT "${CMAKE_BUILD_TYPE}" STREQUAL "DEBUG") AND (NOT "${CMAKE_BUILD_TYPE}" S
     set(CMAKE_BUILD_TYPE DEBUG)
 endif()
 
-set(GUNIT_CMAKE_DIR ${GUNIT_ROOT_DIR}/cmake)
+set(CIDER_CMAKE_DIR ${CIDER_ROOT_DIR}/cmake)
 
-include(${GUNIT_CMAKE_DIR}/common.cmake)
+include(${CIDER_CMAKE_DIR}/common.cmake)
 
 # This is the first target which we execute before building our code.
 # Note: third-parties are built before this target.
-if(NOT DEFINED GUNIT_THIRDPARTY_TARGET_NAME)
-    gunit_export_var(GUNIT_THIRDPARTY_TARGET_NAME build_thirdparty)
-    add_custom_target(${GUNIT_THIRDPARTY_TARGET_NAME})
+if(NOT DEFINED CIDER_THIRDPARTY_TARGET_NAME)
+    cider_export_var(CIDER_THIRDPARTY_TARGET_NAME build_thirdparty)
+    add_custom_target(${CIDER_THIRDPARTY_TARGET_NAME})
 endif()
 
-include(${GUNIT_CMAKE_DIR}/gunit.cmake)
-include(${GUNIT_CMAKE_DIR}/vars.cmake)
-include(${GUNIT_CMAKE_DIR}/sources.cmake)
-include(${GUNIT_CMAKE_DIR}/thirdparty.cmake)
-include(${GUNIT_CMAKE_DIR}/clang-format.cmake)
+include(${CIDER_CMAKE_DIR}/cider.cmake)
+include(${CIDER_CMAKE_DIR}/vars.cmake)
+include(${CIDER_CMAKE_DIR}/sources.cmake)
+include(${CIDER_CMAKE_DIR}/thirdparty.cmake)
+include(${CIDER_CMAKE_DIR}/clang-format.cmake)
 
 if(UNIX)
     set(PLATFORM_LIBRARIES dl pthread)

@@ -2,10 +2,10 @@
 
 #include "aggregate_struct.h"
 
-using namespace gunit::recorder;
-using namespace gunit::models;
-using namespace gunit::tests;
-using namespace gunit;
+using namespace cider::recorder;
+using namespace cider::models;
+using namespace cider::tests;
+using namespace cider;
 
 struct AggregateStructTest : TestSuite {};
 

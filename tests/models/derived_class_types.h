@@ -3,7 +3,7 @@
 #include <memory>
 #include <string>
 
-namespace gunit {
+namespace cider {
 namespace models {
 
 class BaseClass {
@@ -27,4 +27,4 @@ class DerivedClass final : public BaseClass {
 };
 
 }  // namespace models
-}  // namespace gunit
+}  // namespace cider

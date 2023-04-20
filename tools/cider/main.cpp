@@ -18,7 +18,7 @@
 #include "utils.h"
 
 using namespace cppast;
-using namespace gunit::tool;
+using namespace cider::tool;
 
 namespace {
 
@@ -82,7 +82,7 @@ int main(int argc, char* argv[]) {
       return 0;
     }
     if (options.count("version")) {
-      std::cout << "gunit version "
+      std::cout << "cider version "
                 << "1.0"
                 << "\n";
       return 0;

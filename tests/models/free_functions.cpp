@@ -2,7 +2,7 @@
 
 #include <string.h>
 
-namespace gunit {
+namespace cider {
 namespace models {
 void some_function_no_return_no_args() {}
 
@@ -21,4 +21,4 @@ int summ_these_two_params(int first, unsigned long second) {
 }
 
 }  // namespace models
-}  // namespace gunit
+}  // namespace cider

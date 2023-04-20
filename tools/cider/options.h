@@ -12,7 +12,7 @@ namespace cppast {
 class libclang_compile_config;
 }  // namespace cppast
 
-namespace gunit {
+namespace cider {
 namespace tool {
 
 cxxopts::Options getOptions();
@@ -26,4 +26,4 @@ std::string getOutputFilePathWithoutExtension(const std::string& inputFilePath,
                                               const std::string& outDir);
 
 }  // namespace tool
-}  // namespace gunit
+}  // namespace cider

@@ -3,7 +3,7 @@
 #include <memory>
 #include <string>
 
-namespace gunit {
+namespace cider {
 namespace models {
 
 class SomeInterface {
@@ -29,4 +29,4 @@ class OtherStringInterface final : public StringInterface {
 SomeInterface* makeSomeInterface(const char* str);
 
 }  // namespace models
-}  // namespace gunit
+}  // namespace cider

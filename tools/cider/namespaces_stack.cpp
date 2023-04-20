@@ -4,7 +4,7 @@
 
 #include <assert.h>
 
-namespace gunit {
+namespace cider {
 namespace tool {
 
 namespaces_stack::namespaces_stack(std::string generatorScope)
@@ -55,4 +55,4 @@ const std::string& namespaces_stack::genScope() const {
 }
 
 }  // namespace tool
-}  // namespace gunit
+}  // namespace cider

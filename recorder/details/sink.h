@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-namespace gunit {
+namespace cider {
 namespace recorder {
 
 class CodeSink {
@@ -30,4 +30,4 @@ class CodeSink {
 };
 
 }  // namespace recorder
-}  // namespace gunit
+}  // namespace cider

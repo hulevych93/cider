@@ -1,21 +1,21 @@
-gunit_project(swig)
+cider_project(swig)
 
-set(GUNIT_SWIG_VERSION                4.1.0)
-set(GUNIT_SWIG_UNIQUE_DIR_NAME        swig-${GUNIT_SWIG_VERSION}-${GUNIT_3RD_PARTY_LIB_DIR_SUFFIX})
-set(GUNIT_SWIG_PREFIX                 ${GUNIT_3RD_PARTY_INSTALL_DIR}/${GUNIT_SWIG_UNIQUE_DIR_NAME})
-set(GUNIT_SWIG_BUILD_DIR              ${GUNIT_3RD_PARTY_BUILD_DIR}/${GUNIT_SWIG_UNIQUE_DIR_NAME})
+set(CIDER_SWIG_VERSION                4.1.0)
+set(CIDER_SWIG_UNIQUE_DIR_NAME        swig-${CIDER_SWIG_VERSION}-${CIDER_3RD_PARTY_LIB_DIR_SUFFIX})
+set(CIDER_SWIG_PREFIX                 ${CIDER_3RD_PARTY_INSTALL_DIR}/${CIDER_SWIG_UNIQUE_DIR_NAME})
+set(CIDER_SWIG_BUILD_DIR              ${CIDER_3RD_PARTY_BUILD_DIR}/${CIDER_SWIG_UNIQUE_DIR_NAME})
 
-gunit_export_var(GUNIT_SWIG_EXECUTABLE ${GUNIT_SWIG_PREFIX}/bin/swig)
-set(ENV{SWIG_LIB} ${GUNIT_SWIG_PREFIX}/share/swig/${GUNIT_SWIG_VERSION})
+cider_export_var(CIDER_SWIG_EXECUTABLE ${CIDER_SWIG_PREFIX}/bin/swig)
+set(ENV{SWIG_LIB} ${CIDER_SWIG_PREFIX}/share/swig/${CIDER_SWIG_VERSION})
 
-set(TMP_DIR         ${GUNIT_3RD_PARTY_TMP_DIR})
-set(SRC_DIR         ${GUNIT_SWIG_BUILD_DIR})
+set(TMP_DIR         ${CIDER_3RD_PARTY_TMP_DIR})
+set(SRC_DIR         ${CIDER_SWIG_BUILD_DIR})
 
-gunit_3rd_party_common_cmake_options(CMAKE_OPTS)
+cider_3rd_party_common_cmake_options(CMAKE_OPTS)
 
 list(APPEND CMAKE_OPTS
     -DWITH_PCRE=OFF
-    -DCMAKE_INSTALL_PREFIX=${GUNIT_SWIG_PREFIX}
+    -DCMAKE_INSTALL_PREFIX=${CIDER_SWIG_PREFIX}
 )
 
 find_package(BISON)
@@ -23,7 +23,7 @@ if(NOT BISON_FOUND)
     message(FATAL_ERROR "Please, install BISON to be able to build SWIG")
 endif()
 
-function(gunit_generate_swig)
+function(cider_generate_swig)
     set(OPTIONS EXTERNAL_RUNTIME)
     set(ONE_VALUE_ARGS LANGUAGE FLAGS OUTPUT_DIR DEPENDS FILE)
     set(MULTI_VALUE_ARGS GENERATOR_ARGS DEFINES)
@@ -35,10 +35,10 @@ function(gunit_generate_swig)
     file(MAKE_DIRECTORY "${SWIG_OUTPUT_DIR}")
 
     get_filename_component(FILE_NAME "${SWIG_FILE}" NAME_WE)
-    get_filename_component(SWIG_DIRECTORY ${GUNIT_SWIG_EXECUTABLE} DIRECTORY)
+    get_filename_component(SWIG_DIRECTORY ${CIDER_SWIG_EXECUTABLE} DIRECTORY)
 
     add_custom_command(OUTPUT "${SWIG_OUTPUT_DIR}/${FILE_NAME}_wrap.cpp" "${SWIG_OUTPUT_DIR}/${FILE_NAME}_wrap.h"
-                       COMMAND "${GUNIT_SWIG_EXECUTABLE}" -c++ -${SWIG_LANGUAGE} ${SWIG_GENERATOR_ARGS}
+                       COMMAND "${CIDER_SWIG_EXECUTABLE}" -c++ -${SWIG_LANGUAGE} ${SWIG_GENERATOR_ARGS}
                       -cppext cpp "-I${CMAKE_SOURCE_DIR}"
                       -outdir "${SWIG_OUTPUT_DIR}"
                       -w509 # Warning: Overloaded method effectively ignored
@@ -53,7 +53,7 @@ function(gunit_generate_swig)
 
     if(SWIG_EXTERNAL_RUNTIME)
       add_custom_command(OUTPUT "${SWIG_OUTPUT_DIR}/swig${SWIG_LANGUAGE}run.h"
-                COMMAND "${GUNIT_SWIG_EXECUTABLE}" -c++ -${SWIG_LANGUAGE} ${SWIG_FLAGS} -cppext cpp
+                COMMAND "${CIDER_SWIG_EXECUTABLE}" -c++ -${SWIG_LANGUAGE} ${SWIG_FLAGS} -cppext cpp
                         -external-runtime "${SWIG_OUTPUT_DIR}/swig${SWIG_LANGUAGE}run.h"
                   WORKING_DIRECTORY ${SWIG_DIRECTORY}
                   COMMENT "Generating swig runtime headers...")
@@ -62,11 +62,11 @@ endfunction()
 
 ExternalProject_Add(
     swig
-    PREFIX                  ${GUNIT_SWIG_PREFIX}
+    PREFIX                  ${CIDER_SWIG_PREFIX}
     TMP_DIR                 ${TMP_DIR}
-    STAMP_DIR               ${GUNIT_SWIG_PREFIX}/stamp
+    STAMP_DIR               ${CIDER_SWIG_PREFIX}/stamp
     # Download
-    DOWNLOAD_DIR            ${GUNIT_3RD_PARTY_DOWNLOAD_DIR}
+    DOWNLOAD_DIR            ${CIDER_3RD_PARTY_DOWNLOAD_DIR}
     DOWNLOAD_EXTRACT_TIMESTAMP 0
     URL                     https://github.com/swig/swig/archive/refs/tags/v4.1.0.tar.gz
     URL_MD5                 "794433378154eb61270a3ac127d9c5f3"
@@ -77,11 +77,11 @@ ExternalProject_Add(
     BUILD_IN_SOURCE         1
     BUILD_BYPRODUCTS        ${Swig_LIBRARIES}
     # Install
-    INSTALL_COMMAND         ${GUNIT_3RD_PARTY_CMAKE_INSTALL_COMMAND}
+    INSTALL_COMMAND         ${CIDER_3RD_PARTY_CMAKE_INSTALL_COMMAND}
     # Logging
     LOG_CONFIGURE           1
     LOG_BUILD               1
     LOG_INSTALL             1
 )
 
-add_dependencies(${GUNIT_THIRDPARTY_TARGET_NAME} swig)
+add_dependencies(${CIDER_THIRDPARTY_TARGET_NAME} swig)

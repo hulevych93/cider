@@ -2,7 +2,7 @@
 
 #include <sstream>
 
-namespace gunit {
+namespace cider {
 namespace recorder {
 namespace lua {
 
@@ -97,4 +97,4 @@ std::string produceParamCode(const Param& param, CodeSink& sink) {
 
 }  // namespace lua
 }  // namespace recorder
-}  // namespace gunit
+}  // namespace cider

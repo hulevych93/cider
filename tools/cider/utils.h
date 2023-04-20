@@ -4,7 +4,7 @@
 
 #include "metadata.h"
 
-namespace gunit {
+namespace cider {
 namespace tool {
 
 enum OperatorType {
@@ -49,4 +49,4 @@ void replaceScope(const std::string& newScope, std::string& value);
 void handleFile(ast_handler& handler, const cppast::cpp_file& file);
 
 }  // namespace tool
-}  // namespace gunit
+}  // namespace cider

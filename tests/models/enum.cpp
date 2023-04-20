@@ -1,6 +1,6 @@
 #include "enum.h"
 
-namespace gunit {
+namespace cider {
 namespace models {
 
 SomeEnumeration function_test_enumeration(const SomeEnumeration arg) {
@@ -8,4 +8,4 @@ SomeEnumeration function_test_enumeration(const SomeEnumeration arg) {
 }
 
 }  // namespace models
-}  // namespace gunit
+}  // namespace cider

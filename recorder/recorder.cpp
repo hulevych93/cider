@@ -5,7 +5,7 @@
 #include "details/lua/lua_func.h"
 #include "details/lua/lua_params.h"
 
-namespace gunit {
+namespace cider {
 namespace recorder {
 
 ScriptRecordSessionPtr makeLuaRecordingSession(const std::string& moduleName) {
@@ -22,4 +22,4 @@ ScriptRecordSessionPtr makeLuaRecordingSession(const std::string& moduleName) {
 }
 
 }  // namespace recorder
-}  // namespace gunit
+}  // namespace cider

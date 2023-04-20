@@ -8,8 +8,8 @@
 
 #include <clocale>
 
-using namespace gunit::recorder;
-using namespace gunit;
+using namespace cider::recorder;
+using namespace cider;
 
 class GeneratorTestSuite : public testing::Test {
  public:

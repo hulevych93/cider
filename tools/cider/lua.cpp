@@ -9,7 +9,7 @@
 
 using namespace cppast;
 
-namespace gunit {
+namespace cider {
 namespace tool {
 
 namespace {
@@ -108,12 +108,12 @@ lua_generator::lua_generator(std::ostream& out,
   }
 
   m_out << "#include \"recorder/details/lua/lua_params.h\"\n\n";
-  m_out << "namespace gunit {\n";
+  m_out << "namespace cider {\n";
   m_out << "namespace recorder {\n\n";
 }
 
 lua_generator::~lua_generator() {
-  m_out << "} // namespace gunit\n";
+  m_out << "} // namespace cider\n";
   m_out << "} // namespace recorder\n\n";
 }
 
@@ -154,4 +154,4 @@ void lua_generator::handleEnum(const cppast::cpp_enum& e, const bool enter) {
 }
 
 }  // namespace tool
-}  // namespace gunit
+}  // namespace cider

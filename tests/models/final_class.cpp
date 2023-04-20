@@ -1,6 +1,6 @@
 #include "final_class.h"
 
-namespace gunit {
+namespace cider {
 namespace models {
 
 FinalClass::FinalClass() : _number(0), _condition(false) {}
@@ -56,4 +56,4 @@ FinalClass* function_test_class_construct(FinalClass* arg) {
 }
 
 }  // namespace models
-}  // namespace gunit
+}  // namespace cider

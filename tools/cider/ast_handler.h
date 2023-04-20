@@ -6,7 +6,7 @@ namespace cppast {
 class cpp_member_variable;
 }  // namespace cppast
 
-namespace gunit {
+namespace cider {
 namespace tool {
 
 struct ast_handler {
@@ -27,4 +27,4 @@ struct ast_handler {
 };
 
 }  // namespace tool
-}  // namespace gunit
+}  // namespace cider

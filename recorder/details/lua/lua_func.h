@@ -3,7 +3,7 @@
 #include <string>
 #include "recorder/details/action.h"
 
-namespace gunit {
+namespace cider {
 namespace recorder {
 namespace lua {
 std::string produceFunctionCall(const char* moduleName,
@@ -16,4 +16,4 @@ std::string produceBinaryOpCall(BinaryOpType);
 
 }  // namespace lua
 }  // namespace recorder
-}  // namespace gunit
+}  // namespace cider

@@ -1,6 +1,6 @@
 #pragma once
 
-namespace gunit {
+namespace cider {
 namespace models {
 
 class NoConstructors final {
@@ -85,4 +85,4 @@ class OnlyMoveOperator final {
 };
 
 }  // namespace models
-}  // namespace gunit
+}  // namespace cider

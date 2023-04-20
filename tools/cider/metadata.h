@@ -16,7 +16,7 @@ namespace cppast {
 class cpp_member_variable;
 }  // namespace cppast
 
-namespace gunit {
+namespace cider {
 namespace tool {
 
 struct ClassMetadata final {
@@ -77,4 +77,4 @@ MetadataStorage collectMetadata(
     const cppast::detail::iteratable_intrusive_list<cppast::cpp_file>& files);
 
 }  // namespace tool
-}  // namespace gunit
+}  // namespace cider

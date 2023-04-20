@@ -2,7 +2,7 @@
 
 #include <lua.hpp>
 
-namespace gunit {
+namespace cider {
 namespace scripting {
 
 LuaStateUPtr get_lua() {
@@ -17,4 +17,4 @@ bool executeScript(lua_State* L, const char* script) {
 }
 
 }  // namespace scripting
-}  // namespace gunit
+}  // namespace cider

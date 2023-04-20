@@ -6,7 +6,7 @@
 
 #include <unordered_map>
 
-namespace gunit {
+namespace cider {
 namespace recorder {
 
 namespace {
@@ -202,4 +202,4 @@ void ScriptGenerator::discard() {
 }
 
 }  // namespace recorder
-}  // namespace gunit
+}  // namespace cider

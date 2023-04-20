@@ -6,7 +6,7 @@
 #include <optional>
 #include <variant>
 
-namespace gunit {
+namespace cider {
 namespace recorder {
 
 struct Function final {
@@ -84,4 +84,4 @@ Action makeAction(const void* object, BinaryOpType type, ParamType&& param) {
 }  // LCOV_EXCL_LINE
 
 }  // namespace recorder
-}  // namespace gunit
+}  // namespace cider

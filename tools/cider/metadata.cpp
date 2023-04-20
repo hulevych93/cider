@@ -15,7 +15,7 @@
 
 using namespace cppast;
 
-namespace gunit {
+namespace cider {
 namespace tool {
 
 namespace {
@@ -166,4 +166,4 @@ MetadataStorage collectMetadata(
 }
 
 }  // namespace tool
-}  // namespace gunit
+}  // namespace cider

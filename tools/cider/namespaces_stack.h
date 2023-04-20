@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-namespace gunit {
+namespace cider {
 namespace tool {
 
 struct namespaces_stack final {
@@ -27,4 +27,4 @@ struct namespaces_stack final {
 };
 
 }  // namespace tool
-}  // namespace gunit
+}  // namespace cider

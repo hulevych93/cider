@@ -1,6 +1,6 @@
 #include "lua_func.h"
 
-namespace gunit {
+namespace cider {
 namespace recorder {
 namespace lua {
 
@@ -45,4 +45,4 @@ std::string produceBinaryOpCall(const BinaryOpType type) {
 
 }  // namespace lua
 }  // namespace recorder
-}  // namespace gunit
+}  // namespace cider

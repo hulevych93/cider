@@ -1,6 +1,6 @@
 #include "derived_class_types.h"
 
-namespace gunit {
+namespace cider {
 namespace models {
 
 BaseClass::BaseClass(const char* str) : _impl(str) {}
@@ -19,4 +19,4 @@ std::string DerivedClass::sayGoodbye(int times) const {
 }
 
 }  // namespace models
-}  // namespace gunit
+}  // namespace cider

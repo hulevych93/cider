@@ -4,9 +4,9 @@ if(NOT CLANGFORMAT_EXECUTABLE)
     find_program(CLANGFORMAT_EXECUTABLE "clang-format")
 endif()
 
-function(gunit_run_clang_format)
+function(cider_run_clang_format)
     if(CLANGFORMAT_EXECUTABLE)
-        gunit_collect_src(ALL_SRC)
+        cider_collect_src(ALL_SRC)
 
         foreach(SFILE ${ALL_SRC})
             execute_process(COMMAND ${CLANGFORMAT_EXECUTABLE} -style=Chromium -i ${SFILE})
@@ -16,5 +16,5 @@ endfunction()
 
 # run clang-formatting
 if(APPLE)
-gunit_run_clang_format()
+cider_run_clang_format()
 endif()

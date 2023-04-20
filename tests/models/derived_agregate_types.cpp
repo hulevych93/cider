@@ -1,6 +1,6 @@
 #include "derived_agregate_types.h"
 
-namespace gunit {
+namespace cider {
 namespace models {
 
 AggregateDerived function_test_aggregate_derived(const AggregateDerived& arg) {
@@ -12,4 +12,4 @@ AggregateDerived* function_test_aggregate_derived(AggregateDerived* arg) {
 }
 
 }  // namespace models
-}  // namespace gunit
+}  // namespace cider

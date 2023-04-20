@@ -8,7 +8,7 @@
 
 using namespace cppast;
 
-namespace gunit {
+namespace cider {
 namespace tool {
 
 std::optional<OperatorType> isOperator(const cpp_member_function& e) {
@@ -161,4 +161,4 @@ bool isAbstract(const cpp_class& e,
   return false;
 }
 }  // namespace tool
-}  // namespace gunit
+}  // namespace cider

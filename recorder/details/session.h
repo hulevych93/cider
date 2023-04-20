@@ -7,7 +7,7 @@
 
 #include <deque>
 
-namespace gunit {
+namespace cider {
 namespace recorder {
 
 class ScriptGenerator;
@@ -40,4 +40,4 @@ class ScriptRecordSessionImpl final : public ScriptRecordSession,
 };
 
 }  // namespace recorder
-}  // namespace gunit
+}  // namespace cider

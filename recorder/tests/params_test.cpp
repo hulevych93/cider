@@ -4,8 +4,8 @@
 
 #include <clocale>
 
-using namespace gunit::recorder;
-using namespace gunit;
+using namespace cider::recorder;
+using namespace cider;
 
 class ParamsTestSuite : public testing::Test {};
 

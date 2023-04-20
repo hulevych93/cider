@@ -4,7 +4,7 @@
 
 #include "recorder/recorder.h"
 
-namespace gunit {
+namespace cider {
 namespace tests {
 
 constexpr const char* LuaExampleModuleName = "example";
@@ -16,4 +16,4 @@ class TestSuite : public testing::Test {
 };
 
 }  // namespace tests
-}  // namespace gunit
+}  // namespace cider

@@ -12,7 +12,7 @@ namespace cppast {
 class cpp_member_variable;
 }  // namespace cppast
 
-namespace gunit {
+namespace cider {
 namespace tool {
 
 struct generator : ast_handler {
@@ -56,4 +56,4 @@ struct source_generator final : public generator {
 };
 
 }  // namespace tool
-}  // namespace gunit
+}  // namespace cider

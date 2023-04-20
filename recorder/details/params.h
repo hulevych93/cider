@@ -12,7 +12,7 @@
 
 #include "recorder/details/sink.h"
 
-namespace gunit {
+namespace cider {
 namespace recorder {
 
 struct UserDataValueParam;
@@ -173,21 +173,21 @@ Param makeParamImpl(Type arg) {
   return std::string{std::move(arg)};
 }
 
-//` Every floating-point type is converted into `float` with gunit::numCast.
+//` Every floating-point type is converted into `float` with cider::numCast.
 //` The `BadNumCastError` can be thrown.
 template <
     typename Type,
     typename std::enable_if_t<isFloatConvertibleType<Type>, void*> = nullptr>
 Param makeParamImpl(const Type arg) {
-  return gunit::numCast<float>(arg);
+  return cider::numCast<float>(arg);
 }
 
-//` Every integer type is converted into `int` with gunit::numCast.
+//` Every integer type is converted into `int` with cider::numCast.
 //` The `BadNumCastError` can be thrown.
 template <typename Type,
           typename std::enable_if_t<isIntConverbileType<Type>, void*> = nullptr>
 Param makeParamImpl(const Type arg) {
-  return gunit::numCast<int>(arg);
+  return cider::numCast<int>(arg);
 }
 
 template <typename Type,
@@ -216,4 +216,4 @@ inline Param makeParam(std::nullopt_t) {
 }
 
 }  // namespace recorder
-}  // namespace gunit
+}  // namespace cider

@@ -3,7 +3,7 @@
 #include <memory>
 #include <type_traits>
 
-namespace gunit {
+namespace cider {
 
 template <class... Ts>
 struct overloaded : Ts... {
@@ -104,4 +104,4 @@ constexpr bool isTypeInTypeList() {
 }
 
 }  // namespace utils
-}  // namespace gunit
+}  // namespace cider

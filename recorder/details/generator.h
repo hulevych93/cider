@@ -6,7 +6,7 @@
 #include <memory>
 #include <string>
 
-namespace gunit {
+namespace cider {
 namespace recorder {
 
 using ParamCodeProducer = std::string (*)(const Param& param, CodeSink& sink);
@@ -53,4 +53,4 @@ class ScriptGenerator final {
 };
 
 }  // namespace recorder
-}  // namespace gunit
+}  // namespace cider

@@ -8,11 +8,11 @@
 using namespace cppast;
 using namespace cxxopts;
 
-namespace gunit {
+namespace cider {
 namespace tool {
 
 Options getOptions() {
-  Options option_list("gunit", "gunit generates recording wrappers.\n");
+  Options option_list("cider", "cider generates recording wrappers.\n");
   // clang-format off
     option_list.add_options()
         ("h,help", "display this help and exit")
@@ -28,7 +28,7 @@ Options getOptions() {
         ("out_dir", "the directory which is used for output files generation",
          value<std::string>()->default_value("."))
         ("namespace", "the namespace which is used for output entities generation",
-         value<std::string>()->default_value("gunit3"));
+         value<std::string>()->default_value("cider3"));
 
         option_list.add_options("compilation")
         ("database_dir", "set the directory where a 'compile_commands.json' file is located containing build information",
@@ -154,4 +154,4 @@ std::string getOutputFilePath(const cxxopts::ParseResult& options) {
 }
 
 }  // namespace tool
-}  // namespace gunit
+}  // namespace cider

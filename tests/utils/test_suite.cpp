@@ -12,7 +12,7 @@ int luaopen_example(lua_State* L);
 }
 #endif
 
-namespace gunit {
+namespace cider {
 namespace tests {
 
 void TestSuite::testScript(const char* expectedScript,
@@ -27,4 +27,4 @@ void TestSuite::testScript(const char* expectedScript,
 }
 
 }  // namespace tests
-}  // namespace gunit
+}  // namespace cider

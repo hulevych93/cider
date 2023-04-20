@@ -1,12 +1,12 @@
-#gunit.cmake
+#cider.cmake
 
-function(gunit_tool_generate MODULE_NAME FILES OUTPUT_DIR)
-    gunit_add_cmake_deps(${FILES})
+function(cider_tool_generate MODULE_NAME FILES OUTPUT_DIR)
+    cider_add_cmake_deps(${FILES})
 
     # This ensures that there is no files from previous cmake runs.
     file(REMOVE_RECURSE "${OUTPUT_DIR}")
     file(MAKE_DIRECTORY "${OUTPUT_DIR}")
-    set(GUNIT_EXECUTABLE "${CMAKE_BINARY_DIR}/bin/gunit")
+    set(CIDER_EXECUTABLE "${CMAKE_BINARY_DIR}/bin/cider")
 
     set(OUTPUT_FILES)
     foreach(FILE ${FILES})
@@ -22,13 +22,13 @@ function(gunit_tool_generate MODULE_NAME FILES OUTPUT_DIR)
     set_source_files_properties(${GEN_DIR}/${MODULE_NAME}_lua.cpp PROPERTIES GENERATED TRUE)
 
     set(OUT_PARAM)
-    gunit_join_list(FILES ":" OUT_PARAM)
+    cider_join_list(FILES ":" OUT_PARAM)
 
-    get_filename_component(GUNIT_DIRECTORY ${GUNIT_EXECUTABLE} DIRECTORY)
+    get_filename_component(CIDER_DIRECTORY ${CIDER_EXECUTABLE} DIRECTORY)
     add_custom_target(gen_swig
-                       COMMAND "${GUNIT_EXECUTABLE}" --out_dir=${OUTPUT_DIR}
+                       COMMAND "${CIDER_EXECUTABLE}" --out_dir=${OUTPUT_DIR}
                        --files=${OUT_PARAM} --swig=${MODULE_NAME} --lua --namespace=hook 2>/dev/null
-                       WORKING_DIRECTORY ${GUNIT_DIRECTORY}
-                       DEPENDS gunit
-                       COMMENT "Generating gunit files...")
+                       WORKING_DIRECTORY ${CIDER_DIRECTORY}
+                       DEPENDS cider
+                       COMMENT "Generating cider files...")
 endfunction()

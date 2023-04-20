@@ -1,6 +1,6 @@
 #pragma once
 
-namespace gunit {
+namespace cider {
 namespace models {
 
 // Aggregate structures have no constructor that we can hook, as well
@@ -18,4 +18,4 @@ Aggregate function_test_aggregate(const Aggregate& arg);
 Aggregate* function_test_aggregate(Aggregate* arg);
 
 }  // namespace models
-}  // namespace gunit
+}  // namespace cider

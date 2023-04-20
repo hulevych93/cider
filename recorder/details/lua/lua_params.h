@@ -5,7 +5,7 @@
 #include <memory>
 #include <string>
 
-namespace gunit {
+namespace cider {
 namespace recorder {
 
 class CodeSink;
@@ -48,4 +48,4 @@ std::string produceParamCode(const Param& param, CodeSink& sink);
 
 }  // namespace lua
 }  // namespace recorder
-}  // namespace gunit
+}  // namespace cider

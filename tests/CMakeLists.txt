@@ -1,6 +1,6 @@
-gunit_project(tests)
+cider_project(tests)
 
-gunit_collect_src(LIST_OUT "models")
+cider_collect_src(LIST_OUT "models")
 
 add_subdirectory(models)
 
@@ -9,14 +9,14 @@ include_directories(.
     ${GTest_INCLUDE_DIRS}
     ${Boost_INCLUDE_DIRS}
     ${CMAKE_BINARY_DIR}
-    ${GUNIT_GEN_DIR}
+    ${CIDER_GEN_DIR}
 )
 
 add_executable(tests ${LIST_OUT})
 add_test(NAME "tests" COMMAND tests)
-add_dependencies(tests ${GUNIT_THIRDPARTY_TARGET_NAME})
+add_dependencies(tests ${CIDER_THIRDPARTY_TARGET_NAME})
 
-set(GEN_DIR ${GUNIT_GEN_DIR})
+set(GEN_DIR ${CIDER_GEN_DIR})
 set(SWIG_MODULE_NAME "example")
 
 prv_collect_src(${PROJECT_SOURCE_DIR}/models HDRS_OUT ".swig" ".cpp")
@@ -28,14 +28,14 @@ foreach(HDR ${HDRS_OUT})
     list(APPEND GEN_SRC_FILES "${GEN_DIR}/${FILE_NAME}.cpp")
 endforeach()
 
-gunit_tool_generate(${SWIG_MODULE_NAME} "${HDRS_OUT}" ${GEN_DIR})
+cider_tool_generate(${SWIG_MODULE_NAME} "${HDRS_OUT}" ${GEN_DIR})
 
 list(APPEND GEN_SRC_FILES "${GEN_DIR}/${SWIG_MODULE_NAME}_lua.cpp")
 
-add_library(gunit-models ${GEN_SRC_FILES})
-add_dependencies(gunit-models gen_swig)
+add_library(cider-models ${GEN_SRC_FILES})
+add_dependencies(cider-models gen_swig)
 
-gunit_generate_swig(LANGUAGE lua
+cider_generate_swig(LANGUAGE lua
                     EXTERNAL_RUNTIME
                     OUTPUT_DIR "${GEN_DIR}"
                     DEPENDS gen_swig
@@ -46,7 +46,7 @@ add_dependencies(models_wrap models)
 
 if(CLANGFORMAT_EXECUTABLE)
  foreach(OUT_FILE ${GEN_SRC_FILES})
-  add_custom_command(TARGET gunit-models
+  add_custom_command(TARGET cider-models
                    PRE_BUILD
                    COMMAND ${CLANGFORMAT_EXECUTABLE} -style=Chromium -i ${OUT_FILE})
  endforeach()
@@ -54,7 +54,7 @@ endif()
 
 target_link_libraries(tests
     recorder
-    gunit-models
+    cider-models
     models_wrap
     models
     scripting

@@ -5,7 +5,7 @@
 
 #include <boost/numeric/conversion/cast.hpp>
 
-namespace gunit {
+namespace cider {
 class BadNumCast final : public std::exception {
  public:
   explicit BadNumCast(const char* what) : _error("BadNumCast: ") {
@@ -36,4 +36,4 @@ To numCast(const From from) {
   }
 }
 
-}  // namespace gunit
+}  // namespace cider

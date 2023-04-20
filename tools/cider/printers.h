@@ -11,7 +11,7 @@ namespace cppast {
 class cpp_member_variable;
 }  // namespace cppast
 
-namespace gunit {
+namespace cider {
 namespace tool {
 
 void printNamespace(std::ostream& os,
@@ -105,4 +105,4 @@ void printSource(std::ostream& os,
                  const cppast::cpp_file& file);
 
 }  // namespace tool
-}  // namespace gunit
+}  // namespace cider

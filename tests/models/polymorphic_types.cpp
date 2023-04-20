@@ -1,6 +1,6 @@
 #include "polymorphic_types.h"
 
-namespace gunit {
+namespace cider {
 namespace models {
 
 StringInterface::StringInterface(const char* str) : _impl(str) {}
@@ -16,4 +16,4 @@ SomeInterface* makeSomeInterface(const char* str) {
 }
 
 }  // namespace models
-}  // namespace gunit
+}  // namespace cider

@@ -11,7 +11,7 @@ using namespace cppast;
 
 namespace {
 
-using FilesList = std::list<gunit::tool::FileMetadata>;
+using FilesList = std::list<cider::tool::FileMetadata>;
 
 template <typename Functor>
 void traverse(FilesList& files,
@@ -32,7 +32,7 @@ void traverse(FilesList& files,
 
 }  // namespace
 
-namespace gunit {
+namespace cider {
 namespace tool {
 
 swig_generator::swig_generator(std::ostream& out,
@@ -77,4 +77,4 @@ void printSwig(
 }
 
 }  // namespace tool
-}  // namespace gunit
+}  // namespace cider

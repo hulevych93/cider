@@ -2,7 +2,7 @@
 
 #include "recorder/details/action.h"
 
-namespace gunit {
+namespace cider {
 namespace recorder {
 
 using action_id = size_t;
@@ -62,41 +62,41 @@ class ActionsObservable final {
   ActionsObserverWeakPtr _observer;
 };
 
-#define GUNIT_NOTIFY_FREE_FUNCTION_NO_RETURN(...)                             \
-  auto scopeGuard = gunit::recorder::ActionsObservable::getInstance().notify( \
+#define CIDER_NOTIFY_FREE_FUNCTION_NO_RETURN(...)                             \
+  auto scopeGuard = cider::recorder::ActionsObservable::getInstance().notify( \
       __FUNCTION__, std::nullopt, __VA_ARGS__);
 
-#define GUNIT_NOTIFY_FREE_FUNCTION_NO_ARGS(RETURN_VALUE)                      \
-  auto scopeGuard = gunit::recorder::ActionsObservable::getInstance().notify( \
+#define CIDER_NOTIFY_FREE_FUNCTION_NO_ARGS(RETURN_VALUE)                      \
+  auto scopeGuard = cider::recorder::ActionsObservable::getInstance().notify( \
       __FUNCTION__, RETURN_VALUE);
 
-#define GUNIT_NOTIFY_FREE_FUNCTION(RETURN_VALUE, ...)                         \
-  auto scopeGuard = gunit::recorder::ActionsObservable::getInstance().notify( \
+#define CIDER_NOTIFY_FREE_FUNCTION(RETURN_VALUE, ...)                         \
+  auto scopeGuard = cider::recorder::ActionsObservable::getInstance().notify( \
       __FUNCTION__, RETURN_VALUE, __VA_ARGS__);
 
-#define GUNIT_NOTIFY_METHOD_NO_RETURN(...)                                    \
-  auto scopeGuard = gunit::recorder::ActionsObservable::getInstance().notify( \
+#define CIDER_NOTIFY_METHOD_NO_RETURN(...)                                    \
+  auto scopeGuard = cider::recorder::ActionsObservable::getInstance().notify( \
       _impl.get(), __FUNCTION__, std::nullopt, __VA_ARGS__);
 
-#define GUNIT_NOTIFY_METHOD_NO_ARGS(RETURN_VALUE)                             \
-  auto scopeGuard = gunit::recorder::ActionsObservable::getInstance().notify( \
+#define CIDER_NOTIFY_METHOD_NO_ARGS(RETURN_VALUE)                             \
+  auto scopeGuard = cider::recorder::ActionsObservable::getInstance().notify( \
       _impl.get(), __FUNCTION__, RETURN_VALUE);
 
-#define GUNIT_NOTIFY_METHOD(...)                                              \
-  auto scopeGuard = gunit::recorder::ActionsObservable::getInstance().notify( \
+#define CIDER_NOTIFY_METHOD(...)                                              \
+  auto scopeGuard = cider::recorder::ActionsObservable::getInstance().notify( \
       _impl.get(), __FUNCTION__, __VA_ARGS__);
 
-#define GUNIT_NOTIFY_CONSTRUCTOR(...)                                         \
-  auto scopeGuard = gunit::recorder::ActionsObservable::getInstance().notify( \
+#define CIDER_NOTIFY_CONSTRUCTOR(...)                                         \
+  auto scopeGuard = cider::recorder::ActionsObservable::getInstance().notify( \
       __FUNCTION__, _impl.get(), __VA_ARGS__);
 
-#define GUNIT_NOTIFY_CONSTRUCTOR_NO_ARGS                                      \
-  auto scopeGuard = gunit::recorder::ActionsObservable::getInstance().notify( \
+#define CIDER_NOTIFY_CONSTRUCTOR_NO_ARGS                                      \
+  auto scopeGuard = cider::recorder::ActionsObservable::getInstance().notify( \
       __FUNCTION__, _impl.get());
 
-#define GUNIT_NOTIFY_ASSIGNMENT(PARAM)                                        \
-  auto scopeGuard = gunit::recorder::ActionsObservable::getInstance().notify( \
-      _impl.get(), gunit::recorder::BinaryOpType::Assignment, PARAM);
+#define CIDER_NOTIFY_ASSIGNMENT(PARAM)                                        \
+  auto scopeGuard = cider::recorder::ActionsObservable::getInstance().notify( \
+      _impl.get(), cider::recorder::BinaryOpType::Assignment, PARAM);
 
 }  // namespace recorder
-}  // namespace gunit
+}  // namespace cider

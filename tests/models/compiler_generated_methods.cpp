@@ -1,6 +1,6 @@
 #include "compiler_generated_methods.h"
 
-namespace gunit {
+namespace cider {
 namespace models {
 
 void NoConstructors::doo() {
@@ -50,4 +50,4 @@ OnlyMoveOperator& OnlyMoveOperator::operator=(OnlyMoveOperator&&) {
 void OnlyMoveOperator::doo() {}
 
 }  // namespace models
-}  // namespace gunit
+}  // namespace cider

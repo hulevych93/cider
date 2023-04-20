@@ -1,6 +1,6 @@
 #include "session.h"
 
-namespace gunit {
+namespace cider {
 namespace recorder {
 
 ScriptRecordSessionImpl::ScriptRecordSessionImpl(ScriptGenerator&& generator)
@@ -41,4 +41,4 @@ void ScriptRecordSessionImpl::reset() {
 }
 
 }  // namespace recorder
-}  // namespace gunit
+}  // namespace cider

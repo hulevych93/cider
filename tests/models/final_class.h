@@ -2,7 +2,7 @@
 
 #include <memory>
 
-namespace gunit {
+namespace cider {
 namespace models {
 
 class FinalClass final {
@@ -35,4 +35,4 @@ FinalClass function_make_class_construct_obj();
 FinalClass* function_make_class_construct_obj_ptr();
 
 }  // namespace models
-}  // namespace gunit
+}  // namespace cider

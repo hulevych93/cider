@@ -16,7 +16,7 @@
 
 using namespace cppast;
 
-namespace gunit {
+namespace cider {
 namespace tool {
 
 generator::generator(std::ostream& out,
@@ -191,4 +191,4 @@ void handleFile(ast_handler& handler, const cpp_file& file) {
 }
 
 }  // namespace tool
-}  // namespace gunit
+}  // namespace cider

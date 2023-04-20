@@ -1,6 +1,6 @@
 #pragma once
 
-namespace gunit {
+namespace cider {
 namespace models {
 
 enum class SomeEnumeration : unsigned char {
@@ -12,4 +12,4 @@ enum class SomeEnumeration : unsigned char {
 SomeEnumeration function_test_enumeration(SomeEnumeration arg);
 
 }  // namespace models
-}  // namespace gunit
+}  // namespace cider
