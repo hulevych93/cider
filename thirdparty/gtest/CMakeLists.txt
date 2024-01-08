@@ -1,12 +1,12 @@
 cider_project(gtest)
 
-set(CIDER_GTEST_VERSION                1.10.0)
+set(CIDER_GTEST_VERSION                1.14.0)
 set(CIDER_GTEST_UNIQUE_DIR_NAME        gtest-${CIDER_GTEST_VERSION}-${CIDER_3RD_PARTY_LIB_DIR_SUFFIX})
 set(CIDER_GTEST_PREFIX                 ${CIDER_3RD_PARTY_INSTALL_DIR}/${CIDER_GTEST_UNIQUE_DIR_NAME})
 set(CIDER_GTEST_BUILD_DIR              ${CIDER_3RD_PARTY_BUILD_DIR}/${CIDER_GTEST_UNIQUE_DIR_NAME})
 set(GTest_INCLUDE_DIRS                   ${CIDER_GTEST_PREFIX}/include)
 set(GTest_LIB_DIR                        ${CIDER_GTEST_PREFIX}/lib)
-set(GTest_COMPONENTS                     gtest${CIDER_LIB_NAME_DEBUG_SUFFIX} gmock${CIDER_LIB_NAME_DEBUG_SUFFIX})
+set(GTest_COMPONENTS                     gtest gmock)
 set(GTest_LIBRARIES)
 
 foreach(TMP_GTEST_LIB_BASE IN LISTS GTest_COMPONENTS)
@@ -41,8 +41,8 @@ ExternalProject_Add(
     # Download
     DOWNLOAD_DIR            ${CIDER_3RD_PARTY_DOWNLOAD_DIR}
     DOWNLOAD_EXTRACT_TIMESTAMP 0
-    URL                     https://github.com/google/googletest/archive/release-1.10.0.tar.gz
-    URL_MD5                 "ecd1fa65e7de707cd5c00bdac56022cd"
+    URL                     https://github.com/google/googletest/archive/refs/tags/v1.14.0.tar.gz
+    URL_MD5                 "c8340a482851ef6a3fe618a082304cfc"
     # Configure
     SOURCE_DIR              ${SRC_DIR}
     CMAKE_ARGS              ${CMAKE_OPTS}
