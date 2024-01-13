@@ -23,8 +23,6 @@ struct LanguageContext final {
   BinaryOpCodeProducer binaryOpProducer = nullptr;
 };
 
-//` The `ScriptGenerator` class is intended for generating Lua script.
-//` It processes the user action log entries and generates script source code.
 class ScriptGenerator final {
  public:
   ScriptGenerator(std::string moduleName, LanguageContext);
@@ -35,9 +33,6 @@ class ScriptGenerator final {
   void operator()(const ClassMethod& context);
   void operator()(const ClassBinaryOp& context);
 
-  //` The method returns ready to use script. This method resets the state of
-  // the generator and ` it becomes ready to further usage. ` Throws:
-  //`ScriptGenerationError`.
   std::string getScript();
   void discard();
 

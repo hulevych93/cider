@@ -29,22 +29,31 @@ bool hasReturnValue(const cppast::cpp_function& e);
 
 bool hasReturnValue(const cppast::cpp_member_function& e);
 
-bool isUserDefined(const cppast::cpp_type& type, std::string& name);
+bool isUserDefined(const cppast::cpp_type& type,
+                   const std::string& scope,
+                   std::string& name);
 
-bool isUserData(const cppast::cpp_type& type, const MetadataStorage& metadata);
+bool isUserData(const cppast::cpp_type& type,
+                const std::string& scope,
+                const MetadataStorage& metadata);
 
-bool isAggregate(const cppast::cpp_type& type, const MetadataStorage& metadata);
+bool isAggregate(const cppast::cpp_type& type,
+                 const std::string& scope,
+                 const MetadataStorage& metadata);
 bool isAggregate(const std::string& name, const MetadataStorage& metadata);
 
 bool isAbstract(const cppast::cpp_class& e,
-                const char* scope,
+                const std::string& scope,
                 const MetadataStorage& metadata);
 
 bool hasImpl(const cppast::cpp_type& type,
+             const std::string& scope,
              const MetadataStorage& metadata,
              std::string& name);
 
 void replaceScope(const std::string& newScope, std::string& value);
+
+void removeScope(std::string& value);
 
 void handleFile(ast_handler& handler, const cppast::cpp_file& file);
 

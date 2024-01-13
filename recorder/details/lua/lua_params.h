@@ -12,8 +12,6 @@ class CodeSink;
 
 namespace lua {
 
-//` The `ParamVisitor` produces code chunks to be used as arguments during
-//` code generation.
 struct ParamVisitor {
   template <
       typename Type,
@@ -30,8 +28,6 @@ struct ParamVisitor {
   std::string operator()(const std::string& value) const;
 };
 
-//` The `UserDataParamVisitor` is extended with UserDataParamPtr operator
-// overload.
 class UserDataParamVisitor final : public ParamVisitor {
  public:
   explicit UserDataParamVisitor(CodeSink& sink);

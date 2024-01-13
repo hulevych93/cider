@@ -28,26 +28,29 @@ static class NullBuffer : public std::streambuf {
 static std::ostream null_stream(&null_buffer);
 
 void collectParamType(std::unordered_set<std::string>& os,
+                      const std::string& scope,
                       const cpp_type& type) {
   std::string name;
-  if (isUserDefined(type, name)) {
+  if (isUserDefined(type, scope, name)) {
     os.emplace(name);
   }
 }
 
 void collectParamTypes(
     std::unordered_set<std::string>& os,
+    const std::string& scope,
     const detail::iteratable_intrusive_list<cpp_function_parameter>& params) {
   for (const auto& param : params) {
-    collectParamType(os, param.type());
+    collectParamType(os, scope, param.type());
   }
 }
 
 void collectBasesTypes(
     std::unordered_set<std::string>& os,
+    const std::string& scope,
     const detail::iteratable_intrusive_list<cpp_base_class>& bases) {
   for (const auto& base : bases) {
-    collectParamType(os, base.type());
+    collectParamType(os, scope, base.type());
   }
 }
 
@@ -65,8 +68,8 @@ void metadata_collector::handleNamespace(const cppast::cpp_entity& e,
 void metadata_collector::handleEnum(const cppast::cpp_enum& e,
                                     const bool enter) {
   if (enter) {
-    m_file->exports.emplace(m_namespaces.scope() + "::" + e.name());
-    m_storage.enums.emplace(m_namespaces.scope() + "::" + e.name());
+    m_file->exports.emplace(m_namespaces.nativeScope() + "::" + e.name());
+    m_storage.enums.emplace(m_namespaces.nativeScope() + "::" + e.name());
     m_file->hasAggregatesOrEnums = true;
   }
 }
@@ -90,11 +93,11 @@ void metadata_collector::handleClass(const cppast::cpp_class& e, bool enter) {
     m_class = ClassMetadata{};
     m_class->name = e.name();
     m_class->file = m_file->name;
-    m_file->exports.emplace(m_namespaces.scope() + "::" + e.name());
-    collectBasesTypes(m_file->imports, e.bases());
+    m_file->exports.emplace(m_namespaces.nativeScope() + "::" + e.name());
+    collectBasesTypes(m_file->imports, m_namespaces.nativeScope(), e.bases());
   } else {
     assert(m_class.has_value());
-    m_storage.classes.emplace(m_namespaces.scope() + "::" + e.name(),
+    m_storage.classes.emplace(m_namespaces.nativeScope() + "::" + e.name(),
                               m_class.value());
     m_class.reset();
   }
@@ -111,7 +114,8 @@ void metadata_collector::handleConstructor(const cppast::cpp_constructor& e) {
   m_class->hasCopyConstructor |= isCopy;
   m_class->hasMoveConstructor |= isMove;
 
-  collectParamTypes(m_file->imports, e.parameters());
+  collectParamTypes(m_file->imports, m_namespaces.nativeScope(),
+                    e.parameters());
 }
 
 void metadata_collector::handleMemberFunction(
@@ -126,13 +130,17 @@ void metadata_collector::handleMemberFunction(
     m_class->isAbstract |= info.is_set(cppast::cpp_virtual_flags::pure);
   }
 
-  collectParamTypes(m_file->imports, e.parameters());
-  collectParamType(m_file->imports, e.return_type());
+  collectParamTypes(m_file->imports, m_namespaces.nativeScope(),
+                    e.parameters());
+  collectParamType(m_file->imports, m_namespaces.nativeScope(),
+                   e.return_type());
 }
 
 void metadata_collector::handleFreeFunction(const cppast::cpp_function& e) {
-  collectParamTypes(m_file->imports, e.parameters());
-  collectParamType(m_file->imports, e.return_type());
+  collectParamTypes(m_file->imports, m_namespaces.nativeScope(),
+                    e.parameters());
+  collectParamType(m_file->imports, m_namespaces.nativeScope(),
+                   e.return_type());
 }
 
 void metadata_collector::handleMemberVariable(

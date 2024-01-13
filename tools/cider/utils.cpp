@@ -86,35 +86,42 @@ bool hasReturnValue(const cpp_member_function& e) {
   return hasReturnValue<>(e);
 }
 
-bool isUserDefined(const cpp_type& type, std::string& name) {
+bool isUserDefined(const cpp_type& type,
+                   const std::string& scope,
+                   std::string& name) {
   if (type.kind() == cpp_type_kind::user_defined_t) {
     name = to_string(remove_cv(type));
+    replaceScope(scope, name);
     return true;
   } else if (type.kind() == cpp_type_kind::pointer_t) {
     const auto& pointer = static_cast<const cpp_pointer_type&>(type);
-    return isUserDefined(pointer.pointee(), name);
+    return isUserDefined(pointer.pointee(), scope, name);
   } else if (type.kind() == cpp_type_kind::reference_t) {
     const auto& reference = static_cast<const cpp_reference_type&>(type);
-    return isUserDefined(reference.referee(), name);
+    return isUserDefined(reference.referee(), scope, name);
   } else if (type.kind() == cpp_type_kind::cv_qualified_t) {
     const auto& cvType = static_cast<const cpp_cv_qualified_type&>(type);
-    return isUserDefined(cvType.type(), name);
+    return isUserDefined(cvType.type(), scope, name);
   }
   return false;
 }
 
-bool isUserData(const cpp_type& type, const MetadataStorage& metadata) {
+bool isUserData(const cpp_type& type,
+                const std::string& scope,
+                const MetadataStorage& metadata) {
   std::string name;
-  if (isUserDefined(type, name)) {
+  if (isUserDefined(type, scope, name)) {
     return metadata.classes.find(name) != metadata.classes.end() ||
            metadata.enums.find(name) != metadata.enums.end();
   }
   return false;
 }
 
-bool isAggregate(const cpp_type& type, const MetadataStorage& metadata) {
+bool isAggregate(const cpp_type& type,
+                 const std::string& scope,
+                 const MetadataStorage& metadata) {
   std::string name;
-  if (isUserDefined(type, name)) {
+  if (isUserDefined(type, scope, name)) {
     return isAggregate(name, metadata);
   }
   return false;
@@ -130,9 +137,10 @@ bool isAggregate(const std::string& name, const MetadataStorage& metadata) {
 }
 
 bool hasImpl(const cpp_type& type,
+             const std::string& scope,
              const MetadataStorage& metadata,
              std::string& name) {
-  if (isUserDefined(type, name)) {
+  if (isUserDefined(type, scope, name)) {
     auto it = metadata.classes.find(name);
     if (it != metadata.classes.end()) {
       const auto& classMetadata = it->second;
@@ -146,14 +154,24 @@ void replaceScope(const std::string& newScope, std::string& value) {
   auto scopePos = value.find_last_of("::");
   if (scopePos != std::string::npos) {
     value = value.substr(scopePos + 1);
-    value = newScope + "::" + value;
+  }
+  value = newScope + "::" + value;
+}
+
+void removeScope(std::string& value) {
+  auto scopePos = value.find_last_of("::");
+  if (scopePos != std::string::npos) {
+    value = value.substr(scopePos + 1);
   }
 }
 
 bool isAbstract(const cpp_class& e,
-                const char* scope,
+                const std::string& scope,
                 const MetadataStorage& metadata) {
-  auto it = metadata.classes.find(std::string{scope} + "::" + e.name());
+  auto enumName = e.name();
+  replaceScope(scope, enumName);
+
+  auto it = metadata.classes.find(enumName);
   if (it != metadata.classes.end()) {
     const auto& classMetadata = it->second;
     return classMetadata.isAbstract;

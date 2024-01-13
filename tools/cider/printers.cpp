@@ -60,22 +60,29 @@ void printAutoTypeDecl(std::ostream& os, const cpp_type& type) {
 void printReturnStatement(std::ostream& os,
                           const cpp_type& type,
                           const std::optional<std::string> returnName,
-                          const char* genScope,
+                          const namespaces_stack& stack,
                           const MetadataStorage& metadata) {
   if (!returnName.has_value()) {
     return;
   }
-  if (isUserData(type, metadata)) {
+  if (isUserData(type, stack.nativeScope(), metadata)) {
     auto value = to_string(type);
-    replaceScope(genScope, value);
+    replaceScope(stack.genScope(), value);
 
-    if (isAggregate(type, metadata)) {
-      os << "return *reinterpret_cast<" + value + "*>(&" << returnName.value()
-         << ");\n";
+    if (isAggregate(type, stack.nativeScope(), metadata)) {
+        os << "return ";
+        if (!stack.genScope().empty()) {
+            os << "cider::convert_out<" << stack.genScope() << "::" <<
+                to_string(type) << ">(";
+        }
+        os << returnName.value();
+        if (!stack.genScope().empty()) {
+            os << ")";
+        }
+        os << ";\n";
       return;
     }
   }
-
   os << "return " << returnName.value() << ";\n";
 }
 
@@ -111,11 +118,12 @@ void printFunctionNotify(std::ostream& os,
 
 void printParamType(std::ostream& os,
                     const MetadataStorage& metadata,
-                    const std::string& genScope,
+                    const namespaces_stack& stack,
                     const cpp_type& type) {
   auto value = to_string(type);
-  if (isUserData(type, metadata)) {  // check that pointer to user defined type!
-    replaceScope(genScope, value);
+  if (isUserData(type, stack.nativeScope(),
+                 metadata)) {  // check that pointer to user defined type!
+    replaceScope(stack.genScope(), value);
   }
   os << value;
 }
@@ -123,7 +131,7 @@ void printParamType(std::ostream& os,
 void printParamsDecl(
     std::ostream& os,
     const MetadataStorage& metadata,
-    const std::string& genScope,
+    const namespaces_stack& stack,
     const detail::iteratable_intrusive_list<cpp_function_parameter>& params) {
   auto first = true;
   for (const auto& param : params) {
@@ -133,7 +141,7 @@ void printParamsDecl(
       first = false;
     }
 
-    printParamType(os, metadata, genScope, param.type());
+    printParamType(os, metadata, stack, param.type());
     os << " ";
 
     assert(!param.name().empty());
@@ -179,6 +187,7 @@ void printParamsVal(
     std::ostream& os,
     const MetadataStorage& metadata,
     const detail::iteratable_intrusive_list<cpp_function_parameter>& params,
+    const namespaces_stack& stack,
     const bool needDereference = true) {
   auto first = true;
   for (const auto& param : params) {
@@ -187,13 +196,19 @@ void printParamsVal(
     } else {
       first = false;
     }
-
+    const auto& scope = stack.nativeScope();
     assert(!param.name().empty());
     if (!param.name().empty()) {
-      if (isUserData(param.type(), metadata)) {
-        if (isAggregate(param.type(), metadata)) {
-          os << "(" + to_string(param.type()) + ")(";
-          os << param.name() << ")";
+      if (isUserData(param.type(), scope, metadata)) {
+        if (isAggregate(param.type(), scope, metadata)) {
+          if (!scope.empty()) {
+            os << "cider::convert_in<" << scope
+               << "::" << to_string(param.type()) << ">(";
+          }
+          os << param.name();
+          if (!scope.empty()) {
+            os << ")";
+          }
         } else {
           if (needDereference) {
             printDereference(os, param.type());
@@ -257,24 +272,24 @@ template <typename FunctionType>
 void printFunctionDecl(std::ostream& os,
                        const MetadataStorage& metadata,
                        const FunctionType& e,
-                       const char* genScope,
-                       const char* scope,
-                       const bool semicolon) {
-  printParamType(os, metadata, genScope, e.return_type());
+                       const namespaces_stack& stack,
+                       const char* className,
+                       const bool declaration) {
+  printParamType(os, metadata, stack, e.return_type());
   os << " ";
-  if (scope != nullptr) {
-    os << scope << "::";
+  if (className != nullptr) {
+    os << className << "::";
   }
   os << e.name() << "(";
   const auto& params = e.parameters();
-  printParamsDecl(os, metadata, genScope, params);
+  printParamsDecl(os, metadata, stack, params);
   os << ")";
   if constexpr (std::is_same_v<cpp_member_function, FunctionType>) {
     if (is_const(e.cv_qualifier())) {
       os << " const";
     }
   }
-  if (semicolon) {
+  if (declaration) {
     os << ";";
   }
   os << "\n";
@@ -283,33 +298,32 @@ void printFunctionDecl(std::ostream& os,
 void printFunctionDecl(std::ostream& os,
                        const MetadataStorage& metadata,
                        const cpp_function& e,
-                       const char* genScope,
-                       const char* scope,
-                       const bool semicolon) {
-  printFunctionDecl<>(os, metadata, e, genScope, scope, semicolon);
+                       const namespaces_stack& stack,
+                       const char* className,
+                       const bool declaration) {
+  printFunctionDecl<>(os, metadata, e, stack, className, declaration);
 }
 
 void printFunctionDecl(std::ostream& os,
                        const MetadataStorage& metadata,
                        const cpp_member_function& e,
-                       const char* genScope,
-                       const char* scope,
-                       const bool semicolon) {
-  printFunctionDecl<>(os, metadata, e, genScope, scope, semicolon);
+                       const namespaces_stack& stack,
+                       const char* className,
+                       const bool declaration) {
+  printFunctionDecl<>(os, metadata, e, stack, className, declaration);
 }
 
 template <typename FunctionType>
 void printFunctionBody(std::ostream& os,
                        const MetadataStorage& metadata,
                        const FunctionType& e,
-                       const bool member,
-                       const char* genScope,
-                       const char* scope) {
+                       const namespaces_stack& stack,
+                       const bool member) {
   os << "{\n";
   os << "try {\n";
   std::string pureReturnTypeName;
-  const auto hasImplemetation =
-      hasImpl(e.return_type(), metadata, pureReturnTypeName);
+  const auto hasImplemetation = hasImpl(e.return_type(), stack.nativeScope(),
+                                        metadata, pureReturnTypeName);
   std::optional<std::string> returnName;
   std::optional<std::string> notificationName;  // TODO
   if (hasReturnValue(e)) {
@@ -322,13 +336,15 @@ void printFunctionBody(std::ostream& os,
       notificationName = returnName;
     }
   }
+  const auto& scope = stack.nativeScope();
+  const auto& genScope = stack.genScope();
   if constexpr (std::is_same_v<cpp_member_function, FunctionType>) {
     os << "_impl->" << e.name() << "(";
   } else {
     os << scope << "::" << e.name() << "(";
   }
   const auto& params = e.parameters();
-  printParamsVal(os, metadata, params);
+  printParamsVal(os, metadata, params, stack);
   os << ");\n";
 
   if (hasImplemetation) {
@@ -349,10 +365,10 @@ void printFunctionBody(std::ostream& os,
 
   printFunctionNotify(os, member, notificationName, params.empty());
 
-  printParamsVal(os, metadata, params);
+  printParamsVal(os, metadata, params, stack);
   os << ");\n";
 
-  printReturnStatement(os, e.return_type(), returnName, genScope, metadata);
+  printReturnStatement(os, e.return_type(), returnName, stack, metadata);
 
   os << CatchBlock << "}\n";
 }
@@ -401,34 +417,32 @@ void printOperatorBody(std::ostream& os,
 void printFunctionBody(std::ostream& os,
                        const MetadataStorage& metadata,
                        const cppast::cpp_function& e,
-                       const char* genScope,
-                       const char* scope) {
-  printFunctionBody<>(os, metadata, e, false, genScope, scope);
+                       const namespaces_stack& stack) {
+  printFunctionBody<>(os, metadata, e, stack, false);
 }
 
 void printFunctionBody(std::ostream& os,
                        const MetadataStorage& metadata,
                        const cppast::cpp_member_function& e,
-                       const char* genScope,
-                       const char* scope) {
+                       const namespaces_stack& stack) {
   if (auto operatorType = isOperator(e)) {
     printOperatorBody(os, operatorType.value(), e);
   } else {
-    printFunctionBody<>(os, metadata, e, true, genScope, scope);
+    printFunctionBody<>(os, metadata, e, stack, true);
   }
 }
 
 void printConstructorDecl(std::ostream& os,
                           const MetadataStorage& metadata,
                           const cpp_constructor& e,
-                          const char* genScope,
+                          const namespaces_stack& stack,
                           const bool definition) {
   if (definition) {
     os << e.name() << "::";
   }
   os << e.name() << "(";
   const auto& params = e.parameters();
-  printParamsDecl(os, metadata, genScope, params);
+  printParamsDecl(os, metadata, stack, params);
   os << ")";
   if (!definition) {
     os << ";";
@@ -439,10 +453,10 @@ void printConstructorDecl(std::ostream& os,
 void printGeneratedMethods(std::ostream& os,
                            const MetadataStorage& metadata,
                            const cppast::cpp_class& e,
-                           const char* scope,
+                           const namespaces_stack& stack,
                            const bool definition) {
   auto classMetaIt =
-      metadata.classes.find(std::string{scope} + "::" + e.name());
+      metadata.classes.find(stack.nativeScope() + "::" + e.name());
   if (classMetaIt != metadata.classes.end()) {
     auto classMeta = classMetaIt->second;
 
@@ -454,8 +468,8 @@ void printGeneratedMethods(std::ostream& os,
       if (definition) {
         os << " {\n";
         os << "try {\n";
-        os << "_impl = std::make_shared<" << scope << "::" << e.name()
-           << ">();\n";
+        os << "_impl = std::make_shared<" << stack.nativeScope()
+           << "::" << e.name() << ">();\n";
         os << "CIDER_NOTIFY_CONSTRUCTOR_NO_ARGS\n";
         os << CatchBlock;
         os << "}\n";
@@ -486,8 +500,8 @@ void printGeneratedMethods(std::ostream& os,
 
         os << " {\n";
         os << "try {\n";
-        os << "_impl = std::make_shared<" << scope << "::" << e.name()
-           << ">(*other._impl.get());\n";
+        os << "_impl = std::make_shared<" << stack.nativeScope()
+           << "::" << e.name() << ">(*other._impl.get());\n";
         os << "CIDER_NOTIFY_CONSTRUCTOR(other._impl.get())\n";
         os << CatchBlock;
         os << "}\n";
@@ -543,8 +557,7 @@ void printBaseClassesConstructors(
     std::ostream& os,
     const MetadataStorage& metadata,
     const detail::iteratable_intrusive_list<cpp_base_class>& bases,
-    const char* genScope,
-    const char* scope) {
+    const namespaces_stack& stack) {
   if (bases.empty()) {
     return;
   }
@@ -557,8 +570,8 @@ void printBaseClassesConstructors(
     } else {
       first = false;
     }
-    os << base.name() << "(std::shared_ptr<" << scope << "::" << base.name()
-       << ">())";
+    os << base.name() << "(std::shared_ptr<" << stack.nativeScope()
+       << "::" << base.name() << ">())";
   }
 }
 
@@ -586,19 +599,20 @@ void printGeneralConstructorBody(
     const MetadataStorage& metadata,
     const cpp_constructor& e,
     const detail::iteratable_intrusive_list<cpp_base_class>& bases,
-    const char* scope) {
+    const namespaces_stack& stack) {
   os << "{\n";
   os << "try {\n";
-  os << "_impl = std::make_shared<" << scope << "::" << e.name() << ">(";
+  os << "_impl = std::make_shared<" << stack.nativeScope() << "::" << e.name()
+     << ">(";
 
   const auto& params = e.parameters();
-  printParamsVal(os, metadata, params);
+  printParamsVal(os, metadata, params, stack);
   os << ");\n";
 
   printConstructorNotify(os, params.empty());
   if (!params.empty()) {
     os << "(";
-    printParamsVal(os, metadata, params, false);
+    printParamsVal(os, metadata, params, stack, false);
     os << ");\n";
   }
 
@@ -624,20 +638,20 @@ void printConstructorBody(
     const MetadataStorage& metadata,
     const cpp_constructor& e,
     const detail::iteratable_intrusive_list<cpp_base_class>& bases,
-    const char* scope) {
+    const namespaces_stack& stack) {
   if (isMoveContructor(e)) {
     printMoveConstructorBody(os, e);
   } else {
-    printGeneralConstructorBody(os, metadata, e, bases, scope);
+    printGeneralConstructorBody(os, metadata, e, bases, stack);
   }
 }
 
 void printClass(std::ostream& os,
                 const MetadataStorage& metadata,
                 const cpp_class& e,
-                const char* genScope,
-                const char* scope,
+                const namespaces_stack& stack,
                 const bool enter) {
+  const auto& scope = stack.nativeScope();
   if (enter) {
     os << "class " << e.name() << " ";
     if (e.is_final()) {
@@ -648,7 +662,7 @@ void printClass(std::ostream& os,
     os << "public:\n";
     os << e.name() << "(std::shared_ptr<" << scope << "::" << e.name()
        << "> impl) \n";
-    printBaseClassesConstructors(os, metadata, e.bases(), genScope, scope);
+    printBaseClassesConstructors(os, metadata, e.bases(), stack);
     if (!e.bases().empty()) {
       os << ", ";
     } else {
@@ -707,8 +721,8 @@ void printEnumValue(std::ostream& os, const cppast::cpp_enum_value& e) {
 void printVariableDecl(std::ostream& os,
                        const MetadataStorage& metadata,
                        const cppast::cpp_member_variable& e,
-                       const char* genScope) {
-  printParamType(os, metadata, genScope, e.type());
+                       const namespaces_stack& stack) {
+  printParamType(os, metadata, stack, e.type());
   os << " ";
   os << e.name();
   if (const auto& defaultValue = e.default_value()) {
@@ -764,6 +778,7 @@ void printSource(std::ostream& os,
   os << "#include \"" << outputFile + ".h"
      << "\"\n\n";
   os << "#include <recorder/actions_observer.h>\n\n";
+  os << "#include <utils/convert_utils.h>\n\n";
 
   handleFile(source, file);
 }

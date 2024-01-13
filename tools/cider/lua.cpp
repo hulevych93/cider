@@ -118,12 +118,12 @@ lua_generator::~lua_generator() {
 }
 
 void lua_generator::handleClass(const cppast::cpp_class& e, bool enter) {
-  if (!isAggregate(m_namespaces.scope() + "::" + e.name(), m_metadata)) {
+  if (!isAggregate(m_namespaces.nativeScope() + "::" + e.name(), m_metadata)) {
     return;
   }
 
-  printAggregateProducer(m_out, m_metadata, m_module, m_namespaces.scope(), e,
-                         enter);
+  printAggregateProducer(m_out, m_metadata, m_module,
+                         m_namespaces.nativeScope(), e, enter);
 }
 
 void lua_generator::handleMemberVariable(const cppast::cpp_member_variable& e) {
@@ -139,12 +139,12 @@ void lua_generator::handleNamespace(const cpp_entity& e, const bool enter) {
 }
 
 void lua_generator::handleEnumValue(const cppast::cpp_enum_value& e) {
-  printEnumField(m_out, m_module, m_namespaces.top(), m_namespaces.scope(),
-                 e.name());
+  printEnumField(m_out, m_module, m_namespaces.top(),
+                 m_namespaces.nativeScope(), e.name());
 }
 
 void lua_generator::handleEnum(const cppast::cpp_enum& e, const bool enter) {
-  printEnumProducer(m_out, m_namespaces.scope(), e.name(), enter);
+  printEnumProducer(m_out, m_namespaces.nativeScope(), e.name(), enter);
 
   if (enter) {
     m_namespaces.push(null_stream, e.name());

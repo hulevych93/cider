@@ -48,11 +48,9 @@ void header_generator::handleClass(const cpp_class& e, const bool enter) {
   }
 
   if (e.class_kind() == cpp_class_kind::class_t) {
-    printClass(m_out, m_metadata, e, m_namespaces.genScope().c_str(),
-               m_namespaces.top(), enter);
-    if (enter && !isAbstract(e, m_namespaces.scope().c_str(), m_metadata)) {
-      printGeneratedMethods(m_out, m_metadata, e, m_namespaces.scope().c_str(),
-                            false);
+    printClass(m_out, m_metadata, e, m_namespaces, enter);
+    if (enter && !isAbstract(e, m_namespaces.nativeScope(), m_metadata)) {
+      printGeneratedMethods(m_out, m_metadata, e, m_namespaces, false);
     }
   } else {
     printStruct(m_out, m_metadata, e, enter);
@@ -60,15 +58,13 @@ void header_generator::handleClass(const cpp_class& e, const bool enter) {
 }
 
 void header_generator::handleConstructor(const cpp_constructor& e) {
-  printConstructorDecl(m_out, m_metadata, e, m_namespaces.genScope().c_str(),
-                       false);
+  printConstructorDecl(m_out, m_metadata, e, m_namespaces, false);
 }
 
 void header_generator::handleFreeFunction(const cpp_function& e) {
   m_namespaces(m_out);
 
-  printFunctionDecl(m_out, m_metadata, e, m_namespaces.genScope().c_str(),
-                    nullptr, true);
+  printFunctionDecl(m_out, m_metadata, e, m_namespaces, nullptr, true);
 
   m_out << std::endl;
 }
@@ -88,8 +84,7 @@ void header_generator::handleEnum(const cppast::cpp_enum& e, const bool enter) {
 void header_generator::handleMemberFunction(const cpp_member_function& e) {
   m_namespaces(m_out);
 
-  printFunctionDecl(m_out, m_metadata, e, m_namespaces.genScope().c_str(),
-                    nullptr, true);
+  printFunctionDecl(m_out, m_metadata, e, m_namespaces, nullptr, true);
 
   m_out << std::endl;
 }
@@ -98,17 +93,16 @@ void header_generator::handleMemberVariable(
     const cppast::cpp_member_variable& e) {
   m_namespaces(m_out);
 
-  printVariableDecl(m_out, m_metadata, e, m_namespaces.genScope().c_str());
+  printVariableDecl(m_out, m_metadata, e, m_namespaces);
 }
 
 void source_generator::handleClass(const cppast::cpp_class& e, bool enter) {
   generator::handleClass(e, enter);
 
   if (enter && e.class_kind() == cpp_class_kind::class_t &&
-      !isAbstract(e, m_namespaces.scope().c_str(), m_metadata)) {
+      !isAbstract(e, m_namespaces.nativeScope(), m_metadata)) {
     m_namespaces(m_out);
-    printGeneratedMethods(m_out, m_metadata, e, m_namespaces.scope().c_str(),
-                          true);
+    printGeneratedMethods(m_out, m_metadata, e, m_namespaces, true);
     m_out << std::endl;
   }
 }
@@ -116,13 +110,10 @@ void source_generator::handleClass(const cppast::cpp_class& e, bool enter) {
 void source_generator::handleConstructor(const cpp_constructor& e) {
   m_namespaces(m_out);
 
-  printConstructorDecl(m_out, m_metadata, e, m_namespaces.genScope().c_str(),
-                       true);
+  printConstructorDecl(m_out, m_metadata, e, m_namespaces, true);
   printBaseClassesConstructors(m_out, m_metadata, m_class->bases(),
-                               m_namespaces.genScope().c_str(),
-                               m_namespaces.top());
-  printConstructorBody(m_out, m_metadata, e, m_class->bases(),
-                       m_namespaces.top());
+                               m_namespaces);
+  printConstructorBody(m_out, m_metadata, e, m_class->bases(), m_namespaces);
 
   m_out << std::endl;
 }
@@ -130,10 +121,8 @@ void source_generator::handleConstructor(const cpp_constructor& e) {
 void source_generator::handleFreeFunction(const cpp_function& e) {
   m_namespaces(m_out);
 
-  printFunctionDecl(m_out, m_metadata, e, m_namespaces.genScope().c_str(),
-                    nullptr, false);
-  printFunctionBody(m_out, m_metadata, e, m_namespaces.genScope().c_str(),
-                    m_namespaces.top());
+  printFunctionDecl(m_out, m_metadata, e, m_namespaces, nullptr, false);
+  printFunctionBody(m_out, m_metadata, e, m_namespaces);
 
   m_out << std::endl;
 }
@@ -141,9 +130,9 @@ void source_generator::handleFreeFunction(const cpp_function& e) {
 void source_generator::handleMemberFunction(const cpp_member_function& e) {
   m_namespaces(m_out);
 
-  printFunctionDecl(m_out, m_metadata, e, m_namespaces.genScope().c_str(),
-                    m_class->name().c_str(), false);
-  printFunctionBody(m_out, m_metadata, e, m_namespaces.genScope().c_str());
+  printFunctionDecl(m_out, m_metadata, e, m_namespaces, m_class->name().c_str(),
+                    false);
+  printFunctionBody(m_out, m_metadata, e, m_namespaces);
 
   m_out << std::endl;
 }

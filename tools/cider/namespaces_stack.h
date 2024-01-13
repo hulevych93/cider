@@ -15,10 +15,10 @@ struct namespaces_stack final {
 
   void push(std::ostream& os, const std::string& scope);
   void pop(std::ostream& os);
-  const char* top() const;
 
-  std::string scope() const;
-  const std::string& genScope() const;
+  std::string genScope() const;
+  std::string nativeScope() const;
+  std::string top() const;
 
  private:
   std::vector<std::string> m_namespaces;

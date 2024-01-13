@@ -33,11 +33,11 @@ void namespaces_stack::pop(std::ostream& os) {
   m_namespaces.pop_back();
 }
 
-const char* namespaces_stack::top() const {
+std::string namespaces_stack::top() const {
   return !m_namespaces.empty() ? m_namespaces.back().c_str() : nullptr;
 }
 
-std::string namespaces_stack::scope() const {
+std::string namespaces_stack::nativeScope() const {
   std::string scope;
   auto first = true;
   for (const auto& space : m_namespaces) {
@@ -50,7 +50,7 @@ std::string namespaces_stack::scope() const {
   return scope;
 }
 
-const std::string& namespaces_stack::genScope() const {
+std::string namespaces_stack::genScope() const {
   return m_genScope;
 }
 

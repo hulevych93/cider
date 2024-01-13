@@ -21,16 +21,12 @@ using UserDataValueParamPtr = std::shared_ptr<UserDataValueParam>;
 struct UserDataReferenceParam;
 using UserDataReferenceParamPtr = std::shared_ptr<UserDataReferenceParam>;
 
-//` The `Nil` is the tag type for lua 'nil' param generation.
 struct Nil final {
-  //` Every two `Nil` objects are always equal.
   bool operator==(const Nil&) const { return true; }
 };
 
-//` The `GeneratorTypesList` includes all the fundamental types.
 using GeneratorTypesList = TypeList<Nil, bool, int, float, std::string>;
 
-//` User action parameters are introduced by the `Param` variant.
 using Param = utils::ApplyTypeList<
     std::variant,
     utils::ConcatTypeLists<
@@ -151,21 +147,12 @@ constexpr bool isIntConverbileType =
     !std::is_same_v<std::decay_t<Type>, bool> &&
     std::is_integral_v<std::decay_t<Type>>;
 
-//` The `makeParamImpl` functions are supposed to construct correct parameter
-// types ` from wide list of possible input types. Below are sfinae functions
-// for each group ` of input param types.
-
-//` The `UserData` is made from input data of enum and class types, which are
-// not included ` in the generators primitive types list.
 template <typename Type,
           typename std::enable_if_t<isUserData<Type>, void*> = nullptr>
 Param makeParamImpl(Type&& arg) {
   return makeUserData(std::forward<Type>(arg));
 }
 
-//` For every param type from which std::string is constructible, but not the
-// std::string itself. ` Example, the `const char*` type is copied into
-// std::string, and becomes one of the primitive types.
 template <
     typename Type,
     typename std::enable_if_t<isStringConvertibleType<Type>, void*> = nullptr>
@@ -173,8 +160,6 @@ Param makeParamImpl(Type arg) {
   return std::string{std::move(arg)};
 }
 
-//` Every floating-point type is converted into `float` with cider::numCast.
-//` The `BadNumCastError` can be thrown.
 template <
     typename Type,
     typename std::enable_if_t<isFloatConvertibleType<Type>, void*> = nullptr>
@@ -182,8 +167,6 @@ Param makeParamImpl(const Type arg) {
   return cider::numCast<float>(arg);
 }
 
-//` Every integer type is converted into `int` with cider::numCast.
-//` The `BadNumCastError` can be thrown.
 template <typename Type,
           typename std::enable_if_t<isIntConverbileType<Type>, void*> = nullptr>
 Param makeParamImpl(const Type arg) {
@@ -197,9 +180,6 @@ Param makeParamImpl(Type&& arg) {
 }
 
 }  // namespace details
-
-//` The `makeParam` functions are supposed to overload the helper templates,
-//` such as boost::optional, etc.
 
 template <typename Type>
 Param makeParam(Type&& arg) {
