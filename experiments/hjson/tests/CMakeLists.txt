@@ -1,5 +1,13 @@
 cider_project(hjson_tests)
 
+include_directories(.
+    ${Lua_INCLUDE_DIRS}
+    ${GTest_INCLUDE_DIRS}
+    ${Boost_INCLUDE_DIRS}
+    ${CMAKE_BINARY_DIR}
+    ${CIDER_GEN_DIR}
+)
+
 set(GEN_DIR ${CIDER_GEN_DIR})
 set(SWIG_MODULE_NAME "hjson")
 
@@ -12,7 +20,7 @@ foreach(HDR ${HDRS_OUT})
     list(APPEND GEN_SRC_FILES "${GEN_DIR}/${FILE_NAME}.cpp")
 endforeach()
 
-cider_tool_generate(${SWIG_MODULE_NAME} "${HDRS_OUT}" ${GEN_DIR})
+cider_tool_generate(${SWIG_MODULE_NAME} "HjsonHooked" "${HDRS_OUT}" ${GEN_DIR})
 
 list(APPEND GEN_SRC_FILES "${GEN_DIR}/${SWIG_MODULE_NAME}_lua.cpp")
 

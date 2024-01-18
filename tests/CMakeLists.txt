@@ -28,7 +28,7 @@ foreach(HDR ${HDRS_OUT})
     list(APPEND GEN_SRC_FILES "${GEN_DIR}/${FILE_NAME}.cpp")
 endforeach()
 
-cider_tool_generate(${SWIG_MODULE_NAME} "${HDRS_OUT}" ${GEN_DIR})
+cider_tool_generate(${SWIG_MODULE_NAME} "hook" "${HDRS_OUT}" ${GEN_DIR})
 
 list(APPEND GEN_SRC_FILES "${GEN_DIR}/${SWIG_MODULE_NAME}_lua.cpp")
 
@@ -42,7 +42,7 @@ cider_generate_swig(LANGUAGE lua
                     FILE "${GEN_DIR}/${SWIG_MODULE_NAME}.swig")
 
 add_library(models_wrap "${GEN_DIR}/${SWIG_MODULE_NAME}_wrap.cpp" "${GEN_DIR}/swigluarun.h")
-add_dependencies(models_wrap models)
+add_dependencies(models_wrap cider-models)
 
 if(CLANGFORMAT_EXECUTABLE)
  foreach(OUT_FILE ${GEN_SRC_FILES})
@@ -54,8 +54,8 @@ endif()
 
 target_link_libraries(tests
     recorder
-    cider-models
     models_wrap
+    cider-models
     models
     scripting
     ${GTest_LIBRARIES}

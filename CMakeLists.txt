@@ -10,6 +10,8 @@ include (cmake/main.cmake)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 include_directories(${CMAKE_SOURCE_DIR})
 
 enable_testing()
@@ -42,3 +44,5 @@ if(CIDER_ENABLE_COVERAGE)
         DEPENDENCIES recorder_test tests
         EXCLUDE "tools/*" "tests/models/*" "${BUILD_FILES_DIR}/*" "${CIDER_GEN_DIR}/*" "${BASE_DIRECTORY}/*/v1/*" "/Applications/*")
 endif()
+
+#add_subdirectory(experiments/hjson)

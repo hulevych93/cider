@@ -36,6 +36,7 @@ struct lua_generator final : ast_handler {
   std::string m_outPath;
   std::string m_module;
   const MetadataStorage& m_metadata;
+  bool m_isAggregate = false;
 };
 
 }  // namespace tool

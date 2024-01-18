@@ -37,6 +37,14 @@ constexpr const auto* CatchBlock = R"(} catch (const std::exception&) {
 
 namespace {
 
+void printParamName(std::ostream& os, const cpp_function_parameter& param, unsigned int count = 0) {
+    if (!param.name().empty()) {
+      os << param.name();
+    } else {
+      os << "arg" << count;
+    }
+}
+
 void printAutoTypeDecl(std::ostream& os, const cpp_type& type) {
   if (type.kind() == cpp_type_kind::pointer_t) {
     const auto& pointer = static_cast<const cpp_pointer_type&>(type);
@@ -72,8 +80,11 @@ void printReturnStatement(std::ostream& os,
     if (isAggregate(type, stack.nativeScope(), metadata)) {
       os << "return ";
       if (!stack.genScope().empty()) {
-        os << "cider::convert_out<" << stack.genScope()
-           << "::" << to_string(type) << ">(";
+        os << "cider::convert_out<";
+        auto value = to_string(type);
+        replaceScope(stack.genScope(), value);
+        os << value;
+        os << ">(";
       }
       os << returnName.value();
       if (!stack.genScope().empty()) {
@@ -121,7 +132,6 @@ void printParamType(std::ostream& os,
                     const namespaces_stack& stack,
                     const cpp_type& type) {
   auto value = to_string(type);
-  std::cerr << value << " " << (int)type.kind() << " ";
   if (isUserData(type, stack.nativeScope(),
                  metadata)) {  // check that pointer to user defined type!
     replaceScope(stack.genScope(), value);
@@ -135,6 +145,7 @@ void printParamsDecl(
     const namespaces_stack& stack,
     const detail::iteratable_intrusive_list<cpp_function_parameter>& params) {
   auto first = true;
+  unsigned int count = 0U;
   for (const auto& param : params) {
     if (!first) {
       os << ", ";
@@ -145,10 +156,8 @@ void printParamsDecl(
     printParamType(os, metadata, stack, param.type());
     os << " ";
 
-    // assert(!param.name().empty());
-    if (!param.name().empty()) {
-      os << param.name();
-    }
+    printParamName(os, param, count);
+    ++count;
   }
 }
 
@@ -191,37 +200,37 @@ void printParamsVal(
     const namespaces_stack& stack,
     const bool needDereference = true) {
   auto first = true;
+  unsigned int count = 0U;
   for (const auto& param : params) {
     if (!first) {
       os << ", ";
     } else {
       first = false;
     }
+
     const auto& scope = stack.nativeScope();
-    // assert(!param.name().empty());
-    if (!param.name().empty()) {
-      if (isUserData(param.type(), scope, metadata)) {
+    if (isUserData(param.type(), scope, metadata)) {
         if (isAggregate(param.type(), scope, metadata)) {
-          if (!scope.empty()) {
-            os << "cider::convert_in<" << scope
-               << "::" << to_string(param.type()) << ">(";
-          }
-          os << param.name();
-          if (!scope.empty()) {
+            os << "cider::convert_in<";
+            auto value = to_string(param.type());
+            replaceScope(stack.nativeScope(), value);
+            os << value;
+            os << ">(";
+            printParamName(os, param, count);
             os << ")";
-          }
         } else {
-          if (needDereference) {
-            printDereference(os, param.type());
-          }
-          os << param.name();
-          printMethodCallOperator(os, param.type());
-          os << "_impl.get()";
+            if (needDereference) {
+                printDereference(os, param.type());
+            }
+            printParamName(os, param, count);
+            printMethodCallOperator(os, param.type());
+            os << "_impl.get()";
         }
-      } else {
-        os << param.name();
-      }
+    } else {
+        printParamName(os, param, count);
     }
+
+    ++count;
   }
 }
 
@@ -383,28 +392,28 @@ void printOperatorBody(std::ostream& os,
   const auto& params = e.parameters();
   if (type == OperatorType::Equals) {
     os << "return (*_impl) == *";
-    os << params.begin()->name();
+    printParamName(os, *params.begin(), 0U);
     os << "._impl;\n";
   } else if (type == OperatorType::NotEquals) {
     os << "return (*_impl) != *";
-    os << params.begin()->name();
+    printParamName(os, *params.begin(), 0U);
     os << "._impl;\n";
   } else if (type == OperatorType::copyAssignment) {
     os << "CIDER_NOTIFY_ASSIGNMENT(";
-    os << params.begin()->name();
+    printParamName(os, *params.begin(), 0U);
     os << "._impl.get());\n";
 
     os << "(*_impl) = *";
-    os << params.begin()->name();
+    printParamName(os, *params.begin(), 0U);
     os << "._impl;\n";
     returnThis = true;
   } else if (type == OperatorType::moveAssignment) {
     os << "CIDER_NOTIFY_ASSIGNMENT(";
-    os << params.begin()->name();
+    printParamName(os, *params.begin(), 0U);
     os << "._impl.get());\n";
 
     os << "(*_impl) = std::move(*";
-    os << params.begin()->name();
+    printParamName(os, *params.begin(), 0U);
     os << "._impl);\n";
     returnThis = true;
   }
@@ -628,7 +637,7 @@ void printMoveConstructorBody(std::ostream& os, const cpp_constructor& e) {
   os << "_impl = std::move(";
 
   const auto& params = e.parameters();
-  os << params.begin()->name();
+  printParamName(os, *params.begin(), 0U);
   os << "._impl);\n";
 
   os << CatchBlock << "}\n";

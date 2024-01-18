@@ -1,6 +1,6 @@
 #cider.cmake
 
-function(cider_tool_generate MODULE_NAME FILES OUTPUT_DIR)
+function(cider_tool_generate MODULE_NAME NAMESPACE FILES OUTPUT_DIR)
     cider_add_cmake_deps(${FILES})
 
     # This ensures that there is no files from previous cmake runs.
@@ -29,7 +29,7 @@ function(cider_tool_generate MODULE_NAME FILES OUTPUT_DIR)
                        COMMAND "${CIDER_EXECUTABLE}" --out_dir=${OUTPUT_DIR}
                        --database_dir=${CMAKE_BINARY_DIR}
                        --files="${OUT_PARAM}"
-                       --swig=${MODULE_NAME} --std=c++14 --lua --namespace=hook
+                       --swig=${MODULE_NAME} --std=c++14 --lua --namespace=${NAMESPACE} 2>/dev/null
                        WORKING_DIRECTORY ${CIDER_DIRECTORY}
                        DEPENDS cider
                        COMMENT "Generating cider files...")

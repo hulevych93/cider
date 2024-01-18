@@ -62,6 +62,7 @@ cppast::libclang_compile_config buildConfig(const ParseResult& options,
                                             const std::string path) {
   // the compile config stores compilation flags
   libclang_compile_config config;
+
   if (options.count("database_dir")) {
     libclang_compilation_database database(
         options["database_dir"].as<std::string>());
