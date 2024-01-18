@@ -46,6 +46,8 @@ bool isAbstract(const cppast::cpp_class& e,
                 const std::string& scope,
                 const MetadataStorage& metadata);
 
+bool isException(const cppast::cpp_class& e);
+
 bool hasImpl(const cppast::cpp_type& type,
              const std::string& scope,
              const MetadataStorage& metadata,

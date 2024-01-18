@@ -70,16 +70,16 @@ void printReturnStatement(std::ostream& os,
     replaceScope(stack.genScope(), value);
 
     if (isAggregate(type, stack.nativeScope(), metadata)) {
-        os << "return ";
-        if (!stack.genScope().empty()) {
-            os << "cider::convert_out<" << stack.genScope() << "::" <<
-                to_string(type) << ">(";
-        }
-        os << returnName.value();
-        if (!stack.genScope().empty()) {
-            os << ")";
-        }
-        os << ";\n";
+      os << "return ";
+      if (!stack.genScope().empty()) {
+        os << "cider::convert_out<" << stack.genScope()
+           << "::" << to_string(type) << ">(";
+      }
+      os << returnName.value();
+      if (!stack.genScope().empty()) {
+        os << ")";
+      }
+      os << ";\n";
       return;
     }
   }
@@ -121,6 +121,7 @@ void printParamType(std::ostream& os,
                     const namespaces_stack& stack,
                     const cpp_type& type) {
   auto value = to_string(type);
+  std::cerr << value << " " << (int)type.kind() << " ";
   if (isUserData(type, stack.nativeScope(),
                  metadata)) {  // check that pointer to user defined type!
     replaceScope(stack.genScope(), value);
@@ -144,7 +145,7 @@ void printParamsDecl(
     printParamType(os, metadata, stack, param.type());
     os << " ";
 
-    assert(!param.name().empty());
+    // assert(!param.name().empty());
     if (!param.name().empty()) {
       os << param.name();
     }
@@ -197,7 +198,7 @@ void printParamsVal(
       first = false;
     }
     const auto& scope = stack.nativeScope();
-    assert(!param.name().empty());
+    // assert(!param.name().empty());
     if (!param.name().empty()) {
       if (isUserData(param.type(), scope, metadata)) {
         if (isAggregate(param.type(), scope, metadata)) {
@@ -646,6 +647,18 @@ void printConstructorBody(
   }
 }
 
+void printClassDecl(std::ostream& os,
+                    const MetadataStorage& metadata,
+                    const cppast::cpp_class& e) {
+  if (e.class_kind() == cpp_class_kind::class_t) {
+    os << "class ";
+  } else {
+    os << "struct ";
+  }
+
+  os << e.name() << ";";
+}
+
 void printClass(std::ostream& os,
                 const MetadataStorage& metadata,
                 const cpp_class& e,
@@ -714,8 +727,8 @@ void printEnumValue(std::ostream& os, const cppast::cpp_enum_value& e) {
   os << e.name();
   if (const auto& value = e.value()) {
     printExpression(os, value.value());
-    os << ", ";
   }
+  os << ", ";
 }
 
 void printVariableDecl(std::ostream& os,
@@ -725,6 +738,7 @@ void printVariableDecl(std::ostream& os,
   printParamType(os, metadata, stack, e.type());
   os << " ";
   os << e.name();
+  std::cerr << e.name() << " ";
   if (const auto& defaultValue = e.default_value()) {
     printExpression(os, defaultValue.value());
   }

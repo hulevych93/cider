@@ -8,6 +8,8 @@
 #include <fstream>
 #include <thread>
 
+#include <cppast/cpp_entity.hpp>
+
 #include "ast_handler.h"
 #include "generator.h"
 #include "lua.h"
@@ -95,13 +97,13 @@ int main(int argc, char* argv[]) {
     }
 
     std::thread([]() {
-      std::this_thread::sleep_for(std::chrono::seconds(10));
+      std::this_thread::sleep_for(std::chrono::seconds(60));
       print_error("process guard timeout... terminating...");
       std::terminate();
     }).detach();
 
     // the compile config stores compilation flags
-    const libclang_compile_config config = buildConfig(options);
+    const libclang_compile_config config = buildConfig(options, paths.back());
 
     // the logger is used to print diagnostics
     stderr_diagnostic_logger logger;
@@ -109,16 +111,27 @@ int main(int argc, char* argv[]) {
       logger.set_verbose(true);
 
     cpp_entity_index idx;
-    cppast::simple_file_parser<cppast::libclang_parser> parser(
-        type_safe::ref(idx), type_safe::ref(logger));
+    simple_file_parser<libclang_parser> parser(type_safe::ref(idx),
+                                               default_verbose_logger());
+
+    std::vector<const cppast::cpp_file*> files;
+
+    if (options.count("integration_file")) {
+      auto file =
+          parser.parse(options["integration_file"].as<std::string>(), config);
+      cppast::resolve_includes(parser, file.value(), config);
+    }
+
     for (const auto& path : paths) {
-      parser.parse(path, config);
+      auto file = parser.parse(path, config);
+      if (file) {
+        files.emplace_back(std::addressof(file.value()));
+      }
       if (options.count("fatal_errors") == 1 && parser.error()) {
         return 1;
       }
     }
 
-    const auto& files = parser.files();
     const auto& metadata = collectMetadata(files);
     const auto& outDir = getOutputFilePath(options);
 
@@ -142,22 +155,22 @@ int main(int argc, char* argv[]) {
         lua_generator luaGen{luaStream, outDir, moduleName, metadata};
 
         for (const auto& file : files) {
-          handleFile(luaGen, file);
+          handleFile(luaGen, *file);
         }
       }
     }
 
     for (const auto& file : files) {
       const auto outFilePath =
-          getOutputFilePathWithoutExtension(file.name(), outDir);
+          getOutputFilePathWithoutExtension(file->name(), outDir);
 
       const auto genScope = options["namespace"].as<std::string>();
 
       std::ofstream headerStream(outFilePath + ".h");
-      printHeader(headerStream, metadata, genScope, file);
+      printHeader(headerStream, metadata, genScope, *file);
 
       std::ofstream sourceStream(outFilePath + ".cpp");
-      printSource(sourceStream, metadata, genScope, outFilePath, file);
+      printSource(sourceStream, metadata, genScope, outFilePath, *file);
     }
   } catch (const std::exception& ex) {
     print_error(std::string("[fatal parsing error] ") + ex.what());

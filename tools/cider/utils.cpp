@@ -178,5 +178,20 @@ bool isAbstract(const cpp_class& e,
   }
   return false;
 }
+
+bool isException(const cppast::cpp_class& e) {
+  static const std::unordered_set<std::string> Excpts = {
+      "std::logic_error", "std::out_of_range", "std::runtime_error"};
+
+  const auto& bases = e.bases();
+  for (const auto& one : bases) {
+    if (Excpts.find(one.name()) != Excpts.cend()) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 }  // namespace tool
 }  // namespace cider

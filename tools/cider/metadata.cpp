@@ -88,6 +88,12 @@ void metadata_collector::handleFile(const cppast::cpp_file& e,
 }
 
 void metadata_collector::handleClass(const cppast::cpp_class& e, bool enter) {
+  if (e.is_declaration()) {
+    return;
+  }
+  if (isException(e)) {
+    return;
+  }
   if (enter) {
     assert(!m_class.has_value());
     m_class = ClassMetadata{};
@@ -161,16 +167,39 @@ void metadata_collector::finish() {
 }
 
 MetadataStorage collectMetadata(
-    const cppast::detail::iteratable_intrusive_list<cppast::cpp_file>& files) {
+    const std::vector<const cppast::cpp_file*>& files) {
   MetadataStorage metadata;
   metadata_collector collector(metadata);
 
   for (const auto& file : files) {
-    handleFile(collector, file);
+    handleFile(collector, *file);
   }
 
   collector.finish();
+  std::cerr << metadata;
   return metadata;
+}
+
+std::ostream& operator<<(std::ostream& os, const ClassMetadata& metadata) {
+  os << "{";
+  os << metadata.hasAnyMethods << ", ";
+  os << metadata.hasCopyAssignmentOperator << ", ";
+  os << metadata.hasCopyConstructor << ", ";
+  os << metadata.hasMoveAssignmentOperator << ", ";
+  os << metadata.hasUserConstructors;
+  os << "}" << std::endl;
+
+  return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const MetadataStorage& metadata) {
+  os << "[";
+  for (const auto& [entry, classData] : metadata.classes) {
+    os << entry << ": " << classData << ", ";
+  }
+  os << "]" << std::endl;
+
+  return os;
 }
 
 }  // namespace tool

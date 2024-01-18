@@ -63,15 +63,14 @@ void swig_generator::finish() {
   }
 }
 
-void printSwig(
-    std::ostream& os,
-    const std::string& outPath,
-    const std::string& moduleName,
-    const MetadataStorage& metadata,
-    const cppast::detail::iteratable_intrusive_list<cppast::cpp_file>& files) {
+void printSwig(std::ostream& os,
+               const std::string& outPath,
+               const std::string& moduleName,
+               const MetadataStorage& metadata,
+               const std::vector<const cppast::cpp_file*>& files) {
   swig_generator swig_gen(os, outPath, moduleName, metadata);
   for (const auto& file : files) {
-    handleFile(swig_gen, file);
+    handleFile(swig_gen, *file);
   }
   swig_gen.finish();
 }

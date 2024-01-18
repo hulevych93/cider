@@ -47,6 +47,15 @@ void header_generator::handleClass(const cpp_class& e, const bool enter) {
     m_namespaces(m_out);
   }
 
+  if (isException(e)) {
+    return;
+  }
+
+  if (e.is_declaration()) {
+    printClassDecl(m_out, m_metadata, e);
+    return;
+  }
+
   if (e.class_kind() == cpp_class_kind::class_t) {
     printClass(m_out, m_metadata, e, m_namespaces, enter);
     if (enter && !isAbstract(e, m_namespaces.nativeScope(), m_metadata)) {
@@ -91,9 +100,11 @@ void header_generator::handleMemberFunction(const cpp_member_function& e) {
 
 void header_generator::handleMemberVariable(
     const cppast::cpp_member_variable& e) {
-  m_namespaces(m_out);
-
-  printVariableDecl(m_out, m_metadata, e, m_namespaces);
+  if (isAggregate(m_namespaces.nativeScope() + "::" + m_class->name(),
+                  m_metadata)) {
+    m_namespaces(m_out);
+    printVariableDecl(m_out, m_metadata, e, m_namespaces);
+  }
 }
 
 void source_generator::handleClass(const cppast::cpp_class& e, bool enter) {

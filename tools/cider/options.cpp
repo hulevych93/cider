@@ -5,6 +5,8 @@
 
 #include <filesystem>
 
+#include <assert.h>
+
 using namespace cppast;
 using namespace cxxopts;
 
@@ -28,7 +30,9 @@ Options getOptions() {
         ("out_dir", "the directory which is used for output files generation",
          value<std::string>()->default_value("."))
         ("namespace", "the namespace which is used for output entities generation",
-         value<std::string>()->default_value("cider3"));
+         value<std::string>()->default_value("cider3"))
+        ("integration_file", "the file that contains standart headers",
+         value<std::string>());
 
         option_list.add_options("compilation")
         ("database_dir", "set the directory where a 'compile_commands.json' file is located containing build information",
@@ -54,18 +58,17 @@ Options getOptions() {
   return option_list;
 }
 
-cppast::libclang_compile_config buildConfig(const ParseResult& options) {
+cppast::libclang_compile_config buildConfig(const ParseResult& options,
+                                            const std::string path) {
   // the compile config stores compilation flags
   libclang_compile_config config;
   if (options.count("database_dir")) {
     libclang_compilation_database database(
         options["database_dir"].as<std::string>());
-    if (options.count("database_file"))
-      config = libclang_compile_config(
-          database, options["database_file"].as<std::string>());
-    else
-      config =
-          libclang_compile_config(database, options["file"].as<std::string>());
+
+    auto config_ = find_config_for(database, path);
+    assert(config_.has_value());
+    config = config_.value();
   }
 
   if (options.count("verbose"))

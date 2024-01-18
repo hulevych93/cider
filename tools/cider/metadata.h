@@ -36,6 +36,8 @@ struct ClassMetadata final {
   bool hasMoveAssignmentOperator = false;
 };
 
+std::ostream& operator<<(std::ostream& os, const ClassMetadata& metadata);
+
 struct FileMetadata final {
   std::string name;
   bool hasAggregatesOrEnums = false;
@@ -49,6 +51,8 @@ struct MetadataStorage final {
   std::unordered_map<std::string, ClassMetadata> classes;
   std::unordered_map<std::string, FileMetadata> files;
 };
+
+std::ostream& operator<<(std::ostream& os, const MetadataStorage& metadata);
 
 struct metadata_collector final : ast_handler {
   metadata_collector(MetadataStorage& out) : m_storage(out) {}
@@ -74,7 +78,7 @@ struct metadata_collector final : ast_handler {
 };
 
 MetadataStorage collectMetadata(
-    const cppast::detail::iteratable_intrusive_list<cppast::cpp_file>& files);
+    const std::vector<const cppast::cpp_file*>& files);
 
 }  // namespace tool
 }  // namespace cider

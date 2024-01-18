@@ -33,12 +33,12 @@ cider_tool_generate(${SWIG_MODULE_NAME} "${HDRS_OUT}" ${GEN_DIR})
 list(APPEND GEN_SRC_FILES "${GEN_DIR}/${SWIG_MODULE_NAME}_lua.cpp")
 
 add_library(cider-models ${GEN_SRC_FILES})
-add_dependencies(cider-models gen_swig)
+add_dependencies(cider-models example_gen_swig)
 
 cider_generate_swig(LANGUAGE lua
                     EXTERNAL_RUNTIME
                     OUTPUT_DIR "${GEN_DIR}"
-                    DEPENDS gen_swig
+                    DEPENDS example_gen_swig
                     FILE "${GEN_DIR}/${SWIG_MODULE_NAME}.swig")
 
 add_library(models_wrap "${GEN_DIR}/${SWIG_MODULE_NAME}_wrap.cpp" "${GEN_DIR}/swigluarun.h")

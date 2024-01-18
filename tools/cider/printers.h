@@ -74,6 +74,10 @@ void printConstructorBody(
         bases,
     const namespaces_stack& stack);
 
+void printClassDecl(std::ostream& os,
+                    const MetadataStorage& metadata,
+                    const cppast::cpp_class& e);
+
 void printClass(std::ostream& os,
                 const MetadataStorage& metadata,
                 const cppast::cpp_class& e,

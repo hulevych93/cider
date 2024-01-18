@@ -17,8 +17,8 @@ namespace tool {
 
 cxxopts::Options getOptions();
 
-cppast::libclang_compile_config buildConfig(
-    const cxxopts::ParseResult& options);
+cppast::libclang_compile_config buildConfig(const cxxopts::ParseResult& options,
+                                            const std::string path);
 
 std::string getOutputFilePath(const cxxopts::ParseResult& options);
 

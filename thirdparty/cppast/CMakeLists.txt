@@ -62,8 +62,8 @@ ExternalProject_Add(
     TMP_DIR                 ${TMP_DIR}
     STAMP_DIR               ${CIDER_CPPAST_PREFIX}/stamp
     # Download
-    GIT_REPOSITORY          https://github.com/foonathan/cppast.git
-    GIT_TAG                 3fb7c24
+    GIT_REPOSITORY          https://github.com/hulevych93/cppast.git
+    GIT_TAG                 822407f
     UPDATE_DISCONNECTED     1
     # Configure
     SOURCE_DIR              ${SRC_DIR}
