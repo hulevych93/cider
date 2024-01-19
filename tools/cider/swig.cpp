@@ -30,6 +30,11 @@ void traverse(FilesList& files,
   files.erase(iter);
 }
 
+const char* includes = R"(%include <std_string.i>
+    %include <std_vector.i>
+    %include <stdint.i>
+)";
+
 }  // namespace
 
 namespace cider {
@@ -41,6 +46,7 @@ swig_generator::swig_generator(std::ostream& out,
                                const MetadataStorage& metadata)
     : m_out(out), m_outPath(outPath), m_module(module), m_metadata(metadata) {
   m_out << "%module " << m_module << "\n";
+  m_out << includes;
 }
 
 void swig_generator::finish() {

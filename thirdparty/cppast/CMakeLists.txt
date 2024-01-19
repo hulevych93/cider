@@ -43,7 +43,7 @@ if(APPLE)
                     COMMAND_ERROR_IS_FATAL ANY
     )
     list(APPEND CMAKE_OPTS
-    -DLLVM_CONFIG_BINARY=${LLVM_PREFIX_BREW}/bin/llvm-config
+    -DLLVM_CONFIG_BINARY=${LLVM_PREFIX_BREW}@14/bin/llvm-config
     )
 elseif(UNIX)
     execute_process(COMMAND which llvm-config
@@ -63,7 +63,7 @@ ExternalProject_Add(
     STAMP_DIR               ${CIDER_CPPAST_PREFIX}/stamp
     # Download
     GIT_REPOSITORY          https://github.com/hulevych93/cppast.git
-    GIT_TAG                 822407f
+    GIT_TAG                 f00df66
     UPDATE_DISCONNECTED     1
     # Configure
     SOURCE_DIR              ${SRC_DIR}

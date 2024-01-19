@@ -27,6 +27,7 @@ function(cider_tool_generate MODULE_NAME NAMESPACE FILES OUTPUT_DIR)
     get_filename_component(CIDER_DIRECTORY ${CIDER_EXECUTABLE} DIRECTORY)
     add_custom_target(${MODULE_NAME}_gen_swig
                        COMMAND "${CIDER_EXECUTABLE}" --out_dir=${OUTPUT_DIR}
+                       --integration_file="${CMAKE_SOURCE_DIR}/tools/ast.cpp"
                        --database_dir=${CMAKE_BINARY_DIR}
                        --files="${OUT_PARAM}"
                        --swig=${MODULE_NAME} --std=c++14 --lua --namespace=${NAMESPACE} 2>/dev/null

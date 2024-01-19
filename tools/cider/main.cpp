@@ -112,7 +112,7 @@ int main(int argc, char* argv[]) {
 
     cpp_entity_index idx;
     simple_file_parser<libclang_parser> parser(type_safe::ref(idx),
-                                               default_verbose_logger());
+                                               default_logger());
 
     std::vector<const cppast::cpp_file*> files;
 

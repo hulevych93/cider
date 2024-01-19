@@ -61,26 +61,25 @@ Params packParams(ParamsTypes&&... params) {
 
 template <typename ReturnType, typename... ParamsTypes>
 Action makeAction(const char* function,
-                  ReturnType&& retVal,
-                  ParamsTypes&&... params) {
-  return Function{function,
-                  details::packParams(std::forward<ParamsTypes>(params)...),
-                  makeParam(std::forward<ReturnType>(retVal))};
+                  const ReturnType& retVal,
+                  const ParamsTypes&... params) {
+  return Function{function, details::packParams(params...), makeParam(retVal)};
 }  // LCOV_EXCL_LINE
 
 template <typename ReturnType, typename... ParamsTypes>
 Action makeAction(const void* object,
                   const char* methodName,
-                  ReturnType&& retVal,
-                  ParamsTypes&&... params) {
-  return ClassMethod{object, methodName,
-                     details::packParams(std::forward<ParamsTypes>(params)...),
-                     makeParam(std::forward<ReturnType>(retVal))};
+                  const ReturnType& retVal,
+                  const ParamsTypes&... params) {
+  return ClassMethod{object, methodName, details::packParams(params...),
+                     makeParam(retVal)};
 }  // LCOV_EXCL_LINE
 
 template <typename ParamType>
-Action makeAction(const void* object, BinaryOpType type, ParamType&& param) {
-  return ClassBinaryOp{object, type, makeParam(std::forward<ParamType>(param))};
+Action makeAction(const void* object,
+                  BinaryOpType type,
+                  const ParamType& param) {
+  return ClassBinaryOp{object, type, makeParam(param)};
 }  // LCOV_EXCL_LINE
 
 }  // namespace recorder

@@ -7,7 +7,7 @@ using namespace cider::models;
 using namespace cider::tests;
 using namespace cider;
 
-struct StardartTypesTest : TestSuite {};
+struct StandardTypesTest : TestSuite {};
 
 const char* string_struct_as_arg_test_script =
     R"(local object_1 = example.StringStruct()
@@ -15,7 +15,7 @@ object_1.field = 'test'
 example.string_struct_as_arg(object_1)
 )";
 
-TEST_F(StardartTypesTest, string_struct_as_arg_test) {
+TEST_F(StandardTypesTest, string_struct_as_arg_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   hook::StringStruct arg;
@@ -30,7 +30,7 @@ const char* uint16_from_32_test_script =
     R"(example.uint16_from_32(234)
 )";
 
-TEST_F(StardartTypesTest, uint16_from_32_test) {
+TEST_F(StandardTypesTest, uint16_from_32_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   std::uint32_t arg = 234;

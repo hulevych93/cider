@@ -1,2 +1,2 @@
-#include <__fwd/string.h>
+#include <cstdint>
 #include <string>

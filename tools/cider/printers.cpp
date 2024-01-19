@@ -37,12 +37,14 @@ constexpr const auto* CatchBlock = R"(} catch (const std::exception&) {
 
 namespace {
 
-void printParamName(std::ostream& os, const cpp_function_parameter& param, unsigned int count = 0) {
-    if (!param.name().empty()) {
-      os << param.name();
-    } else {
-      os << "arg" << count;
-    }
+void printParamName(std::ostream& os,
+                    const cpp_function_parameter& param,
+                    unsigned int count = 0) {
+  if (!param.name().empty()) {
+    os << param.name();
+  } else {
+    os << "arg" << count;
+  }
 }
 
 void printAutoTypeDecl(std::ostream& os, const cpp_type& type) {
@@ -210,24 +212,24 @@ void printParamsVal(
 
     const auto& scope = stack.nativeScope();
     if (isUserData(param.type(), scope, metadata)) {
-        if (isAggregate(param.type(), scope, metadata)) {
-            os << "cider::convert_in<";
-            auto value = to_string(param.type());
-            replaceScope(stack.nativeScope(), value);
-            os << value;
-            os << ">(";
-            printParamName(os, param, count);
-            os << ")";
-        } else {
-            if (needDereference) {
-                printDereference(os, param.type());
-            }
-            printParamName(os, param, count);
-            printMethodCallOperator(os, param.type());
-            os << "_impl.get()";
-        }
-    } else {
+      if (isAggregate(param.type(), scope, metadata)) {
+        os << "cider::convert_in<";
+        auto value = to_string(param.type());
+        replaceScope(stack.nativeScope(), value);
+        os << value;
+        os << ">(";
         printParamName(os, param, count);
+        os << ")";
+      } else {
+        if (needDereference) {
+          printDereference(os, param.type());
+        }
+        printParamName(os, param, count);
+        printMethodCallOperator(os, param.type());
+        os << "_impl.get()";
+      }
+    } else {
+      printParamName(os, param, count);
     }
 
     ++count;
