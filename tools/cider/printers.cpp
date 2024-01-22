@@ -328,16 +328,24 @@ void printFunctionDecl(std::ostream& os,
 template <typename FunctionType>
 void printFunctionBody(std::ostream& os,
                        const MetadataStorage& metadata,
+                       const char* obj,
                        const FunctionType& e,
                        const namespaces_stack& stack,
                        const bool member) {
   os << "{\n";
   os << "try {\n";
   std::string pureReturnTypeName;
-  const auto hasImplemetation = hasImpl(e.return_type(), stack.nativeScope(),
-                                        metadata, pureReturnTypeName);
+  const auto hasImplemetation =
+          isUserDefined(e.return_type(), stack.nativeScope(), pureReturnTypeName)
+          && isUserData(e.return_type(), stack.nativeScope(), metadata)
+          && !isAggregate(pureReturnTypeName, stack.nativeScope(), metadata);
   std::optional<std::string> returnName;
   std::optional<std::string> notificationName;  // TODO
+
+  if constexpr (std::is_same_v<cpp_member_function, FunctionType>) {
+    os << "auto* callee = cider::getCallee<" << stack.nativeScope() + "::" + obj << ">(this);\n";
+  }
+
   if (hasReturnValue(e)) {
     if (hasImplemetation) {
       os << "auto impl = ";
@@ -351,7 +359,7 @@ void printFunctionBody(std::ostream& os,
   const auto& scope = stack.nativeScope();
   const auto& genScope = stack.genScope();
   if constexpr (std::is_same_v<cpp_member_function, FunctionType>) {
-    os << "_impl->" << e.name() << "(";
+    os << "callee->" << e.name() << "(";
   } else {
     os << scope << "::" << e.name() << "(";
   }
@@ -430,17 +438,18 @@ void printFunctionBody(std::ostream& os,
                        const MetadataStorage& metadata,
                        const cppast::cpp_function& e,
                        const namespaces_stack& stack) {
-  printFunctionBody<>(os, metadata, e, stack, false);
+  printFunctionBody<>(os, metadata, nullptr, e, stack, false);
 }
 
 void printFunctionBody(std::ostream& os,
                        const MetadataStorage& metadata,
+                       const cppast::cpp_class& cl,
                        const cppast::cpp_member_function& e,
                        const namespaces_stack& stack) {
   if (auto operatorType = isOperator(e)) {
     printOperatorBody(os, operatorType.value(), e);
   } else {
-    printFunctionBody<>(os, metadata, e, stack, true);
+    printFunctionBody<>(os, metadata, cl.name().c_str(), e, stack, true);
   }
 }
 
@@ -670,50 +679,40 @@ void printClassDecl(std::ostream& os,
   os << e.name() << ";";
 }
 
-void printClass(std::ostream& os,
+void printClassDef(std::ostream& os,
                 const MetadataStorage& metadata,
                 const cpp_class& e,
                 const namespaces_stack& stack,
                 const bool enter) {
+  const auto aggregate = isAggregate(e.name(), stack.nativeScope(), metadata);
+  const auto objName = e.class_kind() == cpp_class_kind::class_t ? "class" : "struct";
   const auto& scope = stack.nativeScope();
   if (enter) {
-    os << "class " << e.name() << " ";
+    os << objName << " " << e.name() << " ";
     if (e.is_final()) {
       os << "final ";
     }
     printBaseClasses(os, metadata, e.bases());
     os << " {\n";
-    os << "public:\n";
-    os << e.name() << "(std::shared_ptr<" << scope << "::" << e.name()
-       << "> impl) \n";
-    printBaseClassesConstructors(os, metadata, e.bases(), stack);
-    if (!e.bases().empty()) {
-      os << ", ";
-    } else {
-      os << ": ";
+    if(!aggregate) {
+        os << "public:\n";
+        os << e.name() << "(std::shared_ptr<" << scope << "::" << e.name()
+           << "> impl) \n";
+        printBaseClassesConstructors(os, metadata, e.bases(), stack);
+        if (!e.bases().empty()) {
+            os << ", ";
+        } else {
+            os << ": ";
+        }
+        os << "_impl(std::move(impl))\n {}\n";
+        os << "void setImpl(std::shared_ptr<" << scope << "::" << e.name()
+           << "> impl)\n { _impl = std::move(impl); }\n";
     }
-    os << "_impl(std::move(impl))\n {}\n";
-    os << "void setImpl(std::shared_ptr<" << scope << "::" << e.name()
-       << "> impl)\n { _impl = std::move(impl); }\n";
   } else {
-    os << "std::shared_ptr<" << scope << "::" << e.name() << "> _impl;\n";
-    os << "}; // class " << e.name() << "\n\n";
-  }
-}
-
-void printStruct(std::ostream& os,
-                 const MetadataStorage& metadata,
-                 const cppast::cpp_class& e,
-                 const bool enter) {
-  if (enter) {
-    os << "struct " << e.name() << " ";
-    if (e.is_final()) {
-      os << "final ";
-    }
-    printBaseClasses(os, metadata, e.bases());
-    os << " {\n";
-  } else {
-    os << "}; // struct " << e.name() << "\n\n";
+      if(!aggregate) {
+          os << "std::shared_ptr<" << scope << "::" << e.name() << "> _impl;\n";
+      }
+    os << "};\n\n";
   }
 }
 
@@ -804,6 +803,7 @@ void printSource(std::ostream& os,
      << "\"\n\n";
   os << "#include <recorder/actions_observer.h>\n\n";
   os << "#include <utils/convert_utils.h>\n\n";
+  os << "#include <utils/call_utils.h>\n\n";
 
   handleFile(source, file);
 }

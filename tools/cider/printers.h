@@ -39,6 +39,7 @@ void printFunctionBody(std::ostream& os,
 
 void printFunctionBody(std::ostream& os,
                        const MetadataStorage& metadata,
+                       const cppast::cpp_class& cl,
                        const cppast::cpp_member_function& e,
                        const namespaces_stack& stack);
 
@@ -78,7 +79,7 @@ void printClassDecl(std::ostream& os,
                     const MetadataStorage& metadata,
                     const cppast::cpp_class& e);
 
-void printClass(std::ostream& os,
+void printClassDef(std::ostream& os,
                 const MetadataStorage& metadata,
                 const cppast::cpp_class& e,
                 const namespaces_stack& stack,
@@ -87,11 +88,6 @@ void printClass(std::ostream& os,
 void printEnum(std::ostream& os, const cppast::cpp_enum& e, const bool enter);
 
 void printEnumValue(std::ostream& os, const cppast::cpp_enum_value& e);
-
-void printStruct(std::ostream& os,
-                 const MetadataStorage& metadata,
-                 const cppast::cpp_class& e,
-                 const bool enter);
 
 void printHeader(std::ostream& os,
                  const MetadataStorage& metadata,

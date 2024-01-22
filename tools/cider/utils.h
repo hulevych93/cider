@@ -40,7 +40,8 @@ bool isUserData(const cppast::cpp_type& type,
 bool isAggregate(const cppast::cpp_type& type,
                  const std::string& scope,
                  const MetadataStorage& metadata);
-bool isAggregate(const std::string& name, const MetadataStorage& metadata);
+
+bool isAggregate(std::string name, const std::string& scope, const MetadataStorage& metadata);
 
 bool isAbstract(const cppast::cpp_class& e,
                 const std::string& scope,
@@ -48,16 +49,11 @@ bool isAbstract(const cppast::cpp_class& e,
 
 bool isException(const cppast::cpp_class& e);
 
-bool hasImpl(const cppast::cpp_type& type,
-             const std::string& scope,
-             const MetadataStorage& metadata,
-             std::string& name);
-
 void replaceScope(const std::string& newScope, std::string& value);
 
 void removeScope(std::string& value);
 
-void handleFile(ast_handler& handler, const cppast::cpp_file& file);
+void handleFile(ast_handler& handler, const cppast::cpp_file& file, bool onlyPublic = true);
 
 }  // namespace tool
 }  // namespace cider

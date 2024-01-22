@@ -54,6 +54,14 @@ void collectBasesTypes(
   }
 }
 
+void collectBases(
+    std::unordered_set<std::string>& os,
+    const detail::iteratable_intrusive_list<cpp_base_class>& bases) {
+  for (const auto& base : bases) {
+    os.emplace(base.name());
+  }
+}
+
 }  // namespace
 
 void metadata_collector::handleNamespace(const cppast::cpp_entity& e,
@@ -99,6 +107,7 @@ void metadata_collector::handleClass(const cppast::cpp_class& e, bool enter) {
     m_class = ClassMetadata{};
     m_class->name = e.name();
     m_class->file = m_file->name;
+    collectBases(m_class->bases, e.bases());
     m_file->exports.emplace(m_namespaces.nativeScope() + "::" + e.name());
     collectBasesTypes(m_file->imports, m_namespaces.nativeScope(), e.bases());
   } else {
@@ -109,14 +118,13 @@ void metadata_collector::handleClass(const cppast::cpp_class& e, bool enter) {
   }
 }
 
-void metadata_collector::handleConstructor(const cppast::cpp_constructor& e) {
+void metadata_collector::handleConstructor(const cppast::cpp_constructor& e, const cppast::cpp_access_specifier_kind kind) {
   assert(m_class.has_value());
 
   const bool isCopy = isCopyContructor(e);
   const bool isMove = isMoveContructor(e);
 
   m_class->hasUserConstructors |= (!isCopy && !isMove);
-  m_class->hasAnyMethods = true;
   m_class->hasCopyConstructor |= isCopy;
   m_class->hasMoveConstructor |= isMove;
 
@@ -125,9 +133,9 @@ void metadata_collector::handleConstructor(const cppast::cpp_constructor& e) {
 }
 
 void metadata_collector::handleMemberFunction(
-    const cppast::cpp_member_function& e) {
+    const cppast::cpp_member_function& e, const cppast::cpp_access_specifier_kind kind) {
   assert(m_class.has_value());
-  m_class->hasAnyMethods = true;
+
   m_class->hasCopyAssignmentOperator |= isCopyAssignmentOperator(e);
   m_class->hasMoveAssignmentOperator |= isMoveAssignmentOperator(e);
 
@@ -135,6 +143,9 @@ void metadata_collector::handleMemberFunction(
     const auto& info = e.virtual_info().value();
     m_class->isAbstract |= info.is_set(cppast::cpp_virtual_flags::pure);
   }
+
+  m_class->hasPrivateMethods |= kind == cppast::cpp_access_specifier_kind::cpp_private;
+  m_class->hasPublicMethods |= kind == cppast::cpp_access_specifier_kind::cpp_public;
 
   collectParamTypes(m_file->imports, m_namespaces.nativeScope(),
                     e.parameters());
@@ -150,10 +161,14 @@ void metadata_collector::handleFreeFunction(const cppast::cpp_function& e) {
 }
 
 void metadata_collector::handleMemberVariable(
-    const cppast::cpp_member_variable& e) {
+    const cppast::cpp_member_variable& e, const cppast::cpp_access_specifier_kind kind) {
   assert(m_class.has_value());
   m_class->fieldNames.emplace(e.name());
   m_file->hasAggregatesOrEnums = true;  // TODO
+
+  m_class->hasPrivateFields |= kind == cppast::cpp_access_specifier_kind::cpp_private;
+  m_class->hasPublicFields |= kind == cppast::cpp_access_specifier_kind::cpp_public;
+  m_class->hasProtectedFields |= kind == cppast::cpp_access_specifier_kind::cpp_protected;
 }
 
 void metadata_collector::finish() {
@@ -172,7 +187,7 @@ MetadataStorage collectMetadata(
   metadata_collector collector(metadata);
 
   for (const auto& file : files) {
-    handleFile(collector, *file);
+    handleFile(collector, *file, false);
   }
 
   collector.finish();
@@ -182,7 +197,6 @@ MetadataStorage collectMetadata(
 
 std::ostream& operator<<(std::ostream& os, const ClassMetadata& metadata) {
   os << "{";
-  os << metadata.hasAnyMethods << ", ";
   os << metadata.hasCopyAssignmentOperator << ", ";
   os << metadata.hasCopyConstructor << ", ";
   os << metadata.hasMoveAssignmentOperator << ", ";

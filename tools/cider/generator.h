@@ -37,9 +37,9 @@ struct header_generator final : public generator {
   ~header_generator() override = default;
 
   void handleClass(const cppast::cpp_class& e, bool enter) override;
-  void handleConstructor(const cppast::cpp_constructor& e) override;
-  void handleMemberFunction(const cppast::cpp_member_function& e) override;
-  void handleMemberVariable(const cppast::cpp_member_variable& e) override;
+  void handleConstructor(const cppast::cpp_constructor& e, cppast::cpp_access_specifier_kind kind) override;
+  void handleMemberFunction(const cppast::cpp_member_function& e, cppast::cpp_access_specifier_kind kind) override;
+  void handleMemberVariable(const cppast::cpp_member_variable& e, cppast::cpp_access_specifier_kind kind) override;
   void handleFreeFunction(const cppast::cpp_function& e) override;
   void handleEnumValue(const cppast::cpp_enum_value& e) override;
   void handleEnum(const cppast::cpp_enum& e, const bool enter) override;
@@ -50,9 +50,9 @@ struct source_generator final : public generator {
   ~source_generator() override = default;
 
   void handleClass(const cppast::cpp_class& e, bool enter) override;
-  void handleConstructor(const cppast::cpp_constructor& e) override;
+  void handleConstructor(const cppast::cpp_constructor& e, cppast::cpp_access_specifier_kind kind) override;
   void handleFreeFunction(const cppast::cpp_function& e) override;
-  void handleMemberFunction(const cppast::cpp_member_function& e) override;
+  void handleMemberFunction(const cppast::cpp_member_function& e, cppast::cpp_access_specifier_kind kind) override;
 };
 
 }  // namespace tool

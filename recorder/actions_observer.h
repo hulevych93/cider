@@ -76,15 +76,15 @@ class ActionsObservable final {
 
 #define CIDER_NOTIFY_METHOD_NO_RETURN(...)                                    \
   auto scopeGuard = cider::recorder::ActionsObservable::getInstance().notify( \
-      _impl.get(), __FUNCTION__, std::nullopt, __VA_ARGS__);
+      callee, __FUNCTION__, std::nullopt, __VA_ARGS__);
 
 #define CIDER_NOTIFY_METHOD_NO_ARGS(RETURN_VALUE)                             \
   auto scopeGuard = cider::recorder::ActionsObservable::getInstance().notify( \
-      _impl.get(), __FUNCTION__, RETURN_VALUE);
+      callee, __FUNCTION__, RETURN_VALUE);
 
 #define CIDER_NOTIFY_METHOD(...)                                              \
   auto scopeGuard = cider::recorder::ActionsObservable::getInstance().notify( \
-      _impl.get(), __FUNCTION__, __VA_ARGS__);
+      callee, __FUNCTION__, __VA_ARGS__);
 
 #define CIDER_NOTIFY_CONSTRUCTOR(...)                                         \
   auto scopeGuard = cider::recorder::ActionsObservable::getInstance().notify( \

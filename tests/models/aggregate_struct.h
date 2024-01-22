@@ -1,17 +1,17 @@
 #pragma once
 
+#include <type_traits>
+
 namespace cider {
 namespace models {
-
-// Aggregate structures have no constructor that we can hook, as well
-// as we can't hook fields assignments after the object has been constructed.
-// But when the object is used as parameter of the call we can obtain
-// actual information from it.
 
 struct Aggregate {
   int number = 0;
   bool condition = false;
 };
+
+static_assert (std::is_aggregate_v<Aggregate>, "is_aggregate_v Aggregate");
+static_assert (!std::is_pod_v<Aggregate>, "!is_pod_v Aggregate");
 
 // function to test user data as parameter and return value
 Aggregate function_test_aggregate(const Aggregate& arg);

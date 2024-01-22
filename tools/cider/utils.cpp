@@ -122,32 +122,35 @@ bool isAggregate(const cpp_type& type,
                  const MetadataStorage& metadata) {
   std::string name;
   if (isUserDefined(type, scope, name)) {
-    return isAggregate(name, metadata);
+    return isAggregate(name, scope, metadata);
   }
   return false;
 }
 
-bool isAggregate(const std::string& name, const MetadataStorage& metadata) {
+/*
+ * An aggregate is an array or a class (Clause 9) with no user-provided
+ * constructors (12.1), no brace-or-equal-initializers for non-static
+ * data members (9.2), no private or protected non-static data members
+ * (Clause 11), no base classes (Clause 10), and no virtual functions (10.3).
+ */
+bool isAggregate(const ClassMetadata& metadata) {
+    return !metadata.hasPrivateFields &&
+           !metadata.hasProtectedFields &&
+           !metadata.isAbstract;
+}
+
+bool isAggregate(std::string name, const std::string& scope, const MetadataStorage& metadata) {
+  replaceScope(scope, name);
   auto it = metadata.classes.find(name);
   if (it != metadata.classes.end()) {
     const auto& classMetadata = it->second;
-    return !classMetadata.hasAnyMethods;
+    bool aggregate = isAggregate(classMetadata);
+    for(const auto& base: classMetadata.bases) {
+        aggregate &= isAggregate(scope + "::" + base, scope, metadata);
+    }
+    return aggregate;
   }
   return metadata.enums.find(name) != metadata.enums.end();
-}
-
-bool hasImpl(const cpp_type& type,
-             const std::string& scope,
-             const MetadataStorage& metadata,
-             std::string& name) {
-  if (isUserDefined(type, scope, name)) {
-    auto it = metadata.classes.find(name);
-    if (it != metadata.classes.end()) {
-      const auto& classMetadata = it->second;
-      return classMetadata.hasAnyMethods;
-    }
-  }
-  return false;
 }
 
 void replaceScope(const std::string& newScope, std::string& value) {
