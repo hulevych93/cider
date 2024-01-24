@@ -47,6 +47,15 @@ void printParamName(std::ostream& os,
   }
 }
 
+const cpp_type& remove_ref(const cpp_type& type) noexcept {
+  if (type.kind() == cpp_type_kind::reference_t) {
+    auto& ref = static_cast<const cpp_reference_type&>(type);
+    return ref.referee();
+  }
+
+  return type;
+}
+
 void printAutoTypeDecl(std::ostream& os, const cpp_type& type) {
   if (type.kind() == cpp_type_kind::pointer_t) {
     const auto& pointer = static_cast<const cpp_pointer_type&>(type);
@@ -127,6 +136,22 @@ void printFunctionNotify(std::ostream& os,
   if (!hasNoArgs) {
     os << ", ";
   }
+}
+
+void printParamTypePure(std::ostream& os,
+                        const MetadataStorage& metadata,
+                        const namespaces_stack& stack,
+                        const cpp_type& type) {
+  if (isUserData(type, stack.nativeScope(),
+                 metadata)) {  // check that pointer to user defined type!
+    const auto& type_ = remove_ref(type);
+    auto value = to_string(type_);
+    replaceScope(stack.genScope(), value);
+    os << value;
+    return;
+  }
+  auto value = to_string(type);
+  os << value;
 }
 
 void printParamType(std::ostream& os,
@@ -287,7 +312,18 @@ void printFunctionDecl(std::ostream& os,
                        const namespaces_stack& stack,
                        const char* className,
                        const bool declaration) {
-  printParamType(os, metadata, stack, e.return_type());
+  if constexpr (std::is_same_v<cpp_member_function, FunctionType>) {
+    const auto opType = isOperator(e);
+    if (opType && ((*opType) == OperatorType::moveAssignment ||
+                   (*opType) == OperatorType::copyAssignment)) {
+      os << "void";
+    } else {
+      printParamTypePure(os, metadata, stack, e.return_type());
+    }
+  } else {
+    printParamTypePure(os, metadata, stack, e.return_type());
+  }
+
   os << " ";
   if (className != nullptr) {
     os << className << "::";
@@ -336,19 +372,29 @@ void printFunctionBody(std::ostream& os,
   os << "try {\n";
   std::string pureReturnTypeName;
   const auto hasImplemetation =
-          isUserDefined(e.return_type(), stack.nativeScope(), pureReturnTypeName)
-          && isUserData(e.return_type(), stack.nativeScope(), metadata)
-          && !isAggregate(pureReturnTypeName, stack.nativeScope(), metadata);
+      isUserDefined(e.return_type(), stack.nativeScope(), pureReturnTypeName) &&
+      isUserData(e.return_type(), stack.nativeScope(), metadata) &&
+      !isAggregate(pureReturnTypeName, stack.nativeScope(), metadata);
   std::optional<std::string> returnName;
   std::optional<std::string> notificationName;  // TODO
 
   if constexpr (std::is_same_v<cpp_member_function, FunctionType>) {
-    os << "auto* callee = cider::getCallee<" << stack.nativeScope() + "::" + obj << ">(this);\n";
+    os << "auto* callee = cider::getCallee<" << stack.nativeScope() + "::" + obj
+       << ">(this);\n";
+  }
+
+  if (hasImplemetation) {
+    if (e.return_type().kind() == cpp_type_kind::pointer_t) {
+      notificationName = "result->_impl.get()";
+    } else {
+      notificationName = "result._impl.get()";
+    }
   }
 
   if (hasReturnValue(e)) {
     if (hasImplemetation) {
-      os << "auto impl = ";
+      printAutoTypeDecl(os, e.return_type());
+      os << " impl = ";
     } else {
       printAutoTypeDecl(os, e.return_type());
       os << " result = ";
@@ -368,19 +414,27 @@ void printFunctionBody(std::ostream& os,
   os << ");\n";
 
   if (hasImplemetation) {
+    if constexpr (std::is_same_v<cpp_member_function, FunctionType>) {
+      os << "auto implPtr = cider::getImpl(impl, this);\n";
+    } else {
+      if (e.return_type().kind() == cpp_type_kind::pointer_t) {
+        os << "auto implPtr = std::shared_ptr<" << pureReturnTypeName
+           << ">(impl);\n";
+        notificationName = "result->_impl.get()";
+      } else {
+        os << "auto implPtr = std::make_shared<" << pureReturnTypeName
+           << ">(impl);\n";
+        notificationName = "result._impl.get()";
+      }
+    }
+
     os << "auto result = ";
     returnName = "result";
     printNewOperator(os, e.return_type());
     auto value = pureReturnTypeName;
     replaceScope(genScope, value);
     os << value;
-    if (e.return_type().kind() == cpp_type_kind::pointer_t) {
-      os << "(std::shared_ptr<" << pureReturnTypeName << ">(impl));\n";
-      notificationName = "result->_impl.get()";
-    } else {
-      os << "(std::make_shared<" << pureReturnTypeName << ">(impl));\n";
-      notificationName = "result._impl.get()";
-    }
+    os << "(implPtr);\n" << std::endl;
   }
 
   printFunctionNotify(os, member, notificationName, params.empty());
@@ -398,7 +452,6 @@ void printOperatorBody(std::ostream& os,
                        const cppast::cpp_member_function& e) {
   os << "{\n";
   os << "try {\n";
-  auto returnThis = false;  // TODO
   const auto& params = e.parameters();
   if (type == OperatorType::Equals) {
     os << "return (*_impl) == *";
@@ -416,7 +469,6 @@ void printOperatorBody(std::ostream& os,
     os << "(*_impl) = *";
     printParamName(os, *params.begin(), 0U);
     os << "._impl;\n";
-    returnThis = true;
   } else if (type == OperatorType::moveAssignment) {
     os << "CIDER_NOTIFY_ASSIGNMENT(";
     printParamName(os, *params.begin(), 0U);
@@ -425,13 +477,9 @@ void printOperatorBody(std::ostream& os,
     os << "(*_impl) = std::move(*";
     printParamName(os, *params.begin(), 0U);
     os << "._impl);\n";
-    returnThis = true;
   }
   os << CatchBlock;
-  if (returnThis) {
-    os << "return *this;\n";
-  }
-  os << "}\n";
+  os << "}\n\n";
 }
 
 void printFunctionBody(std::ostream& os,
@@ -533,7 +581,7 @@ void printGeneratedMethods(std::ostream& os,
 
     if (!classMeta.hasMoveConstructor && !classMeta.hasCopyAssignmentOperator &&
         !classMeta.hasMoveAssignmentOperator) {
-      os << e.name() << "& ";
+      os << "void ";
       if (definition) {
         os << e.name() << "::";
       }
@@ -544,7 +592,6 @@ void printGeneratedMethods(std::ostream& os,
         os << "CIDER_NOTIFY_ASSIGNMENT(other._impl.get());\n";
         os << "(*_impl) = *other._impl;\n";
         os << CatchBlock;
-        os << "return *this;\n";
         os << "}\n";
       } else {
         os << ";\n";
@@ -554,7 +601,7 @@ void printGeneratedMethods(std::ostream& os,
     if ((!classMeta.hasCopyAssignmentOperator &&
          !classMeta.hasMoveAssignmentOperator) &&
         !classMeta.hasMoveConstructor && !classMeta.hasCopyConstructor) {
-      os << e.name() << "& ";
+      os << "void ";
       if (definition) {
         os << e.name() << "::";
       }
@@ -565,7 +612,6 @@ void printGeneratedMethods(std::ostream& os,
         os << "CIDER_NOTIFY_ASSIGNMENT(other._impl.get());\n";
         os << "(*_impl) = std::move(*other._impl);\n";
         os << CatchBlock;
-        os << "return *this;\n";
         os << "}\n";
       } else {
         os << ";\n";
@@ -680,12 +726,13 @@ void printClassDecl(std::ostream& os,
 }
 
 void printClassDef(std::ostream& os,
-                const MetadataStorage& metadata,
-                const cpp_class& e,
-                const namespaces_stack& stack,
-                const bool enter) {
+                   const MetadataStorage& metadata,
+                   const cpp_class& e,
+                   const namespaces_stack& stack,
+                   const bool enter) {
   const auto aggregate = isAggregate(e.name(), stack.nativeScope(), metadata);
-  const auto objName = e.class_kind() == cpp_class_kind::class_t ? "class" : "struct";
+  const auto objName =
+      e.class_kind() == cpp_class_kind::class_t ? "class" : "struct";
   const auto& scope = stack.nativeScope();
   if (enter) {
     os << objName << " " << e.name() << " ";
@@ -694,24 +741,24 @@ void printClassDef(std::ostream& os,
     }
     printBaseClasses(os, metadata, e.bases());
     os << " {\n";
-    if(!aggregate) {
-        os << "public:\n";
-        os << e.name() << "(std::shared_ptr<" << scope << "::" << e.name()
-           << "> impl) \n";
-        printBaseClassesConstructors(os, metadata, e.bases(), stack);
-        if (!e.bases().empty()) {
-            os << ", ";
-        } else {
-            os << ": ";
-        }
-        os << "_impl(std::move(impl))\n {}\n";
-        os << "void setImpl(std::shared_ptr<" << scope << "::" << e.name()
-           << "> impl)\n { _impl = std::move(impl); }\n";
+    if (!aggregate) {
+      os << "public:\n";
+      os << e.name() << "(std::shared_ptr<" << scope << "::" << e.name()
+         << "> impl) \n";
+      printBaseClassesConstructors(os, metadata, e.bases(), stack);
+      if (!e.bases().empty()) {
+        os << ", ";
+      } else {
+        os << ": ";
+      }
+      os << "_impl(std::move(impl))\n {}\n";
+      os << "void setImpl(std::shared_ptr<" << scope << "::" << e.name()
+         << "> impl)\n { _impl = std::move(impl); }\n";
     }
   } else {
-      if(!aggregate) {
-          os << "std::shared_ptr<" << scope << "::" << e.name() << "> _impl;\n";
-      }
+    if (!aggregate) {
+      os << "std::shared_ptr<" << scope << "::" << e.name() << "> _impl;\n";
+    }
     os << "};\n\n";
   }
 }

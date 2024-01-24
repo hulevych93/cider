@@ -25,7 +25,9 @@ struct lua_generator final : ast_handler {
   ~lua_generator();
 
   void handleClass(const cppast::cpp_class& e, bool enter) override;
-  void handleMemberVariable(const cppast::cpp_member_variable& e, cppast::cpp_access_specifier_kind /*kind*/) override;
+  void handleMemberVariable(
+      const cppast::cpp_member_variable& e,
+      cppast::cpp_access_specifier_kind /*kind*/) override;
   void handleEnumValue(const cppast::cpp_enum_value& e) override;
   void handleEnum(const cppast::cpp_enum& e, const bool enter) override;
   void handleNamespace(const cppast::cpp_entity& e, const bool enter) override;

@@ -15,7 +15,8 @@ object_1.field = 13
 example.test_aggregate_with_functions(object_1)
 )";
 
-TEST_F(AggregateWithFunctionsStructStructTest, function_test_aggregate_with_functions_test) {
+TEST_F(AggregateWithFunctionsStructStructTest,
+       function_test_aggregate_with_functions_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   hook::AggregateWithFunctionsStruct aggregateStruct{13};

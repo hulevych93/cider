@@ -80,10 +80,10 @@ void printClassDecl(std::ostream& os,
                     const cppast::cpp_class& e);
 
 void printClassDef(std::ostream& os,
-                const MetadataStorage& metadata,
-                const cppast::cpp_class& e,
-                const namespaces_stack& stack,
-                const bool enter);
+                   const MetadataStorage& metadata,
+                   const cppast::cpp_class& e,
+                   const namespaces_stack& stack,
+                   const bool enter);
 
 void printEnum(std::ostream& os, const cppast::cpp_enum& e, const bool enter);
 

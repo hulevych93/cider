@@ -14,7 +14,7 @@ struct AggregateWithFunctionsStruct final {
 
 int test_aggregate_with_functions(AggregateWithFunctionsStruct& arg);
 
-static_assert (std::is_pod_v<AggregateWithFunctionsStruct>, "pod SomeRefStruct");
+static_assert(std::is_pod_v<AggregateWithFunctionsStruct>, "pod SomeRefStruct");
 
 }  // namespace models
 }  // namespace cider

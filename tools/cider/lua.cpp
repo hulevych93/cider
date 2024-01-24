@@ -118,8 +118,7 @@ lua_generator::~lua_generator() {
 }
 
 void lua_generator::handleClass(const cppast::cpp_class& e, bool enter) {
-  m_isAggregate =
-      isAggregate(e.name(), m_namespaces.nativeScope(), m_metadata);
+  m_isAggregate = isAggregate(e.name(), m_namespaces.nativeScope(), m_metadata);
   if (!m_isAggregate) {
     return;
   }
@@ -128,7 +127,9 @@ void lua_generator::handleClass(const cppast::cpp_class& e, bool enter) {
                          m_namespaces.nativeScope(), e, enter);
 }
 
-void lua_generator::handleMemberVariable(const cppast::cpp_member_variable& e, cppast::cpp_access_specifier_kind /*kind*/) {
+void lua_generator::handleMemberVariable(
+    const cppast::cpp_member_variable& e,
+    cppast::cpp_access_specifier_kind /*kind*/) {
   if (!m_isAggregate) {
     return;
   }

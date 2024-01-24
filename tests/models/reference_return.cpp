@@ -1,0 +1,19 @@
+#include "reference_return.h"
+
+namespace cider {
+namespace models {
+
+RefStruct& RefStruct::self() {
+  return *this;
+}
+
+RefStruct RefStruct::copy() {
+  return *this;
+}
+
+int RefStruct::inc() {
+  return ++field;
+}
+
+}  // namespace models
+}  // namespace cider

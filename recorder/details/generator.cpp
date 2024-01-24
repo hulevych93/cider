@@ -70,7 +70,9 @@ class CodeSinkImpl : public CodeSink {
         _locals.emplace(object, suggested);
         return suggested;
       }
-      throw ScriptGenerationError{"Object can't be registered twice"};
+      else {
+          return it->second;
+      }
     }
 
     return std::string{"object"} + "_" + std::to_string(++_localCounter);

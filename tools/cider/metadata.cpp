@@ -118,7 +118,9 @@ void metadata_collector::handleClass(const cppast::cpp_class& e, bool enter) {
   }
 }
 
-void metadata_collector::handleConstructor(const cppast::cpp_constructor& e, const cppast::cpp_access_specifier_kind kind) {
+void metadata_collector::handleConstructor(
+    const cppast::cpp_constructor& e,
+    const cppast::cpp_access_specifier_kind kind) {
   assert(m_class.has_value());
 
   const bool isCopy = isCopyContructor(e);
@@ -133,7 +135,8 @@ void metadata_collector::handleConstructor(const cppast::cpp_constructor& e, con
 }
 
 void metadata_collector::handleMemberFunction(
-    const cppast::cpp_member_function& e, const cppast::cpp_access_specifier_kind kind) {
+    const cppast::cpp_member_function& e,
+    const cppast::cpp_access_specifier_kind kind) {
   assert(m_class.has_value());
 
   m_class->hasCopyAssignmentOperator |= isCopyAssignmentOperator(e);
@@ -144,8 +147,10 @@ void metadata_collector::handleMemberFunction(
     m_class->isAbstract |= info.is_set(cppast::cpp_virtual_flags::pure);
   }
 
-  m_class->hasPrivateMethods |= kind == cppast::cpp_access_specifier_kind::cpp_private;
-  m_class->hasPublicMethods |= kind == cppast::cpp_access_specifier_kind::cpp_public;
+  m_class->hasPrivateMethods |=
+      kind == cppast::cpp_access_specifier_kind::cpp_private;
+  m_class->hasPublicMethods |=
+      kind == cppast::cpp_access_specifier_kind::cpp_public;
 
   collectParamTypes(m_file->imports, m_namespaces.nativeScope(),
                     e.parameters());
@@ -161,14 +166,18 @@ void metadata_collector::handleFreeFunction(const cppast::cpp_function& e) {
 }
 
 void metadata_collector::handleMemberVariable(
-    const cppast::cpp_member_variable& e, const cppast::cpp_access_specifier_kind kind) {
+    const cppast::cpp_member_variable& e,
+    const cppast::cpp_access_specifier_kind kind) {
   assert(m_class.has_value());
   m_class->fieldNames.emplace(e.name());
   m_file->hasAggregatesOrEnums = true;  // TODO
 
-  m_class->hasPrivateFields |= kind == cppast::cpp_access_specifier_kind::cpp_private;
-  m_class->hasPublicFields |= kind == cppast::cpp_access_specifier_kind::cpp_public;
-  m_class->hasProtectedFields |= kind == cppast::cpp_access_specifier_kind::cpp_protected;
+  m_class->hasPrivateFields |=
+      kind == cppast::cpp_access_specifier_kind::cpp_private;
+  m_class->hasPublicFields |=
+      kind == cppast::cpp_access_specifier_kind::cpp_public;
+  m_class->hasProtectedFields |=
+      kind == cppast::cpp_access_specifier_kind::cpp_protected;
 }
 
 void metadata_collector::finish() {

@@ -23,9 +23,9 @@ struct ClassMetadata final {
   std::string name;
   std::string file;
 
-  std::unordered_set<std::string> bases; // (e.g. public ones)
+  std::unordered_set<std::string> bases;  // (e.g. public ones)
 
-  bool isAbstract = false;     // e.g. has any pure virtual methods
+  bool isAbstract = false;  // e.g. has any pure virtual methods
 
   bool hasPublicMethods = false;
   bool hasPrivateMethods = false;
@@ -68,10 +68,13 @@ struct metadata_collector final : ast_handler {
 
   void handleFile(const cppast::cpp_file& e, bool enter) override;
   void handleClass(const cppast::cpp_class& e, bool enter) override;
-  void handleConstructor(const cppast::cpp_constructor& e, cppast::cpp_access_specifier_kind kind) override;
-  void handleMemberFunction(const cppast::cpp_member_function& e, cppast::cpp_access_specifier_kind kind) override;
+  void handleConstructor(const cppast::cpp_constructor& e,
+                         cppast::cpp_access_specifier_kind kind) override;
+  void handleMemberFunction(const cppast::cpp_member_function& e,
+                            cppast::cpp_access_specifier_kind kind) override;
   void handleFreeFunction(const cppast::cpp_function& e) override;
-  void handleMemberVariable(const cppast::cpp_member_variable& e, cppast::cpp_access_specifier_kind kind) override;
+  void handleMemberVariable(const cppast::cpp_member_variable& e,
+                            cppast::cpp_access_specifier_kind kind) override;
   void handleNamespace(const cppast::cpp_entity& e, const bool enter) override;
   void handleEnum(const cppast::cpp_enum& e, const bool enter) override;
 

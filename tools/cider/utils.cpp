@@ -134,19 +134,20 @@ bool isAggregate(const cpp_type& type,
  * (Clause 11), no base classes (Clause 10), and no virtual functions (10.3).
  */
 bool isAggregate(const ClassMetadata& metadata) {
-    return !metadata.hasPrivateFields &&
-           !metadata.hasProtectedFields &&
-           !metadata.isAbstract;
+  return !metadata.hasPrivateFields && !metadata.hasProtectedFields &&
+         !metadata.isAbstract;
 }
 
-bool isAggregate(std::string name, const std::string& scope, const MetadataStorage& metadata) {
+bool isAggregate(std::string name,
+                 const std::string& scope,
+                 const MetadataStorage& metadata) {
   replaceScope(scope, name);
   auto it = metadata.classes.find(name);
   if (it != metadata.classes.end()) {
     const auto& classMetadata = it->second;
     bool aggregate = isAggregate(classMetadata);
-    for(const auto& base: classMetadata.bases) {
-        aggregate &= isAggregate(scope + "::" + base, scope, metadata);
+    for (const auto& base : classMetadata.bases) {
+      aggregate &= isAggregate(scope + "::" + base, scope, metadata);
     }
     return aggregate;
   }
