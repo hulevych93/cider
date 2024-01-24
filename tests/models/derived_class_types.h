@@ -6,9 +6,14 @@
 namespace cider {
 namespace models {
 
+class DerivedClass;
+
 class BaseClass {
  public:
   BaseClass(const char* str);
+
+  DerivedClass get();
+  BaseClass get() const;
 
   std::string sayHello() const;
 

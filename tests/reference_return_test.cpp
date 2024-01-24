@@ -37,14 +37,14 @@ object_1:inc()
 )";
 
 TEST_F(ReferenceReturnTest, ref_and_inc_test) {
-    auto session = makeLuaRecordingSession(LuaExampleModuleName);
+  auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-    hook::RefStruct str;
-    auto str1 = str.self();
+  hook::RefStruct str;
+  auto str1 = str.self();
 
-    EXPECT_EQ(2, str.inc());
-    EXPECT_EQ(3, str1.inc());
+  EXPECT_EQ(2, str.inc());
+  EXPECT_EQ(3, str1.inc());
 
-    SCOPED_TRACE("ref_and_inc_test_script");
-    testScript(ref_and_inc_test_script, session);
+  SCOPED_TRACE("ref_and_inc_test_script");
+  testScript(ref_and_inc_test_script, session);
 }

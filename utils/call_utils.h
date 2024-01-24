@@ -8,24 +8,36 @@ namespace cider {
 template <typename Type,
           typename ImplType,
           std::enable_if_t<!std::is_aggregate_v<Type>, void*> = nullptr>
-decltype(auto) getCallee(ImplType* arg) {
+auto* getCallee(ImplType* arg) {
   return (arg->_impl.get());
+}
+
+template <typename Type,
+         typename ImplType,
+         std::enable_if_t<!std::is_aggregate_v<Type>, void*> = nullptr>
+const auto* getCallee(const ImplType* arg) {
+    return (arg->_impl.get());
 }
 
 template <typename Type,
           typename ImplType,
           std::enable_if_t<std::is_aggregate_v<Type>, void*> = nullptr>
-decltype(auto) getCallee(ImplType* arg) {
+auto* getCallee(ImplType* arg) {
   return (Type*)arg;
 }
 
-template <typename Type, typename ImplType>
-auto getImpl(Type& result, ImplType* callee) {
-  if (callee->_impl.get() == std::addressof(result)) {
-    return callee->_impl;
-  }
 
-  return std::make_shared<Type>(*callee->_impl.get());
+template <typename DesiredType, typename ResultType, typename ImplType>
+auto getImpl(ResultType& result, ImplType* callee) {
+    static_assert(std::is_same_v<DesiredType, ResultType>, "same types");
+    using CalleeType = decltype(*callee->_impl.get());
+    if constexpr(std::is_same_v<std::decay_t<CalleeType>, ResultType>) {
+        if (callee->_impl.get() == std::addressof(result)) {
+            return callee->_impl;
+        }
+        return std::make_shared<ResultType>(*callee->_impl.get());
+    }
+    return std::make_shared<DesiredType>(result);
 }
 
 }  // namespace cider

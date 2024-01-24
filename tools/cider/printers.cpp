@@ -415,7 +415,8 @@ void printFunctionBody(std::ostream& os,
 
   if (hasImplemetation) {
     if constexpr (std::is_same_v<cpp_member_function, FunctionType>) {
-      os << "auto implPtr = cider::getImpl(impl, this);\n";
+        os << "auto implPtr = cider::getImpl<" << pureReturnTypeName
+           << ">(impl, this);\n";
     } else {
       if (e.return_type().kind() == cpp_type_kind::pointer_t) {
         os << "auto implPtr = std::shared_ptr<" << pureReturnTypeName
@@ -434,7 +435,7 @@ void printFunctionBody(std::ostream& os,
     auto value = pureReturnTypeName;
     replaceScope(genScope, value);
     os << value;
-    os << "(implPtr);\n" << std::endl;
+    os << "(std::move(implPtr));\n" << std::endl;
   }
 
   printFunctionNotify(os, member, notificationName, params.empty());
@@ -722,7 +723,7 @@ void printClassDecl(std::ostream& os,
     os << "struct ";
   }
 
-  os << e.name() << ";";
+  os << e.name() << ";\n";
 }
 
 void printClassDef(std::ostream& os,
@@ -751,7 +752,9 @@ void printClassDef(std::ostream& os,
       } else {
         os << ": ";
       }
-      os << "_impl(std::move(impl))\n {}\n";
+      os << "_impl(std::move(impl))\n {\n";
+      printBaseClassesSetImpl(os, metadata, e.bases());
+      os << "}\n";
       os << "void setImpl(std::shared_ptr<" << scope << "::" << e.name()
          << "> impl)\n { _impl = std::move(impl); }\n";
     }

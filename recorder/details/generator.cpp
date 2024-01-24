@@ -69,9 +69,8 @@ class CodeSinkImpl : public CodeSink {
             std::string{"object"} + "_" + std::to_string(++_localCounter);
         _locals.emplace(object, suggested);
         return suggested;
-      }
-      else {
-          return it->second;
+      } else {
+        return it->second;
       }
     }
 

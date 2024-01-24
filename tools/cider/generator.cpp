@@ -52,7 +52,9 @@ void header_generator::handleClass(const cpp_class& e, const bool enter) {
   }
 
   if (e.is_declaration()) {
-    printClassDecl(m_out, m_metadata, e);
+    if (enter) {
+      printClassDecl(m_out, m_metadata, e);
+    }
     return;
   }
 
@@ -111,6 +113,10 @@ void header_generator::handleMemberVariable(
 
 void source_generator::handleClass(const cppast::cpp_class& e, bool enter) {
   generator::handleClass(e, enter);
+
+  if (e.is_declaration()) {
+      return;
+  }
 
   if (enter && !isAbstract(e, m_namespaces.nativeScope(), m_metadata) &&
       !isAggregate(e.name(), m_namespaces.nativeScope(), m_metadata)) {
