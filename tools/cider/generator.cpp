@@ -97,7 +97,8 @@ void header_generator::handleMemberFunction(
     cppast::cpp_access_specifier_kind /*kind*/) {
   m_namespaces(m_out);
 
-  printFunctionDecl(m_out, m_metadata, e, m_namespaces, nullptr, m_class->name().c_str(), true);
+  printFunctionDecl(m_out, m_metadata, e, m_namespaces, nullptr,
+                    m_class->name().c_str(), true);
 
   m_out << std::endl;
 }
@@ -115,7 +116,7 @@ void source_generator::handleClass(const cppast::cpp_class& e, bool enter) {
   generator::handleClass(e, enter);
 
   if (e.is_declaration()) {
-      return;
+    return;
   }
 
   if (enter && !isAbstract(e, m_namespaces.nativeScope(), m_metadata) &&
@@ -142,7 +143,8 @@ void source_generator::handleConstructor(
 void source_generator::handleFreeFunction(const cpp_function& e) {
   m_namespaces(m_out);
 
-  printFunctionDecl(m_out, m_metadata, e, m_namespaces, nullptr, nullptr, false);
+  printFunctionDecl(m_out, m_metadata, e, m_namespaces, nullptr, nullptr,
+                    false);
   printFunctionBody(m_out, m_metadata, e, m_namespaces);
 
   m_out << std::endl;
@@ -153,8 +155,8 @@ void source_generator::handleMemberFunction(
     cppast::cpp_access_specifier_kind /*kind*/) {
   m_namespaces(m_out);
 
-  printFunctionDecl(m_out, m_metadata, e, m_namespaces, m_class->name().c_str(), m_class->name().c_str(),
-                    false);
+  printFunctionDecl(m_out, m_metadata, e, m_namespaces, m_class->name().c_str(),
+                    m_class->name().c_str(), false);
   printFunctionBody(m_out, m_metadata, *m_class, e, m_namespaces);
 
   m_out << std::endl;

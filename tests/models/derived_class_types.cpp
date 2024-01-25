@@ -6,8 +6,8 @@ namespace models {
 BaseClass::BaseClass(const char* str) : _impl(str) {}
 
 DerivedClass BaseClass::get() {
-    const auto str = sayHello();
-    return DerivedClass{str.c_str()};
+  const auto str = sayHello();
+  return DerivedClass{str.c_str()};
 }
 
 BaseClass BaseClass::get() const {

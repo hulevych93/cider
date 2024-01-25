@@ -46,14 +46,14 @@ object_2:sayGoodbye(3)
 )";
 
 TEST_F(DerivedClassTypesTest, some_base_class_get_types_test) {
-    auto session = makeLuaRecordingSession(LuaExampleModuleName);
+  auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-    hook::BaseClass object("true");
-    auto derived = object.get();
-    derived.sayGoodbye(3);
+  hook::BaseClass object("true");
+  auto derived = object.get();
+  derived.sayGoodbye(3);
 
-    SCOPED_TRACE("some_base_class_get_types_test_script");
-    testScript(some_base_class_get_types_test_script, session);
+  SCOPED_TRACE("some_base_class_get_types_test_script");
+  testScript(some_base_class_get_types_test_script, session);
 }
 
 const char* some_base_class_get_const_types_test_script =
@@ -63,12 +63,12 @@ object_2:sayHello()
 )";
 
 TEST_F(DerivedClassTypesTest, some_base_class_get_const_types_test) {
-    auto session = makeLuaRecordingSession(LuaExampleModuleName);
+  auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
-    const hook::BaseClass object("true");
-    auto base = object.get();
-    base.sayHello();
+  const hook::BaseClass object("true");
+  auto base = object.get();
+  base.sayHello();
 
-    SCOPED_TRACE("some_base_class_get_const_types_test_script");
-    testScript(some_base_class_get_const_types_test_script, session);
+  SCOPED_TRACE("some_base_class_get_const_types_test_script");
+  testScript(some_base_class_get_const_types_test_script, session);
 }

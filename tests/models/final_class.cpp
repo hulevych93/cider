@@ -35,34 +35,29 @@ bool FinalClass::operator!=(const FinalClass& that) const {
   return (*this) != that;
 }
 
-FinalClass& FinalClass::operator+=(const unsigned int that)
-{
-    _number += that;
-    return *this;
+FinalClass& FinalClass::operator+=(const unsigned int that) {
+  _number += that;
+  return *this;
 }
 
-FinalClass& FinalClass::operator+=(const int& that)
-{
-    _number += that;
-    return *this;
+FinalClass& FinalClass::operator+=(const int& that) {
+  _number += that;
+  return *this;
 }
 
-FinalClass& FinalClass::operator=(const unsigned int that)
-{
-    _number = that;
-    return *this;
+FinalClass& FinalClass::operator=(const unsigned int that) {
+  _number = that;
+  return *this;
 }
 
-FinalClass& FinalClass::operator=(const int& that)
-{
-    _number = that;
-    return *this;
+FinalClass& FinalClass::operator=(const int& that) {
+  _number = that;
+  return *this;
 }
 
-FinalClass& FinalClass::operator=(const int&& that)
-{
-    _number = that;
-    return *this;
+FinalClass& FinalClass::operator=(const int&& that) {
+  _number = that;
+  return *this;
 }
 
 FinalClass function_make_class_construct_obj() {

@@ -76,7 +76,8 @@ void metadata_collector::handleNamespace(const cppast::cpp_entity& e,
 void metadata_collector::handleEnum(const cppast::cpp_enum& e,
                                     const bool enter) {
   if (enter) {
-    m_fileMetadata->exports.emplace(m_namespaces.nativeScope() + "::" + e.name());
+    m_fileMetadata->exports.emplace(m_namespaces.nativeScope() +
+                                    "::" + e.name());
     m_storage.enums.emplace(m_namespaces.nativeScope() + "::" + e.name());
     m_fileMetadata->hasAggregatesOrEnums = true;
   }
@@ -96,11 +97,11 @@ void metadata_collector::handleFile(const cppast::cpp_file& e,
 }
 
 void metadata_collector::handleClass(const cppast::cpp_class& e, bool enter) {
-    if (enter) {
-      m_classes.push_back(std::addressof(e));
-    } else {
-      m_classes.pop_back();
-    }
+  if (enter) {
+    m_classes.push_back(std::addressof(e));
+  } else {
+    m_classes.pop_back();
+  }
   if (e.is_declaration()) {
     return;
   }
@@ -113,8 +114,10 @@ void metadata_collector::handleClass(const cppast::cpp_class& e, bool enter) {
     m_classMetadata->name = e.name();
     m_classMetadata->file = m_fileMetadata->name;
     collectBases(m_classMetadata->bases, e.bases());
-    m_fileMetadata->exports.emplace(m_namespaces.nativeScope() + "::" + e.name());
-    collectBasesTypes(m_fileMetadata->imports, m_namespaces.nativeScope(), e.bases());
+    m_fileMetadata->exports.emplace(m_namespaces.nativeScope() +
+                                    "::" + e.name());
+    collectBasesTypes(m_fileMetadata->imports, m_namespaces.nativeScope(),
+                      e.bases());
   } else {
     assert(m_classMetadata.has_value());
     m_storage.classes.emplace(m_namespaces.nativeScope() + "::" + e.name(),
@@ -145,8 +148,10 @@ void metadata_collector::handleMemberFunction(
   assert(m_classMetadata.has_value());
 
   const auto name = e.name();
-  m_classMetadata->hasCopyAssignmentOperator |= isCopyAssignmentOperator(*m_classes.back(), e);
-  m_classMetadata->hasMoveAssignmentOperator |= isMoveAssignmentOperator(*m_classes.back(), e);
+  m_classMetadata->hasCopyAssignmentOperator |=
+      isCopyAssignmentOperator(*m_classes.back(), e);
+  m_classMetadata->hasMoveAssignmentOperator |=
+      isMoveAssignmentOperator(*m_classes.back(), e);
 
   if (e.is_virtual()) {
     const auto& info = e.virtual_info().value();

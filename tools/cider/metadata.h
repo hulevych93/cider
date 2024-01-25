@@ -85,7 +85,8 @@ struct metadata_collector final : ast_handler {
   namespaces_stack m_namespaces;
   std::vector<const cppast::cpp_class*> m_classes;
 
-  std::optional<ClassMetadata> m_classMetadata;  // TODO: support nested classes?
+  std::optional<ClassMetadata>
+      m_classMetadata;  // TODO: support nested classes?
   std::optional<FileMetadata> m_fileMetadata;
 };
 

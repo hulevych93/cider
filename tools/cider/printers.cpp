@@ -351,7 +351,8 @@ void printFunctionDecl(std::ostream& os,
                        const char* scopeName,
                        const char* className,
                        const bool declaration) {
-  printFunctionDecl<>(os, metadata, e, stack, scopeName, className, declaration);
+  printFunctionDecl<>(os, metadata, e, stack, scopeName, className,
+                      declaration);
 }
 
 void printFunctionDecl(std::ostream& os,
@@ -361,7 +362,8 @@ void printFunctionDecl(std::ostream& os,
                        const char* scopeName,
                        const char* className,
                        const bool declaration) {
-  printFunctionDecl<>(os, metadata, e, stack, scopeName, className, declaration);
+  printFunctionDecl<>(os, metadata, e, stack, scopeName, className,
+                      declaration);
 }
 
 template <typename FunctionType>
@@ -418,8 +420,8 @@ void printFunctionBody(std::ostream& os,
 
   if (hasImplemetation) {
     if constexpr (std::is_same_v<cpp_member_function, FunctionType>) {
-        os << "auto implPtr = cider::getImpl<" << pureReturnTypeName
-           << ">(impl, this);\n";
+      os << "auto implPtr = cider::getImpl<" << pureReturnTypeName
+         << ">(impl, this);\n";
     } else {
       if (e.return_type().kind() == cpp_type_kind::pointer_t) {
         os << "auto implPtr = std::shared_ptr<" << pureReturnTypeName
