@@ -28,6 +28,8 @@ bool hasReturnValue(const cppast::cpp_function& e);
 
 bool hasReturnValue(const cppast::cpp_member_function& e);
 
+bool hasReturnValue(const cppast::cpp_conversion_op& e);
+
 bool isUserDefined(const cppast::cpp_type& type,
                    const std::string& scope,
                    std::string& name);

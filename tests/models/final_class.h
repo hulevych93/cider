@@ -27,6 +27,8 @@ class FinalClass final {
   FinalClass& operator=(const int& that);
   FinalClass& operator=(const int&& that);
 
+  operator bool() const;
+
  private:
   int _number = 0;
   bool _condition = false;

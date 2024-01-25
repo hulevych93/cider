@@ -4,19 +4,21 @@ cider_collect_src(LIST_OUT "models")
 
 add_subdirectory(models)
 
+set(GEN_DIR ${CIDER_GEN_DIR}/tests)
+
 include_directories(.
     ${Lua_INCLUDE_DIRS}
     ${GTest_INCLUDE_DIRS}
     ${Boost_INCLUDE_DIRS}
     ${CMAKE_BINARY_DIR}
-    ${CIDER_GEN_DIR}
+    ${GEN_DIR}
 )
 
 add_executable(tests ${LIST_OUT})
 add_test(NAME "tests" COMMAND tests)
 add_dependencies(tests ${CIDER_THIRDPARTY_TARGET_NAME})
 
-set(GEN_DIR ${CIDER_GEN_DIR})
+set(GEN_DIR ${CIDER_GEN_DIR}/tests)
 set(SWIG_MODULE_NAME "example")
 
 prv_collect_src(${PROJECT_SOURCE_DIR}/models HDRS_OUT ".swig" ".cpp")

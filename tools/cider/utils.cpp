@@ -101,6 +101,10 @@ bool hasReturnValue(const cpp_member_function& e) {
   return hasReturnValue<>(e);
 }
 
+bool hasReturnValue(const cpp_conversion_op& e) {
+  return hasReturnValue<>(e);
+}
+
 bool isUserDefined(const cpp_type& type,
                    const std::string& scope,
                    std::string& name) {

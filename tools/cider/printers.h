@@ -45,6 +45,19 @@ void printFunctionBody(std::ostream& os,
                        const cppast::cpp_member_function& e,
                        const namespaces_stack& stack);
 
+void printConversionOpBody(std::ostream& os,
+                       const MetadataStorage& metadata,
+                       const cppast::cpp_class& cl,
+                       const cppast::cpp_conversion_op& e,
+                       const namespaces_stack& stack);
+
+void printConversionOpDecl(std::ostream& os,
+                       const MetadataStorage& metadata,
+                       const cppast::cpp_conversion_op& e,
+                       const namespaces_stack& stack,
+                       const char* scopeName,
+                       const bool declaration = false);
+
 void printGeneratedMethods(std::ostream& os,
                            const MetadataStorage& metadata,
                            const cppast::cpp_class& e,

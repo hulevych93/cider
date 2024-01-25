@@ -22,6 +22,11 @@ FinalClass& FinalClass::operator=(const FinalClass& other) {
   return *this;
 }
 
+FinalClass::operator bool() const
+{
+    return _condition;
+}
+
 FinalClass& FinalClass::operator=(FinalClass&& other) {
   _number = other._number;
   _condition = other._condition;

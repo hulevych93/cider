@@ -103,6 +103,16 @@ void header_generator::handleMemberFunction(
   m_out << std::endl;
 }
 
+void header_generator::handleConversionOperator(
+        const cppast::cpp_conversion_op& e,
+        cppast::cpp_access_specifier_kind kind) {
+    m_namespaces(m_out);
+
+    printConversionOpDecl(m_out, m_metadata, e, m_namespaces, nullptr, true);
+
+    m_out << std::endl;
+  }
+
 void header_generator::handleMemberVariable(
     const cppast::cpp_member_variable& e,
     cppast::cpp_access_specifier_kind /*kind*/) {
@@ -162,6 +172,17 @@ void source_generator::handleMemberFunction(
   m_out << std::endl;
 }
 
+void source_generator::handleConversionOperator(
+        const cppast::cpp_conversion_op& e,
+        cppast::cpp_access_specifier_kind kind) {
+    m_namespaces(m_out);
+
+    printConversionOpDecl(m_out, m_metadata, e, m_namespaces, m_class->name().c_str(), false);
+    printConversionOpBody(m_out, m_metadata, *m_class, e, m_namespaces);
+
+    m_out << std::endl;
+}
+
 void handleFile(ast_handler& handler,
                 const cpp_file& file,
                 const bool onlyPublic) {
@@ -188,6 +209,10 @@ void handleFile(ast_handler& handler,
         break;
       case ::cpp_entity_kind::member_function_t:
         handler.handleMemberFunction(static_cast<const cpp_member_function&>(e),
+                                     info.access);
+        break;
+      case ::cpp_entity_kind::conversion_op_t:
+        handler.handleConversionOperator(static_cast<const cpp_conversion_op&>(e),
                                      info.access);
         break;
       case ::cpp_entity_kind::member_variable_t:
