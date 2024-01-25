@@ -310,10 +310,11 @@ void printFunctionDecl(std::ostream& os,
                        const MetadataStorage& metadata,
                        const FunctionType& e,
                        const namespaces_stack& stack,
+                       const char* scopeName,
                        const char* className,
                        const bool declaration) {
   if constexpr (std::is_same_v<cpp_member_function, FunctionType>) {
-    const auto opType = isOperator(e);
+    const auto opType = isOperator(className, e);
     if (opType && ((*opType) == OperatorType::moveAssignment ||
                    (*opType) == OperatorType::copyAssignment)) {
       os << "void";
@@ -325,8 +326,8 @@ void printFunctionDecl(std::ostream& os,
   }
 
   os << " ";
-  if (className != nullptr) {
-    os << className << "::";
+  if (scopeName != nullptr) {
+    os << scopeName << "::";
   }
   os << e.name() << "(";
   const auto& params = e.parameters();
@@ -347,18 +348,20 @@ void printFunctionDecl(std::ostream& os,
                        const MetadataStorage& metadata,
                        const cpp_function& e,
                        const namespaces_stack& stack,
+                       const char* scopeName,
                        const char* className,
                        const bool declaration) {
-  printFunctionDecl<>(os, metadata, e, stack, className, declaration);
+  printFunctionDecl<>(os, metadata, e, stack, scopeName, className, declaration);
 }
 
 void printFunctionDecl(std::ostream& os,
                        const MetadataStorage& metadata,
                        const cpp_member_function& e,
                        const namespaces_stack& stack,
+                       const char* scopeName,
                        const char* className,
                        const bool declaration) {
-  printFunctionDecl<>(os, metadata, e, stack, className, declaration);
+  printFunctionDecl<>(os, metadata, e, stack, scopeName, className, declaration);
 }
 
 template <typename FunctionType>
@@ -454,15 +457,7 @@ void printOperatorBody(std::ostream& os,
   os << "{\n";
   os << "try {\n";
   const auto& params = e.parameters();
-  if (type == OperatorType::Equals) {
-    os << "return (*_impl) == *";
-    printParamName(os, *params.begin(), 0U);
-    os << "._impl;\n";
-  } else if (type == OperatorType::NotEquals) {
-    os << "return (*_impl) != *";
-    printParamName(os, *params.begin(), 0U);
-    os << "._impl;\n";
-  } else if (type == OperatorType::copyAssignment) {
+  if (type == OperatorType::copyAssignment) {
     os << "CIDER_NOTIFY_ASSIGNMENT(";
     printParamName(os, *params.begin(), 0U);
     os << "._impl.get());\n";
@@ -495,7 +490,7 @@ void printFunctionBody(std::ostream& os,
                        const cppast::cpp_class& cl,
                        const cppast::cpp_member_function& e,
                        const namespaces_stack& stack) {
-  if (auto operatorType = isOperator(e)) {
+  if (auto operatorType = isOperator(cl, e)) {
     printOperatorBody(os, operatorType.value(), e);
   } else {
     printFunctionBody<>(os, metadata, cl.name().c_str(), e, stack, true);

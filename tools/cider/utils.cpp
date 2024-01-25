@@ -11,24 +11,35 @@ using namespace cppast;
 namespace cider {
 namespace tool {
 
-std::optional<OperatorType> isOperator(const cpp_member_function& e) {
-  if (e.name().find("operator==") != std::string::npos) {
-    return OperatorType::Equals;
-  } else if (e.name().find("operator!=") != std::string::npos) {
-    return OperatorType::NotEquals;
-  } else if (e.name().find("operator=") != std::string::npos) {
-    const auto& params = e.parameters();
-    for (const auto& param : params) {
-      if (param.type().kind() == cpp_type_kind::reference_t) {
-        const auto& reference =
-            static_cast<const cpp_reference_type&>(param.type());
-        return reference.reference_kind() == cpp_reference::cpp_ref_lvalue
-                   ? OperatorType::copyAssignment
-                   : OperatorType::moveAssignment;
+std::optional<OperatorType> isOperator(const cpp_class& o, const cpp_member_function& e) {
+  return isOperator(o.name().c_str(), e);
+}
+
+std::optional<OperatorType> isOperator(const char* classN, const cppast::cpp_member_function& e)
+{
+    auto name = e.name();
+    auto opIt = name.find("operator");
+    if (opIt != std::string::npos) {
+      name = name.substr(opIt + strlen("operator"));
+      if(name.find("=") != std::string::npos && name.find("==") == std::string::npos) {
+      std::string className = classN ? classN : "";
+      removeScope(className);
+      const auto& params = e.parameters();
+      for (const auto& param : params) {
+          auto paramName = to_string(param.type());
+          if(paramName.find(className) != std::string::npos) {
+        if (param.type().kind() == cpp_type_kind::reference_t) {
+          const auto& reference =
+              static_cast<const cpp_reference_type&>(param.type());
+          return reference.reference_kind() == cpp_reference::cpp_ref_lvalue
+                     ? OperatorType::copyAssignment
+                     : OperatorType::moveAssignment;
+        }
+          }
       }
     }
-  }
-  return std::nullopt;
+    }
+    return std::nullopt;
 }
 
 bool isCopyMoveContructor(const cpp_constructor& e, const cpp_reference kind) {
@@ -58,13 +69,15 @@ bool isCopyContructor(const cppast::cpp_constructor& e) {
   return isCopyMoveContructor(e, cpp_reference::cpp_ref_lvalue);
 }
 
-bool isMoveAssignmentOperator(const cppast::cpp_member_function& e) {
-  return isOperator(e).value_or(OperatorType::undefined) ==
+bool isMoveAssignmentOperator(const cppast::cpp_class& o, const cppast::cpp_member_function& e) {
+  const auto op = isOperator(o, e);
+  return op.has_value() && op.value() ==
          OperatorType::moveAssignment;
 }
 
-bool isCopyAssignmentOperator(const cppast::cpp_member_function& e) {
-  return isOperator(e).value_or(OperatorType::undefined) ==
+bool isCopyAssignmentOperator(const cppast::cpp_class& o, const cppast::cpp_member_function& e) {
+    const auto op = isOperator(o, e);
+    return op.has_value() && op.value() ==
          OperatorType::copyAssignment;
 }
 

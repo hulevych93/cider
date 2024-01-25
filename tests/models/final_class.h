@@ -20,6 +20,13 @@ class FinalClass final {
   bool operator==(const FinalClass& that) const;
   bool operator!=(const FinalClass& that) const;
 
+  FinalClass& operator+=(const unsigned int that);
+  FinalClass& operator+=(const int& that);
+
+  FinalClass& operator=(const unsigned int that);
+  FinalClass& operator=(const int& that);
+  FinalClass& operator=(const int&& that);
+
  private:
   int _number = 0;
   bool _condition = false;
