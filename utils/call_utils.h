@@ -28,7 +28,9 @@ auto* getCallee(ImplType* arg) {
 
 template <typename DesiredType, typename ResultType, typename ImplType>
 auto getImpl(ResultType& result, ImplType* callee) {
-  static_assert(std::is_same_v<DesiredType, ResultType>, "same types");
+  using ResultTypePure = std::decay_t<ResultType>;
+  static_assert(std::is_same_v<DesiredType, ResultTypePure>, "same types");
+
   using CalleeType = decltype(*callee->_impl.get());
   if constexpr (std::is_same_v<std::decay_t<CalleeType>, ResultType>) {
     if (callee->_impl.get() == std::addressof(result)) {

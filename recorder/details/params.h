@@ -134,7 +134,8 @@ constexpr bool isUserData =
 template <typename Type>
 constexpr bool isStringConvertibleType =
     !std::is_same_v<std::decay_t<Type>, std::string> &&
-    std::is_constructible_v<std::string, std::decay_t<Type>>;
+    std::is_constructible_v<std::string, std::decay_t<Type>> &&
+    !isUserData<Type>;
 
 template <typename Type>
 constexpr bool isFloatConvertibleType =

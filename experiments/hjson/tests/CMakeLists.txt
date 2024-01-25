@@ -8,6 +8,11 @@ include_directories(.
     ${CIDER_GEN_DIR}
 )
 
+cider_collect_src(LIST_OUT "assets")
+
+add_executable(hjson_tests ${LIST_OUT})
+add_test(NAME "hjson_tests" COMMAND hjson_tests)
+
 set(GEN_DIR ${CIDER_GEN_DIR})
 set(SWIG_MODULE_NAME "hjson")
 
@@ -36,7 +41,7 @@ cider_generate_swig(LANGUAGE lua
                     FILE "${GEN_DIR}/${SWIG_MODULE_NAME}.swig")
 
 add_library(hjson_wrap "${GEN_DIR}/${SWIG_MODULE_NAME}_wrap.cpp" "${GEN_DIR}/swigluarun.h")
-add_dependencies(hjson_wrap hjson)
+add_dependencies(hjson_wrap hjson hjson-models)
 
 if(CLANGFORMAT_EXECUTABLE)
  foreach(OUT_FILE ${GEN_SRC_FILES})
@@ -45,3 +50,16 @@ if(CLANGFORMAT_EXECUTABLE)
                    COMMAND ${CLANGFORMAT_EXECUTABLE} -style=Chromium -i ${OUT_FILE})
  endforeach()
 endif()
+
+add_dependencies(hjson_tests hjson_wrap)
+
+target_link_libraries(hjson_tests
+    recorder
+    hjson_wrap
+    hjson-models
+    models
+    scripting
+    ${Hjson_LIBRARIES}
+    ${Lua_LIBRARIES}
+    ${PLATFORM_LIBRARIES}
+)
