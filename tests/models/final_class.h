@@ -29,6 +29,8 @@ class FinalClass final {
 
   operator bool() const;
 
+  friend FinalClass operator +(const FinalClass& left, const FinalClass& right);
+
  private:
   int _number = 0;
   bool _condition = false;

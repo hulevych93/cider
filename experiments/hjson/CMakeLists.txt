@@ -39,7 +39,7 @@ ExternalProject_Add(
     STAMP_DIR               ${EXPERIMENT_HJSON_PREFIX}/stamp
     # Download
     GIT_REPOSITORY          https://github.com/hulevych93/hjson-cpp
-    GIT_TAG                 3aed695
+    GIT_TAG                 10ee4abb
     UPDATE_DISCONNECTED     1
     # Configure
     SOURCE_DIR              ${SRC_DIR}

@@ -395,6 +395,7 @@ template <typename FunctionType>
 void printFunctionBody(std::ostream& os,
                        const MetadataStorage& metadata,
                        const char* obj,
+                       const char* scope,
                        const FunctionType& e,
                        const namespaces_stack& stack,
                        const bool member) {
@@ -433,13 +434,15 @@ void printFunctionBody(std::ostream& os,
       notificationName = returnName;
     }
   }
-  const auto& scope = stack.nativeScope();
   const auto& genScope = stack.genScope();
   if constexpr (std::is_same_v<cpp_member_function, FunctionType> ||
           std::is_same_v<cpp_conversion_op, FunctionType>) {
     os << "callee->" << e.name() << "(";
   } else {
-    os << scope << "::" << e.name() << "(";
+      if(scope != nullptr) {
+          os << scope << "::";
+      }
+    os << e.name() << "(";
   }
   const auto& params = e.parameters();
   printParamsVal(os, metadata, params, stack);
@@ -511,8 +514,10 @@ void printOperatorBody(std::ostream& os,
 void printFunctionBody(std::ostream& os,
                        const MetadataStorage& metadata,
                        const cppast::cpp_function& e,
-                       const namespaces_stack& stack) {
-  printFunctionBody<>(os, metadata, nullptr, e, stack, false);
+                       const namespaces_stack& stack,
+                       const bool is_friend) {
+  const auto scope = stack.nativeScope();
+  printFunctionBody<>(os, metadata, nullptr, is_friend ? nullptr : scope.c_str(), e, stack, false);
 }
 
 void printFunctionBody(std::ostream& os,
@@ -523,7 +528,7 @@ void printFunctionBody(std::ostream& os,
   if (auto operatorType = isOperator(cl, e)) {
     printOperatorBody(os, operatorType.value(), e);
   } else {
-    printFunctionBody<>(os, metadata, cl.name().c_str(), e, stack, true);
+    printFunctionBody<>(os, metadata, cl.name().c_str(), stack.nativeScope().c_str(), e, stack, true);
   }
 }
 
@@ -533,7 +538,7 @@ void printConversionOpBody(std::ostream& os,
                        const cppast::cpp_conversion_op& e,
                        const namespaces_stack& stack)
 {
-  printFunctionBody<>(os, metadata, cl.name().c_str(), e, stack, true);
+  printFunctionBody<>(os, metadata, cl.name().c_str(), stack.nativeScope().c_str(), e, stack, true);
 }
 
 void printConstructorDecl(std::ostream& os,

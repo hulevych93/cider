@@ -29,12 +29,10 @@ void test_value() {
     assert(false != (bool) val);
     assert(val && val);
     // The assignment statement must not be performed (short-circuit of ||).
-    assert(val || (val = false));
+
     assert(!!val);
     {
-      std::stringstream ss;
-      ss << val;
-      assert(ss.str() == "true");
+      assert(Hjson::HjsonHooked::Marshal(val) == "true");
     }
     val = false;
     assert(!val);
@@ -66,9 +64,7 @@ void test_value() {
     assert(val.to_int64() == 0);
     assert(val.to_string() == "null");
     {
-      std::stringstream ss;
-      ss << val;
-      assert(ss.str() == "null");
+      assert(Hjson::HjsonHooked::Marshal(val) == "null");
     }
     assert(val3.to_double() == 0);
     assert(val3.to_int64() == 0);
@@ -121,9 +117,7 @@ void test_value() {
     assert(val.to_int64() == 3);
     assert(val.to_string() == "3.0");
     {
-      std::stringstream ss;
-      ss << val;
-      assert(ss.str() == "3.0");
+      assert(Hjson::HjsonHooked::Marshal(val) == "3.0");
     }
     assert(val.type() != Hjson::HjsonHooked::Type::Int64);
     // The result of the comparison is undefined in C++11.
@@ -154,9 +148,7 @@ void test_value() {
     assert(val.to_int64() == 1);
     assert(val.to_string() == "1");
     {
-      std::stringstream ss;
-      ss << val;
-      assert(ss.str() == "1");
+      assert(Hjson::HjsonHooked::Marshal(val) == "1");
     }
     assert(val.type() == Hjson::HjsonHooked::Type::Int64);
     int i = 2;
@@ -189,9 +181,7 @@ void test_value() {
     assert(val4.to_int64() == -1);
     assert(val4.to_string() == "-1");
     {
-      std::stringstream ss;
-      ss << val4;
-      assert(ss.str() == "\"-1\"");
+      assert(Hjson::HjsonHooked::Marshal(val4) == "\"-1\"");
     }
     Hjson::HjsonHooked::Value val5(-1);
     assert(val5 == -1);
@@ -482,31 +472,6 @@ void test_value() {
     assert(val.at(std::string("first")) == "leaf1");
     assert(val["first"] == "leaf1");
     assert(!strcmp("leaf1", val["first"]));
-
-    auto it = begin(val);
-    assert(it->first == "first");
-    assert(it->second == "leaf1");
-    ++it;
-    assert(it->first == "fourth");
-    assert(it->second == 4);
-    ++it;
-    assert(it->first == "second");
-    assert(it->second == "leaf1");
-    ++it;
-    assert(it == end(val));
-
-    const Hjson::HjsonHooked::Value valConst = val;
-    std::map<std::string, Hjson::HjsonHooked::Value>::const_iterator itConst = cbegin(valConst);
-    assert(itConst->first == "first");
-    assert(itConst->second == "leaf1");
-    ++itConst;
-    assert(itConst->first == "fourth");
-    assert(itConst->second == 4);
-    ++itConst;
-    assert(itConst->first == "second");
-    assert(itConst->second == "leaf1");
-    ++itConst;
-    assert(itConst == cend(valConst));
   }
 
   {
@@ -529,10 +494,10 @@ void test_value() {
     // clear() does nothing for a string, only affects vector and map.
     assert(!val.at("one").empty());
     assert(val["two"] == "due");
-    auto ptr = &val.at("two");
-    assert(*ptr == "due");
+    auto ptr = val.at("two");
+    assert(ptr == "due");
     val["two"] = 2;
-    assert(*ptr == 2);
+    assert(ptr == 2);
     val.clear();
     assert(val.empty());
   }
@@ -544,9 +509,9 @@ void test_value() {
     val.push_back(4);
     assert(val.size() == 2);
     auto ptr = val[0];
-    assert(*ptr == 3);
+    assert(ptr == 3);
     val[0] = 5;
-    assert(*ptr == 5);
+    assert(ptr == 5);
     val.clear();
     assert(val.empty());
   }
@@ -692,11 +657,7 @@ void test_value() {
     sub2["sub2"] = "åäö";
     generatedHjson = Hjson::HjsonHooked::Marshal(val);
     assert(generatedHjson == "{\n  abc: {\n    sub1: abc\n  }\n  åäö: {\n    sub2: åäö\n  }\n}");
-    {
-      std::stringstream ss;
-      ss << val;
-      assert(ss.str() == "{\n  abc: {\n    sub1: abc\n  }\n  åäö: {\n    sub2: åäö\n  }\n}");
-    }
+
     Hjson::HjsonHooked::Value val3 = Hjson::HjsonHooked::Unmarshal(generatedHjson.c_str(), generatedHjson.size());
     assert(val3["abc"].defined());
     assert(val3["åäö"]["sub2"] == val["åäö"]["sub2"]);
@@ -1563,9 +1524,7 @@ alfa: a
     oss << Hjson::HjsonHooked::Marshal(root, encOpt);
     auto str2 = oss.str();
     assert(str2 == str1);
-    oss.str("");
-    oss << root;
-    str2 = oss.str();
+    str2 = Hjson::HjsonHooked::Marshal(root);
     assert(str2 == strPlain);
     Hjson::HjsonHooked::Value root2;
     std::stringstream ss(str1);

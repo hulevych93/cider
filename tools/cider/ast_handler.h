@@ -32,6 +32,7 @@ struct ast_handler {
   virtual void handleEnumValue(const cppast::cpp_enum_value& /*e*/) {}
   virtual void handleEnum(const cppast::cpp_enum& /*e*/, const bool /*enter*/) {
   }
+  virtual void handleFriend(const cppast::cpp_friend& /*e*/) {}
 };
 
 }  // namespace tool

@@ -37,7 +37,8 @@ void printFunctionDecl(std::ostream& os,
 void printFunctionBody(std::ostream& os,
                        const MetadataStorage& metadata,
                        const cppast::cpp_function& e,
-                       const namespaces_stack& stack);
+                       const namespaces_stack& stack,
+                       const bool is_friend = false);
 
 void printFunctionBody(std::ostream& os,
                        const MetadataStorage& metadata,

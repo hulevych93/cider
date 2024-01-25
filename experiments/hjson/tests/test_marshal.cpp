@@ -82,17 +82,17 @@ static Hjson::HjsonHooked::Value _getTestContent(std::string name, Hjson::HjsonH
     Hjson::HjsonHooked::Value *v;
     int i;
   };
-  Hjson::HjsonHooked::Value *cur = &root;
+  Hjson::HjsonHooked::Value cur = root;
   std::vector<Parent> parents;
   do {
-    _filterComment(cur, &Hjson::HjsonHooked::Value::get_comment_after, &Hjson::HjsonHooked::Value::set_comment_after);
-    _filterComment(cur, &Hjson::HjsonHooked::Value::get_comment_before, &Hjson::HjsonHooked::Value::set_comment_before);
-    _filterComment(cur, &Hjson::HjsonHooked::Value::get_comment_inside, &Hjson::HjsonHooked::Value::set_comment_inside);
-    _filterComment(cur, &Hjson::HjsonHooked::Value::get_comment_key, &Hjson::HjsonHooked::Value::set_comment_key);
+    _filterComment(&cur, &Hjson::HjsonHooked::Value::get_comment_after, &Hjson::HjsonHooked::Value::set_comment_after);
+    _filterComment(&cur, &Hjson::HjsonHooked::Value::get_comment_before, &Hjson::HjsonHooked::Value::set_comment_before);
+    _filterComment(&cur, &Hjson::HjsonHooked::Value::get_comment_inside, &Hjson::HjsonHooked::Value::set_comment_inside);
+    _filterComment(&cur, &Hjson::HjsonHooked::Value::get_comment_key, &Hjson::HjsonHooked::Value::set_comment_key);
 
-    if (cur->is_container() && !cur->empty()) {
-      parents.push_back({cur, 0});
-      cur = &(*cur)[0];
+    if (cur.is_container() && !cur.empty()) {
+      parents.push_back({&cur, 0});
+      cur = cur[0];
     } else if (!parents.empty()) {
       ++parents.back().i;
 
@@ -105,7 +105,7 @@ static Hjson::HjsonHooked::Value _getTestContent(std::string name, Hjson::HjsonH
       }
 
       if (!parents.empty()) {
-        cur = &parents.back().v[0][parents.back().i];
+        cur = parents.back().v[0][parents.back().i];
       }
     }
   } while (!parents.empty());
