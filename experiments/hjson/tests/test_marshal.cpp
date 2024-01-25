@@ -72,7 +72,7 @@ static Hjson::HjsonHooked::Value _getTestContent(std::string name, Hjson::HjsonH
 
   try {
     root = Hjson::HjsonHooked::UnmarshalFromFile("assets/" + name + "_test.hjson", opt);
-  } catch (const Hjson::HjsonHooked::file_error& e) {
+  } catch (const Hjson::file_error& e) {
     root = Hjson::HjsonHooked::UnmarshalFromFile("assets/" + name + "_test.json", opt);
   }
 
@@ -161,7 +161,7 @@ static void _examine(std::string filename) {
       std::cout << "Should have failed on " << name << "\n";
       assert(false);
     }
-  } catch (const Hjson::HjsonHooked::syntax_error& e) {
+  } catch (const Hjson::syntax_error& e) {
     if (!shouldFail) {
       std::cout << "Should NOT have failed on " << name << "\n";
       assert(false);
@@ -267,7 +267,7 @@ static void _examine(std::string filename) {
   decOpt.whitespaceAsComments = true;
   try {
     root = _getTestContent(name, decOpt);
-  } catch (const Hjson::HjsonHooked::syntax_error& e) {
+  } catch (const Hjson::syntax_error& e) {
     std::cout << "Failed to read with whitespace as comments: " << name << "\n";
     assert(false);
   }

@@ -166,11 +166,24 @@ void printParamType(std::ostream& os,
   os << value;
 }
 
+void printExpression(std::ostream& os, const cpp_expression& value) {
+  if (value.kind() == cppast::cpp_expression_kind::literal_t) {
+    const auto& literal =
+        static_cast<const cppast::cpp_literal_expression&>(value);
+    os << " = " << literal.value();
+  } else if (value.kind() == cppast::cpp_expression_kind::unexposed_t) {
+    const auto& expression =
+        static_cast<const cppast::cpp_unexposed_expression&>(value);
+    os << " = " << expression.expression().as_string();
+  }
+}
+
 void printParamsDecl(
     std::ostream& os,
     const MetadataStorage& metadata,
     const namespaces_stack& stack,
-    const detail::iteratable_intrusive_list<cpp_function_parameter>& params) {
+    const detail::iteratable_intrusive_list<cpp_function_parameter>& params,
+    const bool declaration) {
   auto first = true;
   unsigned int count = 0U;
   for (const auto& param : params) {
@@ -184,6 +197,13 @@ void printParamsDecl(
     os << " ";
 
     printParamName(os, param, count);
+
+    if(declaration) {
+      if (const auto& value = param.default_value()) {
+        printExpression(os, value.value());
+      }
+    }
+
     ++count;
   }
 }
@@ -281,18 +301,6 @@ void printBaseClasses(
   }
 }
 
-void printExpression(std::ostream& os, const cpp_expression& value) {
-  if (value.kind() == cppast::cpp_expression_kind::literal_t) {
-    const auto& literal =
-        static_cast<const cppast::cpp_literal_expression&>(value);
-    os << " = " << literal.value();
-  } else if (value.kind() == cppast::cpp_expression_kind::unexposed_t) {
-    const auto& expression =
-        static_cast<const cppast::cpp_unexposed_expression&>(value);
-    os << " = " << expression.expression().as_string();
-  }
-}
-
 }  // namespace
 
 void printNamespace(std::ostream& os,
@@ -331,7 +339,7 @@ void printFunctionDecl(std::ostream& os,
   }
   os << e.name() << "(";
   const auto& params = e.parameters();
-  printParamsDecl(os, metadata, stack, params);
+  printParamsDecl(os, metadata, stack, params, declaration);
   os << ")";
   if constexpr (std::is_same_v<cpp_member_function, FunctionType>) {
     if (is_const(e.cv_qualifier())) {
@@ -509,7 +517,7 @@ void printConstructorDecl(std::ostream& os,
   }
   os << e.name() << "(";
   const auto& params = e.parameters();
-  printParamsDecl(os, metadata, stack, params);
+  printParamsDecl(os, metadata, stack, params, !definition);
   os << ")";
   if (!definition) {
     os << ";";
