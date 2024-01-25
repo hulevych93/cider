@@ -38,10 +38,9 @@ ExternalProject_Add(
     TMP_DIR                 ${TMP_DIR}
     STAMP_DIR               ${EXPERIMENT_HJSON_PREFIX}/stamp
     # Download
-    DOWNLOAD_DIR            ${CIDER_3RD_PARTY_DOWNLOAD_DIR}
-    DOWNLOAD_EXTRACT_TIMESTAMP 0
-    URL                     https://github.com/hjson/hjson-cpp/archive/refs/tags/2.4.1.tar.gz
-    URL_MD5                 "18c11e428b09ae3e41859f2d2b423058"
+    GIT_REPOSITORY          https://github.com/hulevych93/hjson-cpp
+    GIT_TAG                 2d93a8ee
+    UPDATE_DISCONNECTED     1
     # Configure
     SOURCE_DIR              ${SRC_DIR}
     CMAKE_ARGS              ${CMAKE_OPTS}

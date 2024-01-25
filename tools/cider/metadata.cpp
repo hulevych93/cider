@@ -97,10 +97,9 @@ void metadata_collector::handleFile(const cppast::cpp_file& e,
 
 void metadata_collector::handleClass(const cppast::cpp_class& e, bool enter) {
     if (enter) {
-        m_last = e.name();
-      m_class = std::addressof(e);
+      m_classes.push_back(std::addressof(e));
     } else {
-      m_class = nullptr;
+      m_classes.pop_back();
     }
   if (e.is_declaration()) {
     return;
@@ -146,8 +145,8 @@ void metadata_collector::handleMemberFunction(
   assert(m_classMetadata.has_value());
 
   const auto name = e.name();
-  m_classMetadata->hasCopyAssignmentOperator |= isCopyAssignmentOperator(*m_class, e);
-  m_classMetadata->hasMoveAssignmentOperator |= isMoveAssignmentOperator(*m_class, e);
+  m_classMetadata->hasCopyAssignmentOperator |= isCopyAssignmentOperator(*m_classes.back(), e);
+  m_classMetadata->hasMoveAssignmentOperator |= isMoveAssignmentOperator(*m_classes.back(), e);
 
   if (e.is_virtual()) {
     const auto& info = e.virtual_info().value();

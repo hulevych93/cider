@@ -45,4 +45,4 @@ if(CIDER_ENABLE_COVERAGE)
         EXCLUDE "tools/*" "tests/models/*" "${BUILD_FILES_DIR}/*" "${CIDER_GEN_DIR}/*" "${BASE_DIRECTORY}/*/v1/*" "/Applications/*")
 endif()
 
-#add_subdirectory(experiments/hjson)
+add_subdirectory(experiments/hjson)
