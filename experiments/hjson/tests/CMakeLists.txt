@@ -54,12 +54,22 @@ endif()
 
 add_dependencies(hjson_tests hjson_wrap)
 
-target_link_libraries(hjson_tests
-    hjson_wrap
-    hjson-models
-    recorder
-    scripting
-    ${Hjson_LIBRARIES}
-    ${Lua_LIBRARIES}
-    ${PLATFORM_LIBRARIES}
+
+target_link_libraries(hjson_tests PUBLIC
+  hjson_wrap
+  hjson-models
+  recorder
+  scripting
+  ${Lua_LIBRARIES}
+  ${PLATFORM_LIBRARIES}
+  ${Hjson_LIBRARIES}
 )
+
+
+if(HJSON_ENABLE_COVERAGE)
+  setup_target_for_coverage_lcov(
+        NAME coverage
+        EXECUTABLE hjson_tests
+        BASE_DIRECTORY "${EXPERIMENT_HJSON_BUILD_DIR}/src"
+        EXCLUDE "${BUILD_FILES_DIR}/*" "${CIDER_GEN_DIR}/*" "${BASE_DIRECTORY}/*/v1/*" "/Applications/*")
+endif()

@@ -23,7 +23,7 @@ add_subdirectory(thirdparty/lua)
 add_subdirectory(thirdparty/cppast)
 add_subdirectory(thirdparty/cxxopts)
 
-if(CIDER_ENABLE_COVERAGE)
+if(ENABLE_COVERAGE)
     if(NOT "${CMAKE_BUILD_TYPE}" STREQUAL "DEBUG")
       message(FATAL_ERROR "CIDER_ENABLE_COVERAGE only works fine in DEBUG build.")
     endif()
