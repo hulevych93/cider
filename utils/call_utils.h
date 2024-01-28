@@ -26,8 +26,11 @@ auto* getCallee(ImplType* arg) {
   return (Type*)arg;
 }
 
+struct copy_tag final {};
+struct ref_tag final {};
+
 template <typename DesiredType, typename ResultType, typename ImplType>
-auto getImpl(ResultType& result, ImplType* callee) {
+auto getImpl(ResultType& result, ImplType* callee, ref_tag) {
   using ResultTypePure = std::decay_t<ResultType>;
   static_assert(std::is_same_v<DesiredType, ResultTypePure>, "same types");
 
@@ -39,6 +42,11 @@ auto getImpl(ResultType& result, ImplType* callee) {
     return std::make_shared<ResultType>(*callee->_impl.get());
   }
   return std::make_shared<DesiredType>(result);
+}
+
+template <typename DesiredType, typename ResultType, typename ImplType>
+auto getImpl(ResultType& result, ImplType*, copy_tag) {
+    return std::make_shared<DesiredType>(result);
 }
 
 }  // namespace cider

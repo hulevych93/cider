@@ -22,15 +22,14 @@ FinalClass& FinalClass::operator=(const FinalClass& other) {
   return *this;
 }
 
-FinalClass operator +(const FinalClass& left, const FinalClass& right) {
-    FinalClass cl;
-    cl._number = left._number + right._number;
-    return cl;
+FinalClass operator+(const FinalClass& left, const FinalClass& right) {
+  FinalClass cl;
+  cl._number = left._number + right._number;
+  return cl;
 }
 
-FinalClass::operator bool() const
-{
-    return _condition;
+FinalClass::operator bool() const {
+  return _condition;
 }
 
 FinalClass& FinalClass::operator=(FinalClass&& other) {

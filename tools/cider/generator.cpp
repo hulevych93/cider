@@ -4,11 +4,11 @@
 #include <cppast/cpp_entity_kind.hpp>
 #include <cppast/cpp_enum.hpp>
 #include <cppast/cpp_file.hpp>
+#include <cppast/cpp_friend.hpp>
 #include <cppast/cpp_function.hpp>
 #include <cppast/cpp_function_type.hpp>
 #include <cppast/cpp_member_function.hpp>
 #include <cppast/cpp_member_variable.hpp>
-#include <cppast/cpp_friend.hpp>
 
 #include <cppast/visitor.hpp>
 
@@ -105,14 +105,14 @@ void header_generator::handleMemberFunction(
 }
 
 void header_generator::handleConversionOperator(
-        const cppast::cpp_conversion_op& e,
-        cppast::cpp_access_specifier_kind kind) {
-    m_namespaces(m_out);
+    const cppast::cpp_conversion_op& e,
+    cppast::cpp_access_specifier_kind kind) {
+  m_namespaces(m_out);
 
-    printConversionOpDecl(m_out, m_metadata, e, m_namespaces, nullptr, true);
+  printConversionOpDecl(m_out, m_metadata, e, m_namespaces, nullptr, true);
 
-    m_out << std::endl;
-  }
+  m_out << std::endl;
+}
 
 void header_generator::handleMemberVariable(
     const cppast::cpp_member_variable& e,
@@ -123,17 +123,16 @@ void header_generator::handleMemberVariable(
   }
 }
 
-void header_generator::handleFriend(const cppast::cpp_friend& e)
-{
-    const auto& entity = e.entity();
-    if(entity.has_value()) {
-        const auto* func =
-                dynamic_cast<const cpp_function*>(std::addressof(entity.value()));
-        if(func != nullptr) {
-            m_out << "friend ";
-            handleFreeFunction(*func);
-        }
+void header_generator::handleFriend(const cppast::cpp_friend& e) {
+  const auto& entity = e.entity();
+  if (entity.has_value()) {
+    const auto* func =
+        dynamic_cast<const cpp_function*>(std::addressof(entity.value()));
+    if (func != nullptr) {
+      m_out << "friend ";
+      handleFreeFunction(*func);
     }
+  }
 }
 
 void source_generator::handleClass(const cppast::cpp_class& e, bool enter) {
@@ -187,30 +186,31 @@ void source_generator::handleMemberFunction(
 }
 
 void source_generator::handleConversionOperator(
-        const cppast::cpp_conversion_op& e,
-        cppast::cpp_access_specifier_kind kind) {
-    m_namespaces(m_out);
+    const cppast::cpp_conversion_op& e,
+    cppast::cpp_access_specifier_kind kind) {
+  m_namespaces(m_out);
 
-    printConversionOpDecl(m_out, m_metadata, e, m_namespaces, m_class->name().c_str(), false);
-    printConversionOpBody(m_out, m_metadata, *m_class, e, m_namespaces);
+  printConversionOpDecl(m_out, m_metadata, e, m_namespaces,
+                        m_class->name().c_str(), false);
+  printConversionOpBody(m_out, m_metadata, *m_class, e, m_namespaces);
 
-    m_out << std::endl;
+  m_out << std::endl;
 }
 
-void source_generator::handleFriend(const cppast::cpp_friend &e) {
+void source_generator::handleFriend(const cppast::cpp_friend& e) {
   const auto& entity = e.entity();
-  if(entity.has_value()) {
-      const auto* func =
-              dynamic_cast<const cpp_function*>(std::addressof(entity.value()));
-      if(func != nullptr) {
-          m_namespaces(m_out);
+  if (entity.has_value()) {
+    const auto* func =
+        dynamic_cast<const cpp_function*>(std::addressof(entity.value()));
+    if (func != nullptr) {
+      m_namespaces(m_out);
 
-          printFunctionDecl(m_out, m_metadata, *func, m_namespaces, nullptr, nullptr,
-                            false);
-          printFunctionBody(m_out, m_metadata, *func, m_namespaces, true);
+      printFunctionDecl(m_out, m_metadata, *func, m_namespaces, nullptr,
+                        nullptr, false);
+      printFunctionBody(m_out, m_metadata, *func, m_namespaces, true);
 
-          m_out << std::endl;
-      }
+      m_out << std::endl;
+    }
   }
 }
 
@@ -243,8 +243,8 @@ void handleFile(ast_handler& handler,
                                      info.access);
         break;
       case ::cpp_entity_kind::conversion_op_t:
-        handler.handleConversionOperator(static_cast<const cpp_conversion_op&>(e),
-                                     info.access);
+        handler.handleConversionOperator(
+            static_cast<const cpp_conversion_op&>(e), info.access);
         break;
       case ::cpp_entity_kind::member_variable_t:
         handler.handleMemberVariable(static_cast<const cpp_member_variable&>(e),
@@ -253,7 +253,7 @@ void handleFile(ast_handler& handler,
       case ::cpp_entity_kind::enum_t:
         handler.handleEnum(static_cast<const cpp_enum&>(e), enter);
         break;
-    case ::cpp_entity_kind::friend_t:
+      case ::cpp_entity_kind::friend_t:
         handler.handleFriend(static_cast<const cpp_friend&>(e));
         break;
       case ::cpp_entity_kind::enum_value_t:

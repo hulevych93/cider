@@ -1,15 +1,13 @@
 #include <hjson.h>
 #include <cmath>
+#include <cstdio>
 #include <cstring>
 #include <sstream>
-#include <cstdio>
 #include "hjson_test.h"
-
 
 static std::string _test_string_param(std::string param) {
   return param;
 }
-
 
 void test_value() {
   {
@@ -25,19 +23,18 @@ void test_value() {
     assert(val);
     assert(val == true);
     assert(val != false);
-    assert(true == (bool) val);
-    assert(false != (bool) val);
+    assert(true == (bool)val);
+    assert(false != (bool)val);
     assert(val && val);
     // The assignment statement must not be performed (short-circuit of ||).
 
     assert(!!val);
-    {
-      assert(Hjson::HjsonHooked::Marshal(val) == "true");
-    }
+    { assert(Hjson::HjsonHooked::Marshal(val) == "true"); }
     val = false;
     assert(!val);
     assert(!val.empty());
-    // size() is the number of child elements, can only be > 0 for Vector or Map. 
+    // size() is the number of child elements, can only be > 0 for Vector or
+    // Map.
     assert(val.size() == 0);
     assert(val.to_string() == "false");
     assert(val.to_double() == 0);
@@ -63,9 +60,7 @@ void test_value() {
     assert(val.to_double() == 0);
     assert(val.to_int64() == 0);
     assert(val.to_string() == "null");
-    {
-      assert(Hjson::HjsonHooked::Marshal(val) == "null");
-    }
+    { assert(Hjson::HjsonHooked::Marshal(val) == "null"); }
     assert(val3.to_double() == 0);
     assert(val3.to_int64() == 0);
     assert(val3.to_string() == "");
@@ -116,9 +111,7 @@ void test_value() {
     assert(val.to_double() == 3);
     assert(val.to_int64() == 3);
     assert(val.to_string() == "3.0");
-    {
-      assert(Hjson::HjsonHooked::Marshal(val) == "3.0");
-    }
+    { assert(Hjson::HjsonHooked::Marshal(val) == "3.0"); }
     assert(val.type() != Hjson::HjsonHooked::Type::Int64);
     // The result of the comparison is undefined in C++11.
     // assert(val.begin() == val.end());
@@ -147,9 +140,7 @@ void test_value() {
     assert(val.to_double() == 1.0);
     assert(val.to_int64() == 1);
     assert(val.to_string() == "1");
-    {
-      assert(Hjson::HjsonHooked::Marshal(val) == "1");
-    }
+    { assert(Hjson::HjsonHooked::Marshal(val) == "1"); }
     assert(val.type() == Hjson::HjsonHooked::Type::Int64);
     int i = 2;
     Hjson::HjsonHooked::Value val2(i);
@@ -180,9 +171,7 @@ void test_value() {
     assert(val4.to_double() == -1);
     assert(val4.to_int64() == -1);
     assert(val4.to_string() == "-1");
-    {
-      assert(Hjson::HjsonHooked::Marshal(val4) == "\"-1\"");
-    }
+    { assert(Hjson::HjsonHooked::Marshal(val4) == "\"-1\""); }
     Hjson::HjsonHooked::Value val5(-1);
     assert(val5 == -1);
     assert(val5 < val);
@@ -281,8 +270,8 @@ void test_value() {
     // These two assertions fail in GCC 5.4, which is ok because doubles can
     // only represent integers up to 9007199254000000 (2^53) without precision
     // loss.
-    //assert((val2 + 1) == static_cast<double>(i + 1));
-    //assert((val2 - 1) == static_cast<double>(i - 1));
+    // assert((val2 + 1) == static_cast<double>(i + 1));
+    // assert((val2 - 1) == static_cast<double>(i - 1));
     Hjson::HjsonHooked::Value val6 = 9223372036854775807;
     assert(val6 == 9223372036854775807);
     Hjson::HjsonHooked::Value val7("-9223372036854775806");
@@ -315,7 +304,7 @@ void test_value() {
     val9 += i4;
     assert(val9 == 144115188075855874);
     assert(val9 - i4 == 144115188075855873);
-    assert(i4 - val9  == -144115188075855873);
+    assert(i4 - val9 == -144115188075855873);
     val9 -= i4;
     assert(val9 == 144115188075855873);
     assert(val9 / i4 == val9);
@@ -329,9 +318,12 @@ void test_value() {
   }
 
   {
-    Hjson::HjsonHooked::Value val1("92233720368547758073829419051489548484843823585675828488686");
-    Hjson::HjsonHooked::Value val2("92233720368547758073829419051489548484843823585675828488686.0");
-    Hjson::HjsonHooked::Value val3(92233720368547758073829419051489548484843823585675828488686.0);
+    Hjson::HjsonHooked::Value val1(
+        "92233720368547758073829419051489548484843823585675828488686");
+    Hjson::HjsonHooked::Value val2(
+        "92233720368547758073829419051489548484843823585675828488686.0");
+    Hjson::HjsonHooked::Value val3(
+        92233720368547758073829419051489548484843823585675828488686.0);
     assert(val1.to_double() == val2.to_double());
     assert(val1.to_double() == val3.to_double());
   }
@@ -421,23 +413,28 @@ void test_value() {
     try {
       bool a = val > val2;
       assert(!"Did not throw error when using < operator on values of different types.");
-    } catch(const Hjson::type_mismatch& e) {}
+    } catch (const Hjson::type_mismatch& e) {
+    }
     try {
       bool a = val < val2;
       assert(!"Did not throw error when using < operator on values of different types.");
-    } catch(const Hjson::type_mismatch& e) {}
+    } catch (const Hjson::type_mismatch& e) {
+    }
     try {
       std::string a = val + val2;
       assert(!"Did not throw error when using + operator on values of different types.");
-    } catch(const Hjson::type_mismatch& e) {}
+    } catch (const Hjson::type_mismatch& e) {
+    }
     try {
       double a = val2 - val;
       assert(!"Did not throw error when using - operator on values of different types.");
-    } catch(const Hjson::type_mismatch& e) {}
+    } catch (const Hjson::type_mismatch& e) {
+    }
     try {
       Hjson::HjsonHooked::Value val3 = val - Hjson::HjsonHooked::Value("0");
       assert(!"Did not throw error when using - operator on value of type STRING.");
-    } catch(const Hjson::type_mismatch& e) {}
+    } catch (const Hjson::type_mismatch& e) {
+    }
   }
 
   {
@@ -454,18 +451,21 @@ void test_value() {
     try {
       double fifth = valC.at("fifth");
       assert(!"Did not throw error when calling at() with invalid key.");
-    } catch(const Hjson::index_out_of_bounds& e) {}
+    } catch (const Hjson::index_out_of_bounds& e) {
+    }
     fourth = val["fourth"];
     assert(fourth == val["fourth"]);
     assert(fourth == val.at("fourth"));
     try {
       double fifth = val.at("fifth");
       assert(!"Did not throw error when calling at() with invalid key.");
-    } catch(const Hjson::index_out_of_bounds& e) {}
+    } catch (const Hjson::index_out_of_bounds& e) {
+    }
     try {
       std::string fourthString = val["fourth"];
       assert(!"Did not throw error when assigning double to string.");
-    } catch(const Hjson::type_mismatch& e) {}
+    } catch (const Hjson::type_mismatch& e) {
+    }
     std::string leaft1 = val["first"];
     assert(leaft1 == "leaf1");
     assert(val[std::string("first")] == "leaf1");
@@ -480,7 +480,7 @@ void test_value() {
     char szKey[20];
     sprintf(szKey, "first");
     assert(val[szKey] == "leaf1");
-    char *szKey2 = szKey;
+    char* szKey2 = szKey;
     assert(val[szKey2] == "leaf1");
   }
 
@@ -521,7 +521,8 @@ void test_value() {
     val["first"] = "leaf1";
     Hjson::HjsonHooked::Value undefined = val["first"]["down1"]["down2"];
     assert(!"Did not throw error when using brackets on string Value.");
-  } catch (const Hjson::type_mismatch& e) {}
+  } catch (const Hjson::type_mismatch& e) {
+  }
 
   {
     const Hjson::HjsonHooked::Value val;
@@ -536,7 +537,7 @@ void test_value() {
     assert(undefined.type() == Hjson::HjsonHooked::Type::Undefined);
     // The type of val is set to Map because a MapProxy is created, no easy way
     // to avoid that.
-    //assert(!val.defined());
+    // assert(!val.defined());
   }
 
   {
@@ -584,18 +585,21 @@ void test_value() {
     try {
       val[0] = 0;
       assert(!"Did not throw error when trying to assign Value to Type::Vector index that is out of bounds.");
-    } catch(const Hjson::index_out_of_bounds& e) {}
+    } catch (const Hjson::index_out_of_bounds& e) {
+    }
     try {
       const Hjson::HjsonHooked::Value val2;
       const auto val3 = val2[0];
       assert(!"Did not throw error when trying to access Type::Vector index that is out of bounds.");
-    } catch(const Hjson::index_out_of_bounds& e) {}
+    } catch (const Hjson::index_out_of_bounds& e) {
+    }
     try {
       if (val[0].empty()) {
         assert(!"Did not throw error when trying to access Type::Vector index that is out of bounds.");
       }
       assert(!"Did not throw error when trying to access Type::Vector index that is out of bounds.");
-    } catch(const Hjson::index_out_of_bounds& e) {}
+    } catch (const Hjson::index_out_of_bounds& e) {
+    }
     val.push_back("first");
     val.push_back(2);
     std::string f = val[0];
@@ -605,7 +609,8 @@ void test_value() {
     try {
       val2.push_back(0);
       assert(!"Did not throw error when trying to push_back() on Value that is not a Type::Vector.");
-    } catch(const Hjson::type_mismatch& e) {}
+    } catch (const Hjson::type_mismatch& e) {
+    }
     assert(val[1] == 2);
     assert(val[1].type() == Hjson::HjsonHooked::Type::Int64);
     val[0] = 3;
@@ -614,13 +619,15 @@ void test_value() {
     try {
       val[2] = 2;
       assert(!"Did not throw error when trying to assign Value to Type::Vector index that is out of bounds.");
-    } catch(const Hjson::index_out_of_bounds& e) {}
+    } catch (const Hjson::index_out_of_bounds& e) {
+    }
     try {
       if (val[2].empty()) {
         assert(!"Did not throw error when trying to access Type::Vector index that is out of bounds.");
       }
       assert(!"Did not throw error when trying to access Type::Vector index that is out of bounds.");
-    } catch(const Hjson::index_out_of_bounds& e) {}
+    } catch (const Hjson::index_out_of_bounds& e) {
+    }
   }
 
   {
@@ -656,9 +663,11 @@ void test_value() {
     sub1["sub1"] = "abc";
     sub2["sub2"] = "åäö";
     generatedHjson = Hjson::HjsonHooked::Marshal(val);
-    assert(generatedHjson == "{\n  abc: {\n    sub1: abc\n  }\n  åäö: {\n    sub2: åäö\n  }\n}");
+    assert(generatedHjson ==
+           "{\n  abc: {\n    sub1: abc\n  }\n  åäö: {\n    sub2: åäö\n  }\n}");
 
-    Hjson::HjsonHooked::Value val3 = Hjson::HjsonHooked::Unmarshal(generatedHjson.c_str(), generatedHjson.size());
+    Hjson::HjsonHooked::Value val3 = Hjson::HjsonHooked::Unmarshal(
+        generatedHjson.c_str(), generatedHjson.size());
     assert(val3["abc"].defined());
     assert(val3["åäö"]["sub2"] == val["åäö"]["sub2"]);
     assert(val3.deep_equal(val));
@@ -713,7 +722,8 @@ void test_value() {
     try {
       val2.erase("key1");
       assert(!"Did not throw error when trying to do Type::Map erase on a STRING Value.");
-    } catch(const Hjson::type_mismatch& e) {}
+    } catch (const Hjson::type_mismatch& e) {
+    }
   }
 
   {
@@ -721,7 +731,8 @@ void test_value() {
     try {
       val.erase(1);
       assert(!"Did not throw error when trying to do Type::Vector erase on Type::Undefined Value.");
-    } catch(const Hjson::index_out_of_bounds& e) {}
+    } catch (const Hjson::index_out_of_bounds& e) {
+    }
     val.push_back("first");
     val.push_back("second");
     Hjson::HjsonHooked::Value val2;
@@ -734,22 +745,26 @@ void test_value() {
     try {
       val.erase(1);
       assert(!"Did not throw error when trying to do Type::Vector erase with an out-of-bounds index.");
-    } catch(const Hjson::index_out_of_bounds& e) {}
+    } catch (const Hjson::index_out_of_bounds& e) {
+    }
     val.erase(0);
     assert(val.empty());
     try {
       val.erase(0);
       assert(!"Did not throw error when trying to do Type::Vector erase on an empty Type::Vector.");
-    } catch(const Hjson::index_out_of_bounds& e) {}
+    } catch (const Hjson::index_out_of_bounds& e) {
+    }
     Hjson::HjsonHooked::Value val3(3);
     try {
       val3.erase(0);
       assert(!"Did not throw error when trying to do Type::Vector erase on a Type::Double Value.");
-    } catch(const Hjson::type_mismatch& e) {}
+    } catch (const Hjson::type_mismatch& e) {
+    }
   }
 
   {
-    Hjson::HjsonHooked::Value root = Hjson::HjsonHooked::Unmarshal("[3,4,5]", 8);
+    Hjson::HjsonHooked::Value root =
+        Hjson::HjsonHooked::Unmarshal("[3,4,5]", 8);
     assert(root[0] == 3);
     assert(root[1] == 4);
     assert(root[2] == 5);
@@ -779,7 +794,7 @@ void test_value() {
 
   {
     Hjson::HjsonHooked::Value root, val(0);
-    root.push_back(1.0/val);
+    root.push_back(1.0 / val);
     root.push_back(std::sqrt(-1));
     std::string generatedHjson = Hjson::HjsonHooked::Marshal(root);
     assert(generatedHjson == "[\n  null\n  null\n]");
@@ -816,7 +831,8 @@ void test_value() {
     val1["third"]["first"] = 3;
     val2 = val1.clone();
     val2["third"]["second"] = 4;
-    // size() is the number of child elements, can only be > 0 for Vector or Map. 
+    // size() is the number of child elements, can only be > 0 for Vector or
+    // Map.
     assert(val1["first"].size() == 0);
   }
 
@@ -1046,8 +1062,10 @@ window: {
 
     Hjson::HjsonHooked::DecoderOptions decOpt;
     decOpt.whitespaceAsComments = true;
-    Hjson::HjsonHooked::Value base = Hjson::HjsonHooked::Unmarshal(baseStr, decOpt);
-    Hjson::HjsonHooked::Value ext = Hjson::HjsonHooked::Unmarshal(extStr, decOpt);
+    Hjson::HjsonHooked::Value base =
+        Hjson::HjsonHooked::Unmarshal(baseStr, decOpt);
+    Hjson::HjsonHooked::Value ext =
+        Hjson::HjsonHooked::Unmarshal(extStr, decOpt);
     Hjson::HjsonHooked::Value merged = Hjson::HjsonHooked::Merge(base, ext);
     assert(merged["debug"] == true);
     assert(merged["rect"]["width"] == 800);
@@ -1126,20 +1144,23 @@ beta: a// cm 2
   }
 
   {
-    const char *szTmp = "tmpTestFile.hjson";
+    const char* szTmp = "tmpTestFile.hjson";
 
-    auto root1 = Hjson::HjsonHooked::UnmarshalFromFile("assets/charset_test.hjson");
+    auto root1 =
+        Hjson::HjsonHooked::UnmarshalFromFile("assets/charset_test.hjson");
     assert(!root1.empty());
     try {
       root1 = Hjson::HjsonHooked::UnmarshalFromFile("does_not_exist");
       assert(!"Did not throw error for trying to open non-existing file");
-    } catch(const Hjson::file_error& e) {}
+    } catch (const Hjson::file_error& e) {
+    }
 
     Hjson::HjsonHooked::MarshalToFile(root1, szTmp);
     try {
       Hjson::HjsonHooked::MarshalToFile(root1, "");
       assert(!"Did not throw error for trying to write to invalid filename");
-    } catch(const Hjson::file_error& e) {}
+    } catch (const Hjson::file_error& e) {
+    }
 
     auto root2 = Hjson::HjsonHooked::UnmarshalFromFile(szTmp);
     assert(root2.deep_equal(root1));
@@ -1147,14 +1168,15 @@ beta: a// cm 2
   }
 
   {
-    const char *szTmp = "tmpTestFile.hjson";
+    const char* szTmp = "tmpTestFile.hjson";
     Hjson::HjsonHooked::DecoderOptions decOpt;
     Hjson::HjsonHooked::EncoderOptions encOpt;
 
     decOpt.comments = true;
     encOpt.comments = true;
 
-    auto root1 = Hjson::HjsonHooked::UnmarshalFromFile("assets/comments6_test.hjson", decOpt);
+    auto root1 = Hjson::HjsonHooked::UnmarshalFromFile(
+        "assets/comments6_test.hjson", decOpt);
     assert(!root1.empty());
 
     Hjson::HjsonHooked::MarshalToFile(root1, szTmp, encOpt);
@@ -1187,9 +1209,7 @@ beta: a// cm 2
     val2 = val3["one"];
     assert(val2.get_comment_after() == "after2");
 
-    auto fnValOne = [](const Hjson::HjsonHooked::Value& val) {
-      return val;
-    };
+    auto fnValOne = [](const Hjson::HjsonHooked::Value& val) { return val; };
 
     Hjson::HjsonHooked::Value val4 = fnValOne(val1);
     // val4 was created, should get the comments.
@@ -1199,9 +1219,7 @@ beta: a// cm 2
     // val4 already existed, should not get new comments.
     assert(val4.get_comment_after() == "after1");
 
-    auto fnValTwo = [](Hjson::HjsonHooked::Value val) {
-      return val;
-    };
+    auto fnValTwo = [](Hjson::HjsonHooked::Value val) { return val; };
 
     Hjson::HjsonHooked::Value val5 = fnValTwo(val1);
     // val5 was created, should get the comments.
@@ -1290,7 +1308,7 @@ beta: a// cm 2
     root["twoC"].set_comment_key("\n  // key comment for 2c\n  ");
     root["three"] = 3;
     root["three"].set_comment_before("\n  # beforeThree\n  ");
-    root["three"] = 3; // Should not remove the comment
+    root["three"] = 3;  // Should not remove the comment
     root["three"].set_comment_after("\n  # final comment\n");
     Hjson::HjsonHooked::EncoderOptions opt;
     opt.separator = true;
@@ -1320,7 +1338,7 @@ beta: a// cm 2
     root[3].set_comment_key("\n  // key comment for 2c\n  ");
     root.push_back(3);
     root[4].set_comment_before("\n  # beforeThree\n  ");
-    root[4] = 3; // Should not remove the comment
+    root[4] = 3;  // Should not remove the comment
     root[4].set_comment_after("\n  # final comment\n");
     Hjson::HjsonHooked::EncoderOptions opt;
     opt.separator = true;
@@ -1349,7 +1367,8 @@ beta: a// cm 2
     encOpt.separator = true;
     auto newStr = Hjson::HjsonHooked::Marshal(root, encOpt);
 
-    auto expectedStr = R"([ 0, 1, "c", 3, /*4, 5,*/ 6, "h", /*'i', */"j", "k" ])";
+    auto expectedStr =
+        R"([ 0, 1, "c", 3, /*4, 5,*/ 6, "h", /*'i', */"j", "k" ])";
     assert(newStr == expectedStr);
 
     encOpt.separator = false;
@@ -1398,7 +1417,8 @@ beta: a// cm 2
   }
 
   {
-    auto txt = R"({ k1: 0, k2:1, k3: 'c', k4: 3, /*k5:4, k6 : 5,*/ k7 : 6, k8:'h', /*k9:'i', */k10:'j', k11 : 'k' })";
+    auto txt =
+        R"({ k1: 0, k2:1, k3: 'c', k4: 3, /*k5:4, k6 : 5,*/ k7 : 6, k8:'h', /*k9:'i', */k10:'j', k11 : 'k' })";
 
     Hjson::HjsonHooked::DecoderOptions decOpt;
     decOpt.whitespaceAsComments = true;
@@ -1408,7 +1428,8 @@ beta: a// cm 2
     encOpt.separator = true;
     auto newStr = Hjson::HjsonHooked::Marshal(root, encOpt);
 
-    auto expectedStr = R"({ k1: 0, k2: 1, k3: "c", k4: 3, /*k5:4, k6 : 5,*/ k7: 6, k8: "h", /*k9:'i', */k10: "j", k11: "k" })";
+    auto expectedStr =
+        R"({ k1: 0, k2: 1, k3: "c", k4: 3, /*k5:4, k6 : 5,*/ k7: 6, k8: "h", /*k9:'i', */k10: "j", k11: "k" })";
     assert(newStr == expectedStr);
 
     encOpt.separator = false;
@@ -1556,6 +1577,7 @@ key: val2
       decOpt.duplicateKeyException = true;
       root = Hjson::HjsonHooked::Unmarshal(str, decOpt);
       assert(!"Did not throw error for duplicate key");
-    } catch(const Hjson::syntax_error& e) {}
+    } catch (const Hjson::syntax_error& e) {
+    }
   }
 }

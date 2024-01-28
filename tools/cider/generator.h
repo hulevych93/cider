@@ -42,8 +42,8 @@ struct header_generator final : public generator {
   void handleMemberFunction(const cppast::cpp_member_function& e,
                             cppast::cpp_access_specifier_kind kind) override;
   void handleConversionOperator(
-          const cppast::cpp_conversion_op& e,
-          cppast::cpp_access_specifier_kind kind) override;
+      const cppast::cpp_conversion_op& e,
+      cppast::cpp_access_specifier_kind kind) override;
   void handleMemberVariable(const cppast::cpp_member_variable& e,
                             cppast::cpp_access_specifier_kind kind) override;
   void handleFreeFunction(const cppast::cpp_function& e) override;
@@ -63,8 +63,8 @@ struct source_generator final : public generator {
   void handleMemberFunction(const cppast::cpp_member_function& e,
                             cppast::cpp_access_specifier_kind kind) override;
   void handleConversionOperator(
-          const cppast::cpp_conversion_op& e,
-          cppast::cpp_access_specifier_kind kind) override;
+      const cppast::cpp_conversion_op& e,
+      cppast::cpp_access_specifier_kind kind) override;
   void handleFriend(const cppast::cpp_friend& e) override;
 };
 

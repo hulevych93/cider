@@ -138,6 +138,16 @@ void printFunctionNotify(std::ostream& os,
   }
 }
 
+bool isReference(const MetadataStorage& metadata,
+                        const namespaces_stack& stack,
+                        const cpp_type& type) {
+    if (isUserData(type, stack.nativeScope(),
+                   metadata)) {  // check that pointer to user defined type!
+        return type.kind() == cpp_type_kind::reference_t;
+    }
+    return false;
+}
+
 void printParamTypePure(std::ostream& os,
                         const MetadataStorage& metadata,
                         const namespaces_stack& stack,
@@ -198,7 +208,7 @@ void printParamsDecl(
 
     printParamName(os, param, count);
 
-    if(declaration) {
+    if (declaration) {
       if (const auto& value = param.default_value()) {
         printExpression(os, value.value());
       }
@@ -322,9 +332,7 @@ void printFunctionDecl(std::ostream& os,
                        const char* className,
                        const bool declaration) {
   if constexpr (std::is_same_v<cpp_conversion_op, FunctionType>) {
-
-  } else
-  if constexpr (std::is_same_v<cpp_member_function, FunctionType>) {
+  } else if constexpr (std::is_same_v<cpp_member_function, FunctionType>) {
     const auto opType = isOperator(className, e);
     if (opType && ((*opType) == OperatorType::moveAssignment ||
                    (*opType) == OperatorType::copyAssignment)) {
@@ -335,7 +343,7 @@ void printFunctionDecl(std::ostream& os,
     os << " ";
   } else {
     printParamTypePure(os, metadata, stack, e.return_type());
-      os << " ";
+    os << " ";
   }
 
   if (scopeName != nullptr) {
@@ -347,7 +355,7 @@ void printFunctionDecl(std::ostream& os,
   printParamsDecl(os, metadata, stack, params, declaration);
   os << ")";
   if constexpr (std::is_same_v<cpp_member_function, FunctionType> ||
-          std::is_same_v<cpp_conversion_op, FunctionType>) {
+                std::is_same_v<cpp_conversion_op, FunctionType>) {
     if (is_const(e.cv_qualifier())) {
       os << " const";
     }
@@ -381,14 +389,12 @@ void printFunctionDecl(std::ostream& os,
 }
 
 void printConversionOpDecl(std::ostream& os,
-                       const MetadataStorage& metadata,
-                       const cppast::cpp_conversion_op& e,
-                       const namespaces_stack& stack,
-                       const char* scopeName,
-                       const bool declaration)
-{
-    printFunctionDecl<>(os, metadata, e, stack, scopeName, nullptr,
-                        declaration);
+                           const MetadataStorage& metadata,
+                           const cppast::cpp_conversion_op& e,
+                           const namespaces_stack& stack,
+                           const char* scopeName,
+                           const bool declaration) {
+  printFunctionDecl<>(os, metadata, e, stack, scopeName, nullptr, declaration);
 }
 
 template <typename FunctionType>
@@ -436,12 +442,12 @@ void printFunctionBody(std::ostream& os,
   }
   const auto& genScope = stack.genScope();
   if constexpr (std::is_same_v<cpp_member_function, FunctionType> ||
-          std::is_same_v<cpp_conversion_op, FunctionType>) {
+                std::is_same_v<cpp_conversion_op, FunctionType>) {
     os << "callee->" << e.name() << "(";
   } else {
-      if(scope != nullptr) {
-          os << scope << "::";
-      }
+    if (scope != nullptr) {
+      os << scope << "::";
+    }
     os << e.name() << "(";
   }
   const auto& params = e.parameters();
@@ -450,9 +456,15 @@ void printFunctionBody(std::ostream& os,
 
   if (hasImplemetation) {
     if constexpr (std::is_same_v<cpp_member_function, FunctionType> ||
-            std::is_same_v<cpp_conversion_op, FunctionType>) {
+                  std::is_same_v<cpp_conversion_op, FunctionType>) {
       os << "auto implPtr = cider::getImpl<" << pureReturnTypeName
-         << ">(impl, this);\n";
+         << ">(impl, this,";
+      if(isReference(metadata, stack, e.return_type())) {
+          os << "cider::ref_tag{}";
+      } else {
+          os << "cider::copy_tag{}";
+      }
+      os << ");\n";
     } else {
       if (e.return_type().kind() == cpp_type_kind::pointer_t) {
         os << "auto implPtr = std::shared_ptr<" << pureReturnTypeName
@@ -517,7 +529,8 @@ void printFunctionBody(std::ostream& os,
                        const namespaces_stack& stack,
                        const bool is_friend) {
   const auto scope = stack.nativeScope();
-  printFunctionBody<>(os, metadata, nullptr, is_friend ? nullptr : scope.c_str(), e, stack, false);
+  printFunctionBody<>(os, metadata, nullptr,
+                      is_friend ? nullptr : scope.c_str(), e, stack, false);
 }
 
 void printFunctionBody(std::ostream& os,
@@ -528,17 +541,18 @@ void printFunctionBody(std::ostream& os,
   if (auto operatorType = isOperator(cl, e)) {
     printOperatorBody(os, operatorType.value(), e);
   } else {
-    printFunctionBody<>(os, metadata, cl.name().c_str(), stack.nativeScope().c_str(), e, stack, true);
+    printFunctionBody<>(os, metadata, cl.name().c_str(),
+                        stack.nativeScope().c_str(), e, stack, true);
   }
 }
 
 void printConversionOpBody(std::ostream& os,
-                       const MetadataStorage& metadata,
-                       const cppast::cpp_class& cl,
-                       const cppast::cpp_conversion_op& e,
-                       const namespaces_stack& stack)
-{
-  printFunctionBody<>(os, metadata, cl.name().c_str(), stack.nativeScope().c_str(), e, stack, true);
+                           const MetadataStorage& metadata,
+                           const cppast::cpp_class& cl,
+                           const cppast::cpp_conversion_op& e,
+                           const namespaces_stack& stack) {
+  printFunctionBody<>(os, metadata, cl.name().c_str(),
+                      stack.nativeScope().c_str(), e, stack, true);
 }
 
 void printConstructorDecl(std::ostream& os,

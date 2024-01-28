@@ -55,11 +55,9 @@ endif()
 add_dependencies(hjson_tests hjson_wrap)
 
 target_link_libraries(hjson_tests
-    recorder
     hjson_wrap
     hjson-models
     recorder
-    models
     scripting
     ${Hjson_LIBRARIES}
     ${Lua_LIBRARIES}
