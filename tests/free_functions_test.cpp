@@ -61,12 +61,3 @@ TEST_F(FreeFunctionsTest, script_session_clears_test) {
   EXPECT_EQ(720, hook::calculate_factorial(6));
   EXPECT_EQ("example.calculate_factorial(6)\n", session->getScript());
 }
-
-TEST_F(FreeFunctionsTest, bad_num_cast_script_test) {
-  auto session = makeLuaRecordingSession(LuaExampleModuleName);
-  (void)session;
-
-  EXPECT_THROW(
-      hook::summ_these_two_params(0, std::numeric_limits<unsigned int>::max()),
-      BadNumCast);
-}

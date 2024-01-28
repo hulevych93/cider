@@ -38,19 +38,23 @@ TEST_F(ParamsTestSuite, makeParamNil) {
 }
 
 TEST_F(ParamsTestSuite, makeParamIntegral) {
-  EXPECT_NO_THROW(std::get<int>(makeParam(static_cast<char>(10))));
-  EXPECT_NO_THROW(std::get<int>(makeParam(static_cast<unsigned char>(10))));
-  EXPECT_NO_THROW(std::get<int>(makeParam(static_cast<int>(10))));
-  EXPECT_NO_THROW(std::get<int>(makeParam(static_cast<unsigned int>(10))));
-  EXPECT_NO_THROW(std::get<int>(makeParam(static_cast<short>(10))));
-  EXPECT_NO_THROW(std::get<int>(makeParam(static_cast<unsigned short>(10))));
-  EXPECT_NO_THROW(std::get<int>(makeParam(static_cast<long>(10))));
-  EXPECT_NO_THROW(std::get<int>(makeParam(static_cast<unsigned long>(10))));
+  EXPECT_NO_THROW(std::get<IntegerType>(makeParam(static_cast<char>(10))));
+  EXPECT_NO_THROW(
+      std::get<IntegerType>(makeParam(static_cast<unsigned char>(10))));
+  EXPECT_NO_THROW(std::get<IntegerType>(makeParam(static_cast<int>(10))));
+  EXPECT_NO_THROW(
+      std::get<IntegerType>(makeParam(static_cast<unsigned int>(10))));
+  EXPECT_NO_THROW(std::get<IntegerType>(makeParam(static_cast<short>(10))));
+  EXPECT_NO_THROW(
+      std::get<IntegerType>(makeParam(static_cast<unsigned short>(10))));
+  EXPECT_NO_THROW(std::get<IntegerType>(makeParam(static_cast<long>(10))));
+  EXPECT_NO_THROW(
+      std::get<IntegerType>(makeParam(static_cast<unsigned long>(10))));
 }
 
 TEST_F(ParamsTestSuite, makeParamFloating) {
-  EXPECT_NO_THROW(std::get<float>(makeParam(static_cast<float>(10))));
-  EXPECT_NO_THROW(std::get<float>(makeParam(static_cast<double>(10))));
+  EXPECT_NO_THROW(std::get<double>(makeParam(static_cast<float>(10))));
+  EXPECT_NO_THROW(std::get<double>(makeParam(static_cast<double>(10))));
 }
 
 TEST_F(ParamsTestSuite, makeParamString) {
@@ -82,22 +86,6 @@ TEST_F(ParamsTestSuite, makeReferenceParamUserDataPtr) {
   EXPECT_NO_THROW(std::get<UserDataReferenceParamPtr>(makeParam(&object)));
 }
 
-TEST_F(ParamsTestSuite, makeParamLongNumericBadCast) {
-  EXPECT_THROW(
-      std::get<int>(makeParam(std::numeric_limits<unsigned long>::max())),
-      BadNumCast);
-}
-
-TEST_F(ParamsTestSuite, makeParamDoubleNumericBadCast) {
-  EXPECT_THROW(std::get<int>(makeParam(std::numeric_limits<double>::max())),
-               BadNumCast);
-  try {
-    std::get<int>(makeParam(std::numeric_limits<double>::max()));
-  } catch (const BadNumCast& err) {
-    EXPECT_NE("", err.what());
-  }
-}
-
 TEST_F(ParamsTestSuite, paramVisitorFloating) {
   lua::ParamVisitor visitor;
   const auto oldLocale = std::setlocale(LC_NUMERIC, nullptr);
@@ -113,8 +101,8 @@ TEST_F(ParamsTestSuite, paramVisitorFloating) {
 TEST_F(ParamsTestSuite, paramVisitorInteger) {
   lua::ParamVisitor visitor;
 
-  ASSERT_EQ("12", visitor(12u));
-  ASSERT_EQ("12", visitor(12));
+  ASSERT_EQ("12", visitor(IntegerType{12u}));
+  ASSERT_EQ("12", visitor(IntegerType{12}));
 }
 
 TEST_F(ParamsTestSuite, paramVisitorString) {

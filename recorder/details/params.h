@@ -7,7 +7,6 @@
 #include <optional>
 #include <string>
 
-#include "utils/numeric_cast.h"
 #include "utils/type_utils.h"
 
 #include "recorder/details/sink.h"
@@ -25,7 +24,21 @@ struct Nil final {
   bool operator==(const Nil&) const { return true; }
 };
 
-using GeneratorTypesList = TypeList<Nil, bool, int, float, std::string>;
+using IntegerTypeList = TypeList<char,
+                                 unsigned char,
+                                 short,
+                                 unsigned short,
+                                 int,
+                                 unsigned int,
+                                 long,
+                                 unsigned long,
+                                 long long,
+                                 unsigned long long>;
+
+using IntegerType = utils::ApplyTypeList<std::variant, IntegerTypeList>;
+
+using GeneratorTypesList =
+    TypeList<Nil, bool, IntegerType, double, std::string>;
 
 using Param = utils::ApplyTypeList<
     std::variant,
@@ -123,6 +136,11 @@ std::shared_ptr<UserDataReferenceParam> makeUserData(Type* arg) {
 }
 
 template <typename Type>
+constexpr bool isIntegerType =
+    utils::isTypeInTypeList<std::remove_reference_t<std::remove_cv_t<Type>>,
+                            IntegerTypeList>();
+
+template <typename Type>
 constexpr bool isGeneratorType =
     utils::isTypeInTypeList<PureType<Type>, GeneratorTypesList>();
 
@@ -139,14 +157,8 @@ constexpr bool isStringConvertibleType =
 
 template <typename Type>
 constexpr bool isFloatConvertibleType =
-    !std::is_same_v<std::decay_t<Type>, float> &&
+    !std::is_same_v<std::decay_t<Type>, double> &&
     std::is_floating_point_v<std::decay_t<Type>>;
-
-template <typename Type>
-constexpr bool isIntConverbileType =
-    !std::is_same_v<std::decay_t<Type>, int> &&
-    !std::is_same_v<std::decay_t<Type>, bool> &&
-    std::is_integral_v<std::decay_t<Type>>;
 
 template <typename Type,
           typename std::enable_if_t<isUserData<Type>, void*> = nullptr>
@@ -165,13 +177,13 @@ template <
     typename Type,
     typename std::enable_if_t<isFloatConvertibleType<Type>, void*> = nullptr>
 Param makeParamImpl(const Type arg) {
-  return cider::numCast<float>(arg);
+  return static_cast<double>(arg);
 }
 
 template <typename Type,
-          typename std::enable_if_t<isIntConverbileType<Type>, void*> = nullptr>
+          typename std::enable_if_t<isIntegerType<Type>, void*> = nullptr>
 Param makeParamImpl(const Type arg) {
-  return cider::numCast<int>(arg);
+  return IntegerType{arg};
 }
 
 template <typename Type,

@@ -15,15 +15,15 @@ namespace lua {
 struct ParamVisitor {
   template <
       typename Type,
-      std::enable_if_t<std::is_integral_v<Type> &&
-                       !std::is_same_v<std::decay_t<Type>, bool>>* = nullptr>
-  std::string operator()(Type param) {
-    return std::to_string(param);
+      typename std::enable_if_t<details::isIntegerType<Type>, void*> = nullptr>
+  std::string operator()(const Type arg) {
+    return (*this)(IntegerType{arg});
   }
 
   std::string operator()(const Nil&) const;
+  std::string operator()(const IntegerType& value) const;
   std::string operator()(bool value) const;
-  std::string operator()(float value) const;
+  std::string operator()(double value) const;
   std::string operator()(const char* value) const;
   std::string operator()(const std::string& value) const;
 };

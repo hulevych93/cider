@@ -16,11 +16,10 @@ class CodeSink {
 
   virtual std::string processLocalVar(const std::string& codeTemplate) = 0;
 
-  virtual void processFunctionCall(
-      const void* object,
-      const std::string& resultName,
-      const std::vector<std::string>& args,
-      const std::string& codeTemplate) = 0;
+  virtual void processFunctionCall(const void* object,
+                                   const std::string& resultName,
+                                   const std::vector<std::string>& args,
+                                   const std::string& codeTemplate) = 0;
 };
 
 }  // namespace recorder

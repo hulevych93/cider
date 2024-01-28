@@ -139,13 +139,13 @@ void printFunctionNotify(std::ostream& os,
 }
 
 bool isReference(const MetadataStorage& metadata,
-                        const namespaces_stack& stack,
-                        const cpp_type& type) {
-    if (isUserData(type, stack.nativeScope(),
-                   metadata)) {  // check that pointer to user defined type!
-        return type.kind() == cpp_type_kind::reference_t;
-    }
-    return false;
+                 const namespaces_stack& stack,
+                 const cpp_type& type) {
+  if (isUserData(type, stack.nativeScope(),
+                 metadata)) {  // check that pointer to user defined type!
+    return type.kind() == cpp_type_kind::reference_t;
+  }
+  return false;
 }
 
 void printParamTypePure(std::ostream& os,
@@ -459,10 +459,10 @@ void printFunctionBody(std::ostream& os,
                   std::is_same_v<cpp_conversion_op, FunctionType>) {
       os << "auto implPtr = cider::getImpl<" << pureReturnTypeName
          << ">(impl, this,";
-      if(isReference(metadata, stack, e.return_type())) {
-          os << "cider::ref_tag{}";
+      if (isReference(metadata, stack, e.return_type())) {
+        os << "cider::ref_tag{}";
       } else {
-          os << "cider::copy_tag{}";
+        os << "cider::copy_tag{}";
       }
       os << ");\n";
     } else {

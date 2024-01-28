@@ -66,7 +66,7 @@ std::string ParamVisitor::operator()(const bool value) const {
   return value ? "true" : "false";
 }
 
-std::string ParamVisitor::operator()(const float value) const {
+std::string ParamVisitor::operator()(const double value) const {
   // Independent from "C" locale conversion approach.
   // The decimal delimeter sign is always a dot.
 
@@ -74,6 +74,11 @@ std::string ParamVisitor::operator()(const float value) const {
   stream.imbue(std::locale::classic());
   stream << value;
   return stream.str();
+}
+
+std::string ParamVisitor::operator()(const IntegerType& value) const {
+  return std::visit(
+      [this](const auto& integer) { return std::to_string(integer); }, value);
 }
 
 std::string ParamVisitor::operator()(const char* param) const {

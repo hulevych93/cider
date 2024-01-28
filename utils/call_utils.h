@@ -39,14 +39,14 @@ auto getImpl(ResultType& result, ImplType* callee, ref_tag) {
     if (callee->_impl.get() == std::addressof(result)) {
       return callee->_impl;
     }
-    return std::make_shared<ResultType>(*callee->_impl.get());
   }
-  return std::make_shared<DesiredType>(result);
+  return std::shared_ptr<DesiredType>((ResultTypePure*)std::addressof(result),
+                                      [](void*) {});
 }
 
 template <typename DesiredType, typename ResultType, typename ImplType>
 auto getImpl(ResultType& result, ImplType*, copy_tag) {
-    return std::make_shared<DesiredType>(result);
+  return std::make_shared<DesiredType>(result);
 }
 
 }  // namespace cider
