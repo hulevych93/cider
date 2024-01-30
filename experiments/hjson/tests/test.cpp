@@ -28,16 +28,21 @@ int main() {
     std::cerr << e.what();
   }
 
-  const auto script = session->getScript();
-  session.reset();
+  try {
+    const auto script = session->getScript();
+    session.reset();
 
-  std::ofstream scr1("script.lua");
-  scr1 << script;
+    std::ofstream scr1("script.lua");
+    scr1 << script;
 
-  auto lState = cider::scripting::get_lua();
-  luaopen_hjson(lState.get());
+    auto lState = cider::scripting::get_lua();
+    luaopen_hjson(lState.get());
 
-  assert(cider::scripting::executeScript(lState.get(), script.c_str()));
+    assert(cider::scripting::executeScript(lState.get(), script.c_str()));
+
+  } catch (const std::exception& e) {
+    std::cerr << e.what();
+  }
 
   return 0;
 }

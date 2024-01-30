@@ -14,6 +14,8 @@ std::string produceFunctionCall(const char* moduleName,
 
 std::string produceBinaryOpCall(BinaryOpType);
 
+std::string mutateFunctionName(const char* name);
+
 }  // namespace lua
 }  // namespace recorder
 }  // namespace cider

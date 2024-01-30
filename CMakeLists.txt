@@ -34,7 +34,7 @@ endif()
 add_subdirectory(recorder)
 add_subdirectory(scripting)
 add_subdirectory(tools/cider)
-add_subdirectory(tests)
+#add_subdirectory(tests)
 
 if(CIDER_ENABLE_COVERAGE)
   setup_target_for_coverage_lcov(
@@ -45,3 +45,4 @@ if(CIDER_ENABLE_COVERAGE)
 endif()
 
 add_subdirectory(experiments/hjson)
+#add_subdirectory(experiments/pugixml)

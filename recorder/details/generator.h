@@ -16,11 +16,13 @@ using FunctionCodeProducer = std::string (*)(const char* moduleName,
                                              bool hasReturnValue,
                                              bool object);
 using BinaryOpCodeProducer = std::string (*)(BinaryOpType);
+using FunctionNameMutator = std::string (*)(const char* name);
 
 struct LanguageContext final {
   ParamCodeProducer paramProducer = nullptr;
   FunctionCodeProducer funcProducer = nullptr;
   BinaryOpCodeProducer binaryOpProducer = nullptr;
+  FunctionNameMutator functionNameMutator = nullptr;
 };
 
 class ScriptGenerator final {
