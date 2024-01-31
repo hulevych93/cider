@@ -58,7 +58,7 @@ struct UserDataValueParam {
 struct UserDataReferenceParam : UserDataValueParam {
  public:
   virtual ~UserDataReferenceParam() = default;
-  virtual std::string registerLocal(CodeSink& sink) = 0;
+  virtual LocalVar registerLocal(CodeSink& sink) = 0;
 };
 
 template <typename Type>
@@ -95,7 +95,7 @@ struct ReferenceUserDataValueParamImpl final : public UserDataReferenceParam {
     return sink.searchForLocalVar(_address);
   }
 
-  std::string registerLocal(CodeSink& sink) override {
+  LocalVar registerLocal(CodeSink& sink) override {
     return sink.registerLocalVar(_address);
   }
 

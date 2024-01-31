@@ -35,33 +35,30 @@ const char* includes = R"(
 %include <std_vector.i>
 %include <stdint.i>
 
-%rename(equalOp) operator =;
-%rename(plusEqualOp) operator +=;
-%rename(minusEqualOp) operator -=;
-%rename(multiplyEqualOp) operator *=;
-%rename(divideEqualOp) operator /=;
-%rename(percentEqualOp) operator %=;
-%rename(plusOp) operator +;
-%rename(minusOp) operator -;
-%rename(multiplyOp) operator *;
-%rename(divideOp) operator /;
-%rename(percentOp) operator %;
-%rename(notOp) operator !;
-%rename(indexIntoConstOp) operator[](unsigned idx) const;
-%rename(indexIntoOp) operator[](unsigned idx);
-%rename(functorOp) operator ();
-%rename(equalEqualOp) operator ==;
-%rename(notEqualOp) operator !=;
-%rename(lessThanOp) operator <;
-%rename(lessThanEqualOp) operator <=;
-%rename(greaterThanOp) operator >;
-%rename(greaterThanEqualOp) operator >=;
-%rename(andOp) operator &&;
-%rename(orOp) operator ||;
-%rename(plusPlusPrefixOp) operator++();
-%rename(plusPlusPostfixOp) operator++(int);
-%rename(minusMinusPrefixOp) operator--();
-%rename(minusMinusPostfixOp) operator--(int);
+%rename(assignOp) *::operator =;
+%rename(plusEqualOp) *::operator +=;
+%rename(minusEqualOp) *::operator -=;
+%rename(multiplyEqualOp) *::operator *=;
+%rename(divideEqualOp) *::operator /=;
+%rename(percentEqualOp) *::operator %=;
+%rename(plusOp) *::operator +;
+%rename(minusOp) *::operator -;
+%rename(multiplyOp) *::operator *;
+%rename(divideOp) *::operator /;
+%rename(percentOp) *::operator %;
+%rename(notOp) *::operator !;
+%rename(indexIntoOp) *::operator [];
+%rename(functorOp) *::operator ();
+%rename(equalEqualOp) *::operator ==;
+%rename(notEqualOp) *::operator !=;
+%rename(lessThanOp) *::operator <;
+%rename(lessThanEqualOp) *::operator <=;
+%rename(greaterThanOp) *::operator >;
+%rename(greaterThanEqualOp) *::operator >=;
+%rename(andOp) *::operator &&;
+%rename(orOp) *::operator ||;
+%rename(plusPlusPrefixOp) *::operator ++;
+%rename(minusMinusPrefixOp) *::operator --;
 
 %rename(toBool) *::operator bool;
 %rename(toFloat) *::operator float;
@@ -78,7 +75,8 @@ const char* includes = R"(
 %rename(toUnsignedLong) *::operator unsigned long;
 %rename(toUnsignedLongLong) *::operator unsigned long long;
 %rename(toString) *::operator std::string;
-%rename(toConstCharString) *::operator const char*;
+%rename(toBasicString) *::operator basic_string;
+%rename(toConstCharString) *::operator const char *;
 
 )";
 

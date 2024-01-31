@@ -56,8 +56,11 @@ class CodeSinkImpl : public CodeSink {
     return getObjectLocal(object);
   }
 
-  std::string registerLocalVar(const void* object) override {
-    return suggestLocalName(object);
+  LocalVar registerLocalVar(const void* object) override {
+    LocalVar var;
+    var.isNew = IsAbsent(object);
+    var.name = suggestLocalName(object);
+    return var;
   }
 
  private:
@@ -75,6 +78,11 @@ class CodeSinkImpl : public CodeSink {
     }
 
     return std::string{"object"} + "_" + std::to_string(++_localCounter);
+  }
+
+  bool IsAbsent(const void* object) const {
+      const auto it = _locals.find(object);
+      return it == _locals.end();
   }
 
   std::string getObjectLocal(const void* object) const {
@@ -114,7 +122,12 @@ std::string nullParamProcessor(const Param&, CodeSink&) {
       "nullParamProcessor for script generator is set."};
 }  // LCOV_EXCL_LINE
 
-std::string nullFuncProcessor(const char*, const char*, size_t, bool, bool) {
+std::string nullFuncProcessor(const char*,
+                              const char*,
+                              const bool,
+                              const bool,
+                              size_t,
+                              bool) {
   throw ScriptGenerationError{"nullFuncProcessor for script generator is set."};
 }  // LCOV_EXCL_LINE
 
@@ -152,23 +165,25 @@ ScriptGenerator::~ScriptGenerator() = default;
 void ScriptGenerator::operator()(const Function& context) {
   const auto result = processResult(context.retVal);
   const auto mutatedName = _langContext.functionNameMutator(context.name);
+
   const auto codeTemplate =
       _langContext.funcProducer(_module.c_str(), mutatedName.c_str(),
-                                context.params.size(), !result.empty(), false);
+                                context.params.size(), !result.name.empty(), result.isNew, false);
 
   const auto args = produceArgs(context.params);
-  _sink->processFunctionCall(nullptr, result, args, codeTemplate);
+  _sink->processFunctionCall(nullptr, result.name, args, codeTemplate);
 }
 
 void ScriptGenerator::operator()(const ClassMethod& context) {
   const auto result = processResult(context.method.retVal);
   const auto mutatedName = _langContext.functionNameMutator(context.method.name);
+
   const auto codeTemplate = _langContext.funcProducer(
       _module.c_str(), mutatedName.c_str(), context.method.params.size(),
-      !result.empty(), true);
+      !result.name.empty(), result.isNew, true);
 
   const auto args = produceArgs(context.method.params);
-  _sink->processFunctionCall(context.objectAddress, result, args, codeTemplate);
+  _sink->processFunctionCall(context.objectAddress, result.name, args, codeTemplate);
 }
 
 void ScriptGenerator::operator()(const ClassBinaryOp& context) {
@@ -189,7 +204,7 @@ std::vector<std::string> ScriptGenerator::produceArgs(
   return args;
 }
 
-std::string ScriptGenerator::processResult(const Param& param) {
+LocalVar ScriptGenerator::processResult(const Param& param) {
   if (auto* userData = std::get_if<UserDataReferenceParamPtr>(&param)) {
     return (*userData)->registerLocal(*_sink);
   }

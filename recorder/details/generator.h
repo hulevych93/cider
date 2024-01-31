@@ -11,9 +11,10 @@ namespace recorder {
 
 using ParamCodeProducer = std::string (*)(const Param& param, CodeSink& sink);
 using FunctionCodeProducer = std::string (*)(const char* moduleName,
-                                             const char* name,
+                                             const char* functionName,
+                                             const bool localNeeded,
+                                             const bool isNew,
                                              size_t paramCount,
-                                             bool hasReturnValue,
                                              bool object);
 using BinaryOpCodeProducer = std::string (*)(BinaryOpType);
 using FunctionNameMutator = std::string (*)(const char* name);
@@ -40,7 +41,8 @@ class ScriptGenerator final {
 
  private:
   std::vector<std::string> produceArgs(const Params& params) const;
-  std::string processResult(const Param& param);
+
+  LocalVar processResult(const Param& param);
 
  private:
   std::string _module;

@@ -6,11 +6,17 @@
 namespace cider {
 namespace recorder {
 
+struct LocalVar final
+{
+    std::string name;
+    bool isNew = false;
+};
+
 class CodeSink {
  public:
   virtual ~CodeSink() = default;
 
-  virtual std::string registerLocalVar(const void* object) = 0;
+  virtual LocalVar registerLocalVar(const void* object) = 0;
 
   virtual std::string searchForLocalVar(const void* object) const = 0;
 

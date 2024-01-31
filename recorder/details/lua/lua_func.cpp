@@ -7,13 +7,17 @@ namespace recorder {
 namespace lua {
 
 std::string produceFunctionCall(const char* moduleName,
-                                const char* name,
+                                const char* functionName,
+                                const bool localNeeded,
+                                const bool isNew,
                                 size_t paramCount,
-                                const bool keepResultAsLocalVar,
-                                const bool object) {
+                                bool object) {
   std::string funcTemplate;
-  if (keepResultAsLocalVar) {
-    funcTemplate = "local {} = ";
+  if (localNeeded) {
+      if(isNew) {
+          funcTemplate += "local ";
+      }
+      funcTemplate += "{} = ";
   }
   if (object) {
     funcTemplate += "{}:";
@@ -21,7 +25,7 @@ std::string produceFunctionCall(const char* moduleName,
     funcTemplate += moduleName;
     funcTemplate += ".";
   }
-  funcTemplate += name;
+  funcTemplate += functionName;
   constexpr const char* ParamPlaceholer = "{}";
   funcTemplate += "(";
   for (auto i = 0u; i < paramCount; ++i) {
@@ -45,62 +49,55 @@ std::string produceBinaryOpCall(const BinaryOpType type) {
   return funcTemplate;
 }
 
-/*%rename(equalOp) operator =;
-%rename(plusEqualOp) operator +=;
-%rename(minusEqualOp) operator -=;
-%rename(multiplyEqualOp) operator *=;
-%rename(divideEqualOp) operator /=;
-%rename(percentEqualOp) operator %=;
-%rename(plusOp) operator +;
-%rename(minusOp) operator -;
-%rename(multiplyOp) operator *;
-%rename(divideOp) operator /;
-%rename(percentOp) operator %;
-%rename(notOp) operator !;
-%rename(indexIntoConstOp) operator[](unsigned idx) const;
-%rename(indexIntoOp) operator[](unsigned idx);
-%rename(functorOp) operator ();
-%rename(equalEqualOp) operator ==;
-%rename(notEqualOp) operator !=;
-%rename(lessThanOp) operator <;
-%rename(lessThanEqualOp) operator <=;
-%rename(greaterThanOp) operator >;
-%rename(greaterThanEqualOp) operator >=;
-%rename(andOp) operator &&;
-%rename(orOp) operator ||;
-%rename(plusPlusPrefixOp) operator++();
-%rename(plusPlusPostfixOp) operator++(int);
-%rename(minusMinusPrefixOp) operator--();
-%rename(minusMinusPostfixOp) operator--(int);
-
-%rename(toBool) *::operator bool;
-%rename(toFloat) *::operator float;
-%rename(toDouble) *::operator double;
-%rename(toLongDouble) *::operator long double;
-%rename(toChar) *::operator char;
-%rename(toUnsignedChar) *::operator unsigned char;
-%rename(toShort) *::operator short;
-%rename(toInt) *::operator int;
-%rename(toLong) *::operator long;
-%rename(toLongLong) *::operator long long;
-%rename(toUnsignedShort) *::operator unsigned short;
-%rename(toUnsignedInt) *::operator unsigned int;
-%rename(toUnsignedLong) *::operator unsigned long;
-%rename(toUnsignedLongLong) *::operator unsigned long long;
-%rename(toString) *::operator std::string;
-%rename(toConstCharString) *::operator const char*;
-*/
-
 std::string mutateFunctionName(const char* name) {
-    static const std::unordered_map<std::string, std::string> Mapping = {
-        {"operator bool", "toBool"},
-        {"operator float", "toFloat"}
-    };
-    const auto it = Mapping.find(name);
-    if(it != Mapping.end()) {
-        return it->second;
-    }
-    return name;
+  static const std::unordered_map<std::string, std::string> Mapping = {
+      {"operator bool", "toBool"},
+      {"operator float", "toFloat"},
+      {"operator double", "toDouble"},
+      {"operator long double", "toLongDouble"},
+      {"operator char", "toChar"},
+      {"operator short", "toShort"},
+      {"operator int", "toInt"},
+      {"operator long", "toLong"},
+      {"operator long long", "toLongLong"},
+      {"operator unsigned char", "toUnsignedChar"},
+      {"operator unsigned short", "toUnsignedShort"},
+      {"operator unsigned int", "toUnsignedInt"},
+      {"operator unsigned long", "toUnsignedLong"},
+      {"operator unsigned long long", "toUnsignedLongLong"},
+      {"operator string", "toString"},
+      {"operator basic_string", "toBasicString"},
+      {"operator const char *", "toConstCharString"},
+      {"operator=", "assignOp"},
+      {"operator<", "lessThanOp"},
+      {"operator+=", "plusEqualOp"},
+      {"operator<=", "lessThanEqualOp"},
+      {"operator-=", "minusEqualOp"},
+      {"operator>", "greaterThanOp"},
+      {"operator*=", "multiplyEqualOp"},
+      {"operator>=", "greaterThanEqualOp"},
+      {"operator/=", "divideEqualOp"},
+      {"operator&&", "andOp"},
+      {"operator%=", "percentEqualOp"},
+      {"operator||", "orOp"},
+      {"operator+", "plusOp"},
+      {"operator++", "plusPlusPrefixOp"},
+      {"operator-", "minusOp"},
+      {"operator--", "minusMinusPrefixOp"},
+      {"operator/", "divideOp"},
+      {"operator*", "multiplyOp"},
+      {"operator%", "percentOp"},
+      {"operator!", "notOp"},
+      {"operator[]", "indexIntoOp"},
+      {"operator()", "functorOp"},
+      {"operator==", "equalEqualOp"},
+      {"operator!=", "notEqualOp"},
+  };
+  const auto it = Mapping.find(name);
+  if (it != Mapping.end()) {
+    return it->second;
+  }
+  return name;
 }
 
 }  // namespace lua
