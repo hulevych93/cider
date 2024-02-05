@@ -35,7 +35,6 @@ function(cider_generate_swig)
     file(MAKE_DIRECTORY "${SWIG_OUTPUT_DIR}")
 
     get_filename_component(FILE_NAME "${SWIG_FILE}" NAME_WE)
-    get_filename_component(SWIG_DIRECTORY ${CIDER_SWIG_EXECUTABLE} DIRECTORY)
 
     add_custom_command(OUTPUT "${SWIG_OUTPUT_DIR}/${FILE_NAME}_wrap.cpp" "${SWIG_OUTPUT_DIR}/${FILE_NAME}_wrap.h"
                        COMMAND "${CIDER_SWIG_EXECUTABLE}" -c++ -${SWIG_LANGUAGE} ${SWIG_GENERATOR_ARGS}
@@ -47,15 +46,15 @@ function(cider_generate_swig)
                       -xmlout "${SWIG_OUTPUT_DIR}/${FILE_NAME}_wrap.xml"
                       ${SWIG_DEFINES}
                       ${SWIG_FILE}
-              WORKING_DIRECTORY ${SWIG_DIRECTORY}
+              WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/swig/lua"
               DEPENDS ${SWIG_DEPENDS}
-              COMMENT "Generating swig wrapper files...")
+              COMMENT "Generating swig wrapper files... ${SWIG_DIRECTORY}")
 
     if(SWIG_EXTERNAL_RUNTIME)
       add_custom_command(OUTPUT "${SWIG_OUTPUT_DIR}/swig${SWIG_LANGUAGE}run.h"
                 COMMAND "${CIDER_SWIG_EXECUTABLE}" -c++ -${SWIG_LANGUAGE} ${SWIG_FLAGS} -cppext cpp
                         -external-runtime "${SWIG_OUTPUT_DIR}/swig${SWIG_LANGUAGE}run.h"
-                  WORKING_DIRECTORY ${SWIG_DIRECTORY}
+                  WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/swig/lua"
                   COMMENT "Generating swig runtime headers...")
       endif()
 endfunction()

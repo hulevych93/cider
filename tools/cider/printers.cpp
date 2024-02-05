@@ -115,16 +115,26 @@ void printConstructorNotify(std::ostream& os, const bool hasNoArgs) {
   }
 }
 
+template <typename FunctionType>
 void printFunctionNotify(std::ostream& os,
-                         const bool member,
+                         const FunctionType& e,
                          const std::optional<std::string> returnName,
                          const bool hasNoArgs) {
   os << "CIDER_NOTIFY_";
-  if (member) {
+  if constexpr (std::is_same_v<cpp_member_function, FunctionType>) {
+    if(isUnOperator(e)) {
+      os << "UNARY";
+    } else {
+      os << "METHOD";
+    }
+  }
+  if constexpr (std::is_same_v<cpp_conversion_op, FunctionType>) {
     os << "METHOD";
-  } else {
+  }
+  if constexpr (std::is_same_v<cpp_function, FunctionType>) {
     os << "FREE_FUNCTION";
   }
+
   if (hasNoArgs) {
     os << "_NO_ARGS";
   }
@@ -403,8 +413,7 @@ void printFunctionBody(std::ostream& os,
                        const char* obj,
                        const char* scope,
                        const FunctionType& e,
-                       const namespaces_stack& stack,
-                       const bool member) {
+                       const namespaces_stack& stack) {
   os << "{\n";
   os << "try {\n";
   std::string pureReturnTypeName;
@@ -486,7 +495,7 @@ void printFunctionBody(std::ostream& os,
     os << "(std::move(implPtr));\n" << std::endl;
   }
 
-  printFunctionNotify(os, member, notificationName, params.empty());
+  printFunctionNotify(os, e, notificationName, params.empty());
 
   printParamsVal(os, metadata, params, stack);
   os << ");\n";
@@ -530,7 +539,7 @@ void printFunctionBody(std::ostream& os,
                        const bool is_friend) {
   const auto scope = stack.nativeScope();
   printFunctionBody<>(os, metadata, nullptr,
-                      is_friend ? nullptr : scope.c_str(), e, stack, false);
+                      is_friend ? nullptr : scope.c_str(), e, stack);
 }
 
 void printFunctionBody(std::ostream& os,
@@ -542,7 +551,7 @@ void printFunctionBody(std::ostream& os,
     printOperatorBody(os, operatorType.value(), e);
   } else {
     printFunctionBody<>(os, metadata, cl.name().c_str(),
-                        stack.nativeScope().c_str(), e, stack, true);
+                        stack.nativeScope().c_str(), e, stack);
   }
 }
 
@@ -552,7 +561,7 @@ void printConversionOpBody(std::ostream& os,
                            const cppast::cpp_conversion_op& e,
                            const namespaces_stack& stack) {
   printFunctionBody<>(os, metadata, cl.name().c_str(),
-                      stack.nativeScope().c_str(), e, stack, true);
+                      stack.nativeScope().c_str(), e, stack);
 }
 
 void printConstructorDecl(std::ostream& os,

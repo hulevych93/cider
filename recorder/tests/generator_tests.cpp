@@ -27,7 +27,8 @@ class GeneratorTestSuite : public testing::Test {
       makeAction((void*)nullptr, BinaryOpType::Assignment, someParam);
 };
 
-std::string produceAggregateCode(const GeneratorTestSuite::SomeParam&,
+std::string produceAggregateCode(const std::string&,
+                                 const GeneratorTestSuite::SomeParam&,
                                  CodeSink& sink) {
   std::string code;
   code += "local {var} = {bar} {car}\n";

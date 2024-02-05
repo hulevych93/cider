@@ -1,6 +1,9 @@
 #include "swig.h"
 
 #include <cppast/cpp_file.hpp>
+#include <cppast/cpp_class.hpp>
+#include <cppast/cpp_entity_kind.hpp>
+#include <cppast/cpp_enum.hpp>
 
 #include "options.h"
 #include "utils.h"
@@ -10,6 +13,13 @@
 using namespace cppast;
 
 namespace {
+
+static class NullBuffer : public std::streambuf {
+public:
+    int overflow(int c) { return c; }
+} null_buffer;
+
+static std::ostream null_stream(&null_buffer);
 
 using FilesList = std::list<cider::tool::FileMetadata>;
 
@@ -30,68 +40,25 @@ void traverse(FilesList& files,
   files.erase(iter);
 }
 
-const char* includes = R"(
-%include <std_string.i>
-%include <std_vector.i>
-%include <stdint.i>
-
-%rename(assignOp) *::operator =;
-%rename(plusEqualOp) *::operator +=;
-%rename(minusEqualOp) *::operator -=;
-%rename(multiplyEqualOp) *::operator *=;
-%rename(divideEqualOp) *::operator /=;
-%rename(percentEqualOp) *::operator %=;
-%rename(plusOp) *::operator +;
-%rename(minusOp) *::operator -;
-%rename(multiplyOp) *::operator *;
-%rename(divideOp) *::operator /;
-%rename(percentOp) *::operator %;
-%rename(notOp) *::operator !;
-%rename(indexIntoOp) *::operator [];
-%rename(functorOp) *::operator ();
-%rename(equalEqualOp) *::operator ==;
-%rename(notEqualOp) *::operator !=;
-%rename(lessThanOp) *::operator <;
-%rename(lessThanEqualOp) *::operator <=;
-%rename(greaterThanOp) *::operator >;
-%rename(greaterThanEqualOp) *::operator >=;
-%rename(andOp) *::operator &&;
-%rename(orOp) *::operator ||;
-%rename(plusPlusPrefixOp) *::operator ++;
-%rename(minusMinusPrefixOp) *::operator --;
-
-%rename(toBool) *::operator bool;
-%rename(toFloat) *::operator float;
-%rename(toDouble) *::operator double;
-%rename(toLongDouble) *::operator long double;
-%rename(toChar) *::operator char;
-%rename(toUnsignedChar) *::operator unsigned char;
-%rename(toShort) *::operator short;
-%rename(toInt) *::operator int;
-%rename(toLong) *::operator long;
-%rename(toLongLong) *::operator long long;
-%rename(toUnsignedShort) *::operator unsigned short;
-%rename(toUnsignedInt) *::operator unsigned int;
-%rename(toUnsignedLong) *::operator unsigned long;
-%rename(toUnsignedLongLong) *::operator unsigned long long;
-%rename(toString) *::operator std::string;
-%rename(toBasicString) *::operator basic_string;
-%rename(toConstCharString) *::operator const char *;
-
-)";
-
-}  // namespace
+}  // namespaceå
 
 namespace cider {
 namespace tool {
 
 swig_generator::swig_generator(std::ostream& out,
                                const std::string& outPath,
+                               const std::string& swigDir,
                                const std::string& module,
+                               const std::string& genScope,
                                const MetadataStorage& metadata)
-    : m_out(out), m_outPath(outPath), m_module(module), m_metadata(metadata) {
+    : m_out(out),
+      m_outPath(outPath),
+      m_swigDir(swigDir),
+      m_module(module),
+      m_metadata(metadata),
+      m_namespaces(genScope) {
   m_out << "%module " << m_module << "\n";
-  m_out << includes;
+  m_out << "%include <" << m_swigDir << "/lua/main.swig>\n\n";
 }
 
 void swig_generator::finish() {
@@ -114,12 +81,31 @@ void swig_generator::finish() {
   }
 }
 
+void swig_generator::handleNamespace(const cpp_entity& e, const bool enter) {
+    if (enter) {
+        m_namespaces.push(null_stream, e.name());
+    } else {
+        m_namespaces.pop(null_stream);
+    }
+}
+
+void swig_generator::handleEnum(const cppast::cpp_enum& e, const bool enter)
+{
+    if(enter) {
+        const auto fullName = m_namespaces.nativeScope() + "::" + m_namespaces.genScope() + "::" + e.name();
+        m_out << "%template(" + e.name() + ") cider::TypedValue<" + fullName + ">;\n";
+        m_out << "decl_enum_based(" + fullName + ")\n";
+    }
+}
+
 void printSwig(std::ostream& os,
                const std::string& outPath,
+               const std::string& swigDir,
                const std::string& moduleName,
+               const std::string& genScope,
                const MetadataStorage& metadata,
                const std::vector<const cppast::cpp_file*>& files) {
-  swig_generator swig_gen(os, outPath, moduleName, metadata);
+  swig_generator swig_gen(os, outPath, swigDir, moduleName,genScope, metadata);
   for (const auto& file : files) {
     handleFile(swig_gen, *file);
   }

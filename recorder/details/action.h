@@ -20,6 +20,14 @@ struct ClassMethod final {
   Function method;
 };
 
+enum class UnaryOpType { Minus };
+
+struct ClassUnaryOp final {
+  const void* objectAddress;
+  UnaryOpType opName = UnaryOpType::Minus;
+  Param retVal;
+};
+
 enum class BinaryOpType { Assignment };
 
 struct ClassBinaryOp final {
@@ -28,7 +36,7 @@ struct ClassBinaryOp final {
   Param param;
 };
 
-using Action = std::variant<Function, ClassMethod, ClassBinaryOp>;
+using Action = std::variant<Function, ClassMethod, ClassBinaryOp, ClassUnaryOp>;
 
 namespace details {
 
@@ -80,6 +88,13 @@ Action makeAction(const void* object,
                   BinaryOpType type,
                   const ParamType& param) {
   return ClassBinaryOp{object, type, makeParam(param)};
+}  // LCOV_EXCL_LINE
+
+template <typename ReturnType>
+Action makeAction(const void* object,
+                  const ReturnType& retVal,
+                  UnaryOpType type) {
+    return ClassUnaryOp{object, type, makeParam(retVal)};
 }  // LCOV_EXCL_LINE
 
 }  // namespace recorder

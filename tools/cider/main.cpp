@@ -122,6 +122,8 @@ int main(int argc, char* argv[]) {
       cppast::resolve_includes(parser, file.value(), config);
     }
 
+    const auto genScope = options["namespace"].as<std::string>();
+
     for (const auto& path : paths) {
       auto file = parser.parse(path, config);
       if (file) {
@@ -141,11 +143,22 @@ int main(int argc, char* argv[]) {
         print_error("missing swig module name argument");
       }
 
+      std::string swig_dir;
+      if (options.count("swig_directory")) {
+        swig_dir = options["swig_directory"].as<std::string>();
+        if (swig_dir.empty()) {
+          print_error("missing swig module name argument");
+        }
+      } else {
+        print_error("missing swig_directory argument");
+        return 1;
+      }
+
       const auto outSwigFilePath =
           getOutputFilePathWithoutExtension(moduleName, outDir);
 
       std::ofstream swigStream(outSwigFilePath + ".swig");
-      printSwig(swigStream, outDir, moduleName, metadata, files);
+      printSwig(swigStream, outDir, swig_dir, moduleName, genScope, metadata, files);
 
       if (options.count("lua")) {
         const auto outLuaFilePath =
@@ -163,8 +176,6 @@ int main(int argc, char* argv[]) {
     for (const auto& file : files) {
       const auto outFilePath =
           getOutputFilePathWithoutExtension(file->name(), outDir);
-
-      const auto genScope = options["namespace"].as<std::string>();
 
       std::ofstream headerStream(outFilePath + ".h");
       printHeader(headerStream, metadata, genScope, *file);

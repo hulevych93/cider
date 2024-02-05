@@ -20,11 +20,15 @@ class TestClass final {
   TestClass() {}
 };
 
-std::string produceAggregateCode(const TestStruct&, CodeSink&) {
+std::string produceAggregateCode(const std::string&,
+                                 const TestStruct&,
+                                 CodeSink&) {
   return {};
 }
 
-std::string produceAggregateCode(const TestEnum, CodeSink&) {
+std::string produceAggregateCode(const std::string&,
+                                 const TestEnum,
+                                 CodeSink&) {
   return std::string{};
 }
 
@@ -87,7 +91,8 @@ TEST_F(ParamsTestSuite, makeReferenceParamUserDataPtr) {
 }
 
 TEST_F(ParamsTestSuite, paramVisitorFloating) {
-  lua::ParamVisitor visitor;
+  lua::ParamVisitor visitor("test");
+  ;
   const auto oldLocale = std::setlocale(LC_NUMERIC, nullptr);
   // Some platforms may not have the "De_de" locale.
   if (std::setlocale(LC_NUMERIC, "DE_de.utf-8")) {
@@ -99,34 +104,34 @@ TEST_F(ParamsTestSuite, paramVisitorFloating) {
 }
 
 TEST_F(ParamsTestSuite, paramVisitorInteger) {
-  lua::ParamVisitor visitor;
+  lua::ParamVisitor visitor("test");
 
-  ASSERT_EQ("12", visitor(IntegerType{12u}));
-  ASSERT_EQ("12", visitor(IntegerType{12}));
+  ASSERT_EQ("test.UInt8(12)", visitor(IntegerType{12u}));
+  ASSERT_EQ("test.Int8(12)", visitor(IntegerType{12}));
 }
 
 TEST_F(ParamsTestSuite, paramVisitorString) {
-  lua::ParamVisitor visitor;
+  lua::ParamVisitor visitor("test");
 
   ASSERT_EQ("\'str\'", visitor(std::string{"str"}));
   ASSERT_EQ("\'str\'", visitor("str"));
 }
 
 TEST_F(ParamsTestSuite, paramVisitorBoolean) {
-  lua::ParamVisitor visitor;
+  lua::ParamVisitor visitor("test");
 
   ASSERT_EQ("true", visitor(true));
   ASSERT_EQ("false", visitor(false));
 }
 
 TEST_F(ParamsTestSuite, paramVisitorNil) {
-  lua::ParamVisitor visitor;
+  lua::ParamVisitor visitor("test");
 
   ASSERT_EQ("nil", visitor(Nil{}));
 }
 
 TEST_F(ParamsTestSuite, stringParamEscapeTest) {
-  lua::ParamVisitor visitor;
+  lua::ParamVisitor visitor("test");
 
   ASSERT_EQ("\'str\\n\'", visitor("str\n"));
   ASSERT_EQ("\'str\\'\'", visitor("str\'"));

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <string>
 #include <optional>
+#include <string>
 
 #include "recorder/details/action.h"
 
@@ -16,6 +16,9 @@ std::string produceFunctionCall(const char* moduleName,
                                 bool object = false);
 
 std::string produceBinaryOpCall(BinaryOpType);
+std::string produceUnaryOpCall(const bool localNeeded,
+                               const bool isNew,
+                               const UnaryOpType);
 
 std::string mutateFunctionName(const char* name);
 

@@ -31,7 +31,7 @@ TEST_F(ReferenceReturnTest, copy_and_inc_test) {
 
 const char* ref_and_inc_test_script =
     R"(local object_1 = example.RefStruct()
-local object_1 = object_1:self()
+object_1 = object_1:self()
 object_1:inc()
 object_1:inc()
 )";

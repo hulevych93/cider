@@ -9,10 +9,14 @@ namespace tool {
 
 enum OperatorType { copyAssignment, moveAssignment };
 
+enum UnaryOpType { minus };
+
 std::optional<OperatorType> isOperator(const char* name,
                                        const cppast::cpp_member_function& e);
 std::optional<OperatorType> isOperator(const cppast::cpp_class& o,
                                        const cppast::cpp_member_function& e);
+
+std::optional<UnaryOpType> isUnOperator(const cppast::cpp_member_function& e);
 
 bool isMoveContructor(const cppast::cpp_constructor& e);
 

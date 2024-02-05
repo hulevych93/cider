@@ -10,8 +10,8 @@ using namespace cider;
 struct FreeFunctionsTest : TestSuite {};
 
 const char* calculate_factorial_test_script =
-    R"(example.calculate_factorial(5)
-example.calculate_factorial(6)
+    R"(example.calculate_factorial(example.Int(5))
+example.calculate_factorial(example.Int(6))
 )";
 
 TEST_F(FreeFunctionsTest, calculate_factorial_test) {
@@ -40,7 +40,7 @@ TEST_F(FreeFunctionsTest, is_this_sparta_word_test) {
 }
 
 const char* summ_these_two_params_test_script =
-    R"(example.summ_these_two_params(7, 15)
+    R"(example.summ_these_two_params(example.Int(7), example.ULong(15))
 )";
 
 TEST_F(FreeFunctionsTest, summ_these_two_params_test) {
@@ -56,8 +56,8 @@ TEST_F(FreeFunctionsTest, script_session_clears_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   EXPECT_EQ(120, hook::calculate_factorial(5));
-  EXPECT_EQ("example.calculate_factorial(5)\n", session->getScript());
+  EXPECT_EQ("example.calculate_factorial(example.Int(5))\n", session->getScript());
 
   EXPECT_EQ(720, hook::calculate_factorial(6));
-  EXPECT_EQ("example.calculate_factorial(6)\n", session->getScript());
+  EXPECT_EQ("example.calculate_factorial(example.Int(6))\n", session->getScript());
 }

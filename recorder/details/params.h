@@ -52,7 +52,8 @@ class CodeSink;
 struct UserDataValueParam {
  public:
   virtual ~UserDataValueParam() = default;
-  virtual std::string generateCode(CodeSink& sink) const = 0;
+  virtual std::string generateCode(const std::string& moduleName,
+                                   CodeSink& sink) const = 0;
 };
 
 struct UserDataReferenceParam : UserDataValueParam {
@@ -62,7 +63,9 @@ struct UserDataReferenceParam : UserDataValueParam {
 };
 
 template <typename Type>
-std::string produceAggregateCode(const Type&, CodeSink& sink);
+std::string produceAggregateCode(const std::string& moduleName,
+                                 const Type&,
+                                 CodeSink& sink);
 
 namespace details {
 
@@ -78,8 +81,9 @@ struct AggregateUserDataValueParamImpl final : public UserDataValueParam {
 
   ~AggregateUserDataValueParamImpl() override = default;
 
-  std::string generateCode(CodeSink& sink) const override {
-    return produceAggregateCode(_param, sink);
+  std::string generateCode(const std::string& moduleName,
+                           CodeSink& sink) const override {
+    return produceAggregateCode(moduleName, _param, sink);
   }
 
  private:
@@ -91,7 +95,7 @@ struct ReferenceUserDataValueParamImpl final : public UserDataReferenceParam {
   ReferenceUserDataValueParamImpl(const void* address) : _address(address) {}
   ~ReferenceUserDataValueParamImpl() override = default;
 
-  std::string generateCode(CodeSink& sink) const override {
+  std::string generateCode(const std::string&, CodeSink& sink) const override {
     return sink.searchForLocalVar(_address);
   }
 

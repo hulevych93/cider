@@ -14,6 +14,7 @@ ScriptRecordSessionPtr makeLuaRecordingSession(const std::string& moduleName) {
   context.paramProducer = lua::produceParamCode;
   context.binaryOpProducer = lua::produceBinaryOpCall;
   context.functionNameMutator = lua::mutateFunctionName;
+  context.unaryOpProducer = lua::produceUnaryOpCall;
   ScriptGenerator generator{moduleName, context};
 
   auto session =

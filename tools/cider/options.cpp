@@ -32,6 +32,8 @@ Options getOptions() {
         ("namespace", "the namespace which is used for output entities generation",
          value<std::string>()->default_value("cider3"))
         ("integration_file", "the file that contains standart headers",
+         value<std::string>())
+        ("swig_directory", "the dir that contains swig files",
          value<std::string>());
 
         option_list.add_options("compilation")

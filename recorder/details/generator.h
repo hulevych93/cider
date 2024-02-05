@@ -9,19 +9,25 @@
 namespace cider {
 namespace recorder {
 
-using ParamCodeProducer = std::string (*)(const Param& param, CodeSink& sink);
+using ParamCodeProducer = std::string (*)(const std::string& name,
+                                          const Param& param,
+                                          CodeSink& sink);
 using FunctionCodeProducer = std::string (*)(const char* moduleName,
                                              const char* functionName,
                                              const bool localNeeded,
                                              const bool isNew,
                                              size_t paramCount,
                                              bool object);
+using UnaryOpCodeProducer = std::string (*)(const bool,
+                                            const bool,
+                                            const UnaryOpType);
 using BinaryOpCodeProducer = std::string (*)(BinaryOpType);
 using FunctionNameMutator = std::string (*)(const char* name);
 
 struct LanguageContext final {
   ParamCodeProducer paramProducer = nullptr;
   FunctionCodeProducer funcProducer = nullptr;
+  UnaryOpCodeProducer unaryOpProducer = nullptr;
   BinaryOpCodeProducer binaryOpProducer = nullptr;
   FunctionNameMutator functionNameMutator = nullptr;
 };
@@ -35,6 +41,7 @@ class ScriptGenerator final {
   void operator()(const Function& context);
   void operator()(const ClassMethod& context);
   void operator()(const ClassBinaryOp& context);
+  void operator()(const ClassUnaryOp& context);
 
   std::string getScript();
   void discard();

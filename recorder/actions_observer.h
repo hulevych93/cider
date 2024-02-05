@@ -98,5 +98,9 @@ class ActionsObservable final {
   auto scopeGuard = cider::recorder::ActionsObservable::getInstance().notify( \
       _impl.get(), cider::recorder::BinaryOpType::Assignment, PARAM);
 
+#define CIDER_NOTIFY_UNARY_NO_ARGS(RETURN_VALUE)                                        \
+  auto scopeGuard = cider::recorder::ActionsObservable::getInstance().notify( \
+      callee, RETURN_VALUE, cider::recorder::UnaryOpType::Minus);
+
 }  // namespace recorder
 }  // namespace cider

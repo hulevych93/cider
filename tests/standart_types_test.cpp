@@ -27,7 +27,7 @@ TEST_F(StandardTypesTest, string_struct_as_arg_test) {
 }
 
 const char* uint16_from_32_test_script =
-    R"(example.uint16_from_32(234)
+    R"(example.uint16_from_32(example.Int(234))
 )";
 
 TEST_F(StandardTypesTest, uint16_from_32_test) {

@@ -11,7 +11,7 @@ struct DerivedClassTypesTest : TestSuite {};
 
 const char* derived_class_types_test_script =
     R"(local object_1 = example.DerivedClass('false')
-object_1:sayGoodbye(2)
+object_1:sayGoodbye(example.Int(2))
 )";
 
 TEST_F(DerivedClassTypesTest, derived_class_types_test) {
@@ -42,7 +42,7 @@ TEST_F(DerivedClassTypesTest, some_base_class_types_test) {
 const char* some_base_class_get_types_test_script =
     R"(local object_1 = example.BaseClass('true')
 local object_2 = object_1:get()
-object_2:sayGoodbye(3)
+object_2:sayGoodbye(example.Int(3))
 )";
 
 TEST_F(DerivedClassTypesTest, some_base_class_get_types_test) {

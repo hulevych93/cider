@@ -14,10 +14,10 @@ std::string produceFunctionCall(const char* moduleName,
                                 bool object) {
   std::string funcTemplate;
   if (localNeeded) {
-      if(isNew) {
-          funcTemplate += "local ";
-      }
-      funcTemplate += "{} = ";
+    if (isNew) {
+      funcTemplate += "local ";
+    }
+    funcTemplate += "{} = ";
   }
   if (object) {
     funcTemplate += "{}:";
@@ -49,6 +49,22 @@ std::string produceBinaryOpCall(const BinaryOpType type) {
   return funcTemplate;
 }
 
+std::string produceUnaryOpCall(const bool localNeeded,
+                               const bool isNew,
+                               const UnaryOpType type) {
+  std::string funcTemplate;
+  if (localNeeded) {
+      if (isNew) {
+          funcTemplate += "local ";
+      }
+      funcTemplate += "{} = ";
+  }
+  if(type == UnaryOpType::Minus) {
+      funcTemplate += "-{}";
+  }
+  return funcTemplate;
+}
+
 std::string mutateFunctionName(const char* name) {
   static const std::unordered_map<std::string, std::string> Mapping = {
       {"operator bool", "toBool"},
@@ -66,7 +82,7 @@ std::string mutateFunctionName(const char* name) {
       {"operator unsigned long", "toUnsignedLong"},
       {"operator unsigned long long", "toUnsignedLongLong"},
       {"operator string", "toString"},
-      {"operator basic_string", "toBasicString"},
+      {"operator basic_string", "toString"},
       {"operator const char *", "toConstCharString"},
       {"operator=", "assignOp"},
       {"operator<", "lessThanOp"},

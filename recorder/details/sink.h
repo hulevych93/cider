@@ -6,10 +6,9 @@
 namespace cider {
 namespace recorder {
 
-struct LocalVar final
-{
-    std::string name;
-    bool isNew = false;
+struct LocalVar final {
+  std::string name;
+  bool isNew = false;
 };
 
 class CodeSink {

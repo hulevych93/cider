@@ -52,10 +52,11 @@ void printAggregateProducer(std::ostream& os,
                             const bool enter) {
   if (enter) {
     os << "template <>\n";
-    os << "std::string produceAggregateCode(const " << scope + "::" + e.name()
-       << "& aggregate, ";
+    os << "std::string produceAggregateCode(const std::string& moduleName, "
+          "const "
+       << scope + "::" + e.name() << "& aggregate, ";
     os << "CodeSink& sink) {\n";
-    os << "lua::ParamVisitor visitor;\n";
+    os << "lua::ParamVisitor visitor(moduleName);\n";
     os << "std::string code;\n";
     os << "code += \"local {var} = " + module + "." + e.name() + R"(()\n";)"
        << "\n";
@@ -72,8 +73,8 @@ void printEnumProducer(std::ostream& os,
                        const bool enter) {
   if (enter) {
     os << "template <>\n";
-    os << "std::string produceAggregateCode(const " << scope + "::" + name
-       << "& aggregate, ";
+    os << "std::string produceAggregateCode(const std::string&, const "
+       << scope + "::" + name << "& aggregate, ";
     os << "CodeSink&) {\n";
     os << "switch (aggregate) {\n";
   } else {
@@ -89,7 +90,9 @@ void printEnumField(std::ostream& os,
                     const std::string& scope,
                     const std::string& name) {
   os << "case " << scope + "::" << name << ":\n";
-  os << "return \"" + module + "." + enumName + "_" + name << "\";\n";
+  os << "return \"" + module + "." + enumName + "(" + module + "." + enumName +
+            "_" + name
+     << ")\";\n";
   os << "break;\n";
 }
 

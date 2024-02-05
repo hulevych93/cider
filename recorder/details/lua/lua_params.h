@@ -13,24 +13,34 @@ class CodeSink;
 namespace lua {
 
 struct ParamVisitor {
-  template <
-      typename Type,
-      typename std::enable_if_t<details::isIntegerType<Type>, void*> = nullptr>
-  std::string operator()(const Type arg) {
-    return (*this)(IntegerType{arg});
-  }
+  explicit ParamVisitor(const std::string& moduleName);
 
   std::string operator()(const Nil&) const;
-  std::string operator()(const IntegerType& value) const;
   std::string operator()(bool value) const;
   std::string operator()(double value) const;
   std::string operator()(const char* value) const;
   std::string operator()(const std::string& value) const;
+
+  std::string operator()(const IntegerType& value) const;
+
+  std::string operator()(char value) const;
+  std::string operator()(short value) const;
+  std::string operator()(int value) const;
+  std::string operator()(long value) const;
+  std::string operator()(long long value) const;
+  std::string operator()(unsigned char value) const;
+  std::string operator()(unsigned short value) const;
+  std::string operator()(unsigned int value) const;
+  std::string operator()(unsigned long value) const;
+  std::string operator()(unsigned long long value) const;
+
+ protected:
+  std::string _moduleName;
 };
 
 class UserDataParamVisitor final : public ParamVisitor {
  public:
-  explicit UserDataParamVisitor(CodeSink& sink);
+  UserDataParamVisitor(const std::string& moduleName, CodeSink& sink);
 
   using ParamVisitor::operator();
 
@@ -40,7 +50,9 @@ class UserDataParamVisitor final : public ParamVisitor {
   CodeSink& _sink;
 };
 
-std::string produceParamCode(const Param& param, CodeSink& sink);
+std::string produceParamCode(const std::string& moduleName,
+                             const Param& param,
+                             CodeSink& sink);
 
 }  // namespace lua
 }  // namespace recorder
