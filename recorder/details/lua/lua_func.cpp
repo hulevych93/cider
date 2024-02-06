@@ -14,9 +14,6 @@ std::string produceFunctionCall(const char* moduleName,
                                 bool object) {
   std::string funcTemplate;
   if (localNeeded) {
-    if (isNew) {
-      funcTemplate += "local ";
-    }
     funcTemplate += "{} = ";
   }
   if (object) {
@@ -54,13 +51,10 @@ std::string produceUnaryOpCall(const bool localNeeded,
                                const UnaryOpType type) {
   std::string funcTemplate;
   if (localNeeded) {
-      if (isNew) {
-          funcTemplate += "local ";
-      }
-      funcTemplate += "{} = ";
+    funcTemplate += "{} = ";
   }
-  if(type == UnaryOpType::Minus) {
-      funcTemplate += "-{}";
+  if (type == UnaryOpType::Minus) {
+    funcTemplate += "-{}";
   }
   return funcTemplate;
 }

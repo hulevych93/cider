@@ -25,6 +25,8 @@ class CodeSink {
                                    const std::string& resultName,
                                    const std::vector<std::string>& args,
                                    const std::string& codeTemplate) = 0;
+
+  virtual void unregisterLocalVar(const void* object) = 0;
 };
 
 }  // namespace recorder

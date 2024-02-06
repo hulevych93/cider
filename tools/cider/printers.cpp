@@ -122,7 +122,7 @@ void printFunctionNotify(std::ostream& os,
                          const bool hasNoArgs) {
   os << "CIDER_NOTIFY_";
   if constexpr (std::is_same_v<cpp_member_function, FunctionType>) {
-    if(isUnOperator(e)) {
+    if (isUnOperator(e)) {
       os << "UNARY";
     } else {
       os << "METHOD";
@@ -331,6 +331,24 @@ void printNamespace(std::ostream& os,
   } else {
     os << "} // namespace " << scope << "\n";
   }
+}
+
+void printDestructorDecl(std::ostream& os,
+                         const MetadataStorage& /*metadata*/,
+                         const cppast::cpp_destructor& e)
+{
+    if(e.is_virtual()) {
+        os << "virtual ";
+    }
+    os << e.name() << "();";
+}
+
+void printDestructorDef(std::ostream& os,
+                        const MetadataStorage& /*metadata*/,
+                        const cppast::cpp_destructor& e)
+{
+  os << e.name().substr(1) << "::";
+  os << e.name() << "() {}\n";
 }
 
 template <typename FunctionType>

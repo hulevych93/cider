@@ -5,15 +5,19 @@ bool is_typed(lua_State *L, int idx, swig_type_info* desc) {
 }
 %}
 
-%define prv_decl_typecheck_typemap(TYPE_CHECKER, PR, TYPE)
-  %typemap(typecheck, precedence=PR) TYPE, TYPE&, TYPE*
+%define prv_decl_typecheck_typemap_g(TYPE_CHECKER, PR, LTYPE, TYPE)
+  %typemap(typecheck, precedence=PR) LTYPE, LTYPE&, LTYPE*
   %{
     $1 = TYPE_CHECKER($input, TYPE);
   %}
 %enddef
 
-%define prv_decl_in_typemap(TYPE)
-  %typemap(in) TYPE
+%define prv_decl_typecheck_typemap(TYPE_CHECKER, PR, TYPE)
+  prv_decl_typecheck_typemap_g(TYPE_CHECKER, PR, TYPE, TYPE)
+%enddef
+
+%define prv_decl_in_typemap_g(LTYPE, TYPE)
+  %typemap(in) LTYPE
   {
   cider::TypedValue<TYPE>* val_;
   void* argp = nullptr;
@@ -28,9 +32,13 @@ bool is_typed(lua_State *L, int idx, swig_type_info* desc) {
   else
   {
     val_ = reinterpret_cast<cider::TypedValue<TYPE>*>(argp);
-    $1 = val_->value;
+    $1 = (LTYPE)val_->value;
   }
   }
+%enddef
+
+%define prv_decl_in_typemap(TYPE)
+  prv_decl_in_typemap_g(TYPE, TYPE)
 %enddef
 
 %define prv_is_typed(SOURCE, TYPE)
@@ -52,6 +60,11 @@ bool is_typed(lua_State *L, int idx, swig_type_info* desc) {
 %define decl_integer_based(TYPE)
   prv_decl_typecheck_typemap(prv_is_typed, SWIG_TYPECHECK_INT32, TYPE)
   prv_decl_in_typemap(TYPE)
+%enddef
+
+%define decl_integer_based_alias(LTYPE, TYPE)
+  prv_decl_typecheck_typemap_g(prv_is_typed, SWIG_TYPECHECK_INT32, LTYPE, TYPE)
+  prv_decl_in_typemap_g(LTYPE, TYPE)
 %enddef
 
 %define decl_enum_based(TYPE)

@@ -158,7 +158,8 @@ int main(int argc, char* argv[]) {
           getOutputFilePathWithoutExtension(moduleName, outDir);
 
       std::ofstream swigStream(outSwigFilePath + ".swig");
-      printSwig(swigStream, outDir, swig_dir, moduleName, genScope, metadata, files);
+      printSwig(swigStream, outDir, swig_dir, moduleName, genScope, metadata,
+                files);
 
       if (options.count("lua")) {
         const auto outLuaFilePath =

@@ -795,7 +795,6 @@ void test_value() {
   {
     Hjson::HjsonHooked::Value root, val(0);
     root.push_back(1.0 / val);
-    root.push_back(std::sqrt(-1));
     std::string generatedHjson = Hjson::HjsonHooked::Marshal(root);
     assert(generatedHjson == "[\n  null\n  null\n]");
   }

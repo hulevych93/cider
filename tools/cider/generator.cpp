@@ -93,6 +93,17 @@ void header_generator::handleEnum(const cppast::cpp_enum& e, const bool enter) {
   printEnum(m_out, e, enter);
 }
 
+void header_generator::handleDestructor(
+    const cppast::cpp_destructor& e,
+    cppast::cpp_access_specifier_kind /*kind*/)
+{
+    m_namespaces(m_out);
+
+    printDestructorDecl(m_out, m_metadata, e);
+
+    m_out << std::endl;
+}
+
 void header_generator::handleMemberFunction(
     const cpp_member_function& e,
     cppast::cpp_access_specifier_kind /*kind*/) {
@@ -161,6 +172,17 @@ void source_generator::handleConstructor(
   printConstructorBody(m_out, m_metadata, e, m_class->bases(), m_namespaces);
 
   m_out << std::endl;
+}
+
+void source_generator::handleDestructor(
+    const cppast::cpp_destructor& e,
+    cppast::cpp_access_specifier_kind /*kind*/)
+{
+    m_namespaces(m_out);
+
+    printDestructorDef(m_out, m_metadata, e);
+
+    m_out << std::endl;
 }
 
 void source_generator::handleFreeFunction(const cpp_function& e) {
@@ -250,6 +272,10 @@ void handleFile(ast_handler& handler,
         handler.handleMemberVariable(static_cast<const cpp_member_variable&>(e),
                                      info.access);
         break;
+      case ::cpp_entity_kind::destructor_t:
+          handler.handleDestructor(static_cast<const cpp_destructor&>(e),
+                                       info.access);
+          break;
       case ::cpp_entity_kind::enum_t:
         handler.handleEnum(static_cast<const cpp_enum&>(e), enter);
         break;

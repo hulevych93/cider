@@ -1,9 +1,9 @@
 #include "swig.h"
 
-#include <cppast/cpp_file.hpp>
 #include <cppast/cpp_class.hpp>
 #include <cppast/cpp_entity_kind.hpp>
 #include <cppast/cpp_enum.hpp>
+#include <cppast/cpp_file.hpp>
 
 #include "options.h"
 #include "utils.h"
@@ -15,8 +15,8 @@ using namespace cppast;
 namespace {
 
 static class NullBuffer : public std::streambuf {
-public:
-    int overflow(int c) { return c; }
+ public:
+  int overflow(int c) { return c; }
 } null_buffer;
 
 static std::ostream null_stream(&null_buffer);
@@ -40,7 +40,7 @@ void traverse(FilesList& files,
   files.erase(iter);
 }
 
-}  // namespaceå
+}  // namespace
 
 namespace cider {
 namespace tool {
@@ -82,20 +82,21 @@ void swig_generator::finish() {
 }
 
 void swig_generator::handleNamespace(const cpp_entity& e, const bool enter) {
-    if (enter) {
-        m_namespaces.push(null_stream, e.name());
-    } else {
-        m_namespaces.pop(null_stream);
-    }
+  if (enter) {
+    m_namespaces.push(null_stream, e.name());
+  } else {
+    m_namespaces.pop(null_stream);
+  }
 }
 
-void swig_generator::handleEnum(const cppast::cpp_enum& e, const bool enter)
-{
-    if(enter) {
-        const auto fullName = m_namespaces.nativeScope() + "::" + m_namespaces.genScope() + "::" + e.name();
-        m_out << "%template(" + e.name() + ") cider::TypedValue<" + fullName + ">;\n";
-        m_out << "decl_enum_based(" + fullName + ")\n";
-    }
+void swig_generator::handleEnum(const cppast::cpp_enum& e, const bool enter) {
+  if (enter) {
+    const auto fullName = m_namespaces.nativeScope() +
+                          "::" + m_namespaces.genScope() + "::" + e.name();
+    m_out << "%template(" + e.name() + ") cider::TypedValue<" + fullName +
+                 ">;\n";
+    m_out << "decl_enum_based(" + fullName + ")\n";
+  }
 }
 
 void printSwig(std::ostream& os,
@@ -105,7 +106,7 @@ void printSwig(std::ostream& os,
                const std::string& genScope,
                const MetadataStorage& metadata,
                const std::vector<const cppast::cpp_file*>& files) {
-  swig_generator swig_gen(os, outPath, swigDir, moduleName,genScope, metadata);
+  swig_generator swig_gen(os, outPath, swigDir, moduleName, genScope, metadata);
   for (const auto& file : files) {
     handleFile(swig_gen, *file);
   }

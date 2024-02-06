@@ -5,6 +5,8 @@
 %include <types.swig>
 
 %inline %{
+#include <iostream>
+
 namespace cider {
 
 template<typename Type>
@@ -35,21 +37,6 @@ decl_integer_based(unsigned short)
 decl_integer_based(unsigned long long)
 decl_integer_based(unsigned char)
 
-decl_integer_based(uint8_t)
-decl_integer_based(std::uint8_t)
-
-decl_integer_based(uint16_t)
-decl_integer_based(std::uint16_t)
-
-decl_integer_based(uint32_t)
-decl_integer_based(std::uint32_t)
-
-decl_integer_based(uint64_t)
-decl_integer_based(std::uint64_t)
-
-decl_integer_based(size_t)
-decl_integer_based(std::size_t)
-
 decl_integer_based(int)
 decl_integer_based(signed int)
 decl_integer_based(long)
@@ -61,17 +48,32 @@ decl_integer_based(signed long long)
 decl_integer_based(char)
 decl_integer_based(signed char)
 
-decl_integer_based(int8_t)
-decl_integer_based(std::int8_t)
+decl_integer_based_alias(uint8_t, unsigned char)
+decl_integer_based_alias(std::uint8_t, unsigned char)
 
-decl_integer_based(int16_t)
-decl_integer_based(std::int16_t)
+decl_integer_based_alias(uint16_t, unsigned short)
+decl_integer_based_alias(std::uint16_t, unsigned short)
 
-decl_integer_based(int32_t)
-decl_integer_based(std::int32_t)
+decl_integer_based_alias(uint32_t, unsigned int)
+decl_integer_based_alias(std::uint32_t, unsigned int)
 
-decl_integer_based(int64_t)
-decl_integer_based(std::int64_t)
+decl_integer_based_alias(uint64_t, unsigned long long)
+decl_integer_based_alias(std::uint64_t, unsigned long long)
+
+decl_integer_based_alias(size_t, unsigned long)
+decl_integer_based_alias(std::size_t, unsigned long)
+
+decl_integer_based_alias(int8_t, char)
+decl_integer_based_alias(std::int8_t, char)
+
+decl_integer_based_alias(int16_t, short)
+decl_integer_based_alias(std::int16_t, short)
+
+decl_integer_based_alias(int32_t, int)
+decl_integer_based_alias(std::int32_t, int)
+
+decl_integer_based_alias(int64_t, long long)
+decl_integer_based_alias(std::int64_t, long long)
 
 decl_string_based(const char*)
 

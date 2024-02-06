@@ -44,22 +44,20 @@ std::optional<OperatorType> isOperator(const char* classN,
   return std::nullopt;
 }
 
-std::optional<UnaryOpType> isUnOperator(const cppast::cpp_member_function& e)
-{
-    auto name = e.name();
-    auto opIt = name.find("operator");
-    if (opIt != std::string::npos) {
-        name = name.substr(opIt + strlen("operator"));
-        if (name.find("-") != std::string::npos &&
-            name.find("--") == std::string::npos) {
-
-            const auto& params = e.parameters();
-            if(params.empty()) {
-                return UnaryOpType::minus;
-            }
-        }
+std::optional<UnaryOpType> isUnOperator(const cppast::cpp_member_function& e) {
+  auto name = e.name();
+  auto opIt = name.find("operator");
+  if (opIt != std::string::npos) {
+    name = name.substr(opIt + strlen("operator"));
+    if (name.find("-") != std::string::npos &&
+        name.find("--") == std::string::npos) {
+      const auto& params = e.parameters();
+      if (params.empty()) {
+        return UnaryOpType::minus;
+      }
     }
-    return std::nullopt;
+  }
+  return std::nullopt;
 }
 
 bool isCopyMoveContructor(const cpp_constructor& e, const cpp_reference kind) {

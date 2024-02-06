@@ -3,6 +3,8 @@
 #include <memory>
 #include <type_traits>
 
+#include "recorder/actions_observer.h"
+
 namespace cider {
 
 template <typename Type,
@@ -29,6 +31,11 @@ auto* getCallee(ImplType* arg) {
 struct copy_tag final {};
 struct ref_tag final {};
 
+template <typename ImplType, typename... Args>
+auto makeImpl(Args&&... args) {
+    return std::shared_ptr<ImplType>(new ImplType{std::forward<Args>(args)...}, [](ImplType* p) { CIDER_NOTIFY_DESTRUCTOR(p); delete p; });
+}
+
 template <typename DesiredType, typename ResultType, typename ImplType>
 auto getImpl(ResultType& result, ImplType* callee, ref_tag) {
   using ResultTypePure = std::decay_t<ResultType>;
@@ -46,7 +53,7 @@ auto getImpl(ResultType& result, ImplType* callee, ref_tag) {
 
 template <typename DesiredType, typename ResultType, typename ImplType>
 auto getImpl(ResultType& result, ImplType*, copy_tag) {
-  return std::make_shared<DesiredType>(result);
+  return makeImpl<DesiredType>(result);
 }
 
 }  // namespace cider

@@ -22,6 +22,9 @@ struct ast_handler {
   virtual void handleMemberFunction(
       const cppast::cpp_member_function& /*e*/,
       cppast::cpp_access_specifier_kind /*kind*/) {}
+  virtual void handleDestructor(
+      const cppast::cpp_destructor& /*e*/,
+      cppast::cpp_access_specifier_kind /*kind*/) {}
   virtual void handleConversionOperator(
       const cppast::cpp_conversion_op& /*e*/,
       cppast::cpp_access_specifier_kind /*kind*/) {}

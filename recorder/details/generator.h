@@ -42,6 +42,7 @@ class ScriptGenerator final {
   void operator()(const ClassMethod& context);
   void operator()(const ClassBinaryOp& context);
   void operator()(const ClassUnaryOp& context);
+  void operator()(const ClassDestructor& context);
 
   std::string getScript();
   void discard();

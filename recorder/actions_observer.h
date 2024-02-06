@@ -90,6 +90,10 @@ class ActionsObservable final {
   auto scopeGuard = cider::recorder::ActionsObservable::getInstance().notify( \
       __FUNCTION__, _impl.get(), __VA_ARGS__);
 
+#define CIDER_NOTIFY_DESTRUCTOR(P)                              \
+  auto scopeGuard = cider::recorder::ActionsObservable::getInstance().notify( \
+      P);
+
 #define CIDER_NOTIFY_CONSTRUCTOR_NO_ARGS                                      \
   auto scopeGuard = cider::recorder::ActionsObservable::getInstance().notify( \
       __FUNCTION__, _impl.get());

@@ -63,6 +63,14 @@ class CodeSinkImpl : public CodeSink {
     return var;
   }
 
+  void unregisterLocalVar(const void* object) override {
+      const auto localIt = _locals.find(object);
+      if (localIt != _locals.end()) {
+          _sink += localIt->second + " = nil\n"; // TODO
+          _locals.erase(localIt);
+      }
+  }
+
  private:
   std::string suggestLocalName(const void* object = nullptr) {
     if (object) {
@@ -71,6 +79,9 @@ class CodeSinkImpl : public CodeSink {
         const auto suggested =
             std::string{"object"} + "_" + std::to_string(++_localCounter);
         _locals.emplace(object, suggested);
+
+        _sink += "collectgarbage('collect')\n";
+
         return suggested;
       } else {
         return it->second;
@@ -207,10 +218,16 @@ void ScriptGenerator::operator()(const ClassBinaryOp& context) {
 void ScriptGenerator::operator()(const ClassUnaryOp& context) {
   const auto result = processResult(context.retVal);
 
-  const auto codeTemplate = _langContext.unaryOpProducer(!result.name.empty(), result.isNew, context.opName);
+  const auto codeTemplate = _langContext.unaryOpProducer(
+      !result.name.empty(), result.isNew, context.opName);
 
   _sink->processFunctionCall(context.objectAddress, result.name, {},
                              codeTemplate);
+}
+
+void ScriptGenerator::operator()(const ClassDestructor& context)
+{
+    _sink->unregisterLocalVar(context.objectAddress);
 }
 
 std::vector<std::string> ScriptGenerator::produceArgs(

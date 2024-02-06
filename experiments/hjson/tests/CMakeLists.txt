@@ -30,10 +30,14 @@ cider_tool_generate(${SWIG_MODULE_NAME} "HjsonHooked" "${HDRS_OUT}" ${GEN_DIR})
 
 list(APPEND GEN_SRC_FILES "${GEN_DIR}/${SWIG_MODULE_NAME}_lua.cpp")
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-add_library(hjson-models ${GEN_SRC_FILES})
+add_library(hjson-models ${GEN_SRC_FILES}
+    ${EXPERIMENT_HJSON_BUILD_DIR}/src/hjson_value.cpp
+    ${EXPERIMENT_HJSON_BUILD_DIR}/src/hjson_encode.cpp
+    ${EXPERIMENT_HJSON_BUILD_DIR}/src/hjson_decode.cpp
+    ${EXPERIMENT_HJSON_BUILD_DIR}/src/hjson_parsenumber.cpp
+)
+
 add_dependencies(hjson-models hjson_gen_swig)
-set(CMAKE_EXPORT_COMPILE_COMMANDS OFF)
 
 cider_generate_swig(LANGUAGE lua
                     EXTERNAL_RUNTIME
@@ -43,14 +47,6 @@ cider_generate_swig(LANGUAGE lua
 
 add_library(hjson_wrap "${GEN_DIR}/${SWIG_MODULE_NAME}_wrap.cpp" "${GEN_DIR}/swigluarun.h")
 add_dependencies(hjson_wrap hjson hjson-models)
-
-if(CLANGFORMAT_EXECUTABLE)
- foreach(OUT_FILE ${GEN_SRC_FILES})
-  add_custom_command(TARGET hjson-models
-                   PRE_BUILD
-                   COMMAND ${CLANGFORMAT_EXECUTABLE} -style=Chromium -i ${OUT_FILE})
- endforeach()
-endif()
 
 add_dependencies(hjson_tests hjson_wrap)
 
@@ -62,7 +58,6 @@ target_link_libraries(hjson_tests PUBLIC
   scripting
   ${Lua_LIBRARIES}
   ${PLATFORM_LIBRARIES}
-  ${Hjson_LIBRARIES}
 )
 
 
