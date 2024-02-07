@@ -34,6 +34,7 @@ endif()
 add_subdirectory(recorder)
 add_subdirectory(scripting)
 add_subdirectory(tools/cider)
+
 #add_subdirectory(tests)
 
 if(CIDER_ENABLE_COVERAGE)

@@ -174,6 +174,20 @@ void printParamTypePure(std::ostream& os,
   os << value;
 }
 
+void printSetImpl(
+    std::ostream& os,
+    const detail::iteratable_intrusive_list<cpp_base_class>& bases) {
+  auto first = true;
+  for (const auto& base : bases) {
+    if (!first) {
+      os << ", ";
+    } else {
+      first = false;
+    }
+    os << base.name() << "::setImpl(_impl);\n";
+  }
+}
+
 void printParamType(std::ostream& os,
                     const MetadataStorage& metadata,
                     const namespaces_stack& stack,
@@ -335,18 +349,16 @@ void printNamespace(std::ostream& os,
 
 void printDestructorDecl(std::ostream& os,
                          const MetadataStorage& /*metadata*/,
-                         const cppast::cpp_destructor& e)
-{
-    if(e.is_virtual()) {
-        os << "virtual ";
-    }
-    os << e.name() << "();";
+                         const cppast::cpp_destructor& e) {
+  if (e.is_virtual()) {
+    os << "virtual ";
+  }
+  os << e.name() << "();";
 }
 
 void printDestructorDef(std::ostream& os,
                         const MetadataStorage& /*metadata*/,
-                        const cppast::cpp_destructor& e)
-{
+                        const cppast::cpp_destructor& e) {
   os << e.name().substr(1) << "::";
   os << e.name() << "() {}\n";
 }
@@ -485,7 +497,7 @@ void printFunctionBody(std::ostream& os,
     if constexpr (std::is_same_v<cpp_member_function, FunctionType> ||
                   std::is_same_v<cpp_conversion_op, FunctionType>) {
       os << "auto implPtr = cider::getImpl<" << pureReturnTypeName
-         << ">(impl, this,";
+         << ">(std::move(impl), this,";
       if (isReference(metadata, stack, e.return_type())) {
         os << "cider::ref_tag{}";
       } else {
@@ -620,6 +632,7 @@ void printGeneratedMethods(std::ostream& os,
         os << "try {\n";
         os << "_impl = std::make_shared<" << stack.nativeScope()
            << "::" << e.name() << ">();\n";
+        printSetImpl(os, e.bases());
         os << "CIDER_NOTIFY_CONSTRUCTOR_NO_ARGS\n";
         os << CatchBlock;
         os << "}\n";
@@ -652,6 +665,7 @@ void printGeneratedMethods(std::ostream& os,
         os << "try {\n";
         os << "_impl = std::make_shared<" << stack.nativeScope()
            << "::" << e.name() << ">(*other._impl.get());\n";
+        printSetImpl(os, e.bases());
         os << "CIDER_NOTIFY_CONSTRUCTOR(other._impl.get())\n";
         os << CatchBlock;
         os << "}\n";
@@ -725,7 +739,7 @@ void printBaseClassesConstructors(
 
 void printBaseClassesSetImpl(
     std::ostream& os,
-    const MetadataStorage& metadata,
+    const MetadataStorage& /*metadata*/,
     const detail::iteratable_intrusive_list<cpp_base_class>& bases) {
   if (bases.empty()) {
     return;
@@ -769,7 +783,10 @@ void printGeneralConstructorBody(
   os << CatchBlock << "}\n";
 }
 
-void printMoveConstructorBody(std::ostream& os, const cpp_constructor& e) {
+void printMoveConstructorBody(
+    std::ostream& os,
+    const detail::iteratable_intrusive_list<cpp_base_class>& bases,
+    const cpp_constructor& e) {
   os << "{\n";
   os << "try {\n";
   os << "_impl = std::move(";
@@ -777,6 +794,8 @@ void printMoveConstructorBody(std::ostream& os, const cpp_constructor& e) {
   const auto& params = e.parameters();
   printParamName(os, *params.begin(), 0U);
   os << "._impl);\n";
+
+  printSetImpl(os, bases);
 
   os << CatchBlock << "}\n";
 }
@@ -788,7 +807,7 @@ void printConstructorBody(
     const detail::iteratable_intrusive_list<cpp_base_class>& bases,
     const namespaces_stack& stack) {
   if (isMoveContructor(e)) {
-    printMoveConstructorBody(os, e);
+    printMoveConstructorBody(os, bases, e);
   } else {
     printGeneralConstructorBody(os, metadata, e, bases, stack);
   }

@@ -64,11 +64,11 @@ class CodeSinkImpl : public CodeSink {
   }
 
   void unregisterLocalVar(const void* object) override {
-      const auto localIt = _locals.find(object);
-      if (localIt != _locals.end()) {
-          _sink += localIt->second + " = nil\n"; // TODO
-          _locals.erase(localIt);
-      }
+    const auto localIt = _locals.find(object);
+    if (localIt != _locals.end()) {
+      _sink += localIt->second + " = nil\n";  // TODO
+      _locals.erase(localIt);
+    }
   }
 
  private:
@@ -107,6 +107,7 @@ class CodeSinkImpl : public CodeSink {
 
   void format(const std::string& codeTemplate,
               const fmt::dynamic_format_arg_store<fmt::format_context>& args) {
+    _sink += "print(" + std::to_string(++_lineCounter) + ") ";
     try {
       _sink += fmt::vformat(codeTemplate, args);
     } catch (const fmt::format_error& fmtErr) {
@@ -126,6 +127,7 @@ class CodeSinkImpl : public CodeSink {
   std::string _sink;
   std::unordered_map<const void*, std::string> _locals;
   size_t _localCounter = 0u;
+  size_t _lineCounter = 0u;
 };
 
 std::string nullParamProcessor(const std::string&, const Param&, CodeSink&) {
@@ -225,9 +227,8 @@ void ScriptGenerator::operator()(const ClassUnaryOp& context) {
                              codeTemplate);
 }
 
-void ScriptGenerator::operator()(const ClassDestructor& context)
-{
-    _sink->unregisterLocalVar(context.objectAddress);
+void ScriptGenerator::operator()(const ClassDestructor& context) {
+  _sink->unregisterLocalVar(context.objectAddress);
 }
 
 std::vector<std::string> ScriptGenerator::produceArgs(

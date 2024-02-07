@@ -33,11 +33,15 @@ struct ref_tag final {};
 
 template <typename ImplType, typename... Args>
 auto makeImpl(Args&&... args) {
-    return std::shared_ptr<ImplType>(new ImplType{std::forward<Args>(args)...}, [](ImplType* p) { CIDER_NOTIFY_DESTRUCTOR(p); delete p; });
+  return std::shared_ptr<ImplType>(new ImplType{std::forward<Args>(args)...},
+                                   [](ImplType* p) {
+                                     CIDER_NOTIFY_DESTRUCTOR(p);
+                                     delete p;
+                                   });
 }
 
 template <typename DesiredType, typename ResultType, typename ImplType>
-auto getImpl(ResultType& result, ImplType* callee, ref_tag) {
+auto getImpl(ResultType&& result, ImplType* callee, ref_tag) {
   using ResultTypePure = std::decay_t<ResultType>;
   static_assert(std::is_same_v<DesiredType, ResultTypePure>, "same types");
 
@@ -52,8 +56,8 @@ auto getImpl(ResultType& result, ImplType* callee, ref_tag) {
 }
 
 template <typename DesiredType, typename ResultType, typename ImplType>
-auto getImpl(ResultType& result, ImplType*, copy_tag) {
-  return makeImpl<DesiredType>(result);
+auto getImpl(ResultType&& result, ImplType*, copy_tag) {
+  return makeImpl<DesiredType>(std::forward<ResultType>(result));
 }
 
 }  // namespace cider

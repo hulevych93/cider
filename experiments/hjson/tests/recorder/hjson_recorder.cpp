@@ -5,43 +5,30 @@
 
 #include "hjson_test.h"
 
-#include "scripting/interpreter.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-int luaopen_hjson(lua_State* L);
-
-#ifdef __cplusplus
-}
-#endif
-
 void test_value();
 
-int main() {
+int main(int argc, char* argv[]) {
+  assert(argc == 2);
+  std::cout << "recording script: " << argv[1];
+
   auto session = cider::recorder::makeLuaRecordingSession("hjson");
 
   try {
     test_value();
   } catch (const std::exception& e) {
     std::cerr << e.what();
+    return 1;
   }
 
   try {
     const auto script = session->getScript();
     session.reset();
 
-    std::ofstream scr1("script.lua");
+    std::ofstream scr1(argv[1]);
     scr1 << script;
-
-    auto lState = cider::scripting::get_lua();
-    luaopen_hjson(lState.get());
-
-    assert(cider::scripting::executeScript(lState.get(), script.c_str()));
-
   } catch (const std::exception& e) {
     std::cerr << e.what();
+    return 1;
   }
 
   return 0;

@@ -50,9 +50,8 @@ struct header_generator final : public generator {
   void handleEnumValue(const cppast::cpp_enum_value& e) override;
   void handleEnum(const cppast::cpp_enum& e, const bool enter) override;
   void handleFriend(const cppast::cpp_friend& e) override;
-  void handleDestructor(
-      const cppast::cpp_destructor& e,
-      cppast::cpp_access_specifier_kind kind) override;
+  void handleDestructor(const cppast::cpp_destructor& e,
+                        cppast::cpp_access_specifier_kind kind) override;
 };
 
 struct source_generator final : public generator {
@@ -69,9 +68,8 @@ struct source_generator final : public generator {
       const cppast::cpp_conversion_op& e,
       cppast::cpp_access_specifier_kind kind) override;
   void handleFriend(const cppast::cpp_friend& e) override;
-  void handleDestructor(
-      const cppast::cpp_destructor& e,
-      cppast::cpp_access_specifier_kind kind) override;
+  void handleDestructor(const cppast::cpp_destructor& e,
+                        cppast::cpp_access_specifier_kind kind) override;
 };
 
 }  // namespace tool

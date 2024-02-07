@@ -21,7 +21,7 @@ struct ClassMethod final {
 };
 
 struct ClassDestructor final {
-    const void* objectAddress;
+  const void* objectAddress;
 };
 
 enum class UnaryOpType { Minus };
@@ -40,7 +40,11 @@ struct ClassBinaryOp final {
   Param param;
 };
 
-using Action = std::variant<Function, ClassMethod, ClassBinaryOp, ClassUnaryOp, ClassDestructor>;
+using Action = std::variant<Function,
+                            ClassMethod,
+                            ClassBinaryOp,
+                            ClassUnaryOp,
+                            ClassDestructor>;
 
 namespace details {
 
@@ -102,7 +106,7 @@ Action makeAction(const void* object,
 }  // LCOV_EXCL_LINE
 
 inline Action makeAction(const void* object) {
-    return ClassDestructor{object};
+  return ClassDestructor{object};
 }  // LCOV_EXCL_LINE
 
 }  // namespace recorder

@@ -19,12 +19,12 @@ void printNamespace(std::ostream& os,
                     const bool enter);
 
 void printDestructorDecl(std::ostream& os,
-                       const MetadataStorage& metadata,
-                       const cppast::cpp_destructor& e);
-
-void printDestructorDef(std::ostream& os,
                          const MetadataStorage& metadata,
                          const cppast::cpp_destructor& e);
+
+void printDestructorDef(std::ostream& os,
+                        const MetadataStorage& metadata,
+                        const cppast::cpp_destructor& e);
 
 void printFunctionDecl(std::ostream& os,
                        const MetadataStorage& metadata,
