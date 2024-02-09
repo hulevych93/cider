@@ -1,4 +1,5 @@
-# common.cmake file contains common utilitary cmake functions and macroses.
+# Copyright (C) 2022-2024 Hulevych Mykhailo
+# SPDX-License-Identifier: MIT
 
 # The `cider_export_var` declares a variable in the project scope
 # and also in the parent project scope if one exists.

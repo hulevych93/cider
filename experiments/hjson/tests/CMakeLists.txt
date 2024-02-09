@@ -1,3 +1,5 @@
+# Copyright (C) 2022-2024 Hulevych Mykhailo
+# SPDX-License-Identifier: MIT
 
 set(TESTED_FILES ${EXPERIMENT_HJSON_BUILD_DIR}/src/hjson_value.cpp
     ${EXPERIMENT_HJSON_BUILD_DIR}/src/hjson_encode.cpp

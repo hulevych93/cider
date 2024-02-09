@@ -1,4 +1,5 @@
-# sources.cmake
+# Copyright (C) 2022-2024 Hulevych Mykhailo
+# SPDX-License-Identifier: MIT
 
 # Excludes are passed as ARGN
 function(prv_collect_src SOURCE_FOLDER SRC_LIST_OUT)

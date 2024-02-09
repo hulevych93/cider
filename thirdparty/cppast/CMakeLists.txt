@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2024 Hulevych Mykhailo
+# SPDX-License-Identifier: MIT
+
 cider_project(cppast)
 
 set(CIDER_CPPAST_VERSION                3fb7c24)

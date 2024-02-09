@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2024 Hulevych Mykhailo
+# SPDX-License-Identifier: MIT
+
 cider_project(tests)
 
 cider_collect_src(LIST_OUT "models")

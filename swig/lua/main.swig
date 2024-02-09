@@ -1,3 +1,6 @@
+// Copyright (C) 2022-2024 Hulevych Mykhailo
+// SPDX-License-Identifier: MIT
+
 %include <std_string.i>
 %include <std_vector.i>
 %include <stdint.i>

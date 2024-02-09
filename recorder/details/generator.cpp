@@ -1,4 +1,7 @@
-﻿#include "generator.h"
+﻿// Copyright (C) 2022-2024 Hulevych Mykhailo
+// SPDX-License-Identifier: MIT
+
+#include "generator.h"
 #include "params.h"
 
 #include <fmt/args.h>

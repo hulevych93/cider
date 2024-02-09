@@ -1,3 +1,6 @@
+// Copyright (C) 2022-2024 Hulevych Mykhailo
+// SPDX-License-Identifier: MIT
+
 #include "compiler_generated_methods.h"
 
 namespace cider {

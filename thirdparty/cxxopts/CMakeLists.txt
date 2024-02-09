@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2024 Hulevych Mykhailo
+# SPDX-License-Identifier: MIT
+
 cider_project(cxxopts)
 
 set(CIDER_CXXOPTS_VERSION                2.2.1)

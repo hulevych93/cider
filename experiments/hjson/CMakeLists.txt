@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2024 Hulevych Mykhailo
+# SPDX-License-Identifier: MIT
+
 cider_project(hjson)
 
 set(EXPERIMENT_HJSON_VERSION                2.4.1)

@@ -1,4 +1,5 @@
-# main.cmake
+# Copyright (C) 2022-2024 Hulevych Mykhailo
+# SPDX-License-Identifier: MIT
 
 set(CMAKE_CXX_STANDARD 14)
 

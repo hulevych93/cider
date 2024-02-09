@@ -1,3 +1,5 @@
+// Copyright (C) 2022-2024 Hulevych Mykhailo
+// SPDX-License-Identifier: MIT
 
 #include "utils/test_suite.h"
 

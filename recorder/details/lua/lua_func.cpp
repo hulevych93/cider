@@ -1,3 +1,6 @@
+// Copyright (C) 2022-2024 Hulevych Mykhailo
+// SPDX-License-Identifier: MIT
+
 #include "lua_func.h"
 
 #include <unordered_map>

@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2024 Hulevych Mykhailo
+# SPDX-License-Identifier: MIT
+
 cider_project(swig)
 
 set(CIDER_SWIG_VERSION                4.1.0)

@@ -1,4 +1,5 @@
-#cider.cmake
+# Copyright (C) 2022-2024 Hulevych Mykhailo
+# SPDX-License-Identifier: MIT
 
 function(cider_tool_generate MODULE_NAME NAMESPACE FILES OUTPUT_DIR)
     cider_add_cmake_deps(${FILES})

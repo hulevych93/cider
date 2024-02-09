@@ -1,3 +1,6 @@
+// Copyright (C) 2022-2024 Hulevych Mykhailo
+// SPDX-License-Identifier: MIT
+
 #ifndef HJSONTEST_AENFOAWINFAWENFEFAWEFNWF
 #define HJSONTEST_AENFOAWINFAWENFEFAWEFNWF
 

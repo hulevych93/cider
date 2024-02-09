@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2024 Hulevych Mykhailo
+# SPDX-License-Identifier: MIT
+
 cider_project(fmt)
 
 set(CIDER_FMT_VERSION                9.0.0)

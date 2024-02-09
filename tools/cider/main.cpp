@@ -1,4 +1,5 @@
-/* Copyright(C) 2023 Hulevych */
+// Copyright (C) 2022-2024 Hulevych Mykhailo
+// SPDX-License-Identifier: MIT
 
 #include <cppast/libclang_parser.hpp>
 

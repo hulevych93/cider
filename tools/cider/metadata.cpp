@@ -1,3 +1,6 @@
+// Copyright (C) 2022-2024 Hulevych Mykhailo
+// SPDX-License-Identifier: MIT
+
 #include "metadata.h"
 
 #include <cppast/cpp_class.hpp>

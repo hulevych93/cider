@@ -1,4 +1,7 @@
-﻿#include "recorder.h"
+﻿// Copyright (C) 2022-2024 Hulevych Mykhailo
+// SPDX-License-Identifier: MIT
+
+#include "recorder.h"
 
 #include "details/session.h"
 

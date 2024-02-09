@@ -1,4 +1,7 @@
-﻿#pragma once
+﻿// Copyright (C) 2022-2024 Hulevych Mykhailo
+// SPDX-License-Identifier: MIT
+
+#pragma once
 
 #include "recorder/details/action.h"
 

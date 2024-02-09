@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2024 Hulevych Mykhailo
+# SPDX-License-Identifier: MIT
+
 cmake_minimum_required(VERSION 3.22)
 
 project(cider)
@@ -47,5 +50,5 @@ if(CIDER_ENABLE_COVERAGE)
         EXCLUDE "tools/*" "tests/models/*" "${BUILD_FILES_DIR}/*" "${CIDER_GEN_DIR}/*" "${BASE_DIRECTORY}/*/v1/*" "/Applications/*")
 endif()
 
-#add_subdirectory(experiments/hjson)
+add_subdirectory(experiments/hjson)
 #add_subdirectory(experiments/pugixml)

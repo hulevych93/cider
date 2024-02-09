@@ -1,3 +1,6 @@
+// Copyright (C) 2022-2024 Hulevych Mykhailo
+// SPDX-License-Identifier: MIT
+
 #include <gtest/gtest.h>
 
 #include "recorder/details/generator.h"
@@ -68,7 +71,7 @@ TEST_F(GeneratorTestSuite, nullContextForSession) {
   LanguageContext context;
   ScriptGenerator generator{"module", context};
 
-  ScriptRecordSessionImpl session{std::move(generator)};
+  ScriptRecordSessionImpl session{std::move(generator), {}};
   static_cast<ActionsObserver&>(session).onActionBegins(function);
 
   EXPECT_THROW(session.getScript(), ScriptGenerationError);

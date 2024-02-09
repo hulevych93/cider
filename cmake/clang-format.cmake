@@ -1,4 +1,5 @@
-# clang-format.cmake
+# Copyright (C) 2022-2024 Hulevych Mykhailo
+# SPDX-License-Identifier: MIT
 
 if(NOT CLANGFORMAT_EXECUTABLE)
     find_program(CLANGFORMAT_EXECUTABLE "clang-format")

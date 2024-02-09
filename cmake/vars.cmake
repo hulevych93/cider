@@ -1,4 +1,5 @@
-# vars.cmake
+# Copyright (C) 2022-2024 Hulevych Mykhailo
+# SPDX-License-Identifier: MIT
 
 if(NOT DEFINED CIDER_VARS_EXPORTED)
 cider_export_var(CIDER_VARS_EXPORTED 1)
