@@ -12,7 +12,7 @@ namespace recorder {
 
 class ScriptGenerator;
 
-class ScriptRecordSessionImpl final : public ScriptRecordSession,
+class ScriptRecordSessionImpl final : public IScriptRecordSession,
                                       public ActionsObserver {
   struct ActionEntry final {
     Action action;
@@ -21,7 +21,8 @@ class ScriptRecordSessionImpl final : public ScriptRecordSession,
   };
 
  public:
-  explicit ScriptRecordSessionImpl(ScriptGenerator&& generator);
+  explicit ScriptRecordSessionImpl(ScriptGenerator&& generator,
+                                   const SessionSettings& settings);
 
   std::string getScript() override;
 
@@ -37,6 +38,7 @@ class ScriptRecordSessionImpl final : public ScriptRecordSession,
   action_id _action_id = 1u;
 
   ScriptGenerator _generator;
+  SessionSettings _settings;
 };
 
 }  // namespace recorder

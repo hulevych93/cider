@@ -10,13 +10,10 @@ include (cmake/main.cmake)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
 include_directories(${CMAKE_SOURCE_DIR})
 
 enable_testing()
 
-add_subdirectory(thirdparty/gtest)
 add_subdirectory(thirdparty/fmt)
 add_subdirectory(thirdparty/swig)
 add_subdirectory(thirdparty/lua)
@@ -35,7 +32,12 @@ add_subdirectory(recorder)
 add_subdirectory(scripting)
 add_subdirectory(tools/cider)
 
-#add_subdirectory(tests)
+if(ENABLE_TESTS)
+  add_subdirectory(thirdparty/gtest)
+
+  add_subdirectory(tests)
+  add_subdirectory(recorder/tests)
+endif()
 
 if(CIDER_ENABLE_COVERAGE)
   setup_target_for_coverage_lcov(
@@ -45,5 +47,5 @@ if(CIDER_ENABLE_COVERAGE)
         EXCLUDE "tools/*" "tests/models/*" "${BUILD_FILES_DIR}/*" "${CIDER_GEN_DIR}/*" "${BASE_DIRECTORY}/*/v1/*" "/Applications/*")
 endif()
 
-add_subdirectory(experiments/hjson)
+#add_subdirectory(experiments/hjson)
 #add_subdirectory(experiments/pugixml)

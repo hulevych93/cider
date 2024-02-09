@@ -25,10 +25,9 @@ cider_tool_generate(${SWIG_MODULE_NAME} "PugixmlHooked" "${HDRS_OUT}" ${GEN_DIR}
 
 list(APPEND GEN_SRC_FILES "${GEN_DIR}/${SWIG_MODULE_NAME}_lua.cpp")
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_library(pugixml-models ${GEN_SRC_FILES})
 add_dependencies(pugixml-models pugixml_gen_swig)
-set(CMAKE_EXPORT_COMPILE_COMMANDS OFF)
+add_dependencies(pugixml_gen_swig ${CIDER_THIRDPARTY_TARGET_NAME})
 
 cider_generate_swig(LANGUAGE lua
                     EXTERNAL_RUNTIME

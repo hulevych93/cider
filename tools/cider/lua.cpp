@@ -58,7 +58,7 @@ void printAggregateProducer(std::ostream& os,
     os << "CodeSink& sink) {\n";
     os << "lua::ParamVisitor visitor(moduleName);\n";
     os << "std::string code;\n";
-    os << "code += \"local {var} = " + module + "." + e.name() + R"(()\n";)"
+    os << "code += \"{var} = " + module + "." + e.name() + R"(()\n";)"
        << "\n";
     printBaseClassesAggregateFields(os, metadata, e.bases(), scope);
   } else {

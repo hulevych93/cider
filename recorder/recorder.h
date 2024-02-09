@@ -14,14 +14,20 @@ struct ScriptGenerationError final : public std::exception {
   std::string _error;
 };
 
-class ScriptRecordSession {
+struct SessionSettings final {
+  size_t insructionsCount = 5000U;
+};
+
+class IScriptRecordSession {
  public:
-  virtual ~ScriptRecordSession() = default;
+  virtual ~IScriptRecordSession() = default;
   virtual std::string getScript() = 0;
 };
 
-using ScriptRecordSessionPtr = std::shared_ptr<ScriptRecordSession>;
-ScriptRecordSessionPtr makeLuaRecordingSession(const std::string& moduleName);
+using ScriptRecordSessionPtr = std::shared_ptr<IScriptRecordSession>;
+ScriptRecordSessionPtr makeLuaRecordingSession(
+    const std::string& moduleName,
+    const SessionSettings& settings = {});
 
 }  // namespace recorder
 }  // namespace cider

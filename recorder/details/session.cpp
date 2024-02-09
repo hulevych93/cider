@@ -3,14 +3,21 @@
 namespace cider {
 namespace recorder {
 
-ScriptRecordSessionImpl::ScriptRecordSessionImpl(ScriptGenerator&& generator)
-    : _generator(std::move(generator)) {}
+ScriptRecordSessionImpl::ScriptRecordSessionImpl(
+    ScriptGenerator&& generator,
+    const SessionSettings& settings)
+    : _generator(std::move(generator)), _settings(settings) {}
 
 std::string ScriptRecordSessionImpl::getScript() {
   try {
+    size_t count = 0U;
     for (const auto& entry : _log) {
       if (entry.nestingLevel < 1u) {
         std::visit(_generator, entry.action);
+        ++count;
+        if (count >= _settings.insructionsCount) {
+          break;
+        }
       }
     }
     reset();

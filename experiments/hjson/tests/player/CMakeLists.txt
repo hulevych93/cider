@@ -22,9 +22,10 @@ target_link_libraries(hjson_player PUBLIC
 
 if(HJSON_ENABLE_COVERAGE)
   setup_target_for_coverage_lcov(
-        NAME coverage
+        NAME hjson_player_coverage
         EXECUTABLE hjson_player
-        EXECUTABLE_ARGS "${CMAKE_BINARY_DIR}/experiments/hjson/tests/script.lua"
+        EXECUTABLE_ARGS "${CMAKE_BINARY_DIR}/experiments/hjson/tests/script_2.lua"
         BASE_DIRECTORY "${EXPERIMENT_HJSON_BUILD_DIR}/src"
+        WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..
         EXCLUDE "${CIDER_GEN_DIR}/*" "${BASE_DIRECTORY}/*/v1/*" "/Applications/*")
 endif()

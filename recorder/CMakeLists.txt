@@ -9,5 +9,3 @@ target_include_directories(recorder PRIVATE ${Fmt_INCLUDE_DIRS} PUBLIC ${Boost_I
 target_link_libraries(recorder PRIVATE ${Fmt_LIBRARIES})
 
 add_dependencies(recorder ${CIDER_THIRDPARTY_TARGET_NAME})
-
-add_subdirectory(tests)

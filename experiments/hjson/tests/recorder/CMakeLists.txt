@@ -12,7 +12,8 @@ include_directories(.
 
 cider_collect_src(LIST_OUT)
 
-add_executable(hjson_recorder ${LIST_OUT})
+add_executable(hjson_recorder ${LIST_OUT} ${TESTED_FILES})
+add_dependencies(hjson_recorder ${CIDER_THIRDPARTY_TARGET_NAME})
 
 set(SWIG_MODULE_NAME "hjson")
 
@@ -49,5 +50,20 @@ target_link_libraries(hjson_recorder PUBLIC
   recorder
   ${Lua_LIBRARIES}
   ${PLATFORM_LIBRARIES}
-  ${Hjson_LIBRARIES}
 )
+
+add_custom_target(record_hjson_script
+                   COMMAND "${CMAKE_CURRENT_BINARY_DIR}/hjson_recorder" ${SCRIPT_PATH}
+                   WORKING_DIRECTORY ${CIDER_DIRECTORY}
+                   DEPENDS hjson_recorder
+                   COMMENT "Recording script files...")
+
+if(HJSON_ENABLE_COVERAGE)
+                   setup_target_for_coverage_lcov(
+                       NAME hjson_recoder_coverage
+                       EXECUTABLE hjson_recorder
+                       EXECUTABLE_ARGS "${CMAKE_BINARY_DIR}/experiments/hjson/tests/script.lua"
+                       BASE_DIRECTORY "${EXPERIMENT_HJSON_BUILD_DIR}/src"
+                       WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..
+                       EXCLUDE "${CIDER_GEN_DIR}/*" "${BASE_DIRECTORY}/*/v1/*" "/Applications/*")
+endif()

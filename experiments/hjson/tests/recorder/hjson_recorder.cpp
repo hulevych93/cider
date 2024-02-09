@@ -6,15 +6,17 @@
 #include "hjson_test.h"
 
 void test_value();
+void test_marshal();
 
 int main(int argc, char* argv[]) {
   assert(argc == 2);
-  std::cout << "recording script: " << argv[1];
+  std::cout << "working directory: " << argv[1];
 
-  auto session = cider::recorder::makeLuaRecordingSession("hjson");
+  auto session = cider::recorder::makeLuaRecordingSession(
+      "hjson", cider::recorder::SessionSettings{67});
 
   try {
-    test_value();
+    test_marshal();
   } catch (const std::exception& e) {
     std::cerr << e.what();
     return 1;

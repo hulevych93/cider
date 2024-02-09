@@ -140,7 +140,7 @@ find_program( GCOV_PATH gcov )
 find_program( LCOV_PATH  NAMES lcov lcov.bat lcov.exe lcov.perl)
 find_program( FASTCOV_PATH NAMES fastcov fastcov.py )
 find_program( GENHTML_PATH NAMES genhtml genhtml.perl genhtml.bat )
-find_program( GCOVR_PATH gcovr PATHS ${CMAKE_SOURCE_DIR}/scripts/test)
+find_program( GCOVR_PATH NAMES gcovr )
 find_program( CPPFILT_PATH NAMES c++filt )
 
 if(NOT GCOV_PATH)
@@ -225,7 +225,7 @@ endif()
 function(setup_target_for_coverage_lcov)
 
     set(options NO_DEMANGLE SONARQUBE)
-    set(oneValueArgs BASE_DIRECTORY NAME)
+    set(oneValueArgs BASE_DIRECTORY WORKING_DIR NAME)
     set(multiValueArgs EXCLUDE EXECUTABLE EXECUTABLE_ARGS DEPENDENCIES LCOV_ARGS GENHTML_ARGS)
     cmake_parse_arguments(Coverage "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
@@ -294,6 +294,7 @@ function(setup_target_for_coverage_lcov)
         ${GENHTML_PATH} ${GENHTML_EXTRA_ARGS} ${Coverage_GENHTML_ARGS} -o
         ${Coverage_NAME} ${Coverage_NAME}.info
     )
+
     if(${Coverage_SONARQUBE})
         # Generate SonarQube output
         set(GCOVR_XML_CMD
@@ -307,49 +308,29 @@ function(setup_target_for_coverage_lcov)
         set(GCOVR_XML_CMD_COMMENT COMMENT "SonarQube code coverage info report saved in ${Coverage_NAME}_sonarqube.xml.")
     endif()
 
-
-    if(CODE_COVERAGE_VERBOSE)
-        message(STATUS "Executed command report")
-        message(STATUS "Command to clean up lcov: ")
-        string(REPLACE ";" " " LCOV_CLEAN_CMD_SPACED "${LCOV_CLEAN_CMD}")
-        message(STATUS "${LCOV_CLEAN_CMD_SPACED}")
-
-        message(STATUS "Command to create baseline: ")
-        string(REPLACE ";" " " LCOV_BASELINE_CMD_SPACED "${LCOV_BASELINE_CMD}")
-        message(STATUS "${LCOV_BASELINE_CMD_SPACED}")
-
-        message(STATUS "Command to run the tests: ")
-        string(REPLACE ";" " " LCOV_EXEC_TESTS_CMD_SPACED "${LCOV_EXEC_TESTS_CMD}")
-        message(STATUS "${LCOV_EXEC_TESTS_CMD_SPACED}")
-
-        message(STATUS "Command to capture counters and generate report: ")
-        string(REPLACE ";" " " LCOV_CAPTURE_CMD_SPACED "${LCOV_CAPTURE_CMD}")
-        message(STATUS "${LCOV_CAPTURE_CMD_SPACED}")
-
-        message(STATUS "Command to add baseline counters: ")
-        string(REPLACE ";" " " LCOV_BASELINE_COUNT_CMD_SPACED "${LCOV_BASELINE_COUNT_CMD}")
-        message(STATUS "${LCOV_BASELINE_COUNT_CMD_SPACED}")
-
-        message(STATUS "Command to filter collected data: ")
-        string(REPLACE ";" " " LCOV_FILTER_CMD_SPACED "${LCOV_FILTER_CMD}")
-        message(STATUS "${LCOV_FILTER_CMD_SPACED}")
-
-        message(STATUS "Command to generate lcov HTML output: ")
-        string(REPLACE ";" " " LCOV_GEN_HTML_CMD_SPACED "${LCOV_GEN_HTML_CMD}")
-        message(STATUS "${LCOV_GEN_HTML_CMD_SPACED}")
-
-        if(${Coverage_SONARQUBE})
-            message(STATUS "Command to generate SonarQube XML output: ")
-            string(REPLACE ";" " " GCOVR_XML_CMD_SPACED "${GCOVR_XML_CMD}")
-            message(STATUS "${GCOVR_XML_CMD_SPACED}")
-        endif()
-    endif()
-
     # Setup target
-    add_custom_target(${Coverage_NAME}
+    add_custom_target("${Coverage_NAME}_pre"
         COMMAND ${LCOV_CLEAN_CMD}
         COMMAND ${LCOV_BASELINE_CMD}
+
+        # Set output files as GENERATED (will be removed on 'make clean')
+        BYPRODUCTS
+            ${Coverage_NAME}.base
+        WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+        DEPENDS ${Coverage_DEPENDENCIES}
+        VERBATIM # Protect arguments to commands
+        COMMENT "Resetting code coverage counters to zero.\nProcessing code coverage counters and generating report."
+    )
+
+    add_custom_target(${Coverage_NAME}_mid
         COMMAND ${LCOV_EXEC_TESTS_CMD}
+        WORKING_DIRECTORY ${Coverage_WORKING_DIR}
+        DEPENDS ${Coverage_NAME}_pre
+        VERBATIM # Protect arguments to commands
+        COMMENT "Resetting code coverage counters to zero.\nProcessing code coverage counters and generating report."
+    )
+
+    add_custom_target(${Coverage_NAME}
         COMMAND ${LCOV_CAPTURE_CMD}
         COMMAND ${LCOV_BASELINE_COUNT_CMD}
         COMMAND ${LCOV_FILTER_CMD}
@@ -358,14 +339,14 @@ function(setup_target_for_coverage_lcov)
 
         # Set output files as GENERATED (will be removed on 'make clean')
         BYPRODUCTS
-            ${Coverage_NAME}.base
-            ${Coverage_NAME}.capture
-            ${Coverage_NAME}.total
-            ${Coverage_NAME}.info
-            ${GCOVR_XML_CMD_BYPRODUCTS}
-            ${Coverage_NAME}/index.html
+        ${Coverage_NAME}.capture
+        ${Coverage_NAME}.total
+        ${Coverage_NAME}.info
+        ${GCOVR_XML_CMD_BYPRODUCTS}
+        ${Coverage_NAME}/index.html
+
         WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
-        DEPENDS ${Coverage_DEPENDENCIES}
+        DEPENDS ${Coverage_NAME}_mid
         VERBATIM # Protect arguments to commands
         COMMENT "Resetting code coverage counters to zero.\nProcessing code coverage counters and generating report."
     )
