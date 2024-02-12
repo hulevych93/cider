@@ -7,10 +7,10 @@
 #include <fstream>
 #include <iostream>
 
-#include "hjson_test.h"
+#include <assert.h>
 
-void test_value();
-void test_marshal();
+extern void test_value();
+extern void test_marshal();
 
 int main(int argc, char* argv[]) {
   assert(argc == 2);

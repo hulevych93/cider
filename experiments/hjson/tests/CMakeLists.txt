@@ -13,3 +13,5 @@ set(SCRIPT_PATH "${CMAKE_BINARY_DIR}/experiments/hjson/tests/script.lua")
 
 add_subdirectory(recorder)
 add_subdirectory(player)
+add_subdirectory(coverage_driver)
+add_subdirectory(hjson_tests)

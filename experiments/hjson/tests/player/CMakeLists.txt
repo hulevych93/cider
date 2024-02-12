@@ -5,20 +5,15 @@ cider_project(hjson_player)
 
 set(GEN_DIR ${CIDER_GEN_DIR}/hjson)
 
-include_directories(.
-    ${Lua_INCLUDE_DIRS}
-    ${GTest_INCLUDE_DIRS}
-    ${Boost_INCLUDE_DIRS}
-    ${CMAKE_BINARY_DIR}
-    ${GEN_DIR}
-)
+add_executable(hjson_player hjson_play.cpp)
 
-add_executable(hjson_player hjson_play.cpp ${TESTED_FILES})
 target_link_libraries(hjson_player PUBLIC
   hjson_wrap
   hjson-models
   scripting
   recorder
+  coverage
+  ${Hjson_LIBRARIES}
   ${Lua_LIBRARIES}
   ${PLATFORM_LIBRARIES}
 )

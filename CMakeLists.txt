@@ -28,7 +28,6 @@ add_subdirectory(thirdparty/tpl)
 add_subdirectory(coverage)
 add_subdirectory(tools/cider)
 add_subdirectory(tools/coverage/table_printer)
-add_subdirectory(tools/coverage/coverage_driver)
 
 if(ENABLE_COVERAGE)
     if(NOT "${CMAKE_BUILD_TYPE}" STREQUAL "DEBUG")
@@ -40,7 +39,6 @@ endif()
 
 add_subdirectory(recorder)
 add_subdirectory(scripting)
-add_subdirectory(serialization)
 
 if(ENABLE_TESTS)
   add_subdirectory(thirdparty/gtest)
