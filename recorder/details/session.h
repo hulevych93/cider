@@ -27,7 +27,8 @@ class ScriptRecordSessionImpl final : public IScriptRecordSession,
   explicit ScriptRecordSessionImpl(ScriptGenerator&& generator,
                                    const SessionSettings& settings);
 
-  std::string getScript() override;
+  std::string getScript(size_t instructions) override;
+  size_t getInstructionsCount() const override;
 
  private:
   action_id onActionBegins(const Action& action) override;

@@ -22,6 +22,11 @@ add_subdirectory(thirdparty/swig)
 add_subdirectory(thirdparty/lua)
 add_subdirectory(thirdparty/cppast)
 add_subdirectory(thirdparty/cxxopts)
+add_subdirectory(thirdparty/nlohmann)
+
+add_subdirectory(coverage)
+add_subdirectory(tools/cider)
+add_subdirectory(tools/coverage/table_printer)
 
 if(ENABLE_COVERAGE)
     if(NOT "${CMAKE_BUILD_TYPE}" STREQUAL "DEBUG")
@@ -33,7 +38,6 @@ endif()
 
 add_subdirectory(recorder)
 add_subdirectory(scripting)
-add_subdirectory(tools/cider)
 
 if(ENABLE_TESTS)
   add_subdirectory(thirdparty/gtest)
@@ -51,4 +55,3 @@ if(CIDER_ENABLE_COVERAGE)
 endif()
 
 add_subdirectory(experiments/hjson)
-#add_subdirectory(experiments/pugixml)

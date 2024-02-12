@@ -21,7 +21,7 @@ int luaopen_hjson(lua_State* L);
 int main(int argc, char* argv[]) {
   try {
     assert(argc == 2);
-    std::cout << "running script: " << argv[1];
+    std::cout << "running script: " << argv[1] << std::endl;
 
     std::ifstream scr1(argv[1], std::ios::binary);
     scr1.seekg(0, std::ios::end);

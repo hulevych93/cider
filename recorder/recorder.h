@@ -17,14 +17,13 @@ struct ScriptGenerationError final : public std::exception {
   std::string _error;
 };
 
-struct SessionSettings final {
-  size_t insructionsCount = 5000U;
-};
+struct SessionSettings final {};
 
 class IScriptRecordSession {
  public:
   virtual ~IScriptRecordSession() = default;
-  virtual std::string getScript() = 0;
+  virtual std::string getScript(size_t) = 0;
+  virtual size_t getInstructionsCount() const = 0;
 };
 
 using ScriptRecordSessionPtr = std::shared_ptr<IScriptRecordSession>;

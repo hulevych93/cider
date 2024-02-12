@@ -19,6 +19,7 @@ class CodeSinkImpl : public CodeSink {
   std::string getScript() {
     _locals.clear();
     _localCounter = 0u;
+    _lineCounter = 0u;
     return std::move(_sink);
   }
 
@@ -110,7 +111,6 @@ class CodeSinkImpl : public CodeSink {
 
   void format(const std::string& codeTemplate,
               const fmt::dynamic_format_arg_store<fmt::format_context>& args) {
-    _sink += "print(" + std::to_string(++_lineCounter) + ") ";
     try {
       _sink += fmt::vformat(codeTemplate, args);
     } catch (const fmt::format_error& fmtErr) {

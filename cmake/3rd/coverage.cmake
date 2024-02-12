@@ -371,7 +371,7 @@ endfunction() # setup_target_for_coverage_lcov
 # NOTE! The executable should always have a ZERO as exit code otherwise
 # the coverage generation will not complete.
 #
-# setup_target_for_coverage_gcovr_xml(
+# setup_target_for_coverage_gcovr_json(
 #     NAME ctest_coverage                    # New target name
 #     EXECUTABLE ctest -j ${PROCESSOR_COUNT} # Executable in PROJECT_BINARY_DIR
 #     DEPENDENCIES executable_target         # Dependencies to build first
@@ -382,10 +382,10 @@ endfunction() # setup_target_for_coverage_lcov
 # )
 # The user can set the variable GCOVR_ADDITIONAL_ARGS to supply additional flags to the
 # GCVOR command.
-function(setup_target_for_coverage_gcovr_xml)
+function(setup_target_for_coverage_gcovr_json)
 
     set(options NONE)
-    set(oneValueArgs BASE_DIRECTORY NAME)
+    set(oneValueArgs BASE_DIRECTORY EXECUTABLE_WORKING_DIR NAME)
     set(multiValueArgs EXCLUDE EXECUTABLE EXECUTABLE_ARGS DEPENDENCIES)
     cmake_parse_arguments(Coverage "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
@@ -419,34 +419,38 @@ function(setup_target_for_coverage_gcovr_xml)
 
     # Set up commands which will be run to generate coverage data
     # Run tests
-    set(GCOVR_XML_EXEC_TESTS_CMD
+    set(GCOVR_EXEC_TESTS_CMD
         ${Coverage_EXECUTABLE} ${Coverage_EXECUTABLE_ARGS}
     )
+
     # Running gcovr
-    set(GCOVR_XML_CMD
-        ${GCOVR_PATH} --xml ${Coverage_NAME}.xml -r ${BASEDIR} ${GCOVR_ADDITIONAL_ARGS}
+    set(GCOVR_JSON_SUMMARY_CMD
+        ${GCOVR_PATH} --json-summary ${Coverage_NAME}.json --json-summary-pretty -r ${BASEDIR} ${GCOVR_ADDITIONAL_ARGS}
         ${GCOVR_EXCLUDE_ARGS} --object-directory=${PROJECT_BINARY_DIR}
     )
 
-    if(CODE_COVERAGE_VERBOSE)
-        message(STATUS "Executed command report")
+    add_custom_target(${Coverage_NAME}_clean
+        COMMAND find . -name "*.gcda" -delete
 
-        message(STATUS "Command to run tests: ")
-        string(REPLACE ";" " " GCOVR_XML_EXEC_TESTS_CMD_SPACED "${GCOVR_XML_EXEC_TESTS_CMD}")
-        message(STATUS "${GCOVR_XML_EXEC_TESTS_CMD_SPACED}")
-
-        message(STATUS "Command to generate gcovr XML coverage data: ")
-        string(REPLACE ";" " " GCOVR_XML_CMD_SPACED "${GCOVR_XML_CMD}")
-        message(STATUS "${GCOVR_XML_CMD_SPACED}")
-    endif()
-
-    add_custom_target(${Coverage_NAME}
-        COMMAND ${GCOVR_XML_EXEC_TESTS_CMD}
-        COMMAND ${GCOVR_XML_CMD}
-
-        BYPRODUCTS ${Coverage_NAME}.xml
         WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
         DEPENDS ${Coverage_DEPENDENCIES}
+        VERBATIM # Protect arguments to commands
+    )
+
+    add_custom_target(${Coverage_NAME}_exec
+        COMMAND ${GCOVR_EXEC_TESTS_CMD}
+
+        WORKING_DIRECTORY ${Coverage_EXECUTABLE_WORKING_DIR}
+        DEPENDS ${Coverage_NAME}_clean
+        VERBATIM # Protect arguments to commands
+    )
+
+    add_custom_target(${Coverage_NAME}
+        COMMAND ${GCOVR_JSON_SUMMARY_CMD}
+
+        BYPRODUCTS ${Coverage_NAME}.json
+        WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+        DEPENDS ${Coverage_NAME}_exec
         VERBATIM # Protect arguments to commands
         COMMENT "Running gcovr to produce Cobertura code coverage report."
     )
@@ -454,9 +458,9 @@ function(setup_target_for_coverage_gcovr_xml)
     # Show info where to find the report
     add_custom_command(TARGET ${Coverage_NAME} POST_BUILD
         COMMAND ;
-        COMMENT "Cobertura code coverage report saved in ${Coverage_NAME}.xml."
+        COMMENT "Cobertura code coverage report saved in ${Coverage_NAME}.json."
     )
-endfunction() # setup_target_for_coverage_gcovr_xml
+endfunction() # setup_target_for_coverage_gcovr_json
 
 # Defines a target for running and collection code coverage information
 # Builds dependencies, runs the given executable and outputs reports.
