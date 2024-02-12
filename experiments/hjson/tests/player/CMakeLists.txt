@@ -23,7 +23,7 @@ target_link_libraries(hjson_player PUBLIC
   ${PLATFORM_LIBRARIES}
 )
 
-if(HJSON_ENABLE_COVERAGE)
+if(HJSON_ENABLE_PLAYER_COVERAGE)
   add_custom_target(coverage_hjson)
 
   foreach(INDEX RANGE 1 1259 1)

@@ -70,3 +70,18 @@ if(HJSON_ENABLE_COVERAGE)
                        WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..
                        EXCLUDE "${CIDER_GEN_DIR}/*" "${BASE_DIRECTORY}/*/v1/*" "/Applications/*")
 endif()
+
+if(1)
+  add_custom_target(coverage_driver_run
+      COMMAND coverage_driver
+      "${CMAKE_SOURCE_DIR}/experiments/hjson/tests"
+      "${EXPERIMENT_HJSON_BUILD_DIR}/src"
+      "${CMAKE_BINARY_DIR}/experiments/hjson/tests/player"
+      "${CMAKE_BINARY_DIR}/experiments/hjson/tests/scripts/script_55.lua"
+      "${CMAKE_BINARY_DIR}/bin"
+
+      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/experiments/hjson/tests/player"
+      DEPENDS hjson_player
+      VERBATIM # Protect arguments to commands
+  )
+endif()

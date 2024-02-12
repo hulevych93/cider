@@ -425,7 +425,7 @@ function(setup_target_for_coverage_gcovr_json)
 
     # Running gcovr
     set(GCOVR_JSON_SUMMARY_CMD
-        ${GCOVR_PATH} --json-summary ${Coverage_NAME}.json --json-summary-pretty -r ${BASEDIR} ${GCOVR_ADDITIONAL_ARGS}
+        ${GCOVR_PATH} --json-summary --json-summary-pretty -r ${BASEDIR} ${GCOVR_ADDITIONAL_ARGS}
         ${GCOVR_EXCLUDE_ARGS} --object-directory=${PROJECT_BINARY_DIR}
     )
 

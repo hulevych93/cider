@@ -11,19 +11,19 @@ namespace cider {
 namespace coverage {
 
 CoverageReport parseCoverageReport(const nlohmann::json& value) {
-    CoverageReport report;
-    report.branchCov.covered = value["branch_covered"];
-    report.branchCov.total = value["branch_total"];
-    report.branchCov.percent = value["branch_percent"];
+  CoverageReport report;
+  report.branchCov.covered = value["branch_covered"];
+  report.branchCov.total = value["branch_total"];
+  report.branchCov.percent = value["branch_percent"];
 
-    report.funcCov.covered = value["function_covered"];
-    report.funcCov.total = value["function_total"];
-    report.funcCov.percent = value["function_percent"];
+  report.funcCov.covered = value["function_covered"];
+  report.funcCov.total = value["function_total"];
+  report.funcCov.percent = value["function_percent"];
 
-    report.lineCov.covered = value["line_covered"];
-    report.lineCov.total = value["line_total"];
-    report.lineCov.percent = value["line_percent"];
-    return report;
+  report.lineCov.covered = value["line_covered"];
+  report.lineCov.total = value["line_total"];
+  report.lineCov.percent = value["line_percent"];
+  return report;
 }
 
 std::optional<RootReport> parseJsonCovReport(const std::string& json,
@@ -35,12 +35,12 @@ std::optional<RootReport> parseJsonCovReport(const std::string& json,
     report.report = parseCoverageReport(parsedReport);
 
     if (deep) {
-        for(const auto& file : parsedReport["files"]) {
-            FileReport fileReport;
-            fileReport.name = file["filename"];
-            fileReport.report = parseCoverageReport(file);
-            report.files.emplace_back(fileReport);
-        }
+      for (const auto& file : parsedReport["files"]) {
+        FileReport fileReport;
+        fileReport.name = file["filename"];
+        fileReport.report = parseCoverageReport(file);
+        report.files.emplace_back(fileReport);
+      }
     }
   } catch (...) {
     return std::nullopt;
