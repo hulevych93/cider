@@ -26,6 +26,7 @@ add_subdirectory(thirdparty/nlohmann)
 add_subdirectory(thirdparty/tpl)
 
 add_subdirectory(coverage)
+add_subdirectory(harmony)
 add_subdirectory(tools/cider)
 add_subdirectory(tools/coverage/table_printer)
 

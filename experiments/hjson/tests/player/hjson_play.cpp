@@ -21,14 +21,23 @@ int luaopen_hjson(lua_State* L);
 
 int main(int argc, char* argv[]) {
   try {
-    assert(argc == 2);
-    std::cout << "running script: " << argv[1] << std::endl;
+    std::string script;
+    if (argc == 2) {
+      std::cout << "running script: " << argv[1] << std::endl;
+      script = cider::coverage::loadFile(argv[1]);
+    } else {
+      for (std::string line; std::getline(std::cin, line);) {
+        script += line += "\n";
+      }
+      std::ofstream scrrr("scr");
+      scrrr << script;
+    }
 
     auto lState = cider::scripting::get_lua();
     luaopen_hjson(lState.get());
 
-    const auto script = cider::coverage::loadFile(argv[1]);
-    cider::scripting::executeScript(lState.get(), script.c_str());
+    return cider::scripting::executeScript(lState.get(), script.c_str()) ? 0
+                                                                         : 1;
 
   } catch (const std::exception& e) {
     std::cerr << e.what();

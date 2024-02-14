@@ -7,6 +7,9 @@
 #include <fmt/args.h>
 #include <fmt/format.h>
 
+#include "recorder/details/lua/lua_func.h"
+#include "recorder/details/lua/lua_params.h"
+
 #include <unordered_map>
 
 namespace cider {
@@ -111,6 +114,7 @@ class CodeSinkImpl : public CodeSink {
 
   void format(const std::string& codeTemplate,
               const fmt::dynamic_format_arg_store<fmt::format_context>& args) {
+    _sink + "print(" + std::to_string(_lineCounter) + ") ";
     try {
       _sink += fmt::vformat(codeTemplate, args);
     } catch (const fmt::format_error& fmtErr) {
@@ -257,6 +261,16 @@ std::string ScriptGenerator::getScript() {
 
 void ScriptGenerator::discard() {
   static_cast<CodeSinkImpl&>(*_sink).getScript();
+}
+
+ScriptGenerator makeLuaGenerator(const std::string& moduleName) {
+  LanguageContext context;
+  context.funcProducer = lua::produceFunctionCall;
+  context.paramProducer = lua::produceParamCode;
+  context.binaryOpProducer = lua::produceBinaryOpCall;
+  context.functionNameMutator = lua::mutateFunctionName;
+  context.unaryOpProducer = lua::produceUnaryOpCall;
+  return ScriptGenerator{moduleName, context};
 }
 
 }  // namespace recorder

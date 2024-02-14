@@ -24,6 +24,7 @@ class IScriptRecordSession {
   virtual ~IScriptRecordSession() = default;
   virtual std::string getScript(size_t) = 0;
   virtual size_t getInstructionsCount() const = 0;
+  virtual std::vector<Action> getInstructions() const = 0;
 };
 
 using ScriptRecordSessionPtr = std::shared_ptr<IScriptRecordSession>;

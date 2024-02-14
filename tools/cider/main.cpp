@@ -14,6 +14,7 @@
 #include "ast_handler.h"
 #include "generator.h"
 #include "lua.h"
+#include "mutator.h"
 #include "namespaces_stack.h"
 #include "options.h"
 #include "printers.h"
@@ -172,6 +173,16 @@ int main(int argc, char* argv[]) {
         for (const auto& file : files) {
           handleFile(luaGen, *file);
         }
+      }
+
+      const auto outMutatorFilePath =
+          getOutputFilePathWithoutExtension(moduleName, outDir);
+
+      std::ofstream mutatorStream(outMutatorFilePath + "_mutator.cpp");
+      mutator_generator mutGen{mutatorStream, outDir, metadata};
+
+      for (const auto& file : files) {
+        handleFile(mutGen, *file);
       }
     }
 

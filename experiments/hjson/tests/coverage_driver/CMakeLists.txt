@@ -8,8 +8,9 @@ add_executable(coverage_driver coverage_driver.cpp)
 target_include_directories(coverage_driver PRIVATE ${Tpl_INCLUDE_DIRS})
 target_link_libraries(coverage_driver PUBLIC
   coverage
+  harmony
+  hjson_tests
   ${Tpl_LIBRARIES}
-  ${PLATFORM_LIBRARIES}
 )
 
 if(ENABLE_COVERAGE_DRIVER)
@@ -18,7 +19,6 @@ if(ENABLE_COVERAGE_DRIVER)
       "${CMAKE_SOURCE_DIR}/experiments/hjson/tests/hjson_tests"
       "${EXPERIMENT_HJSON_BUILD_DIR}/src"
       "${CMAKE_BINARY_DIR}/experiments/hjson/tests/player"
-      "${CMAKE_BINARY_DIR}/experiments/hjson/tests/scripts/script_4178.lua"
       "${CMAKE_BINARY_DIR}/bin"
 
       WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/experiments/hjson/tests/player"

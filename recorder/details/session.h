@@ -29,6 +29,7 @@ class ScriptRecordSessionImpl final : public IScriptRecordSession,
 
   std::string getScript(size_t instructions) override;
   size_t getInstructionsCount() const override;
+  std::vector<Action> getInstructions() const override;
 
  private:
   action_id onActionBegins(const Action& action) override;

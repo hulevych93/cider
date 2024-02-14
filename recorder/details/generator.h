@@ -62,5 +62,7 @@ class ScriptGenerator final {
   std::unique_ptr<CodeSink> _sink;
 };
 
+ScriptGenerator makeLuaGenerator(const std::string& moduleName);
+
 }  // namespace recorder
 }  // namespace cider

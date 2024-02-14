@@ -41,6 +41,17 @@ size_t ScriptRecordSessionImpl::getInstructionsCount() const {
   return count;
 }
 
+std::vector<Action> ScriptRecordSessionImpl::getInstructions() const {
+  std::vector<Action> actions;
+  actions.reserve(getInstructionsCount());
+  for (const auto& entry : _log) {
+    if (entry.nestingLevel < 1u) {
+      actions.push_back(entry.action);
+    }
+  }
+  return actions;
+}
+
 action_id ScriptRecordSessionImpl::onActionBegins(const Action& action) {
   const auto id = _action_id;
   _log.emplace_back(ActionEntry{action, id, _nestingLevel});

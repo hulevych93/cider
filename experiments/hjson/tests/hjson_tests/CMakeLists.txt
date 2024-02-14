@@ -14,7 +14,7 @@ include_directories(.
 
 cider_collect_src(LIST_OUT)
 
-add_library(hjson_tests SHARED ${LIST_OUT})
+add_library(hjson_tests OBJECT ${LIST_OUT})
 add_dependencies(hjson_tests ${CIDER_THIRDPARTY_TARGET_NAME})
 
 set(SWIG_MODULE_NAME "hjson")
@@ -31,6 +31,7 @@ endforeach()
 cider_tool_generate(${SWIG_MODULE_NAME} "HjsonHooked" "${HDRS_OUT}" ${GEN_DIR})
 
 list(APPEND GEN_SRC_FILES "${GEN_DIR}/${SWIG_MODULE_NAME}_lua.cpp")
+list(APPEND GEN_SRC_FILES "${GEN_DIR}/${SWIG_MODULE_NAME}_mutator.cpp")
 
 add_library(hjson-models ${GEN_SRC_FILES})
 add_dependencies(hjson-models hjson_gen_swig)

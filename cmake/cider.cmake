@@ -21,6 +21,7 @@ function(cider_tool_generate MODULE_NAME NAMESPACE FILES OUTPUT_DIR)
 
     set_source_files_properties(${GEN_DIR}/${MODULE_NAME}.swig PROPERTIES GENERATED TRUE)
     set_source_files_properties(${GEN_DIR}/${MODULE_NAME}_lua.cpp PROPERTIES GENERATED TRUE)
+    set_source_files_properties(${GEN_DIR}/${MODULE_NAME}_mutator.cpp PROPERTIES GENERATED TRUE)
 
     set(OUT_PARAM)
     cider_join_list(FILES ":" OUT_PARAM)

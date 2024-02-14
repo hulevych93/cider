@@ -13,30 +13,21 @@ extern void test_value();
 extern void test_marshal();
 
 int main(int argc, char* argv[]) {
-  assert(argc == 2);
-  std::cout << "working directory: " << argv[1];
-  std::filesystem::create_directories(argv[1]);
-
   auto session = cider::recorder::makeLuaRecordingSession("hjson");
 
   try {
-    test_value();
     test_marshal();
   } catch (const std::exception& e) {
     std::cerr << e.what();
     return 1;
   }
 
-  const auto count = session->getInstructionsCount();
-  for (auto i = 1U; i < count; ++i) {
+  if (argc == 2) {
+    std::cout << "script path: " << argv[1];
     try {
-      const auto script = session->getScript(i);
+      const auto script = session->getScript(session->getInstructionsCount());
 
-      auto outPath = std::string{argv[1]};
-      std::filesystem::create_directories(outPath);
-
-      std::ofstream output_file(outPath + "/script_" + std::to_string(i) +
-                                ".lua");
+      std::ofstream output_file(argv[1]);
       output_file << script;
     } catch (const std::exception& e) {
       std::cerr << e.what();
