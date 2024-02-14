@@ -45,9 +45,9 @@ bool runCoverage(const std::string& base,
 }
 
 void printTableEntry(std::ostream& ss,
-                     const std::string& name,
+                     const size_t index,
                      const cider::coverage::CoverageReport& report) {
-  ss << name << "\t" << report.lineCov.percent << "\t"
+  ss << index << "\t" << report.lineCov.percent << "\t"
      << report.branchCov.percent << "\t" << report.funcCov.percent << std::endl;
 }
 
@@ -69,12 +69,17 @@ struct Cmd final {
 extern void test_value();
 extern void test_marshal();
 
-std::string generateScript(
-    const std::vector<cider::recorder::Action>& actions) {
+std::string generateScript(const std::vector<cider::recorder::Action>& actions,
+                           const size_t limit) {
   auto generator = cider::recorder::makeLuaGenerator("hjson");
   try {
+    size_t count = 0;
     for (const auto& action : actions) {
       std::visit(generator, action);
+      if (count >= limit) {
+        break;
+      }
+      ++count;
     }
     return generator.getScript();
   } catch (...) {
@@ -90,24 +95,24 @@ int main(int argc, char* argv[]) {
     auto session = cider::recorder::makeLuaRecordingSession("hjson");
 
     try {
-      test_value();
       test_marshal();
     } catch (const std::exception& e) {
       std::cout << e.what();
     }
 
-    // std::ofstream report("report.txt");
+    std::ofstream report("report.txt");
 
     cider::harmony::Settings settings;
-    settings.mutationRate = 0.1;
-    settings.harmonyMemoryConsiderationRate = 0.1;
-    settings.harmonyMemorySize = 3;
+    settings.mutationRate = 0.0;
+    settings.harmonyMemoryConsiderationRate = 0;
+    settings.harmonyMemorySize = 1;
     settings.maxIterations = 10000;
     settings.strategy = cider::harmony::MutationStrategy::ChangeBits;
 
+    size_t index = 1;
     settings.meassure = [&](const std::vector<cider::recorder::Action>& actions)
         -> cider::harmony::ReportOpt {
-      const auto script = generateScript(actions);
+      const auto script = generateScript(actions, index);
 
       assert(cleanCoverage());
 
@@ -120,11 +125,17 @@ int main(int argc, char* argv[]) {
                            }));
 
         const auto rootReport =
-            cider::coverage::parseJsonCovReport(jsonReport, false);
+            cider::coverage::parseJsonCovReport(jsonReport, true);
         assert(rootReport.has_value());
 
-        printTableEntry(std::cout, "root", rootReport->report);
+        printTableEntry(report, index, rootReport->report);
 
+        for (const auto& fileReport : rootReport->files) {
+          std::ofstream fileStream(fileReport.name, std::ios::app);
+          printTableEntry(fileStream, index, fileReport.report);
+        }
+
+        index++;
         return rootReport.value();
       }
 

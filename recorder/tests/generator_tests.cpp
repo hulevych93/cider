@@ -38,6 +38,10 @@ std::string produceAggregateCode(const std::string&,
   return sink.processLocalVar(std::move(code));
 }
 
+void mutateAggregate(const IParamMutator&,
+                                 GeneratorTestSuite::SomeParam&) {
+}
+
 TEST_F(GeneratorTestSuite, scriptErrorMsg) {
   LanguageContext context;
 
@@ -74,7 +78,7 @@ TEST_F(GeneratorTestSuite, nullContextForSession) {
   ScriptRecordSessionImpl session{std::move(generator), {}};
   static_cast<ActionsObserver&>(session).onActionBegins(function);
 
-  EXPECT_THROW(session.getScript(), ScriptGenerationError);
+  EXPECT_THROW(session.getScript(999U), ScriptGenerationError);
 }
 
 TEST_F(GeneratorTestSuite, invalidTemplateGenerator) {

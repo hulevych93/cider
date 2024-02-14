@@ -21,7 +21,7 @@ if(ENABLE_COVERAGE_DRIVER)
       "${CMAKE_BINARY_DIR}/experiments/hjson/tests/player"
       "${CMAKE_BINARY_DIR}/bin"
 
-      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/experiments/hjson/tests/player"
+      WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/experiments/hjson/tests/hjson_tests"
       DEPENDS hjson_player
       VERBATIM # Protect arguments to commands
   )

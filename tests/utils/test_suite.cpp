@@ -20,7 +20,7 @@ namespace tests {
 
 void TestSuite::testScript(const char* expectedScript,
                            recorder::ScriptRecordSessionPtr& session) {
-  const auto script = session->getScript();
+  const auto script = session->getScript(999U);
   session.reset();
 
   auto lState = scripting::get_lua();

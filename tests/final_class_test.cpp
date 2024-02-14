@@ -16,11 +16,12 @@ TEST_F(FinalClassTest, class_construct_test) {
   auto session = makeLuaRecordingSession(LuaExampleModuleName);
 
   hook::FinalClass object1;
-  EXPECT_EQ("local object_1 = example.FinalClass()\n", session->getScript());
+  EXPECT_EQ("local object_1 = example.FinalClass()\n",
+            session->getScript(999U));
 
   hook::FinalClass object2(125, true);
   EXPECT_EQ("local object_1 = example.FinalClass(example.Int(125), true)\n",
-            session->getScript());
+            session->getScript(999U));
 }
 
 const char* class_method_test_script =
@@ -198,5 +199,5 @@ TEST_F(FinalClassTest, unreachable_object_error) {
 
   object.someMethod(23);
 
-  EXPECT_THROW(session->getScript(), ScriptGenerationError);
+  EXPECT_THROW(session->getScript(999U), ScriptGenerationError);
 }

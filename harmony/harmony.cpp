@@ -60,7 +60,6 @@ Search::Search(const Settings& settings)
       _mutator(makeMutator(settings.mutationRate, settings.strategy)) {}
 
 void Search::initialize(const std::vector<recorder::Action>& actions) {
-  _initial.cov = _settings.meassure(actions).value();
   _initial.actions = actions;
 
   _harmonyMemory.resize(_settings.harmonyMemorySize);

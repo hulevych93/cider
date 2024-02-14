@@ -63,6 +63,7 @@ struct IParamMutator {
   virtual void operator()(double& value) const = 0;
   virtual void operator()(char*& value) const = 0;
   virtual void operator()(std::string& value) const = 0;
+  virtual void operator()(float& value) const = 0;
 
   void operator()(recorder::IntegerType& value) const {
     return std::visit([this](auto& val) { return (*this)(val); }, value);
