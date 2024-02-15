@@ -9,7 +9,7 @@ set(EXPERIMENT_PUGIXML_PREFIX                 ${CIDER_3RD_PARTY_INSTALL_DIR}/${E
 set(EXPERIMENT_PUGIXML_BUILD_DIR              ${CIDER_3RD_PARTY_BUILD_DIR}/${EXPERIMENT_PUGIXML_UNIQUE_DIR_NAME})
 set(Pugixml_INCLUDE_DIRS                   ${EXPERIMENT_PUGIXML_PREFIX}/include)
 set(Pugixml_LIB_DIR                        ${EXPERIMENT_PUGIXML_PREFIX}/lib)
-set(Pugixml_COMPONENTS                     hjson${CIDER_LIB_NAME_DEBUG_SUFFIX})
+set(Pugixml_COMPONENTS                     pugixml)
 set(Pugixml_LIBRARIES)
 
 foreach(TMP_Pugixml_LIB_BASE IN LISTS Pugixml_COMPONENTS)
@@ -44,6 +44,7 @@ ExternalProject_Add(
     STAMP_DIR               ${EXPERIMENT_PUGIXML_PREFIX}/stamp
     # Download
     GIT_REPOSITORY          https://github.com/hulevych93/pugixml.git
+    GIT_TAG                 17c5786
     UPDATE_DISCONNECTED     1
     # Configure
     SOURCE_DIR              ${SRC_DIR}

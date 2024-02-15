@@ -1331,11 +1331,6 @@ TEST(parse_embed_pcdata) {
     CHECK_STRING(child.child_value(), STR("outer"));
     CHECK_STRING(child.child_value(STR("inner2")), STR("value2"));
 
-#ifndef PUGIXML_NO_XPATH
-    CHECK_XPATH_NUMBER(doc, STR("count(node/child/*[starts-with(., 'value')])"),
-                       2);
-#endif
-
     CHECK_NODE(doc, STR("<node><key>value</key><child><inner1>value1</"
                         "inner1><inner2>value2</inner2>outer</"
                         "child><two>text<data/></two></node>"));

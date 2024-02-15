@@ -1,7 +1,7 @@
 #ifndef HEADER_TEST_WRITER_STRING_HPP
 #define HEADER_TEST_WRITER_STRING_HPP
 
-#include "pugixml.hpp"
+#include "pugixml.h"
 
 #include <string>
 

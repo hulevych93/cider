@@ -3,10 +3,9 @@
 
 cider_project(pugixml_tests)
 
-set(GEN_DIR ${CIDER_GEN_DIR}/hjson)
+set(GEN_DIR ${CIDER_GEN_DIR}/pugixml)
 
 include_directories(.
-    ${Pugixml_INCLUDE_DIRS}
     ${Lua_INCLUDE_DIRS}
     ${GTest_INCLUDE_DIRS}
     ${CMAKE_BINARY_DIR}
@@ -15,7 +14,7 @@ include_directories(.
 
 cider_collect_src(LIST_OUT)
 
-add_library(pugixml_tests OBJECT ${LIST_OUT})
+add_executable(pugixml_tests ${LIST_OUT})
 add_dependencies(pugixml_tests ${CIDER_THIRDPARTY_TARGET_NAME})
 
 set(SWIG_MODULE_NAME "pugixml")
