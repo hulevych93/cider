@@ -38,9 +38,7 @@ std::string produceAggregateCode(const std::string&,
   return sink.processLocalVar(std::move(code));
 }
 
-void mutateAggregate(const IParamMutator&,
-                                 GeneratorTestSuite::SomeParam&) {
-}
+void mutateAggregate(const IParamMutator&, GeneratorTestSuite::SomeParam&) {}
 
 TEST_F(GeneratorTestSuite, scriptErrorMsg) {
   LanguageContext context;

@@ -19,7 +19,9 @@ struct ast_handler {
   }
   virtual void handleNamespace(const cppast::cpp_entity& /*e*/,
                                const bool /*enter*/) {}
-  virtual void handleClass(const cppast::cpp_class& /*e*/, bool /*enter*/) {}
+  virtual void handleClass(const cppast::cpp_class& /*e*/,
+                           cppast::cpp_access_specifier_kind /*kind*/,
+                           bool /*enter*/) {}
   virtual void handleConstructor(const cppast::cpp_constructor& /*e*/,
                                  cppast::cpp_access_specifier_kind /*kind*/) {}
   virtual void handleMemberFunction(

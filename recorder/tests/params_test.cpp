@@ -35,13 +35,9 @@ std::string produceAggregateCode(const std::string&,
   return std::string{};
 }
 
-void mutateAggregate(const IParamMutator&,
-                     TestStruct&) {
-}
+void mutateAggregate(const IParamMutator&, TestStruct&) {}
 
-void mutateAggregate(const IParamMutator&,
-                     TestEnum&) {
-}
+void mutateAggregate(const IParamMutator&, TestEnum&) {}
 
 TEST_F(ParamsTestSuite, makeParamBool) {
   EXPECT_NO_THROW(std::get<bool>(makeParam(static_cast<bool>(10))));

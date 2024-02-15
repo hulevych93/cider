@@ -63,4 +63,13 @@ auto getImpl(ResultType&& result, ImplType*, copy_tag) {
   return makeImpl<DesiredType>(std::forward<ResultType>(result));
 }
 
+template <typename DesiredType, typename ResultType, typename ImplType>
+auto getImpl(ResultType* result, ImplType*, copy_tag) {
+  return std::shared_ptr<DesiredType>((std::remove_cv_t<ResultType>*)result,
+                                      [](ResultType* p) {
+                                        CIDER_NOTIFY_DESTRUCTOR(p);
+                                        delete p;
+                                      });
+}
+
 }  // namespace cider

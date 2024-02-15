@@ -88,9 +88,6 @@ void printReturnStatement(std::ostream& os,
     return;
   }
   if (isUserData(type, stack.nativeScope(), metadata)) {
-    auto value = to_string(type);
-    replaceScope(stack.genScope(), value);
-
     if (isAggregate(type, stack.nativeScope(), metadata)) {
       os << "return ";
       if (!stack.genScope().empty()) {

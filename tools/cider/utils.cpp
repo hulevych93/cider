@@ -223,7 +223,8 @@ bool isAbstract(const cpp_class& e,
 
 bool isException(const cppast::cpp_class& e) {
   static const std::unordered_set<std::string> Excpts = {
-      "std::logic_error", "std::out_of_range", "std::runtime_error"};
+      "std::exception", "std::logic_error", "std::out_of_range",
+      "std::runtime_error"};
 
   const auto& bases = e.bases();
   for (const auto& one : bases) {

@@ -70,7 +70,9 @@ struct metadata_collector final : ast_handler {
   ~metadata_collector() = default;
 
   void handleFile(const cppast::cpp_file& e, bool enter) override;
-  void handleClass(const cppast::cpp_class& e, bool enter) override;
+  void handleClass(const cppast::cpp_class& e,
+                   cppast::cpp_access_specifier_kind /*kind*/,
+                   bool enter) override;
   void handleConstructor(const cppast::cpp_constructor& e,
                          cppast::cpp_access_specifier_kind kind) override;
   void handleMemberFunction(const cppast::cpp_member_function& e,
@@ -88,8 +90,7 @@ struct metadata_collector final : ast_handler {
   namespaces_stack m_namespaces;
   std::vector<const cppast::cpp_class*> m_classes;
 
-  std::optional<ClassMetadata>
-      m_classMetadata;  // TODO: support nested classes?
+  std::optional<ClassMetadata> m_classMetadata;
   std::optional<FileMetadata> m_fileMetadata;
 };
 

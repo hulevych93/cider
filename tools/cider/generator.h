@@ -23,7 +23,9 @@ struct generator : ast_handler {
             std::string genScope,
             const MetadataStorage& metadata);
 
-  void handleClass(const cppast::cpp_class& e, const bool enter) override;
+  void handleClass(const cppast::cpp_class& e,
+                   cppast::cpp_access_specifier_kind /*kind*/,
+                   const bool enter) override;
   void handleNamespace(const cppast::cpp_entity& e, const bool enter) override;
 
  protected:
@@ -39,7 +41,9 @@ struct header_generator final : public generator {
   using generator::generator;
   ~header_generator() override = default;
 
-  void handleClass(const cppast::cpp_class& e, bool enter) override;
+  void handleClass(const cppast::cpp_class& e,
+                   cppast::cpp_access_specifier_kind /*kind*/,
+                   bool enter) override;
   void handleConstructor(const cppast::cpp_constructor& e,
                          cppast::cpp_access_specifier_kind kind) override;
   void handleMemberFunction(const cppast::cpp_member_function& e,
@@ -61,7 +65,9 @@ struct source_generator final : public generator {
   using generator::generator;
   ~source_generator() override = default;
 
-  void handleClass(const cppast::cpp_class& e, bool enter) override;
+  void handleClass(const cppast::cpp_class& e,
+                   cppast::cpp_access_specifier_kind /*kind*/,
+                   bool enter) override;
   void handleConstructor(const cppast::cpp_constructor& e,
                          cppast::cpp_access_specifier_kind kind) override;
   void handleFreeFunction(const cppast::cpp_function& e) override;

@@ -55,8 +55,15 @@ class CodeSink;
 template <typename Type>
 using PureType = std::remove_pointer_t<std::decay_t<Type>>;
 
+class IParamMutator;
+
+template <typename Type>
+void mutateAggregate(const IParamMutator& mutator, Type&);
+
 struct IParamMutator {
   virtual ~IParamMutator() = default;
+
+  virtual void operator()(const char*&) const {}
 
   virtual void operator()(recorder::Nil&) const = 0;
   virtual void operator()(bool& value) const = 0;
@@ -85,6 +92,13 @@ struct IParamMutator {
   virtual void operator()(unsigned int& value) const = 0;
   virtual void operator()(unsigned long& value) const = 0;
   virtual void operator()(unsigned long long& value) const = 0;
+
+  template <
+      typename EnumType,
+      typename std::enable_if_t<std::is_enum_v<EnumType>, void*> = nullptr>
+  void operator()(EnumType& value) const {
+    mutateAggregate(*this, value);
+  }
 
   virtual void operator()(recorder::UserDataValueParamPtr& value) const = 0;
   virtual void operator()(recorder::UserDataReferenceParamPtr& value) const = 0;
@@ -204,7 +218,8 @@ constexpr bool isUserData =
 template <typename Type>
 constexpr bool isStringConvertibleType =
     !std::is_same_v<std::decay_t<Type>, std::string> &&
-    std::is_constructible_v<std::string, std::decay_t<Type>> &&
+    std::is_constructible_v<std::string,
+                            std::remove_reference_t<std::remove_cv_t<Type>>> &&
     !isUserData<Type>;
 
 template <typename Type>

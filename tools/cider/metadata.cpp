@@ -99,7 +99,9 @@ void metadata_collector::handleFile(const cppast::cpp_file& e,
   }
 }
 
-void metadata_collector::handleClass(const cppast::cpp_class& e, bool enter) {
+void metadata_collector::handleClass(const cppast::cpp_class& e,
+                                     cppast::cpp_access_specifier_kind kind,
+                                     bool enter) {
   if (enter) {
     m_classes.push_back(std::addressof(e));
   } else {
@@ -109,6 +111,9 @@ void metadata_collector::handleClass(const cppast::cpp_class& e, bool enter) {
     return;
   }
   if (isException(e)) {
+    return;
+  }
+  if (kind == cppast::cpp_access_specifier_kind::cpp_private) {
     return;
   }
   if (enter) {

@@ -9,6 +9,7 @@
 #include <cppast/cpp_file.hpp>
 #include <cppast/cpp_friend.hpp>
 #include <cppast/cpp_function.hpp>
+#include <cppast/cpp_function_template.hpp>
 #include <cppast/cpp_function_type.hpp>
 #include <cppast/cpp_member_function.hpp>
 #include <cppast/cpp_member_variable.hpp>
@@ -28,7 +29,9 @@ generator::generator(std::ostream& out,
                      const MetadataStorage& metadata)
     : m_namespaces(std::move(genScope)), m_out(out), m_metadata(metadata) {}
 
-void generator::handleClass(const cpp_class& e, const bool enter) {
+void generator::handleClass(const cpp_class& e,
+                            cppast::cpp_access_specifier_kind /*kind*/,
+                            const bool enter) {
   if (enter) {
     m_class = std::addressof(e);
   } else {
@@ -44,8 +47,10 @@ void generator::handleNamespace(const cpp_entity& e, const bool enter) {
   }
 }
 
-void header_generator::handleClass(const cpp_class& e, const bool enter) {
-  generator::handleClass(e, enter);
+void header_generator::handleClass(const cpp_class& e,
+                                   cppast::cpp_access_specifier_kind kind,
+                                   const bool enter) {
+  generator::handleClass(e, kind, enter);
 
   if (enter) {
     m_namespaces(m_out);
@@ -108,8 +113,12 @@ void header_generator::handleDestructor(
 
 void header_generator::handleMemberFunction(
     const cpp_member_function& e,
-    cppast::cpp_access_specifier_kind /*kind*/) {
+    cppast::cpp_access_specifier_kind kind) {
   m_namespaces(m_out);
+
+  if (kind != cppast::cpp_access_specifier_kind::cpp_public) {
+    return;
+  }
 
   printFunctionDecl(m_out, m_metadata, e, m_namespaces, nullptr,
                     m_class->name().c_str(), true);
@@ -148,8 +157,10 @@ void header_generator::handleFriend(const cppast::cpp_friend& e) {
   }
 }
 
-void source_generator::handleClass(const cppast::cpp_class& e, bool enter) {
-  generator::handleClass(e, enter);
+void source_generator::handleClass(const cppast::cpp_class& e,
+                                   cppast::cpp_access_specifier_kind kind,
+                                   bool enter) {
+  generator::handleClass(e, kind, enter);
 
   if (e.is_declaration()) {
     return;
@@ -198,8 +209,12 @@ void source_generator::handleFreeFunction(const cpp_function& e) {
 
 void source_generator::handleMemberFunction(
     const cpp_member_function& e,
-    cppast::cpp_access_specifier_kind /*kind*/) {
+    cppast::cpp_access_specifier_kind kind) {
   m_namespaces(m_out);
+
+  if (kind != cppast::cpp_access_specifier_kind::cpp_public) {
+    return;
+  }
 
   printFunctionDecl(m_out, m_metadata, e, m_namespaces, m_class->name().c_str(),
                     m_class->name().c_str(), false);
@@ -241,12 +256,32 @@ void handleFile(ast_handler& handler,
                 const cpp_file& file,
                 const bool onlyPublic) {
   handler.handleFile(file, true);
+
+  auto isTemplate = false;
   cppast::visit(file, [&](const cpp_entity& e, visitor_info info) {
     const auto enter = info.event == visitor_info::container_entity_enter;
     if (onlyPublic && info.access != cpp_access_specifier_kind::cpp_public) {
       // skip not public entities
       return;
     }
+
+    if (e.kind() == cpp_entity_kind::function_template_t ||
+        e.kind() == cpp_entity_kind::class_template_t) {
+      isTemplate = enter;
+    }
+
+    const auto comment = e.comment();
+    if (comment) {
+      auto value = comment.value();
+      if (value.find("@cider_ignore") != std::string::npos) {
+        return;
+      }
+    }
+
+    if (isTemplate) {
+      return;
+    }
+
     switch (e.kind()) {
       case cpp_entity_kind::namespace_t:
         handler.handleNamespace(e, enter);
@@ -255,7 +290,8 @@ void handleFile(ast_handler& handler,
         handler.handleFreeFunction(static_cast<const cpp_function&>(e));
         break;
       case ::cpp_entity_kind::class_t:
-        handler.handleClass(static_cast<const cpp_class&>(e), enter);
+        handler.handleClass(static_cast<const cpp_class&>(e), info.access,
+                            enter);
         break;
       case ::cpp_entity_kind::constructor_t:
         handler.handleConstructor(static_cast<const cpp_constructor&>(e),

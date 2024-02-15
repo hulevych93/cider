@@ -26,7 +26,9 @@ struct mutator_generator final : ast_handler {
                     const MetadataStorage& metadata);
   ~mutator_generator();
 
-  void handleClass(const cppast::cpp_class& e, bool enter) override;
+  void handleClass(const cppast::cpp_class& e,
+                   cppast::cpp_access_specifier_kind /*kind*/,
+                   bool enter) override;
   void handleMemberVariable(
       const cppast::cpp_member_variable& e,
       cppast::cpp_access_specifier_kind /*kind*/) override;

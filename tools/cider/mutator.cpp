@@ -108,9 +108,15 @@ mutator_generator::~mutator_generator() {
   m_out << "} // namespace recorder\n\n";
 }
 
-void mutator_generator::handleClass(const cppast::cpp_class& e, bool enter) {
+void mutator_generator::handleClass(const cppast::cpp_class& e,
+                                    cppast::cpp_access_specifier_kind /*kind*/,
+                                    bool enter) {
   m_isAggregate = isAggregate(e.name(), m_namespaces.nativeScope(), m_metadata);
   if (!m_isAggregate) {
+    return;
+  }
+
+  if (e.is_declaration()) {
     return;
   }
 
