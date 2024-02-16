@@ -12,9 +12,7 @@ include_directories(.
     ${GEN_DIR}
 )
 
-cider_collect_src(LIST_OUT)
-
-add_executable(pugixml_tests ${LIST_OUT})
+add_library(pugixml_tests OBJECT test_document.cpp test.cpp allocator.cpp writer_string.cpp)
 add_dependencies(pugixml_tests ${CIDER_THIRDPARTY_TARGET_NAME})
 
 set(SWIG_MODULE_NAME "pugixml")

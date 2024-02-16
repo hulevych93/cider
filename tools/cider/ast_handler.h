@@ -40,6 +40,8 @@ struct ast_handler {
   virtual void handleEnum(const cppast::cpp_enum& /*e*/, const bool /*enter*/) {
   }
   virtual void handleFriend(const cppast::cpp_friend& /*e*/) {}
+  virtual void handleVariable(const cppast::cpp_variable& /*e*/) {}
+  virtual void handleAlias(const cppast::cpp_type_alias& /*e*/) {}
 };
 
 }  // namespace tool

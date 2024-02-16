@@ -49,6 +49,7 @@ struct ParamMutator final : cider::recorder::IParamMutator {
   void operator()(float& value) const override { mutate<>(value); }
   void operator()(char*& value) const override {}
   void operator()(std::string& value) const override {}
+  void operator()(std::wstring& value) const override {}
 
   void operator()(char& value) const override { mutate<>(value); }
   void operator()(short& value) const override { mutate<>(value); }

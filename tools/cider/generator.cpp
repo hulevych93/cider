@@ -13,6 +13,8 @@
 #include <cppast/cpp_function_type.hpp>
 #include <cppast/cpp_member_function.hpp>
 #include <cppast/cpp_member_variable.hpp>
+#include <cppast/cpp_variable.hpp>
+#include "cppast/cpp_type_alias.hpp"
 
 #include <cppast/visitor.hpp>
 
@@ -143,6 +145,16 @@ void header_generator::handleMemberVariable(
     m_namespaces(m_out);
     printVariableDecl(m_out, m_metadata, e, m_namespaces);
   }
+}
+
+void header_generator::handleVariable(const cppast::cpp_variable& e) {
+  printVariableDecl(m_out, m_metadata, e, m_namespaces);
+}
+
+void header_generator::handleAlias(const cppast::cpp_type_alias& e) {
+  m_namespaces(m_out);
+
+  printAliasDecl(m_out, m_metadata, e, m_namespaces);
 }
 
 void header_generator::handleFriend(const cppast::cpp_friend& e) {
@@ -321,6 +333,12 @@ void handleFile(ast_handler& handler,
         break;
       case ::cpp_entity_kind::enum_value_t:
         handler.handleEnumValue(static_cast<const cpp_enum_value&>(e));
+        break;
+      case ::cpp_entity_kind::variable_t:
+        handler.handleVariable(static_cast<const cpp_variable&>(e));
+        break;
+      case ::cpp_entity_kind::type_alias_t:
+        handler.handleAlias(static_cast<const cpp_type_alias&>(e));
         break;
       default:
         break;

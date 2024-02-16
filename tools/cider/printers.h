@@ -89,9 +89,19 @@ void printBaseClassesConstructors(
         bases,
     const namespaces_stack& stack);
 
+void printAliasDecl(std::ostream& os,
+                    const MetadataStorage& metadata,
+                    const cppast::cpp_type_alias& e,
+                    const namespaces_stack& stack);
+
 void printVariableDecl(std::ostream& os,
                        const MetadataStorage& metadata,
                        const cppast::cpp_member_variable& e,
+                       const namespaces_stack& stack);
+
+void printVariableDecl(std::ostream& os,
+                       const MetadataStorage& metadata,
+                       const cppast::cpp_variable& e,
                        const namespaces_stack& stack);
 
 void printConstructorBody(

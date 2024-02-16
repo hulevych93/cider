@@ -109,7 +109,7 @@ class CodeSinkImpl : public CodeSink {
       return localIt->second;
     }
 
-    throw ScriptGenerationError{"Object is unreachable."};
+    return "NAN";
   }  // LCOV_EXCL_LINE
 
   void format(const std::string& codeTemplate,

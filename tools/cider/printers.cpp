@@ -14,6 +14,8 @@
 #include <cppast/cpp_function_type.hpp>
 #include <cppast/cpp_member_function.hpp>
 #include <cppast/cpp_member_variable.hpp>
+#include <cppast/cpp_type_alias.hpp>
+#include <cppast/cpp_variable.hpp>
 
 #include <filesystem>
 
@@ -890,9 +892,10 @@ void printEnumValue(std::ostream& os, const cppast::cpp_enum_value& e) {
   os << ", ";
 }
 
+template <typename Type>
 void printVariableDecl(std::ostream& os,
                        const MetadataStorage& metadata,
-                       const cppast::cpp_member_variable& e,
+                       const Type& e,
                        const namespaces_stack& stack) {
   printParamType(os, metadata, stack, e.type());
   os << " ";
@@ -901,6 +904,29 @@ void printVariableDecl(std::ostream& os,
   if (const auto& defaultValue = e.default_value()) {
     printExpression(os, defaultValue.value());
   }
+  os << ";\n";
+}
+
+void printVariableDecl(std::ostream& os,
+                       const MetadataStorage& metadata,
+                       const cppast::cpp_member_variable& e,
+                       const namespaces_stack& stack) {
+  printVariableDecl<>(os, metadata, e, stack);
+}
+
+void printVariableDecl(std::ostream& os,
+                       const MetadataStorage& metadata,
+                       const cppast::cpp_variable& e,
+                       const namespaces_stack& stack) {
+  printVariableDecl<>(os, metadata, e, stack);
+}
+
+void printAliasDecl(std::ostream& os,
+                    const MetadataStorage& metadata,
+                    const cppast::cpp_type_alias& e,
+                    const namespaces_stack& stack) {
+  os << "using " << e.name() << " = ";
+  printParamType(os, metadata, stack, e.underlying_type());
   os << ";\n";
 }
 

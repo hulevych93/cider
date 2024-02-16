@@ -42,7 +42,7 @@ inline bool test_node_name_value(const Node& node,
          test_string_equal(node.value(), value);
 }
 
-bool test_node(const pugi::xml_node& node,
+bool test_node(const pugi::PugixmlHooked::xml_node& node,
                const pugi::char_t* contents,
                const pugi::char_t* indent,
                unsigned int flags);
@@ -66,22 +66,23 @@ struct dummy_fixture {};
 
 #define TEST(name) TEST_FIXTURE(name, dummy_fixture)
 
-#define TEST_XML_FLAGS(name, xml, flags)                        \
-  struct test_fixture_##name {                                  \
-    pugi::xml_document doc;                                     \
-                                                                \
-    test_fixture_##name() {                                     \
-      CHECK(doc.load_string(PUGIXML_TEXT(xml), flags));         \
-    }                                                           \
-                                                                \
-   private:                                                     \
-    test_fixture_##name(const test_fixture_##name&);            \
-    test_fixture_##name& operator=(const test_fixture_##name&); \
-  };                                                            \
-                                                                \
+#define TEST_XML_FLAGS(name, xml, flags)                                    \
+  struct test_fixture_##name {                                              \
+    pugi::PugixmlHooked::xml_document doc;                                  \
+                                                                            \
+    test_fixture_##name() {                                                 \
+      CHECK(doc.load_string(PUGIXML_TEXT(xml), flags).status == status_ok); \
+    }                                                                       \
+                                                                            \
+   private:                                                                 \
+    test_fixture_##name(const test_fixture_##name&);                        \
+    test_fixture_##name& operator=(const test_fixture_##name&);             \
+  };                                                                        \
+                                                                            \
   TEST_FIXTURE(name, test_fixture_##name)
 
-#define TEST_XML(name, xml) TEST_XML_FLAGS(name, xml, pugi::parse_default)
+#define TEST_XML(name, xml) \
+  TEST_XML_FLAGS(name, xml, pugi::PugixmlHooked::parse_default)
 
 #define CHECK_JOIN(text, file, line) text " at " file ":" #line
 #define CHECK_JOIN2(text, file, line) CHECK_JOIN(text, file, line)
@@ -138,7 +139,8 @@ struct dummy_fixture {};
       STRINGIZE(query) " does not evaluate to NaN in context " STRINGIZE(node))
 #define CHECK_XPATH_NODESET_VAR(node, query, variables)             \
   xpath_node_set_tester(                                            \
-      pugi::xpath_query(query, variables).evaluate_node_set(node),  \
+      pugi::PugixmlHooked::xpath_query(query, variables)            \
+          .evaluate_node_set(node),                                 \
       CHECK_JOIN2(                                                  \
           STRINGIZE(query) " does not evaluate to expected set in " \
                            "context " STRINGIZE(node), __FILE__, __LINE__))
@@ -200,6 +202,6 @@ inline wchar_t wchar_cast(unsigned int value) {
 }
 
 bool is_little_endian();
-pugi::xml_encoding get_native_encoding();
+pugi::PugixmlHooked::xml_encoding get_native_encoding();
 
 #endif

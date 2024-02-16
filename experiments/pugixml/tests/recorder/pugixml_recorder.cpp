@@ -1,5 +1,16 @@
-#include "allocator.hpp"
-#include "test.hpp"
+// Copyright (C) 2022-2024 Hulevych Mykhailo
+// SPDX-License-Identifier: MIT
+
+#include "recorder/recorder.h"
+
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+
+#include <assert.h>
+
+#include "experiments/pugixml/tests/pugixml_tests/allocator.hpp"
+#include "experiments/pugixml/tests/pugixml_tests/test.hpp"
 
 #include <assert.h>
 #include <float.h>
@@ -72,7 +83,7 @@ static void custom_deallocate(void* ptr) {
 static void replace_memory_management() {
   // create some document to touch original functions
   {
-    pugi::xml_document doc;
+    pugi::PugixmlHooked::xml_document doc;
     doc.append_child().set_name(STR("node"));
   }
 
@@ -106,10 +117,11 @@ static bool run_test(test_runner* test,
 
 #ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable : 4611)  // interaction between _setjmp and C++ object
-                                 // destruction is non-portable
-#pragma warning(disable : 4793)  // function compiled as native: presence of
-                                 // '_setjmp' makes a function unmanaged
+#pragma warning( \
+    disable : 4611)              // interaction between _setjmp and C++ object \
+    // destruction is non-portable
+#pragma warning(disable : 4793)  // function compiled as native: presence of \
+    // '_setjmp' makes a function unmanaged
 #endif
 
     volatile int result = setjmp(test_runner::_failure_buffer);
@@ -159,11 +171,7 @@ void std::exception::_Raise() const {
 }
 #endif
 
-int main(int, char** argv) {
-#ifdef __BORLANDC__
-  _control87(MCW_EM | PC_53, MCW_EM | MCW_PC);
-#endif
-
+int main(int argc, char** argv) {
   // setup temp path as the executable folder
   std::string temp = argv[0];
   std::string::size_type slash = temp.find_last_of("\\/");
@@ -173,39 +181,56 @@ int main(int, char** argv) {
 
   replace_memory_management();
 
-  unsigned int total = 0;
-  unsigned int passed = 0;
+  auto session = cider::recorder::makeLuaRecordingSession("pugixml");
 
-  test_runner* test = 0;  // gcc3 "variable might be used uninitialized in this
-                          // function" bug workaround
+  try {
+    unsigned int total = 0;
+    unsigned int passed = 0;
 
-  for (test = test_runner::_tests; test; test = test->_next) {
-    total++;
-    passed += run_test(test, test->_name, custom_allocate);
+    test_runner* test = 0;  // gcc3 "variable might be used uninitialized in
+                            // this function" bug workaround
 
-    if (g_memory_fail_triggered) {
-      // run tests that trigger memory failures twice - with an allocator that
-      // returns NULL and with an allocator that throws
-#ifndef PUGIXML_NO_EXCEPTIONS
+    for (test = test_runner::_tests; test; test = test->_next) {
       total++;
-      passed += run_test(test, (test->_name + std::string(" (throw)")).c_str(),
-                         custom_allocate_throw);
+      passed += run_test(test, test->_name, custom_allocate);
+
+      if (g_memory_fail_triggered) {
+        // run tests that trigger memory failures twice - with an allocator that
+        // returns NULL and with an allocator that throws
+#ifndef PUGIXML_NO_EXCEPTIONS
+        total++;
+        passed +=
+            run_test(test, (test->_name + std::string(" (throw)")).c_str(),
+                     custom_allocate_throw);
 #endif
+      }
     }
+
+    if (argc == 2) {
+      std::cout << "script path: " << argv[1] << std::endl;
+      try {
+        const auto script = session->getScript(session->getInstructionsCount());
+
+        std::ofstream output_file(argv[1]);
+        output_file << script;
+      } catch (const std::exception& e) {
+        std::cerr << e.what();
+        return 1;
+      }
+    }
+
+    unsigned int failed = total - passed;
+
+    if (failed != 0)
+      printf("FAILURE: %u out of %u tests failed.\n", failed, total);
+    else
+      printf("Success: %u tests passed.\n", total);
+
+    return failed;
+  } catch (const std::exception& e) {
+    std::cerr << e.what();
+    return 1;
   }
 
-  unsigned int failed = total - passed;
-
-  if (failed != 0)
-    printf("FAILURE: %u out of %u tests failed.\n", failed, total);
-  else
-    printf("Success: %u tests passed.\n", total);
-
-  return failed;
+  return 0;
 }
-
-#ifdef _WIN32_WCE
-int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
-  return main(0, NULL);
-}
-#endif

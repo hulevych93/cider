@@ -23,6 +23,7 @@ struct ParamVisitor {
   std::string operator()(double value) const;
   std::string operator()(const char* value) const;
   std::string operator()(const std::string& value) const;
+  std::string operator()(const std::wstring& value) const;
 
   std::string operator()(const IntegerType& value) const;
 

@@ -3,6 +3,8 @@
 
 #include "lua_params.h"
 
+#include <codecvt>
+#include <locale>
 #include <sstream>
 
 namespace cider {
@@ -57,6 +59,15 @@ std::string escape(const std::string& str) {
   }
 
   return output;
+}
+
+std::string toUtf8(const std::wstring& string_to_convert) {
+  // setup converter
+  using convert_type = std::codecvt_utf8<wchar_t>;
+  std::wstring_convert<convert_type, wchar_t> converter;
+
+  // use converter (.to_bytes: wstr->str, .from_bytes: str->wstr)
+  return converter.to_bytes(string_to_convert);
 }
 
 }  // namespace
@@ -133,6 +144,10 @@ std::string ParamVisitor::operator()(const char* param) const {
 std::string ParamVisitor::operator()(const std::string& value) const {
   return std::string{"'" + escape(value) + "'"};
 }  // LCOV_EXCL_LINE
+
+std::string ParamVisitor::operator()(const std::wstring& value) const {
+  return std::string{"'" + escape(toUtf8(value)) + "'"};
+}
 
 UserDataParamVisitor::UserDataParamVisitor(const std::string& moduleName,
                                            CodeSink& sink)

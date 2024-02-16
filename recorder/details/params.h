@@ -41,7 +41,7 @@ using IntegerTypeList = TypeList<char,
 using IntegerType = utils::ApplyTypeList<std::variant, IntegerTypeList>;
 
 using GeneratorTypesList =
-    TypeList<Nil, bool, IntegerType, double, std::string>;
+    TypeList<Nil, bool, IntegerType, double, std::string, std::wstring>;
 
 using Param = utils::ApplyTypeList<
     std::variant,
@@ -70,6 +70,7 @@ struct IParamMutator {
   virtual void operator()(double& value) const = 0;
   virtual void operator()(char*& value) const = 0;
   virtual void operator()(std::string& value) const = 0;
+  virtual void operator()(std::wstring& value) const = 0;
   virtual void operator()(float& value) const = 0;
 
   void operator()(recorder::IntegerType& value) const {
@@ -223,6 +224,13 @@ constexpr bool isStringConvertibleType =
     !isUserData<Type>;
 
 template <typename Type>
+constexpr bool isWStringConvertibleType =
+    !std::is_same_v<std::decay_t<Type>, std::string> &&
+    std::is_constructible_v<std::wstring,
+                            std::remove_reference_t<std::remove_cv_t<Type>>> &&
+    !isUserData<Type>;
+
+template <typename Type>
 constexpr bool isFloatConvertibleType =
     !std::is_same_v<std::decay_t<Type>, double> &&
     std::is_floating_point_v<std::decay_t<Type>>;
@@ -238,6 +246,13 @@ template <
     typename std::enable_if_t<isStringConvertibleType<Type>, void*> = nullptr>
 Param makeParamImpl(Type arg) {
   return std::string{std::move(arg)};
+}
+
+template <
+    typename Type,
+    typename std::enable_if_t<isWStringConvertibleType<Type>, void*> = nullptr>
+Param makeParamImpl(Type arg) {
+  return std::wstring{std::move(arg)};
 }
 
 template <

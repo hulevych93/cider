@@ -59,6 +59,8 @@ struct header_generator final : public generator {
   void handleFriend(const cppast::cpp_friend& e) override;
   void handleDestructor(const cppast::cpp_destructor& e,
                         cppast::cpp_access_specifier_kind kind) override;
+  void handleVariable(const cppast::cpp_variable& e) override;
+  void handleAlias(const cppast::cpp_type_alias& /*e*/) override;
 };
 
 struct source_generator final : public generator {
