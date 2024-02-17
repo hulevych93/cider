@@ -109,12 +109,12 @@ class CodeSinkImpl : public CodeSink {
       return localIt->second;
     }
 
-    return "NAN";
+    throw ScriptGenerationError{"Object is unreachable"};
   }  // LCOV_EXCL_LINE
 
   void format(const std::string& codeTemplate,
               const fmt::dynamic_format_arg_store<fmt::format_context>& args) {
-    _sink + "print(" + std::to_string(_lineCounter) + ") ";
+    //_sink += "print(" + std::to_string(++_lineCounter) + ") ";
     try {
       _sink += fmt::vformat(codeTemplate, args);
     } catch (const fmt::format_error& fmtErr) {

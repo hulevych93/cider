@@ -44,7 +44,7 @@ ExternalProject_Add(
     STAMP_DIR               ${EXPERIMENT_PUGIXML_PREFIX}/stamp
     # Download
     GIT_REPOSITORY          https://github.com/hulevych93/pugixml.git
-    GIT_TAG                 5c741dc
+    GIT_TAG                 4edc40b
     UPDATE_DISCONNECTED     1
     # Configure
     SOURCE_DIR              ${SRC_DIR}

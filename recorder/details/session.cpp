@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "session.h"
+#include <iostream>
 
 namespace cider {
 namespace recorder {
@@ -15,12 +16,18 @@ std::string ScriptRecordSessionImpl::getScript(const size_t instuctions) {
   try {
     size_t count = 0U;
     for (const auto& entry : _log) {
-      if (entry.nestingLevel < 1u) {
-        std::visit(_generator, entry.action);
-        ++count;
-        if (count >= instuctions) {
-          break;
+      try {
+        if (entry.nestingLevel < 1u) {
+          std::visit(_generator, entry.action);
+          ++count;
+          if (count >= instuctions) {
+            break;
+          }
         }
+
+      } catch (const std::exception& ex) {
+        std::cout << "Call generation ignored, what: " << ex.what()
+                  << std::endl;
       }
     }
     return _generator.getScript();

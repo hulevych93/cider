@@ -53,11 +53,13 @@ std::basic_string<pugi::PugixmlHooked::char_t> xml_writer_string::as_string()
 std::string save_narrow(const pugi::PugixmlHooked::xml_document& doc,
                         unsigned int flags,
                         pugi::PugixmlHooked::xml_encoding encoding) {
-  xml_writer_string writer;
+  auto* writer = new xml_writer_string{};
 
-  doc.save(writer, STR("\t"), flags, encoding);
+  doc.save(*writer, STR("\t"), flags, encoding);
 
-  return writer.as_narrow();
+  auto result = writer->as_narrow();
+  delete writer;
+  return result;
 }
 
 bool test_save_narrow(const pugi::PugixmlHooked::xml_document& doc,
@@ -71,9 +73,13 @@ bool test_save_narrow(const pugi::PugixmlHooked::xml_document& doc,
 std::string write_narrow(pugi::PugixmlHooked::xml_node node,
                          unsigned int flags,
                          pugi::PugixmlHooked::xml_encoding encoding) {
-  xml_writer_string writer;
+  auto* writer = new xml_writer_string{};
 
-  return writer.as_narrow();
+  node.print(*writer, STR("\t"), flags, encoding);
+
+  auto result = writer->as_narrow();
+  delete writer;
+  return result;
 }
 
 bool test_write_narrow(pugi::PugixmlHooked::xml_node node,
@@ -88,7 +94,11 @@ std::basic_string<wchar_t> write_wide(
     pugi::PugixmlHooked::xml_node node,
     unsigned int flags,
     pugi::PugixmlHooked::xml_encoding encoding) {
-  xml_writer_string writer;
+  auto* writer = new xml_writer_string{};
 
-  return writer.as_wide();
+  node.print(*writer, STR("\t"), flags, encoding);
+
+  auto result = writer->as_wide();
+  delete writer;
+  return result;
 }

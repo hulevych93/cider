@@ -91,11 +91,14 @@ void printEnumField(std::ostream& os,
                     const std::string& module,
                     const std::string& enumName,
                     const std::string& scope,
-                    const std::string& name) {
+                    const std::string& name,
+                    const bool isScoped) {
   os << "case " << scope + "::" << name << ":\n";
-  os << "return \"" + module + "." + enumName + "(" + module + "." + enumName +
-            "_" + name
-     << ")\";\n";
+  os << "return \"" + module + "." + enumName + "(" + module << ".";
+  if (isScoped) {
+    os << enumName + "_";
+  }
+  os << name << ")\";\n";
   os << "break;\n";
 }
 
@@ -159,11 +162,12 @@ void lua_generator::handleNamespace(const cpp_entity& e, const bool enter) {
 
 void lua_generator::handleEnumValue(const cppast::cpp_enum_value& e) {
   printEnumField(m_out, m_module, m_namespaces.top(),
-                 m_namespaces.nativeScope(), e.name());
+                 m_namespaces.nativeScope(), e.name(), m_isScopedEnum);
 }
 
 void lua_generator::handleEnum(const cppast::cpp_enum& e, const bool enter) {
   printEnumProducer(m_out, m_namespaces.nativeScope(), e.name(), enter);
+  m_isScopedEnum = e.is_scoped();
 
   if (enter) {
     m_namespaces.push(null_stream, e.name());

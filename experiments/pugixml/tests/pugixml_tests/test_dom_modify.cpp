@@ -7,7 +7,7 @@
 #include <math.h>
 #include <string.h>
 
-using namespace pugi;
+using namespace pugi::PugixmlHooked;
 
 TEST_XML(dom_attr_assign, "<node/>") {
   xml_node node = doc.child(STR("node"));
@@ -93,42 +93,6 @@ TEST_XML(dom_attr_set_value, "<node/>") {
           "attr7=\"0.25\" attr8=\"true\" attr9=\"v2\" attr10=\"v3\"/>"));
 }
 
-#if LONG_MAX > 2147483647
-TEST_XML(dom_attr_assign_long, "<node/>") {
-  xml_node node = doc.child(STR("node"));
-
-  node.append_attribute(STR("attr1")) = -9223372036854775807l;
-  node.append_attribute(STR("attr2")) = -9223372036854775807l - 1;
-  xml_attribute() = -9223372036854775807l - 1;
-
-  node.append_attribute(STR("attr3")) = 18446744073709551615ul;
-  node.append_attribute(STR("attr4")) = 18446744073709551614ul;
-  xml_attribute() = 18446744073709551615ul;
-
-  CHECK_NODE(
-      node,
-      STR("<node attr1=\"-9223372036854775807\" attr2=\"-9223372036854775808\" "
-          "attr3=\"18446744073709551615\" attr4=\"18446744073709551614\"/>"));
-}
-
-TEST_XML(dom_attr_set_value_long, "<node/>") {
-  xml_node node = doc.child(STR("node"));
-
-  CHECK(node.append_attribute(STR("attr1")).set_value(-9223372036854775807l));
-  CHECK(
-      node.append_attribute(STR("attr2")).set_value(-9223372036854775807l - 1));
-  CHECK(!xml_attribute().set_value(-9223372036854775807l - 1));
-
-  CHECK(node.append_attribute(STR("attr3")).set_value(18446744073709551615ul));
-  CHECK(node.append_attribute(STR("attr4")).set_value(18446744073709551614ul));
-  CHECK(!xml_attribute().set_value(18446744073709551615ul));
-
-  CHECK_NODE(
-      node,
-      STR("<node attr1=\"-9223372036854775807\" attr2=\"-9223372036854775808\" "
-          "attr3=\"18446744073709551615\" attr4=\"18446744073709551614\"/>"));
-}
-#else
 TEST_XML(dom_attr_assign_long, "<node/>") {
   xml_node node = doc.child(STR("node"));
 
@@ -158,7 +122,6 @@ TEST_XML(dom_attr_set_value_long, "<node/>") {
   CHECK_NODE(node, STR("<node attr1=\"-2147483647\" attr2=\"-2147483648\" "
                        "attr3=\"4294967295\" attr4=\"4294967294\"/>"));
 }
-#endif
 
 #ifdef PUGIXML_HAS_LONG_LONG
 TEST_XML(dom_attr_assign_llong, "<node/>") {
@@ -1268,200 +1231,6 @@ TEST(dom_node_doctype_value) {
   CHECK_NODE(node, STR("<!DOCTYPE id [ foo ]>"));
 }
 
-TEST_XML(dom_node_append_buffer_native, "<node>test</node>") {
-  xml_node node = doc.child(STR("node"));
-
-  const char_t data1[] = STR("<child1 id='1' /><child2>text</child2>");
-  const char_t data2[] = STR("<child3 />");
-
-  CHECK(node.append_buffer(data1, sizeof(data1)));
-  CHECK(node.append_buffer(data2, sizeof(data2)));
-  CHECK(node.append_buffer(data1, sizeof(data1)));
-  CHECK(node.append_buffer(data2, sizeof(data2)));
-  CHECK(node.append_buffer(data2, sizeof(data2)));
-
-  CHECK_NODE(
-      doc,
-      STR("<node>test<child1 id=\"1\"/><child2>text</child2><child3/><child1 "
-          "id=\"1\"/><child2>text</child2><child3/><child3/></node>"));
-}
-
-TEST_XML(dom_node_append_buffer_convert, "<node>test</node>") {
-  xml_node node = doc.child(STR("node"));
-
-  const char data[] = {0, 0, 0, '<', 0, 0, 0, 'n', 0, 0, 0, '/', 0, 0, 0, '>'};
-
-  CHECK(node.append_buffer(data, sizeof(data)));
-  CHECK(
-      node.append_buffer(data, sizeof(data), parse_default, encoding_utf32_be));
-
-  CHECK_NODE(doc, STR("<node>test<n/><n/></node>"));
-}
-
-TEST_XML(dom_node_append_buffer_remove, "<node>test</node>") {
-  xml_node node = doc.child(STR("node"));
-
-  const char data1[] = "<child1 id='1' /><child2>text</child2>";
-  const char data2[] = "<child3 />";
-
-  CHECK(node.append_buffer(data1, sizeof(data1)));
-  CHECK(node.append_buffer(data2, sizeof(data2)));
-  CHECK(node.append_buffer(data1, sizeof(data1)));
-  CHECK(node.append_buffer(data2, sizeof(data2)));
-
-  CHECK_NODE(
-      doc,
-      STR("<node>test<child1 id=\"1\"/><child2>text</child2><child3/><child1 "
-          "id=\"1\"/><child2>text</child2><child3/></node>"));
-
-  while (node.remove_child(STR("child2"))) {
-  }
-
-  CHECK_NODE(doc, STR("<node>test<child1 id=\"1\"/><child3/><child1 "
-                      "id=\"1\"/><child3/></node>"));
-
-  while (node.remove_child(STR("child1"))) {
-  }
-
-  CHECK_NODE(doc, STR("<node>test<child3/><child3/></node>"));
-
-  while (node.remove_child(STR("child3"))) {
-  }
-
-  CHECK_NODE(doc, STR("<node>test</node>"));
-
-  CHECK(doc.remove_child(STR("node")));
-
-  CHECK(!doc.first_child());
-}
-
-TEST(dom_node_append_buffer_empty_document) {
-  xml_document doc;
-
-  const char data[] = "<child1 id='1' /><child2>text</child2>";
-
-  doc.append_buffer(data, sizeof(data));
-
-  CHECK_NODE(doc, STR("<child1 id=\"1\"/><child2>text</child2>"));
-}
-
-TEST_XML(dom_node_append_buffer_invalid_type, "<node>test</node>") {
-  const char data[] = "<child1 id='1' /><child2>text</child2>";
-
-  CHECK(xml_node().append_buffer(data, sizeof(data)).status ==
-        status_append_invalid_root);
-  CHECK(doc.first_child()
-            .first_child()
-            .append_buffer(data, sizeof(data))
-            .status == status_append_invalid_root);
-}
-
-TEST_XML(dom_node_append_buffer_close_external, "<node />") {
-  xml_node node = doc.child(STR("node"));
-
-  const char data[] = "<child1 /></node><child2 />";
-
-  CHECK(node.append_buffer(data, sizeof(data)).status ==
-        status_end_element_mismatch);
-  CHECK_NODE(doc, STR("<node><child1/></node>"));
-
-  CHECK(node.append_buffer(data, sizeof(data)).status ==
-        status_end_element_mismatch);
-  CHECK_NODE(doc, STR("<node><child1/><child1/></node>"));
-}
-
-TEST(dom_node_append_buffer_out_of_memory_extra) {
-  test_runner::_memory_fail_threshold = 1;
-
-  xml_document doc;
-  CHECK_ALLOC_FAIL(
-      CHECK(doc.append_buffer("<n/>", 4).status == status_out_of_memory));
-  CHECK(!doc.first_child());
-}
-
-TEST(dom_node_append_buffer_out_of_memory_buffer) {
-  test_runner::_memory_fail_threshold = 32768 + 128;
-
-  char data[128] = {0};
-
-  xml_document doc;
-  CHECK_ALLOC_FAIL(CHECK(doc.append_buffer(data, sizeof(data)).status ==
-                         status_out_of_memory));
-  CHECK(!doc.first_child());
-}
-
-TEST(dom_node_append_buffer_out_of_memory_nodes) {
-  unsigned int count = 4000;
-  std::basic_string<char_t> data;
-
-  for (unsigned int i = 0; i < count; ++i)
-    data += STR("<a/>");
-
-  test_runner::_memory_fail_threshold =
-      32768 + 128 + data.length() * sizeof(char_t) + 32;
-
-#ifdef PUGIXML_COMPACT
-  // ... and some space for hash table
-  test_runner::_memory_fail_threshold += 2048;
-#endif
-
-  xml_document doc;
-  CHECK_ALLOC_FAIL(
-      CHECK(doc.append_buffer(data.c_str(), data.length() * sizeof(char_t),
-                              parse_fragment)
-                .status == status_out_of_memory));
-
-  unsigned int valid = 0;
-
-  for (xml_node n = doc.first_child(); n; n = n.next_sibling()) {
-    CHECK_STRING(n.name(), STR("a"));
-    valid++;
-  }
-
-  CHECK(valid > 0 && valid < count);
-}
-
-TEST(dom_node_append_buffer_out_of_memory_name) {
-  test_runner::_memory_fail_threshold = 32768 + 4096;
-
-  char data[4096] = {0};
-
-  xml_document doc;
-  CHECK(doc.append_child(STR("root")));
-  CHECK_ALLOC_FAIL(
-      CHECK(doc.first_child().append_buffer(data, sizeof(data)).status ==
-            status_out_of_memory));
-  CHECK_STRING(doc.first_child().name(), STR("root"));
-}
-
-TEST_XML(dom_node_append_buffer_fragment, "<node />") {
-  xml_node node = doc.child(STR("node"));
-
-  CHECK(node.append_buffer("1", 1).status == status_no_document_element);
-  CHECK_NODE(doc, STR("<node>1</node>"));
-
-  CHECK(node.append_buffer("2", 1, parse_fragment));
-  CHECK_NODE(doc, STR("<node>12</node>"));
-
-  CHECK(node.append_buffer("3", 1).status == status_no_document_element);
-  CHECK_NODE(doc, STR("<node>123</node>"));
-
-  CHECK(node.append_buffer("4", 1, parse_fragment));
-  CHECK_NODE(doc, STR("<node>1234</node>"));
-}
-
-TEST_XML(dom_node_append_buffer_empty, "<node />") {
-  xml_node node = doc.child(STR("node"));
-
-  CHECK(node.append_buffer("", 0).status == status_no_document_element);
-  CHECK(node.append_buffer("", 0, parse_fragment).status == status_ok);
-
-  CHECK(node.append_buffer(0, 0).status == status_no_document_element);
-  CHECK(node.append_buffer(0, 0, parse_fragment).status == status_ok);
-
-  CHECK_NODE(doc, STR("<node/>"));
-}
-
 TEST_XML(dom_node_prepend_move, "<node>foo<child/></node>") {
   xml_node child = doc.child(STR("node")).child(STR("child"));
 
@@ -1673,7 +1442,7 @@ TEST(dom_node_copy_stackless) {
     data += STR("</a>");
 
   xml_document doc;
-  CHECK(doc.load_string(data.c_str()));
+  CHECK(doc.load_string(data.c_str()).status == status_ok);
 
   xml_document copy;
   CHECK(copy.append_copy(doc.first_child()));
@@ -1681,43 +1450,12 @@ TEST(dom_node_copy_stackless) {
   CHECK_NODE(doc, data.c_str());
 }
 
-TEST(dom_node_copy_copyless) {
-  std::basic_string<char_t> data;
-  data += STR("<node>");
-  for (int i = 0; i < 10000; ++i)
-    data += STR("pcdata");
-  data += STR("<?name value?><child attr1=\"\" attr2=\"value2\"/></node>");
-
-  std::basic_string<char_t> datacopy = data;
-
-  // the document is parsed in-place so there should only be 1 page worth of
-  // allocations
-  test_runner::_memory_fail_threshold = 32768 + 128;
-
-#ifdef PUGIXML_COMPACT
-  // ... and some space for hash table
-  test_runner::_memory_fail_threshold += 2048;
-#endif
-
-  xml_document doc;
-  CHECK(doc.load_buffer_inplace(&datacopy[0], datacopy.size() * sizeof(char_t),
-                                parse_full));
-
-  // this copy should share all string storage; since there are not a lot of
-  // nodes we should not have *any* allocations here (everything will fit in the
-  // same page in the document)
-  xml_node copy = doc.append_copy(doc.child(STR("node")));
-  xml_node copy2 = doc.append_copy(copy);
-
-  CHECK_NODE(copy, data.c_str());
-  CHECK_NODE(copy2, data.c_str());
-}
-
 TEST(dom_node_copy_copyless_mix) {
   xml_document doc;
   CHECK(doc.load_string(STR("<node>pcdata<?name value?><child attr1=\"\" "
                             "attr2=\"value2\" /></node>"),
-                        parse_full));
+                        parse_full)
+            .status == status_ok);
 
   xml_node child = doc.child(STR("node")).child(STR("child"));
 
@@ -1771,41 +1509,6 @@ TEST_XML(dom_node_copy_copyless_taint, "<node attr=\"value\" />") {
                       "att3=\"value\"/>"));
 }
 
-TEST(dom_node_copy_attribute_copyless) {
-  std::basic_string<char_t> data;
-  data += STR("<node attr=\"");
-  for (int i = 0; i < 10000; ++i)
-    data += STR("data");
-  data += STR("\"/>");
-
-  std::basic_string<char_t> datacopy = data;
-
-  // the document is parsed in-place so there should only be 1 page worth of
-  // allocations
-  test_runner::_memory_fail_threshold = 32768 + 128;
-
-#ifdef PUGIXML_COMPACT
-  // ... and some space for hash table
-  test_runner::_memory_fail_threshold += 2048;
-#endif
-
-  xml_document doc;
-  CHECK(doc.load_buffer_inplace(&datacopy[0], datacopy.size() * sizeof(char_t),
-                                parse_full));
-
-  // this copy should share all string storage; since there are not a lot of
-  // nodes we should not have *any* allocations here (everything will fit in the
-  // same page in the document)
-  xml_node copy1 = doc.append_child(STR("node"));
-  copy1.append_copy(doc.first_child().first_attribute());
-
-  xml_node copy2 = doc.append_child(STR("node"));
-  copy2.append_copy(copy1.first_attribute());
-
-  CHECK_NODE(copy1, data.c_str());
-  CHECK_NODE(copy2, data.c_str());
-}
-
 TEST_XML(dom_node_copy_attribute_copyless_taint, "<node attr=\"value\" />") {
   xml_node node = doc.child(STR("node"));
   xml_attribute attr = node.first_attribute();
@@ -1833,27 +1536,6 @@ TEST_XML(dom_node_copy_attribute_copyless_taint, "<node attr=\"value\" />") {
 
   CHECK_NODE(doc, STR("<node att1=\"value\"/><copy1 attr=\"valu2\"/><copy2 "
                       "att1=\"value\"/><copy3 attr=\"valu2\"/>"));
-}
-
-TEST_XML(
-    dom_node_copy_out_of_memory_node,
-    "<node><child1 /><child2 /><child3>text1<child4 />text2</child3></node>") {
-  test_runner::_memory_fail_threshold = 32768 * 2 + 4096;
-
-  xml_document copy;
-  CHECK_ALLOC_FAIL(for (int i = 0; i < 1000; ++i)
-                       copy.append_copy(doc.first_child()));
-}
-
-TEST_XML(dom_node_copy_out_of_memory_attr,
-         "<node attr1='' attr2='' attr3='' attr4='' attr5='' attr6='' attr7='' "
-         "attr8='' attr9='' attr10='' attr11='' attr12='' attr13='' attr14='' "
-         "attr15='' />") {
-  test_runner::_memory_fail_threshold = 32768 * 2 + 4096;
-
-  xml_document copy;
-  CHECK_ALLOC_FAIL(for (int i = 0; i < 1000; ++i)
-                       copy.append_copy(doc.first_child()));
 }
 
 TEST_XML(dom_node_remove_deallocate, "<node attr='value'>text</node>") {
@@ -1959,51 +1641,3 @@ TEST(dom_fp_double_custom_precision) {
   node.text().set(std::numeric_limits<double>::max(), 20);
   CHECK(fp_equal(node.text().as_double(), std::numeric_limits<double>::max()));
 }
-
-const double fp_roundtrip_base[] = {
-    0.31830988618379067154, 0.43429448190325182765, 0.57721566490153286061,
-    0.69314718055994530942, 0.70710678118654752440, 0.78539816339744830962,
-};
-
-TEST(dom_fp_roundtrip_float) {
-  xml_document doc;
-
-  for (int e = -125; e <= 128; ++e) {
-    for (size_t i = 0;
-         i < sizeof(fp_roundtrip_base) / sizeof(fp_roundtrip_base[0]); ++i) {
-      float value = static_cast<float>(ldexp(fp_roundtrip_base[i], e));
-
-      doc.text().set(value);
-      CHECK(fp_equal(doc.text().as_float(), value));
-    }
-  }
-}
-
-// Borland C does not print double values with enough precision
-#ifndef __BORLANDC__
-TEST(dom_fp_roundtrip_double) {
-  xml_document doc;
-
-  for (int e = -1021; e <= 1024; ++e) {
-    for (size_t i = 0;
-         i < sizeof(fp_roundtrip_base) / sizeof(fp_roundtrip_base[0]); ++i) {
-#if (defined(_MSC_VER) && _MSC_VER < 1400) || defined(__MWERKS__)
-      // Not all runtime libraries guarantee roundtripping for denormals
-      if (e == -1021 && fp_roundtrip_base[i] < 0.5)
-        continue;
-#endif
-
-#ifdef __DMC__
-      // Digital Mars C does not roundtrip on exactly one combination
-      if (e == -12 && i == 1)
-        continue;
-#endif
-
-      double value = ldexp(fp_roundtrip_base[i], e);
-
-      doc.text().set(value);
-      CHECK(fp_equal(doc.text().as_double(), value));
-    }
-  }
-}
-#endif

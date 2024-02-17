@@ -26,7 +26,8 @@ std::optional<OperatorType> isOperator(const char* classN,
   if (opIt != std::string::npos) {
     name = name.substr(opIt + strlen("operator"));
     if (name.find("=") != std::string::npos &&
-        name.find("==") == std::string::npos) {
+        name.find("==") == std::string::npos &&
+        name.find("!=") == std::string::npos) {
       std::string className = classN ? classN : "";
       removeScope(className);
       const auto& params = e.parameters();

@@ -1,6 +1,7 @@
 #ifndef HEADER_TEST_TEST_HPP
 #define HEADER_TEST_TEST_HPP
 
+#include "allocator.hpp"
 #include "pugixml.h"
 
 #include <setjmp.h>
@@ -31,6 +32,8 @@ struct test_runner {
 
   static const char* _temp_path;
 };
+
+int run_tests(const char* temp);
 
 bool test_string_equal(const pugi::char_t* lhs, const pugi::char_t* rhs);
 
