@@ -26,10 +26,11 @@ target_link_libraries(hjson_player PUBLIC
 if(HJSON_ENABLE_COVERAGE)
     setup_target_for_coverage_lcov(
         NAME hjson_player_coverage
-        EXECUTABLE hjson_player /Users/mykhailo.hulevych/github/cider/build/experiments/hjson/tests/script.lua
+        EXECUTABLE hjson_player
+        EXECUTABLE_ARGS "optimized2.lua"
         BASE_DIRECTORY "${EXPERIMENT_HJSON_BUILD_DIR}/src"
         WORKING_DIR ${CMAKE_SOURCE_DIR}/experiments/hjson/tests/hjson_tests
         EXCLUDE "${CIDER_GEN_DIR}/*" "${BASE_DIRECTORY}/*/v1/*" "/Applications/*"
-        DEPENDENCIES hjson_tests
+        DEPENDENCIES hjson_tests hjson_player
     )
 endif()

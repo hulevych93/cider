@@ -10,6 +10,7 @@
 #include "recorder/details/lua/lua_func.h"
 #include "recorder/details/lua/lua_params.h"
 
+#include <iostream>
 #include <unordered_map>
 
 namespace cider {
@@ -271,6 +272,23 @@ ScriptGenerator makeLuaGenerator(const std::string& moduleName) {
   context.functionNameMutator = lua::mutateFunctionName;
   context.unaryOpProducer = lua::produceUnaryOpCall;
   return ScriptGenerator{moduleName, context};
+}
+
+std::string generateScript(ScriptGenerator& generator,
+                           const std::vector<cider::recorder::Action>& actions,
+                           const size_t limit) {
+  size_t count = 0;
+  for (const auto& action : actions) {
+    try {
+      std::visit(generator, action);
+      if (count >= limit) {
+        break;
+      }
+      ++count;
+    } catch (const std::exception&) {
+    }
+  }
+  return generator.getScript();
 }
 
 }  // namespace recorder

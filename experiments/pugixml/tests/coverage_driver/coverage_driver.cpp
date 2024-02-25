@@ -1,7 +1,6 @@
 // Copyright (C) 2022-2024 Hulevych Mykhailo
 // SPDX-License-Identifier: MIT
 
-#include <filesystem>
 #include <fstream>
 #include <iostream>
 
@@ -13,30 +12,28 @@
 
 #include <assert.h>
 
-extern void test_value();
-extern void test_marshal();
+extern int run_tests(const char* temp_);
 
 int main(int argc, char* argv[]) {
   try {
     cider::harmony::Cmd cmd(argc, argv);
 
-    auto session = cider::recorder::makeLuaRecordingSession("hjson");
+    auto session = cider::recorder::makeLuaRecordingSession("pugixml");
 
     try {
-      test_value();
-      test_marshal();
+      run_tests(argv[0]);
     } catch (const std::exception& e) {
       std::cout << e.what();
     }
 
     cider::harmony::Settings settings;
-    settings.mutationRate = 0.03;
+    settings.mutationRate = 0.15;
     settings.harmonyMemoryConsiderationRate = 0.5;
-    settings.harmonyMemorySize = 5;
-    settings.maxIterationsWithoutUpdates = 150;
-    settings.strategy = cider::harmony::MutationStrategy::ShuffleBytes;
+    settings.harmonyMemorySize = 10;
+    settings.maxIterationsWithoutUpdates = 500;
+    settings.strategy = cider::harmony::MutationStrategy::ChangeBits;
 
-    cider::harmony::CoverageMeasurment measurer{cmd, "log.txt", "hjson"};
+    cider::harmony::CoverageMeasurment measurer{cmd, "log.txt", "pugixml"};
     settings.meassure =
         std::bind(&cider::harmony::CoverageMeasurment::operator(),
                   std::ref(measurer), std::placeholders::_1);
@@ -49,14 +46,14 @@ int main(int argc, char* argv[]) {
 
     const auto& bestActions = hs.getBest().actions;
 
-    auto generator = cider::recorder::makeLuaGenerator("hjson");
+    auto generator = cider::recorder::makeLuaGenerator("pugixml");
     const auto script =
         cider::recorder::generateScript(generator, bestActions, 99999U);
 
-    std::ofstream output_file("optimized_hjson.lua");
+    std::ofstream output_file("optimized_pugi.lua");
     output_file << script;
 
-    cider::harmony::StepperCoverageMeasurment stepper{cmd, "hjson"};
+    cider::harmony::StepperCoverageMeasurment stepper{cmd, "pugixml"};
     stepper.measure(bestActions);
 
   } catch (const std::exception& e) {

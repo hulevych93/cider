@@ -131,13 +131,10 @@ static bool _evaluate(std::string name,
   if (std::strcmp(expected.c_str(), got.c_str())) {
     for (int a = 0; a < expected.size() && a < got.size(); a++) {
       if (got[a] != expected[a]) {
-        std::cout << std::endl << "first diff at index " << a << std::endl;
+        // std::cout << std::endl << "first diff at index " << a << std::endl;
         break;
       }
     }
-    std::cout << "\nExpected: (size " << expected.size() << ")\n"
-              << expected << "\n\nGot: (size " << got.size() << ")\n"
-              << got << "\n\n";
     return false;
   }
 
@@ -162,7 +159,7 @@ static void _examine(std::string filename) {
   }
   std::string name(filename.begin(), filename.begin() + pos);
 
-  std::cout << "running " << name << '\n';
+  // std::cout << "running " << name << '\n';
 
   bool shouldFail = !name.compare(0, 4, "fail");
 

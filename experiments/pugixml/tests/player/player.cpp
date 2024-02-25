@@ -1,6 +1,7 @@
 // Copyright (C) 2022-2024 Hulevych Mykhailo
 // SPDX-License-Identifier: MIT
 
+#include <chrono>
 #include <fstream>
 #include <iostream>
 
@@ -29,16 +30,23 @@ int main(int argc, char* argv[]) {
       for (std::string line; std::getline(std::cin, line);) {
         script += line += "\n";
       }
-      std::ofstream scrrr("scr");
-      scrrr << script;
     }
 
     auto lState = cider::scripting::get_lua();
     luaopen_pugixml(lState.get());
 
-    return cider::scripting::executeScript(lState.get(), script.c_str()) ? 0
-                                                                         : 1;
+    const auto start = std::chrono::system_clock::now();
+    const auto result =
+        cider::scripting::executeScript(lState.get(), script.c_str()) ? 0 : 1;
 
+    const auto end = std::chrono::system_clock::now();
+    const auto elapsed = end - start;
+    std::cout << "Time: "
+              << std::chrono::duration_cast<std::chrono::microseconds>(elapsed)
+                     .count()
+              << " mcs" << std::endl;
+
+    return result;
   } catch (const std::exception& e) {
     std::cerr << e.what();
     return 1;

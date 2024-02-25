@@ -1,25 +1,24 @@
 # Copyright (C) 2022-2024 Hulevych Mykhailo
 # SPDX-License-Identifier: MIT
 
-cider_project(coverage_driver)
+cider_project(hjson_driver)
 
-add_executable(coverage_driver coverage_driver.cpp)
+add_executable(hjson_driver coverage_driver.cpp)
 
-target_include_directories(coverage_driver PRIVATE ${Tpl_INCLUDE_DIRS})
-target_link_libraries(coverage_driver PUBLIC
+target_link_libraries(hjson_driver PUBLIC
   coverage
   harmony
   hjson_tests
-  ${Tpl_LIBRARIES}
 )
 
 if(ENABLE_COVERAGE_DRIVER)
-  add_custom_target(coverage_driver_run
-      COMMAND coverage_driver
+  add_custom_target(hjson_coverage_driver_run
+      COMMAND hjson_driver
       "${CMAKE_SOURCE_DIR}/experiments/hjson/tests/hjson_tests"
       "${EXPERIMENT_HJSON_BUILD_DIR}/src"
       "${CMAKE_BINARY_DIR}/experiments/hjson/tests/player"
-      "${CMAKE_BINARY_DIR}/bin"
+      "${CMAKE_BINARY_DIR}/bin/hjson_player"
+      "${CMAKE_BINARY_DIR}"
 
       WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/experiments/hjson/tests/hjson_tests"
       DEPENDS hjson_player

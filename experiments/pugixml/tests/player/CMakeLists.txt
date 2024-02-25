@@ -26,7 +26,8 @@ target_link_libraries(pugixml_player PUBLIC
 if(PUGIXML_ENABLE_COVERAGE)
     setup_target_for_coverage_lcov(
         NAME pugixml_player_coverage
-        EXECUTABLE pugixml_player ${SCRIPT_PATH}
+        EXECUTABLE pugixml_player
+        EXECUTABLE_ARGS "optimized_pugi.lua"
         BASE_DIRECTORY "${EXPERIMENT_PUGIXML_BUILD_DIR}/src"
         WORKING_DIR ${CMAKE_SOURCE_DIR}/experiments/pugixml/tests/pugixml_tests
         EXCLUDE "${CIDER_GEN_DIR}/*" "${BASE_DIRECTORY}/*/v1/*" "/Applications/*"

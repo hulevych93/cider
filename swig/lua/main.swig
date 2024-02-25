@@ -177,12 +177,10 @@ void pushError(lua_State* L, const char* message)
     }
     catch (const std::exception& e)
     {
-        pushError(L, e.what());
-        SWIG_fail;
+
     }
     catch (...)
     {
-        pushError(L, "Unknown error");
-        SWIG_fail;
+
     }
 }

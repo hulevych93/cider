@@ -17,7 +17,7 @@ namespace {
 
 size_t randomInRange(const size_t from, const size_t to) {
   std::random_device rd;
-  std::mt19937 gen(rd());
+  static std::mt19937 gen(rd());
   std::uniform_int_distribution<> distr(from, to);
   return distr(gen);
 }

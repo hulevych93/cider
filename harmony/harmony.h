@@ -21,7 +21,7 @@ struct Settings final {
   int harmonyMemorySize = 10;
   double harmonyMemoryConsiderationRate = 0.95;
   double mutationRate = 0.1;
-  size_t maxIterations = 500U;
+  size_t maxIterationsWithoutUpdates = 500U;
   MeassureCallback meassure;
   MutationStrategy strategy = MutationStrategy::ShuffleBytes;
 };
@@ -43,8 +43,10 @@ class Search final {
 
  private:
   Harmony generateHarmony(const Harmony& harmony) const;
-  Harmony mutateHarmony(const Harmony& harmony) const;
-  void updateHarmonyMemory(const Harmony& harmony);
+  std::optional<Harmony> mutateHarmony(const Harmony& harmony) const;
+  bool updateHarmonyMemory(const Harmony& harmony);
+
+  Harmony& getWorst();
 
   void dump();
 

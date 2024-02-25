@@ -18,7 +18,15 @@ int main(int argc, char** argv) {
   auto session = cider::recorder::makeLuaRecordingSession("pugixml");
 
   try {
+    const auto start = std::chrono::system_clock::now();
     run_tests(temp.c_str());
+
+    const auto end = std::chrono::system_clock::now();
+    const auto elapsed = end - start;
+    std::cout << "Time: "
+              << std::chrono::duration_cast<std::chrono::microseconds>(elapsed)
+                     .count()
+              << " mcs" << std::endl;
 
     if (argc == 2) {
       std::cout << "script path: " << argv[1] << std::endl;

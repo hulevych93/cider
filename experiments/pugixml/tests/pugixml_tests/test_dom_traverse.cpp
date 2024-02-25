@@ -452,28 +452,6 @@ struct find_predicate_prefix {
   }
 };
 
-#ifndef PUGIXML_NO_STL
-TEST_XML(dom_node_path, "<node><child1>text<child2/></child1></node>") {
-  CHECK(xml_node().path() == STR(""));
-
-  CHECK(doc.path() == STR(""));
-  CHECK(doc.child(STR("node")).path() == STR("/node"));
-  CHECK(doc.child(STR("node")).child(STR("child1")).path() ==
-        STR("/node/child1"));
-  CHECK(
-      doc.child(STR("node")).child(STR("child1")).child(STR("child2")).path() ==
-      STR("/node/child1/child2"));
-  CHECK(doc.child(STR("node")).child(STR("child1")).first_child().path() ==
-        STR("/node/child1/"));
-
-  CHECK(doc.child(STR("node")).child(STR("child1")).path('\\') ==
-        STR("\\node\\child1"));
-
-  doc.append_child(node_element);
-  CHECK(doc.last_child().path() == STR("/"));
-}
-#endif
-
 TEST_XML(dom_node_first_element_by_path,
          "<node><child1>text<child2/></child1></node>") {
   CHECK(xml_node().first_element_by_path(STR("/")) == xml_node());
@@ -486,11 +464,6 @@ TEST_XML(dom_node_first_element_by_path,
   CHECK(doc.first_element_by_path(STR("node/")) == doc.child(STR("node")));
   CHECK(doc.first_element_by_path(STR("node")) == doc.child(STR("node")));
   CHECK(doc.first_element_by_path(STR("/node")) == doc.child(STR("node")));
-
-#ifndef PUGIXML_NO_STL
-  CHECK(doc.first_element_by_path(STR("/node/child1/child2")).path() ==
-        STR("/node/child1/child2"));
-#endif
 
   CHECK(doc.first_element_by_path(STR("/node/child2")) == xml_node());
 

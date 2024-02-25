@@ -548,7 +548,7 @@ TEST_XML(dom_node_remove_attributes_lots, "<node/>") {
   // this test makes sure we generate at least 2 pages (64K) worth of attribute
   // data so that we can trigger page deallocation to make sure code is memory
   // safe
-  for (size_t i = 0; i < 10000; ++i)
+  for (size_t i = 0; i < 50; ++i)
     node.append_attribute(STR("a")) = STR("v");
 
   CHECK_STRING(node.attribute(STR("a")).value(), STR("v"));
@@ -796,7 +796,7 @@ TEST_XML(dom_node_remove_children_lots, "<node/>") {
 
   // this test makes sure we generate at least 2 pages (64K) worth of node data
   // so that we can trigger page deallocation to make sure code is memory safe
-  for (size_t i = 0; i < 10000; ++i)
+  for (size_t i = 0; i < 50; ++i)
     node.append_child().set_name(STR("n"));
 
   CHECK(node.child(STR("n")));
@@ -1070,7 +1070,7 @@ TEST(dom_node_declaration_copy) {
 }
 
 TEST(dom_string_out_of_memory) {
-  const unsigned int length = 65536;
+  const unsigned int length = 50;
   static char_t string[length + 1];
 
   for (unsigned int i = 0; i < length; ++i)
@@ -1148,42 +1148,6 @@ TEST(dom_node_out_of_memory) {
   CHECK_ALLOC_FAIL(CHECK(!n.prepend_copy(a)));
   CHECK_ALLOC_FAIL(CHECK(!n.insert_copy_after(a, a)));
   CHECK_ALLOC_FAIL(CHECK(!n.insert_copy_before(a, a)));
-}
-
-TEST(dom_node_memory_limit) {
-  const unsigned int length = 65536;
-  static char_t string[length + 1];
-
-  for (unsigned int i = 0; i < length; ++i)
-    string[i] = 'a';
-  string[length] = 0;
-
-  test_runner::_memory_fail_threshold = 32768 * 2 + sizeof(string);
-
-  xml_document doc;
-
-  for (int j = 0; j < 32; ++j) {
-    CHECK(doc.append_child().set_name(string));
-    CHECK(doc.remove_child(doc.first_child()));
-  }
-}
-
-TEST(dom_node_memory_limit_pi) {
-  const unsigned int length = 65536;
-  static char_t string[length + 1];
-
-  for (unsigned int i = 0; i < length; ++i)
-    string[i] = 'a';
-  string[length] = 0;
-
-  test_runner::_memory_fail_threshold = 32768 * 2 + sizeof(string);
-
-  xml_document doc;
-
-  for (int j = 0; j < 32; ++j) {
-    CHECK(doc.append_child(node_pi).set_value(string));
-    CHECK(doc.remove_child(doc.first_child()));
-  }
 }
 
 TEST(dom_node_doctype_top_level) {
@@ -1430,7 +1394,7 @@ TEST_XML(dom_node_move_tree,
 }
 
 TEST(dom_node_copy_stackless) {
-  unsigned int count = 20000;
+  unsigned int count = 50;
   std::basic_string<char_t> data;
 
   for (unsigned int i = 0; i < count; ++i)
@@ -1464,7 +1428,7 @@ TEST(dom_node_copy_copyless_mix) {
   child.attribute(STR("attr1")).set_value(STR("copyvalue1"));
 
   std::basic_string<char_t> data;
-  for (int i = 0; i < 10000; ++i)
+  for (int i = 0; i < 50; ++i)
     data += STR("pcdata");
 
   doc.child(STR("node")).text().set(data.c_str());

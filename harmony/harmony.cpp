@@ -19,6 +19,10 @@ bool operator>(const coverage::RootReport& left,
   return left.report > right.report;
 }
 
+bool operator>(const harmony::Harmony& left, const harmony::Harmony& right) {
+  return left.cov > right.cov;
+}
+
 bool operator<(const coverage::CoverageReport& left,
                const coverage::CoverageReport& right) {
   return left.lineCov.covered < right.lineCov.covered;
@@ -27,6 +31,10 @@ bool operator<(const coverage::CoverageReport& left,
 bool operator<(const coverage::RootReport& left,
                const coverage::RootReport& right) {
   return left.report < right.report;
+}
+
+bool operator<(const harmony::Harmony& left, const harmony::Harmony& right) {
+  return left.cov < right.cov;
 }
 
 struct ActionMutator final {
@@ -69,13 +77,19 @@ void Search::initialize(const std::vector<recorder::Action>& actions) {
 }
 
 void Search::run() {
-  for (int iteration = 0; iteration < _settings.maxIterations; ++iteration) {
+  size_t iterWithoutUpdates = 0U;
+  for (int iteration = 0;
+       iterWithoutUpdates <= _settings.maxIterationsWithoutUpdates;
+       ++iteration, ++iterWithoutUpdates) {
     std::cout << "Iter: " << iteration << std::endl;
-    Harmony newHarmony =
-        generateHarmony(_harmonyMemory[rand() % _settings.harmonyMemorySize]);
-    newHarmony = mutateHarmony(newHarmony);
-    updateHarmonyMemory(newHarmony);
+    Harmony newHarmony = generateHarmony(getWorst());
+    if (auto mutated = mutateHarmony(newHarmony)) {
+      if (updateHarmonyMemory(*mutated)) {
+        iterWithoutUpdates = 0U;
+      }
+    }
   }
+  dump();
 }
 
 Harmony Search::generateHarmony(const Harmony& harmony) const {
@@ -89,7 +103,7 @@ Harmony Search::generateHarmony(const Harmony& harmony) const {
   return harmony;
 }
 
-Harmony Search::mutateHarmony(const Harmony& harmony) const {
+std::optional<Harmony> Search::mutateHarmony(const Harmony& harmony) const {
   Harmony mutatedHarmony = harmony;
 
   for (auto& action : mutatedHarmony.actions) {
@@ -101,29 +115,37 @@ Harmony Search::mutateHarmony(const Harmony& harmony) const {
     mutatedHarmony.cov = covOpt.value();
     return mutatedHarmony;
   }
-  return harmony;
+  return std::nullopt;
 }
 
-void Search::updateHarmonyMemory(const Harmony& harmony) {
-  auto worstHarmony = std::min_element(
-      _harmonyMemory.begin(), _harmonyMemory.end(),
-      [](const Harmony& h1, const Harmony& h2) { return h1.cov < h2.cov; });
-  if (harmony.cov > worstHarmony->cov) {
-    *worstHarmony = harmony;
+bool Search::updateHarmonyMemory(const Harmony& harmony) {
+  auto& worstHarmony = getWorst();
+  if (harmony.cov > worstHarmony.cov) {
+    worstHarmony = harmony;
     dump();
+    return false;
   }
+  return false;
 }
 
-const Harmony& Search::getBest() const {
-  return *std::max_element(
-      _harmonyMemory.begin(), _harmonyMemory.end(),
-      [](const Harmony& h1, const Harmony& h2) { return h1.cov > h2.cov; });
+Harmony& Search::getWorst() {
+  auto worstHarmony =
+      std::min_element(_harmonyMemory.begin(), _harmonyMemory.end());
+  return *worstHarmony;
 }
 
 void printTableEntry(std::ostream& ss,
                      const cider::coverage::CoverageReport& report) {
   ss << report.lineCov.percent << "\t" << report.branchCov.percent << "\t"
      << report.funcCov.percent << std::endl;
+}
+
+const Harmony& Search::getBest() const {
+  const auto& best =
+      *std::max_element(_harmonyMemory.begin(), _harmonyMemory.end());
+  std::cout << "Best :";
+  printTableEntry(std::cout, best.cov.report);
+  return best;
 }
 
 void Search::dump() {

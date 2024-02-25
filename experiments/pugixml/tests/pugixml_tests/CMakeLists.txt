@@ -13,8 +13,14 @@ include_directories(.
 )
 
 add_library(pugixml_tests OBJECT
-    test_document.cpp test_dom_modify.cpp test_dom_text.cpp
-    test_dom_traverse.cpp test_parse.cpp test.cpp allocator.cpp writer_string.cpp)
+    test_document.cpp
+    test_dom_modify.cpp
+    test_dom_text.cpp
+    test_dom_traverse.cpp
+    test_parse.cpp
+    test.cpp
+    allocator.cpp
+    writer_string.cpp)
 
 add_dependencies(pugixml_tests ${CIDER_THIRDPARTY_TARGET_NAME})
 

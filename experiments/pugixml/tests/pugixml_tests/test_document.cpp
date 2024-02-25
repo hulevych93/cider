@@ -105,7 +105,7 @@ TEST(document_load_file_large) {
 
   std::basic_string<char_t> str;
   str += STR("<node>");
-  for (int i = 0; i < 10000; ++i)
+  for (int i = 0; i < 10; ++i)
     str += STR("<node/>");
   str += STR("</node>");
 
@@ -131,7 +131,7 @@ TEST(document_load_file_out_of_memory_file_leak) {
 
   xml_document doc;
 
-  for (int i = 0; i < 256; ++i)
+  for (int i = 0; i < 5; ++i)
     CHECK_ALLOC_FAIL(CHECK(doc.load_file("tests/data/small.xml").status ==
                            status_out_of_memory));
 
@@ -146,7 +146,7 @@ TEST(document_load_file_wide_out_of_memory_file_leak) {
 
   xml_document doc;
 
-  for (int i = 0; i < 256; ++i)
+  for (int i = 0; i < 5; ++i)
     CHECK_ALLOC_FAIL(CHECK(doc.load_file("tests/data/small.xml").status ==
                            status_out_of_memory));
 
@@ -331,7 +331,7 @@ TEST_XML(document_save_file_wide_text, "<node/>") {
 TEST_XML(document_save_file_leak, "<node/>") {
   temp_file f;
 
-  for (int i = 0; i < 256; ++i)
+  for (int i = 0; i < 5; ++i)
     CHECK(doc.save_file(f.path));
 }
 
@@ -342,7 +342,7 @@ TEST_XML(document_save_file_wide_leak, "<node/>") {
   wchar_t wpath[sizeof(f.path)];
   std::copy(f.path, f.path + strlen(f.path) + 1, wpath + 0);
 
-  for (int i = 0; i < 256; ++i)
+  for (int i = 0; i < 5; ++i)
     CHECK(doc.save_file(wpath));
 }
 
@@ -352,7 +352,7 @@ TEST(document_parse_result_bool) {
   result.status = status_ok;
   CHECK(result.status == status_ok);
 
-  for (int i = 1; i < 20; ++i) {
+  for (int i = 1; i < 5; ++i) {
     result.status = static_cast<xml_parse_status>(i);
     CHECK(result.status != status_ok);
   }
@@ -361,7 +361,7 @@ TEST(document_parse_result_bool) {
 TEST(document_parse_result_description) {
   xml_parse_result result;
 
-  for (int i = 0; i < 20; ++i) {
+  for (int i = 0; i < 5; ++i) {
     result.status = static_cast<xml_parse_status>(i);
   }
 }

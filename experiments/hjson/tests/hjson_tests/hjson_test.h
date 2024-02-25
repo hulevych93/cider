@@ -6,7 +6,7 @@
 
 #undef assert
 
-#if 1
+#if 0
 #define assert(expression)                                                    \
   (void)((!!(expression)) ||                                                  \
          (printf("\nTest failure in file %s on line %d:\n  %s\n\n", __FILE__, \

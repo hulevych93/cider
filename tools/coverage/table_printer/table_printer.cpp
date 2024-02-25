@@ -17,13 +17,6 @@ auto getIndexFromFilepath(const std::string& path) {
   static const auto patternLength = strlen("hjson_player_coverage_");
   return std::atoi(lidx.string().substr(patternLength).c_str());
 }
-
-void printTableEntry(std::ostream& ss,
-                     size_t idx,
-                     const cider::coverage::CoverageReport& report) {
-  ss << idx << "\t" << report.lineCov.percent << "\t"
-     << report.branchCov.percent << "\t" << report.funcCov.percent << std::endl;
-}
 }  // namespace
 
 int main(int argc, char* argv[]) {
