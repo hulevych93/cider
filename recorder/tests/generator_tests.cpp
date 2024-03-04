@@ -34,7 +34,7 @@ std::string produceAggregateCode(const std::string&,
                                  const GeneratorTestSuite::SomeParam&,
                                  CodeSink& sink) {
   std::string code;
-  code += "local {var} = {bar} {car}\n";
+  code += "{var} = {bar} {car}\n";
   return sink.processLocalVar(std::move(code));
 }
 
@@ -91,13 +91,14 @@ TEST_F(GeneratorTestSuite, invalidTemplateGenerator) {
   EXPECT_THROW(std::visit(generator, binaryOp), ScriptGenerationError);
 }
 
-TEST_F(GeneratorTestSuite, objectCantBeRegisteredTwice) {
+TEST_F(GeneratorTestSuite, objectCanBeRegisteredTwice) {
   LanguageContext context;
   context.funcProducer = lua::produceFunctionCall;
   context.binaryOpProducer = lua::produceBinaryOpCall;
   context.paramProducer = lua::produceParamCode;
+  context.functionNameMutator = lua::mutateFunctionName;
 
   ScriptGenerator generator{"module", context};
   EXPECT_NO_THROW(std::visit(generator, someOtherFunc));
-  EXPECT_THROW(std::visit(generator, someOtherFunc), ScriptGenerationError);
+  EXPECT_NO_THROW(std::visit(generator, someOtherFunc));
 }

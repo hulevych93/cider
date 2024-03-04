@@ -33,19 +33,14 @@ function(cider_generate_swig)
 
     cmake_parse_arguments(SWIG "${OPTIONS}" "${ONE_VALUE_ARGS}" "${MULTI_VALUE_ARGS}" ${ARGN})
 
-    # This ensures that there is no files from previous cmake runs.
-    file(REMOVE_RECURSE "${SWIG_OUTPUT_DIR}")
-    file(MAKE_DIRECTORY "${SWIG_OUTPUT_DIR}")
-
     get_filename_component(FILE_NAME "${SWIG_FILE}" NAME_WE)
 
-    add_custom_command(OUTPUT "${SWIG_OUTPUT_DIR}/${FILE_NAME}_wrap.cpp" "${SWIG_OUTPUT_DIR}/${FILE_NAME}_wrap.h"
+    add_custom_command(OUTPUT "${SWIG_OUTPUT_DIR}/${FILE_NAME}_wrap.cpp"
                        COMMAND "${CIDER_SWIG_EXECUTABLE}" -c++ -${SWIG_LANGUAGE} ${SWIG_GENERATOR_ARGS}
                       -cppext cpp "-I${CMAKE_SOURCE_DIR}"
                       -outdir "${SWIG_OUTPUT_DIR}"
                       -w509 # Warning: Overloaded method effectively ignored
                       -o "${SWIG_OUTPUT_DIR}/${FILE_NAME}_wrap.cpp"
-                      -oh "${SWIG_OUTPUT_DIR}/${FILE_NAME}_wrap.h"
                       -xmlout "${SWIG_OUTPUT_DIR}/${FILE_NAME}_wrap.xml"
                       ${SWIG_DEFINES}
                       ${SWIG_FILE}

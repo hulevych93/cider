@@ -14,7 +14,7 @@ using namespace cider;
 struct DerivedAggregateTypesTest : TestSuite {};
 
 static const char* function_test_aggregate_test_script =
-    R"(local object_1 = example.Aggregate()
+    R"(object_1 = example.Aggregate()
 object_1.number = example.Int(10)
 object_1.condition = true
 example.function_test_aggregate(object_1)
@@ -42,7 +42,7 @@ TEST_F(DerivedAggregateTypesTest,
 }
 
 const char* function_test_aggregate_derived_test_script =
-    R"(local object_1 = example.AggregateDerived()
+    R"(object_1 = example.AggregateDerived()
 object_1.condition = true
 object_1.number = example.Int(10)
 object_1.floatingNumber = 0.5

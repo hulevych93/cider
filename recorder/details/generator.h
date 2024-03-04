@@ -37,7 +37,9 @@ struct LanguageContext final {
 
 class ScriptGenerator final {
  public:
-  ScriptGenerator(std::string moduleName, LanguageContext);
+  ScriptGenerator(std::string moduleName,
+                  LanguageContext,
+                  const SessionSettings& settings = {});
   ScriptGenerator(ScriptGenerator&&) = default;
   ~ScriptGenerator();
 
@@ -58,6 +60,7 @@ class ScriptGenerator final {
  private:
   std::string _module;
   LanguageContext _langContext;
+  SessionSettings _settings;
 
   std::unique_ptr<CodeSink> _sink;
 };

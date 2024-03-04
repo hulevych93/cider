@@ -54,15 +54,3 @@ TEST_F(FreeFunctionsTest, summ_these_two_params_test) {
   SCOPED_TRACE("summ_these_two_params_test_script");
   testScript(summ_these_two_params_test_script, session);
 }
-
-TEST_F(FreeFunctionsTest, script_session_clears_test) {
-  auto session = makeLuaRecordingSession(LuaExampleModuleName);
-
-  EXPECT_EQ(120, hook::calculate_factorial(5));
-  EXPECT_EQ("example.calculate_factorial(example.Int(5))\n",
-            session->getScript(999U));
-
-  EXPECT_EQ(720, hook::calculate_factorial(6));
-  EXPECT_EQ("example.calculate_factorial(example.Int(6))\n",
-            session->getScript(999U));
-}

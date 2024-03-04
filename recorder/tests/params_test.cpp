@@ -113,8 +113,8 @@ TEST_F(ParamsTestSuite, paramVisitorFloating) {
 TEST_F(ParamsTestSuite, paramVisitorInteger) {
   lua::ParamVisitor visitor("test");
 
-  ASSERT_EQ("test.UInt8(12)", visitor(IntegerType{12u}));
-  ASSERT_EQ("test.Int8(12)", visitor(IntegerType{12}));
+  ASSERT_EQ("test.UInt(12)", visitor(IntegerType{12u}));
+  ASSERT_EQ("test.Int(12)", visitor(IntegerType{12}));
 }
 
 TEST_F(ParamsTestSuite, paramVisitorString) {

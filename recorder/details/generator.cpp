@@ -20,6 +20,8 @@ namespace {
 
 class CodeSinkImpl : public CodeSink {
  public:
+  CodeSinkImpl(const SessionSettings& settings) : _settings(settings) {}
+
   std::string getScript() {
     _locals.clear();
     _localCounter = 0u;
@@ -74,7 +76,10 @@ class CodeSinkImpl : public CodeSink {
   void unregisterLocalVar(const void* object) override {
     const auto localIt = _locals.find(object);
     if (localIt != _locals.end()) {
-      _sink += localIt->second + " = nil\n";  // TODO
+      if (_settings.enableGC) {
+        _sink += localIt->second + " = nil\n";
+      }
+
       _locals.erase(localIt);
     }
   }
@@ -88,7 +93,9 @@ class CodeSinkImpl : public CodeSink {
             std::string{"object"} + "_" + std::to_string(++_localCounter);
         _locals.emplace(object, suggested);
 
-        _sink += "collectgarbage('collect')\n";
+        if (_settings.enableGC) {
+          _sink += "collectgarbage('collect')\n";
+        }
 
         return suggested;
       } else {
@@ -115,7 +122,10 @@ class CodeSinkImpl : public CodeSink {
 
   void format(const std::string& codeTemplate,
               const fmt::dynamic_format_arg_store<fmt::format_context>& args) {
-    //_sink += "print(" + std::to_string(++_lineCounter) + ") ";
+    if (_settings.printLines) {
+      _sink += "print(" + std::to_string(++_lineCounter) + ") ";
+    }
+
     try {
       _sink += fmt::vformat(codeTemplate, args);
     } catch (const fmt::format_error& fmtErr) {
@@ -136,6 +146,7 @@ class CodeSinkImpl : public CodeSink {
   std::unordered_map<const void*, std::string> _locals;
   size_t _localCounter = 0u;
   size_t _lineCounter = 0u;
+  SessionSettings _settings;
 };
 
 std::string nullParamProcessor(const std::string&, const Param&, CodeSink&) {
@@ -162,6 +173,11 @@ std::string nullUnaryOpProcessor(bool, bool, UnaryOpType) {
       "nullUnaryOpProcessor for script generator is set."};
 }  // LCOV_EXCL_LINE
 
+std::string nullFunctionNameMutator(const char*) {
+    throw ScriptGenerationError{
+        "nullFunctionNameMutator for script generator is set."};
+}
+
 LanguageContext fixLanguageContext(LanguageContext context) {
   if (!context.funcProducer) {
     context.funcProducer = nullFuncProcessor;
@@ -175,6 +191,9 @@ LanguageContext fixLanguageContext(LanguageContext context) {
   if (!context.unaryOpProducer) {
     context.unaryOpProducer = nullUnaryOpProcessor;
   }
+  if(!context.functionNameMutator) {
+      context.functionNameMutator = nullFunctionNameMutator;
+  }
   return context;
 }
 
@@ -184,10 +203,12 @@ ScriptGenerationError::ScriptGenerationError(const char* msg)
     : _error(fmt::format("ScriptGenerationError: {}", msg)) {}
 
 ScriptGenerator::ScriptGenerator(std::string moduleName,
-                                 const LanguageContext context)
+                                 const LanguageContext context,
+                                 const SessionSettings& settings)
     : _module(std::move(moduleName)),
       _langContext(fixLanguageContext(context)),
-      _sink(std::make_unique<CodeSinkImpl>()) {}
+      _settings(settings),
+      _sink(std::make_unique<CodeSinkImpl>(settings)) {}
 
 ScriptGenerator::~ScriptGenerator() = default;
 

@@ -13,7 +13,7 @@ using namespace cider;
 struct StandardTypesTest : TestSuite {};
 
 const char* string_struct_as_arg_test_script =
-    R"(local object_1 = example.StringStruct()
+    R"(object_1 = example.StringStruct()
 object_1.field = 'test'
 example.string_struct_as_arg(object_1)
 )";

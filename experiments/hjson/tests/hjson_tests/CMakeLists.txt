@@ -14,7 +14,7 @@ include_directories(.
 
 cider_collect_src(LIST_OUT)
 
-add_library(hjson_tests OBJECT ${LIST_OUT})
+add_library(hjson_tests SHARED ${LIST_OUT})
 add_dependencies(hjson_tests ${CIDER_THIRDPARTY_TARGET_NAME})
 
 set(SWIG_MODULE_NAME "hjson")
@@ -34,13 +34,12 @@ list(APPEND GEN_SRC_FILES "${GEN_DIR}/${SWIG_MODULE_NAME}_lua.cpp")
 list(APPEND GEN_SRC_FILES "${GEN_DIR}/${SWIG_MODULE_NAME}_mutator.cpp")
 
 add_library(hjson-models ${GEN_SRC_FILES})
-add_dependencies(hjson-models hjson_gen_swig)
 add_dependencies(hjson_tests hjson-models)
 
 cider_generate_swig(LANGUAGE lua
                     EXTERNAL_RUNTIME
                     OUTPUT_DIR "${GEN_DIR}"
-                    DEPENDS hjson_gen_swig
+                    DEPENDS hjson-models
                     FILE "${GEN_DIR}/${SWIG_MODULE_NAME}.swig")
 
 add_library(hjson_wrap "${GEN_DIR}/${SWIG_MODULE_NAME}_wrap.cpp" "${GEN_DIR}/swigluarun.h")

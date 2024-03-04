@@ -13,8 +13,8 @@ using namespace cider;
 struct ReferenceReturnTest : TestSuite {};
 
 const char* copy_and_inc_test_script =
-    R"(local object_1 = example.RefStruct()
-local object_2 = object_1:copy()
+    R"(object_1 = example.RefStruct()
+object_2 = object_1:copy()
 object_1:inc()
 object_2:inc()
 )";
@@ -33,7 +33,7 @@ TEST_F(ReferenceReturnTest, copy_and_inc_test) {
 }
 
 const char* ref_and_inc_test_script =
-    R"(local object_1 = example.RefStruct()
+    R"(object_1 = example.RefStruct()
 object_1 = object_1:self()
 object_1:inc()
 object_1:inc()

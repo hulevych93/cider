@@ -13,7 +13,7 @@ using namespace cider;
 struct CompilerGeneratedMethods : TestSuite {};
 
 const char* no_constructors_default_ctr_test_script =
-    R"(local object_1 = example.NoConstructors()
+    R"(object_1 = example.NoConstructors()
 object_1:doo()
 )";
 
@@ -28,8 +28,8 @@ TEST_F(CompilerGeneratedMethods, defaultConstructorNoConstructors) {
 }
 
 const char* no_constructors_move_ctr_test_script =
-    R"(local object_1 = example.NoConstructors()
-local object_2 = example.NoConstructors(object_1)
+    R"(object_1 = example.NoConstructors()
+object_2 = example.NoConstructors(object_1)
 object_2:doo()
 )";
 
@@ -45,8 +45,8 @@ TEST_F(CompilerGeneratedMethods, moveConstructorNoConstructors) {
 }
 
 // const char* no_constructors_move_assgn_test_script =
-//     R"(local object_1 = example.NoConstructors()
-// local object_2 = example.NoConstructors()
+//     R"(object_1 = example.NoConstructors()
+// object_2 = example.NoConstructors()
 // object_2 = object_1
 // object_2:doo()
 //)";
@@ -64,8 +64,8 @@ TEST_F(CompilerGeneratedMethods, moveConstructorNoConstructors) {
 //}
 
 const char* no_constructors_copy_ctr_test_script =
-    R"(local object_1 = example.NoConstructors()
-local object_2 = example.NoConstructors(object_1)
+    R"(object_1 = example.NoConstructors()
+object_2 = example.NoConstructors(object_1)
 object_2:doo()
 )";
 
@@ -81,7 +81,7 @@ TEST_F(CompilerGeneratedMethods, copyConstructorNoConstructors) {
 }
 
 const char* only_destrutor_default_ctr_test_script =
-    R"(local object_1 = example.OnlyDestructor()
+    R"(object_1 = example.OnlyDestructor()
 object_1:doo()
 )";
 
@@ -96,8 +96,8 @@ TEST_F(CompilerGeneratedMethods, defaultConstructorOnlyDestructor) {
 }
 
 const char* only_destructor_move_ctr_test_script =
-    R"(local object_1 = example.OnlyDestructor()
-local object_2 = example.OnlyDestructor(object_1)
+    R"(object_1 = example.OnlyDestructor()
+object_2 = example.OnlyDestructor(object_1)
 object_2:doo()
 )";
 
@@ -113,8 +113,8 @@ TEST_F(CompilerGeneratedMethods, moveConstructorOnlyDestructor) {
 }
 
 const char* only_destructor_copy_ctr_test_script =
-    R"(local object_1 = example.OnlyDestructor()
-local object_2 = example.OnlyDestructor(object_1)
+    R"(object_1 = example.OnlyDestructor()
+object_2 = example.OnlyDestructor(object_1)
 object_2:doo()
 )";
 
@@ -130,7 +130,7 @@ TEST_F(CompilerGeneratedMethods, copyConstructorOnlyDestructor) {
 }
 
 const char* default_and_move_ctr_test_script =
-    R"(local object_1 = example.DefaultAndMoveConstructor()
+    R"(object_1 = example.DefaultAndMoveConstructor()
 object_1:doo()
 )";
 
@@ -145,7 +145,7 @@ TEST_F(CompilerGeneratedMethods, defaultConstructorDefaultAndMoveConstructor) {
 }
 
 const char* move_default_and_move_ctr_test_script =
-    R"(local object_1 = example.DefaultAndMoveConstructor()
+    R"(object_1 = example.DefaultAndMoveConstructor()
 object_1:doo()
 )";
 
@@ -161,7 +161,7 @@ TEST_F(CompilerGeneratedMethods, moveConstructorDefaultAndMoveConstructor) {
 }
 
 const char* default_and_copy_ctr_test_script =
-    R"(local object_1 = example.DefaultAndCopyConstructor()
+    R"(object_1 = example.DefaultAndCopyConstructor()
 object_1:doo()
 )";
 
@@ -176,8 +176,8 @@ TEST_F(CompilerGeneratedMethods, defaultConstructorDefaultAndCopyConstructor) {
 }
 
 const char* copy_default_and_copy_ctr_test_script =
-    R"(local object_1 = example.DefaultAndCopyConstructor()
-local object_2 = example.DefaultAndCopyConstructor(object_1)
+    R"(object_1 = example.DefaultAndCopyConstructor()
+object_2 = example.DefaultAndCopyConstructor(object_1)
 object_2:doo()
 )";
 
@@ -193,8 +193,8 @@ TEST_F(CompilerGeneratedMethods, copyConstructorDefaultAndCopyConstructor) {
 }
 
 const char* copy_assgn_default_and_copy_ctr_test_script =
-    R"(local object_1 = example.DefaultAndCopyConstructor()
-local object_2 = example.DefaultAndCopyConstructor()
+    R"(object_1 = example.DefaultAndCopyConstructor()
+object_2 = example.DefaultAndCopyConstructor()
 object_2 = object_1
 object_2:doo()
 )";
@@ -212,7 +212,7 @@ TEST_F(CompilerGeneratedMethods, copyAssgnDefaultAndCopyConstructor) {
 }
 
 const char* only_copy_operator_ctr_test_script =
-    R"(local object_1 = example.OnlyCopyOperator()
+    R"(object_1 = example.OnlyCopyOperator()
 object_1:doo()
 )";
 
@@ -227,8 +227,8 @@ TEST_F(CompilerGeneratedMethods, defaultConstructorOnlyCopyOperator) {
 }
 
 const char* only_copy_operator_copy_ctr_test_script =
-    R"(local object_1 = example.OnlyCopyOperator()
-local object_2 = example.OnlyCopyOperator(object_1)
+    R"(object_1 = example.OnlyCopyOperator()
+object_2 = example.OnlyCopyOperator(object_1)
 object_2:doo()
 )";
 
@@ -244,8 +244,8 @@ TEST_F(CompilerGeneratedMethods, copyConstructorOnlyCopyOperator) {
 }
 
 const char* copy_assgn_only_copy_operator_ctr_test_script =
-    R"(local object_1 = example.OnlyCopyOperator()
-local object_2 = example.OnlyCopyOperator()
+    R"(object_1 = example.OnlyCopyOperator()
+object_2 = example.OnlyCopyOperator()
 object_2 = object_1
 object_2:doo()
 )";
@@ -263,7 +263,7 @@ TEST_F(CompilerGeneratedMethods, copyAssgnOnlyCopyOperator) {
 }
 
 const char* only_move_operator_ctr_test_script =
-    R"(local object_1 = example.OnlyMoveOperator()
+    R"(object_1 = example.OnlyMoveOperator()
 object_1:doo()
 )";
 
@@ -278,8 +278,8 @@ TEST_F(CompilerGeneratedMethods, defaultConstructorOnlyMoveOperator) {
 }
 
 const char* move_assgn_only_move_operator_ctr_test_script =
-    R"(local object_1 = example.OnlyMoveOperator()
-local object_2 = example.OnlyMoveOperator()
+    R"(object_1 = example.OnlyMoveOperator()
+object_2 = example.OnlyMoveOperator()
 object_2 = object_1
 object_2:doo()
 )";

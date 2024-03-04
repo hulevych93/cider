@@ -13,7 +13,7 @@ using namespace cider;
 struct PolymorphicTypesTest : TestSuite {};
 
 const char* some_interface_test_script =
-    R"(local object_1 = example.StringInterface('abc')
+    R"(object_1 = example.StringInterface('abc')
 object_1:isEmpty()
 )";
 
@@ -39,7 +39,7 @@ TEST_F(PolymorphicTypesTest, some_interface_test_ptr) {
 }
 
 const char* some_other_interface_test_script =
-    R"(local object_1 = example.OtherStringInterface(false)
+    R"(object_1 = example.OtherStringInterface(false)
 object_1:isEmpty()
 )";
 
@@ -55,7 +55,7 @@ TEST_F(PolymorphicTypesTest, some_other_interface_test_ptr) {
 }
 
 const char* make_some_interface_test_script =
-    R"(local object_1 = example.makeSomeInterface('false')
+    R"(object_1 = example.makeSomeInterface('false')
 object_1:isEmpty()
 )";
 

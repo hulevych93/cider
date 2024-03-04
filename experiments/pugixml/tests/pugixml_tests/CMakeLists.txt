@@ -41,13 +41,12 @@ list(APPEND GEN_SRC_FILES "${GEN_DIR}/${SWIG_MODULE_NAME}_lua.cpp")
 list(APPEND GEN_SRC_FILES "${GEN_DIR}/${SWIG_MODULE_NAME}_mutator.cpp")
 
 add_library(pugixml-models ${GEN_SRC_FILES})
-add_dependencies(pugixml-models pugixml_gen_swig)
 add_dependencies(pugixml_tests pugixml-models)
 
 cider_generate_swig(LANGUAGE lua
                     EXTERNAL_RUNTIME
                     OUTPUT_DIR "${GEN_DIR}"
-                    DEPENDS pugixml_gen_swig
+                    DEPENDS pugixml-models
                     FILE "${GEN_DIR}/${SWIG_MODULE_NAME}.swig")
 
 add_library(pugixml_wrap "${GEN_DIR}/${SWIG_MODULE_NAME}_wrap.cpp" "${GEN_DIR}/swigluarun.h")

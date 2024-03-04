@@ -30,10 +30,10 @@ int main(int argc, char* argv[]) {
     }
 
     cider::harmony::Settings settings;
-    settings.mutationRate = 0.03;
+    settings.mutationRate = 0.00;
     settings.harmonyMemoryConsiderationRate = 0.5;
-    settings.harmonyMemorySize = 5;
-    settings.maxIterationsWithoutUpdates = 150;
+    settings.harmonyMemorySize = 1;
+    settings.maxIterationsWithoutUpdates = 15;
     settings.strategy = cider::harmony::MutationStrategy::ShuffleBytes;
 
     cider::harmony::CoverageMeasurment measurer{cmd, "log.txt", "hjson"};

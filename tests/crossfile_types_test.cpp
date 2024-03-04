@@ -13,7 +13,7 @@ using namespace cider;
 struct CrossfileTest : TestSuite {};
 
 const char* function_test_aggregate_in_other_file_test_script =
-    R"(local object_1 = example.Aggregate()
+    R"(object_1 = example.Aggregate()
 object_1.number = example.Int(0)
 object_1.condition = false
 example.function_test_aggregate_in_other_file(object_1)
@@ -30,8 +30,8 @@ TEST_F(CrossfileTest, function_test_aggregate_in_other_file_test) {
 }
 
 const char* function_test_class_construct_in_other_file_test_script =
-    R"(local object_1 = example.FinalClass()
-local object_2 = example.function_test_class_construct_in_other_file(object_1)
+    R"(object_1 = example.FinalClass()
+object_2 = example.function_test_class_construct_in_other_file(object_1)
 )";
 
 TEST_F(CrossfileTest, function_test_class_construct_in_other_file_test) {

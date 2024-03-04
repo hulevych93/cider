@@ -13,7 +13,7 @@ using namespace cider;
 struct AggregateWithFunctionsStructStructTest : TestSuite {};
 
 static const char* test_aggregate_with_functions_test_script =
-    R"(local object_1 = example.AggregateWithFunctionsStruct()
+    R"(object_1 = example.AggregateWithFunctionsStruct()
 object_1.field = example.Int(13)
 example.test_aggregate_with_functions(object_1)
 )";

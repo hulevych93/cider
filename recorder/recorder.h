@@ -17,7 +17,11 @@ struct ScriptGenerationError final : public std::exception {
   std::string _error;
 };
 
-struct SessionSettings final {};
+struct SessionSettings final {
+  bool printLines = false;
+  bool enableGC = false;
+  bool ignoreErrors = false;
+};
 
 class IScriptRecordSession {
  public:
