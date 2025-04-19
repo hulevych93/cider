@@ -8,12 +8,10 @@
 
 #include "coverage/coverage.h"
 
-#include "harmony.h"
-
 #include <fstream>
 
 namespace cider {
-namespace harmony {
+namespace coverage {
 
 struct Cmd final {
   Cmd(int argc, char* argv[]);
@@ -25,13 +23,14 @@ struct Cmd final {
   std::string covDir;
 };
 
+using ReportOpt = std::optional<coverage::RootReport>;
+
 struct CoverageMeasurment {
   explicit CoverageMeasurment(const Cmd& cmd,
                               const char* logName,
                               const char* module);
 
-  cider::harmony::ReportOpt operator()(
-      const std::vector<cider::recorder::Action>& actions);
+  ReportOpt operator()(const std::vector<cider::recorder::Action>& actions);
 
   virtual std::string getScript(
       const std::vector<cider::recorder::Action>& actions) const;
@@ -54,5 +53,5 @@ struct StepperCoverageMeasurment final : CoverageMeasurment {
       const std::vector<cider::recorder::Action>& actions) const override;
 };
 
-}  // namespace harmony
+}  // namespace coverage
 }  // namespace cider

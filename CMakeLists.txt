@@ -15,6 +15,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include_directories(${CMAKE_SOURCE_DIR})
 
+OPTION(ENABLE_COVERAGE "Without this coverage won't be meassured" ON)
+OPTION(CIDER_ENABLE_COVERAGE "Coverage target for cider tests" OFF)
+OPTION(ENABLE_COVERAGE_DRIVER "Experimental coverage run targets" ON)
+
 enable_testing()
 
 add_subdirectory(thirdparty/fmt)
@@ -26,7 +30,8 @@ add_subdirectory(thirdparty/nlohmann)
 add_subdirectory(thirdparty/tpl)
 
 add_subdirectory(coverage)
-add_subdirectory(harmony)
+add_subdirectory(metaheuristics)
+add_subdirectory(q-learning)
 add_subdirectory(tools/cider)
 add_subdirectory(tools/coverage/table_printer)
 
@@ -56,5 +61,6 @@ if(CIDER_ENABLE_COVERAGE)
         EXCLUDE "tools/*" "tests/models/*" "${BUILD_FILES_DIR}/*" "${CIDER_GEN_DIR}/*" "${BASE_DIRECTORY}/*/v1/*" "/Applications/*")
 endif()
 
+add_subdirectory(experiments/pipelines)
 add_subdirectory(experiments/hjson)
 add_subdirectory(experiments/pugixml)

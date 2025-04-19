@@ -25,7 +25,7 @@ static class NullBuffer : public std::streambuf {
 static std::ostream null_stream(&null_buffer);
 
 void printAggregateFieldMutator(std::ostream& os, const std::string& name) {
-  os << "  mutator(aggregate." + name + ");\n";
+  os << " isMutated |= mutator(aggregate." + name + ");\n";
 }
 
 void printBaseClassesAggregateFields(
@@ -52,11 +52,13 @@ void printAggregateMutator(std::ostream& os,
                            const bool enter) {
   if (enter) {
     os << "template <>\n";
-    os << "void mutateAggregate(const IParamMutator& mutator, "
+    os << "bool mutateAggregate(const IParamMutator& mutator, "
        << scope + "::" + e.name() << "& aggregate) {\n";
+    os << " bool isMutated = false;\n";
     printBaseClassesAggregateFields(os, metadata, e.bases(), scope,
                                     printAggregateFieldMutator);
   } else {
+    os << " return isMutated;\n";
     os << "}\n\n";
   }
 }
@@ -67,14 +69,15 @@ void printEnumMutator(std::ostream& os,
                       const bool enter) {
   if (enter) {
     os << "template <>\n";
-    os << "void mutateAggregate(const IParamMutator& mutator, "
+    os << "bool mutateAggregate(const IParamMutator& mutator, "
        << scope + "::" + name << "& aggregate) {\n";
     os << "std::vector<" << scope + "::" + name << "> vals;\n";
   } else {
     os << "const auto rnd = mutator.random(vals.size());\n";
     os << "if(rnd.has_value()) {\n";
     os << "  aggregate = vals[rnd.value()];\n";
-    os << "}\n}\n\n";
+    os << "  return true;\n}\n";
+    os << "  return false;\n}\n\n";
   }
 }
 

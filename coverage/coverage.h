@@ -59,5 +59,25 @@ void printTableEntry(std::ostream& ss,
                      const size_t index,
                      const CoverageReport& report);
 
+inline bool operator>(const coverage::CoverageReport& left,
+                      const coverage::CoverageReport& right) {
+  return left.lineCov.percent > right.lineCov.percent;
+}
+
+inline bool operator>(const coverage::RootReport& left,
+                      const coverage::RootReport& right) {
+  return left.report > right.report;
+}
+
+inline bool operator<(const coverage::CoverageReport& left,
+                      const coverage::CoverageReport& right) {
+  return left.lineCov.covered < right.lineCov.covered;
+}
+
+inline bool operator<(const coverage::RootReport& left,
+                      const coverage::RootReport& right) {
+  return left.report < right.report;
+}
+
 }  // namespace coverage
 }  // namespace cider

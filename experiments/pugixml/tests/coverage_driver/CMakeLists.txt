@@ -7,7 +7,8 @@ add_executable(pugixml_driver coverage_driver.cpp)
 
 target_link_libraries(pugixml_driver PUBLIC
   coverage
-  harmony
+  metaheuristics
+  pipelines
   pugixml_tests
 )
 

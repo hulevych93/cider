@@ -7,7 +7,8 @@ add_executable(hjson_driver coverage_driver.cpp)
 
 target_link_libraries(hjson_driver PUBLIC
   coverage
-  harmony
+  metaheuristics
+  pipelines
   hjson_tests
 )
 

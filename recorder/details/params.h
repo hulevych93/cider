@@ -58,22 +58,22 @@ using PureType = std::remove_pointer_t<std::decay_t<Type>>;
 class IParamMutator;
 
 template <typename Type>
-void mutateAggregate(const IParamMutator& mutator, Type&);
+bool mutateAggregate(const IParamMutator& mutator, Type&);
 
 struct IParamMutator {
   virtual ~IParamMutator() = default;
 
-  virtual void operator()(const char*&) const {}
+  virtual bool operator()(const char*&) const { return false; }
 
-  virtual void operator()(recorder::Nil&) const = 0;
-  virtual void operator()(bool& value) const = 0;
-  virtual void operator()(double& value) const = 0;
-  virtual void operator()(char*& value) const = 0;
-  virtual void operator()(std::string& value) const = 0;
-  virtual void operator()(std::wstring& value) const = 0;
-  virtual void operator()(float& value) const = 0;
+  virtual bool operator()(recorder::Nil&) const = 0;
+  virtual bool operator()(bool& value) const = 0;
+  virtual bool operator()(double& value) const = 0;
+  virtual bool operator()(char*& value) const = 0;
+  virtual bool operator()(std::string& value) const = 0;
+  virtual bool operator()(std::wstring& value) const = 0;
+  virtual bool operator()(float& value) const = 0;
 
-  void operator()(recorder::IntegerType& value) const {
+  bool operator()(recorder::IntegerType& value) const {
     return std::visit([this](auto& val) { return (*this)(val); }, value);
   }
 
@@ -83,26 +83,26 @@ struct IParamMutator {
     return random(0, max);
   }
 
-  virtual void operator()(char& value) const = 0;
-  virtual void operator()(short& value) const = 0;
-  virtual void operator()(int& value) const = 0;
-  virtual void operator()(long& value) const = 0;
-  virtual void operator()(long long& value) const = 0;
-  virtual void operator()(unsigned char& value) const = 0;
-  virtual void operator()(unsigned short& value) const = 0;
-  virtual void operator()(unsigned int& value) const = 0;
-  virtual void operator()(unsigned long& value) const = 0;
-  virtual void operator()(unsigned long long& value) const = 0;
+  virtual bool operator()(char& value) const = 0;
+  virtual bool operator()(short& value) const = 0;
+  virtual bool operator()(int& value) const = 0;
+  virtual bool operator()(long& value) const = 0;
+  virtual bool operator()(long long& value) const = 0;
+  virtual bool operator()(unsigned char& value) const = 0;
+  virtual bool operator()(unsigned short& value) const = 0;
+  virtual bool operator()(unsigned int& value) const = 0;
+  virtual bool operator()(unsigned long& value) const = 0;
+  virtual bool operator()(unsigned long long& value) const = 0;
 
   template <
       typename EnumType,
       typename std::enable_if_t<std::is_enum_v<EnumType>, void*> = nullptr>
-  void operator()(EnumType& value) const {
+  bool operator()(EnumType& value) const {
     mutateAggregate(*this, value);
   }
 
-  virtual void operator()(recorder::UserDataValueParamPtr& value) const = 0;
-  virtual void operator()(recorder::UserDataReferenceParamPtr& value) const = 0;
+  virtual bool operator()(recorder::UserDataValueParamPtr& value) const = 0;
+  virtual bool operator()(recorder::UserDataReferenceParamPtr& value) const = 0;
 };
 
 struct UserDataValueParam {
@@ -110,7 +110,7 @@ struct UserDataValueParam {
   virtual ~UserDataValueParam() = default;
   virtual std::string generateCode(const std::string& moduleName,
                                    CodeSink& sink) const = 0;
-  virtual void mutate(const IParamMutator&) = 0;
+  virtual bool mutate(const IParamMutator&) = 0;
 };
 
 struct UserDataReferenceParam : UserDataValueParam {
@@ -118,7 +118,7 @@ struct UserDataReferenceParam : UserDataValueParam {
   virtual ~UserDataReferenceParam() = default;
   virtual LocalVar registerLocal(CodeSink& sink) = 0;
 
-  void mutate(const IParamMutator&) {}
+  bool mutate(const IParamMutator&) { return false; }
 };
 
 template <typename Type>
@@ -127,7 +127,7 @@ std::string produceAggregateCode(const std::string& moduleName,
                                  CodeSink& sink);
 
 template <typename Type>
-void mutateAggregate(const IParamMutator& mutator, Type&);
+bool mutateAggregate(const IParamMutator& mutator, Type&);
 
 namespace details {
 
@@ -148,8 +148,8 @@ struct AggregateUserDataValueParamImpl final : public UserDataValueParam {
     return produceAggregateCode(moduleName, _param, sink);
   }
 
-  void mutate(const IParamMutator& mutator) override {
-    mutateAggregate(mutator, _param);
+  bool mutate(const IParamMutator& mutator) override {
+    return mutateAggregate(mutator, _param);
   }
 
  private:

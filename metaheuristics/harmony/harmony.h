@@ -7,15 +7,14 @@
 #include "recorder/details/params.h"
 
 #include "coverage/coverage.h"
+#include "coverage/measurer.h"
+
+#include "metaheuristics/args_mutator.h"
+#include "metaheuristics/metasearch.h"
 
 namespace cider {
+namespace metasearch {
 namespace harmony {
-
-using ReportOpt = std::optional<coverage::RootReport>;
-using MeassureCallback =
-    std::function<ReportOpt(const std::vector<recorder::Action>&)>;
-
-enum class MutationStrategy { ShuffleBytes, ChangeBits };
 
 struct Settings final {
   int harmonyMemorySize = 10;
@@ -26,20 +25,17 @@ struct Settings final {
   MutationStrategy strategy = MutationStrategy::ShuffleBytes;
 };
 
-struct Harmony final {
-  std::vector<recorder::Action> actions;
-  coverage::RootReport cov;
-};
+using Harmony = Solution;
 
-class Search final {
+class Search final : public IMetaSearch {
  public:
   explicit Search(const Settings& settings);
 
-  void initialize(const std::vector<recorder::Action>& actions);
+  void initialize(const std::vector<recorder::Action>& actions) override;
 
-  void run();
+  void run() override;
 
-  const Harmony& getBest() const;
+  const Harmony& getBest() const override;
 
  private:
   Harmony generateHarmony(const Harmony& harmony) const;
@@ -51,14 +47,15 @@ class Search final {
   void dump();
 
  private:
+  std::random_device _rd;
+  mutable std::mt19937 _gen;
+
   Settings _settings;
   std::vector<Harmony> _harmonyMemory;
   Harmony _initial;
   std::unique_ptr<recorder::IParamMutator> _mutator;
 };
 
-std::unique_ptr<recorder::IParamMutator> makeMutator(double mutationRate,
-                                                     MutationStrategy strategy);
-
 }  // namespace harmony
+}  // namespace metasearch
 }  // namespace cider

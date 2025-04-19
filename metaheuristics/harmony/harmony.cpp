@@ -3,77 +3,71 @@
 
 #include "harmony.h"
 
+#include "metaheuristics/args_mutator.h"
+
 #include <assert.h>
 #include <iostream>
 
 namespace cider {
+namespace metasearch {
 namespace harmony {
 
-bool operator>(const coverage::CoverageReport& left,
-               const coverage::CoverageReport& right) {
-  return left.lineCov.covered > right.lineCov.covered;
-}
-
-bool operator>(const coverage::RootReport& left,
-               const coverage::RootReport& right) {
-  return left.report > right.report;
-}
-
-bool operator>(const harmony::Harmony& left, const harmony::Harmony& right) {
-  return left.cov > right.cov;
-}
-
-bool operator<(const coverage::CoverageReport& left,
-               const coverage::CoverageReport& right) {
-  return left.lineCov.covered < right.lineCov.covered;
-}
-
-bool operator<(const coverage::RootReport& left,
-               const coverage::RootReport& right) {
-  return left.report < right.report;
-}
-
-bool operator<(const harmony::Harmony& left, const harmony::Harmony& right) {
-  return left.cov < right.cov;
-}
+namespace {
 
 struct ActionMutator final {
   explicit ActionMutator(const recorder::IParamMutator& mutator)
       : _mutator(mutator) {}
 
-  void operator()(recorder::Function& context) {
+  bool operator()(recorder::Function& context) {
+    bool isMutated = false;
     for (auto& param : context.params) {
-      std::visit(_mutator, param);
+      isMutated |= std::visit(_mutator, param);
     }
+    return isMutated;
   }
 
-  void operator()(recorder::ClassMethod& context) {
+  bool operator()(recorder::ClassMethod& context) {
+    bool isMutated = false;
     for (auto& param : context.method.params) {
-      std::visit(_mutator, param);
+      isMutated |= std::visit(_mutator, param);
     }
+    return isMutated;
   }
 
-  void operator()(recorder::ClassBinaryOp& context) {
-    std::visit(_mutator, context.param);
+  bool operator()(recorder::ClassBinaryOp& context) {
+    return std::visit(_mutator, context.param);
   }
 
-  void operator()(recorder::ClassUnaryOp&) {}
-  void operator()(recorder::ClassDestructor&) {}
+  bool operator()(recorder::ClassUnaryOp&) { return false; }
+  bool operator()(recorder::ClassDestructor&) { return false; }
 
   const recorder::IParamMutator& _mutator;
 };
 
+}  // namespace
+
 Search::Search(const Settings& settings)
-    : _settings(settings),
-      _mutator(makeMutator(settings.mutationRate, settings.strategy)) {}
+    : _gen(_rd()),
+      _settings(settings),
+      _mutator(cider::metasearch::makeMutator(_gen,
+                                              settings.mutationRate,
+                                              settings.strategy)) {}
 
 void Search::initialize(const std::vector<recorder::Action>& actions) {
   _initial.actions = actions;
+
+  if (const auto& covOpt = _settings.meassure(_initial.actions)) {
+    _initial.cov = covOpt.value();
+  } else {
+    throw std::logic_error{"Bad initial script."};
+  }
 
   _harmonyMemory.resize(_settings.harmonyMemorySize);
   for (auto i = 0U; i < _settings.harmonyMemorySize; ++i) {
     _harmonyMemory[i] = _initial;
   }
+
+  dump();
 }
 
 void Search::run() {
@@ -100,19 +94,26 @@ Harmony Search::generateHarmony(const Harmony& harmony) const {
   } else {
     newHarmony = _initial;
   }
-  return harmony;
+  return newHarmony;
 }
 
 std::optional<Harmony> Search::mutateHarmony(const Harmony& harmony) const {
   Harmony mutatedHarmony = harmony;
 
+  bool isMutated = false;
   for (auto& action : mutatedHarmony.actions) {
     ActionMutator mutator(*_mutator);
-    std::visit(mutator, action);
+    isMutated |= std::visit(mutator, action);
+  }
+
+  if (!isMutated) {
+    return std::nullopt;
   }
 
   if (const auto& covOpt = _settings.meassure(mutatedHarmony.actions)) {
     mutatedHarmony.cov = covOpt.value();
+    std::cout << "Candidate: ";
+    cider::coverage::printTableEntry(std::cout, 0, mutatedHarmony.cov.report);
     return mutatedHarmony;
   }
   return std::nullopt;
@@ -123,7 +124,7 @@ bool Search::updateHarmonyMemory(const Harmony& harmony) {
   if (harmony.cov > worstHarmony.cov) {
     worstHarmony = harmony;
     dump();
-    return false;
+    return true;
   }
   return false;
 }
@@ -134,25 +135,20 @@ Harmony& Search::getWorst() {
   return *worstHarmony;
 }
 
-void printTableEntry(std::ostream& ss,
-                     const cider::coverage::CoverageReport& report) {
-  ss << report.lineCov.percent << "\t" << report.branchCov.percent << "\t"
-     << report.funcCov.percent << std::endl;
-}
-
 const Harmony& Search::getBest() const {
   const auto& best =
       *std::max_element(_harmonyMemory.begin(), _harmonyMemory.end());
   std::cout << "Best :";
-  printTableEntry(std::cout, best.cov.report);
+  cider::coverage::printTableEntry(std::cout, 0, best.cov.report);
   return best;
 }
 
 void Search::dump() {
   for (const auto& harmony : _harmonyMemory) {
-    printTableEntry(std::cout, harmony.cov.report);
+    cider::coverage::printTableEntry(std::cout, 0, harmony.cov.report);
   }
 }
 
 }  // namespace harmony
+}  // namespace metasearch
 }  // namespace cider

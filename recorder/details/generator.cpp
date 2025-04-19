@@ -174,8 +174,8 @@ std::string nullUnaryOpProcessor(bool, bool, UnaryOpType) {
 }  // LCOV_EXCL_LINE
 
 std::string nullFunctionNameMutator(const char*) {
-    throw ScriptGenerationError{
-        "nullFunctionNameMutator for script generator is set."};
+  throw ScriptGenerationError{
+      "nullFunctionNameMutator for script generator is set."};
 }
 
 LanguageContext fixLanguageContext(LanguageContext context) {
@@ -191,8 +191,8 @@ LanguageContext fixLanguageContext(LanguageContext context) {
   if (!context.unaryOpProducer) {
     context.unaryOpProducer = nullUnaryOpProcessor;
   }
-  if(!context.functionNameMutator) {
-      context.functionNameMutator = nullFunctionNameMutator;
+  if (!context.functionNameMutator) {
+    context.functionNameMutator = nullFunctionNameMutator;
   }
   return context;
 }

@@ -11,7 +11,7 @@
 #include "recorder/details/generator.h"
 
 namespace cider {
-namespace harmony {
+namespace coverage {
 
 Cmd::Cmd(int argc, char* argv[]) {
   assert(argc == 6);
@@ -31,13 +31,11 @@ CoverageMeasurment::CoverageMeasurment(const Cmd& cmd,
                                        const char* module)
     : _cmd(cmd), _report(logName), _module(module) {}
 
-cider::harmony::ReportOpt CoverageMeasurment::operator()(
+ReportOpt CoverageMeasurment::operator()(
     const std::vector<cider::recorder::Action>& actions) {
   const auto script = getScript(actions);
 
   assert(cider::coverage::cleanCoverage(_cmd.covDir));
-
-  std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
   const auto result =
       cider::coverage::runScript(_cmd.binPath, _cmd.workingDir, script);
@@ -95,5 +93,5 @@ std::string StepperCoverageMeasurment::getScript(
   return result;
 }
 
-}  // namespace harmony
+}  // namespace coverage
 }  // namespace cider
