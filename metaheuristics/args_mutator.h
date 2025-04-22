@@ -11,7 +11,7 @@
 namespace cider {
 namespace metasearch {
 
-enum class MutationStrategy { ShuffleBytes, ChangeBits };
+enum class MutationStrategy { ShuffleBytes, ChangeBits, LevyFlight };
 
 std::unique_ptr<recorder::IParamMutator> makeMutator(std::mt19937& gen,
                                                      double mutationRate,

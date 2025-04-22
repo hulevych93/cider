@@ -97,6 +97,9 @@ struct ParamMutator final : cider::recorder::IParamMutator {
           shaffle_bytes(value);
           return true;
           break;
+        case MutationStrategy::LevyFlight:
+          return true;
+          break;
         default:
           break;
       }
@@ -105,10 +108,10 @@ struct ParamMutator final : cider::recorder::IParamMutator {
   }
 
   bool shouldMutate() const {
-    auto rnd = rand() / static_cast<double>(RAND_MAX);
-    const bool shouldMutate = rnd < _mutationRate;
+    const bool shouldMutate =
+        ((double)randomInRange(_gen, 0, 10000.f) / 10000.f) < _mutationRate;
     if (shouldMutate) {
-      // std::cout << "rnd: " << rnd << ", fl: " << shouldMutate << std::endl;
+      // std::cout << "rnd: " << rnd << "fl: " << shouldMutate << std::endl;
     }
     return shouldMutate;
   }

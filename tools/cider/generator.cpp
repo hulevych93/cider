@@ -39,6 +39,11 @@ void generator::handleClass(const cpp_class& e,
   } else {
     m_class = nullptr;
   }
+
+  if (isException(e)) {
+    m_isException = enter;
+    return;
+  }
 }
 
 void generator::handleNamespace(const cpp_entity& e, const bool enter) {
@@ -80,6 +85,9 @@ void header_generator::handleClass(const cpp_class& e,
 void header_generator::handleConstructor(
     const cpp_constructor& e,
     cppast::cpp_access_specifier_kind /*kind*/) {
+  if (m_isException) {
+    return;
+  }
   printConstructorDecl(m_out, m_metadata, e, m_namespaces, false);
 }
 
@@ -148,6 +156,8 @@ void header_generator::handleMemberVariable(
 }
 
 void header_generator::handleVariable(const cppast::cpp_variable& e) {
+  m_namespaces(m_out);
+
   printVariableDecl(m_out, m_metadata, e, m_namespaces);
 }
 
@@ -190,6 +200,10 @@ void source_generator::handleConstructor(
     const cpp_constructor& e,
     cppast::cpp_access_specifier_kind /*kind*/) {
   m_namespaces(m_out);
+
+  if (m_isException) {
+    return;
+  }
 
   printConstructorDecl(m_out, m_metadata, e, m_namespaces, true);
   printBaseClassesConstructors(m_out, m_metadata, m_class->bases(),

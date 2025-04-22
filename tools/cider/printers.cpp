@@ -14,6 +14,7 @@
 #include <cppast/cpp_function_type.hpp>
 #include <cppast/cpp_member_function.hpp>
 #include <cppast/cpp_member_variable.hpp>
+#include <cppast/cpp_storage_class_specifiers.hpp>
 #include <cppast/cpp_type_alias.hpp>
 #include <cppast/cpp_variable.hpp>
 
@@ -49,6 +50,14 @@ void printParamName(std::ostream& os,
     os << param.name();
   } else {
     os << "arg" << count;
+  }
+}
+
+void printStorageClassSpec(std::ostream& os, const cpp_variable& param) {
+  const auto storageClass = param.storage_class();
+  if (storageClass ==
+      cppast::cpp_storage_class_specifiers::cpp_storage_class_static) {
+    os << " static ";
   }
 }
 
@@ -164,13 +173,23 @@ void printParamTypePure(std::ostream& os,
                         const MetadataStorage& metadata,
                         const namespaces_stack& stack,
                         const cpp_type& type) {
-  if (isUserData(type, stack.nativeScope(),
-                 metadata)) {  // check that pointer to user defined type!
-    const auto& type_ = remove_ref(type);
-    auto value = to_string(type_);
-    replaceScope(stack.genScope(), value);
-    os << value;
-    return;
+  std::string name;
+  if (isUserDefined(type, stack.nativeScope(), name)) {
+    if (metadata.classes.find(name) != metadata.classes.end() ||
+        metadata.enums.find(name) != metadata.enums.end()) {
+      if (isAggregate(name, stack.nativeScope(), metadata)) {
+        auto value = to_string(type);
+        replaceScope(stack.genScope(), value);
+        os << value;
+        return;
+      } else {
+        const auto& type_ = remove_ref(type);
+        auto value = to_string(type_);
+        replaceScope(stack.genScope(), value);
+        os << value;
+        return;
+      }
+    }
   }
   auto value = to_string(type);
   os << value;
@@ -918,7 +937,13 @@ void printVariableDecl(std::ostream& os,
                        const MetadataStorage& metadata,
                        const cppast::cpp_variable& e,
                        const namespaces_stack& stack) {
+  printStorageClassSpec(os, e);
+  if (e.is_constexpr()) {
+    os << "constexpr ";
+  }
+
   printVariableDecl<>(os, metadata, e, stack);
+  os << "\n";
 }
 
 void printAliasDecl(std::ostream& os,

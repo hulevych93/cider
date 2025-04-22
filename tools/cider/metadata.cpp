@@ -111,6 +111,7 @@ void metadata_collector::handleClass(const cppast::cpp_class& e,
     return;
   }
   if (isException(e)) {
+    m_isException = enter;
     return;
   }
   if (kind == cppast::cpp_access_specifier_kind::cpp_private) {
@@ -137,6 +138,9 @@ void metadata_collector::handleClass(const cppast::cpp_class& e,
 void metadata_collector::handleConstructor(
     const cppast::cpp_constructor& e,
     const cppast::cpp_access_specifier_kind kind) {
+  if (m_isException) {
+    return;
+  }
   assert(m_classMetadata.has_value());
 
   const bool isCopy = isCopyContructor(e);

@@ -88,7 +88,8 @@ void Search::run() {
 
 Harmony Search::generateHarmony(const Harmony& harmony) const {
   Harmony newHarmony;
-  if (rand() / static_cast<double>(RAND_MAX) <
+  std::uniform_int_distribution<> distr(0, 10000);
+  if (((double)distr(_gen) / 10000.f) <
       _settings.harmonyMemoryConsiderationRate) {
     newHarmony = harmony;
   } else {

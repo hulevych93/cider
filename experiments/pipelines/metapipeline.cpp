@@ -7,13 +7,14 @@ namespace cider {
 namespace pipelines {
 
 std::unique_ptr<cider::metasearch::IMetaSearch> makeHarmonySearch(
-    cider::coverage::CoverageMeasurment& meassurer) {
+    cider::coverage::CoverageMeasurment& meassurer,
+    cider::metasearch::MutationStrategy stategy) {
   cider::metasearch::harmony::Settings settings;
   settings.mutationRate = 0.01;
   settings.harmonyMemoryConsiderationRate = 0.5;
   settings.harmonyMemorySize = 1;
   settings.maxIterationsWithoutUpdates = 500;
-  settings.strategy = cider::metasearch::MutationStrategy::ShuffleBytes;
+  settings.strategy = stategy;
 
   settings.meassure =
       std::bind(&cider::coverage::CoverageMeasurment::operator(),
@@ -23,12 +24,13 @@ std::unique_ptr<cider::metasearch::IMetaSearch> makeHarmonySearch(
 }
 
 std::unique_ptr<cider::metasearch::IMetaSearch> makeCackooSearch(
-    cider::coverage::CoverageMeasurment& meassurer) {
+    cider::coverage::CoverageMeasurment& meassurer,
+    cider::metasearch::MutationStrategy stategy) {
   cider::metasearch::cuckoo::Settings settings;
   settings.populationSize = 5;
   settings.Pa = 0.1;
   settings.maxIterationsWithoutUpdates = 500;
-  settings.strategy = cider::metasearch::MutationStrategy::ShuffleBytes;
+  settings.strategy = stategy;
 
   settings.meassure =
       std::bind(&cider::coverage::CoverageMeasurment::operator(),
@@ -39,7 +41,8 @@ std::unique_ptr<cider::metasearch::IMetaSearch> makeCackooSearch(
 
 int metaPipeline(const std::string& libName,
                  const cider::coverage::Cmd& cmd,
-                 cider::recorder::ScriptRecordSessionPtr session) {
+                 cider::recorder::ScriptRecordSessionPtr session,
+                 cider::metasearch::MutationStrategy stategy) {
   try {
     std::cout << "InstructionsCount: " << session->getInstructionsCount()
               << std::endl;
@@ -50,9 +53,9 @@ int metaPipeline(const std::string& libName,
     std::unique_ptr<cider::metasearch::IMetaSearch> metaSearch;
 
     if (false) {
-      metaSearch = makeHarmonySearch(measurer);
+      metaSearch = makeHarmonySearch(measurer, stategy);
     } else {
-      metaSearch = makeCackooSearch(measurer);
+      metaSearch = makeCackooSearch(measurer, stategy);
     }
 
     metaSearch->initialize(session->getInstructions());

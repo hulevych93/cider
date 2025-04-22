@@ -222,11 +222,11 @@ bool isAbstract(const cpp_class& e,
   return false;
 }
 
-bool isException(const cppast::cpp_class& e) {
-  static const std::unordered_set<std::string> Excpts = {
-      "std::exception", "std::logic_error", "std::out_of_range",
-      "std::runtime_error"};
+static const std::unordered_set<std::string> Excpts = {
+    "std::exception", "std::logic_error", "std::out_of_range",
+    "std::runtime_error"};
 
+bool isException(const cppast::cpp_class& e) {
   const auto& bases = e.bases();
   for (const auto& one : bases) {
     if (Excpts.find(one.name()) != Excpts.cend()) {
@@ -234,6 +234,13 @@ bool isException(const cppast::cpp_class& e) {
     }
   }
 
+  return false;
+}
+
+bool isException(const cppast::cpp_constructor& e) {
+  if (Excpts.find(e.name()) != Excpts.cend()) {
+    return true;
+  }
   return false;
 }
 

@@ -18,8 +18,8 @@ decltype(auto) convert_in(OtherType* arg) {
 }
 
 template <typename Type, typename OtherType>
-Type convert_out(OtherType arg) {
-  return *(Type*)&arg;
+Type convert_out(OtherType& arg) {
+  return *(std::decay_t<Type>*)&arg;
 }
 
 }  // namespace cider

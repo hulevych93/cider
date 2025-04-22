@@ -62,5 +62,6 @@ if(CIDER_ENABLE_COVERAGE)
 endif()
 
 add_subdirectory(experiments/pipelines)
-add_subdirectory(experiments/hjson)
+#add_subdirectory(experiments/hjson)
 add_subdirectory(experiments/pugixml)
+add_subdirectory(experiments/BitmapPlusPlus)

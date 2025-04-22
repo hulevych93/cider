@@ -92,6 +92,8 @@ struct metadata_collector final : ast_handler {
 
   std::optional<ClassMetadata> m_classMetadata;
   std::optional<FileMetadata> m_fileMetadata;
+
+  bool m_isException = false;
 };
 
 MetadataStorage collectMetadata(

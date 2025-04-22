@@ -58,6 +58,7 @@ bool isAbstract(const cppast::cpp_class& e,
                 const MetadataStorage& metadata);
 
 bool isException(const cppast::cpp_class& e);
+bool isException(const cppast::cpp_constructor& e);
 
 void replaceScope(const std::string& newScope, std::string& value);
 

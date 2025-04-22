@@ -18,14 +18,18 @@ namespace cider {
 namespace pipelines {
 
 std::unique_ptr<cider::metasearch::IMetaSearch> makeHarmonySearch(
-    cider::coverage::CoverageMeasurment& meassurer);
+    cider::coverage::CoverageMeasurment& meassurer,
+    cider::metasearch::MutationStrategy stategy);
 
 std::unique_ptr<cider::metasearch::IMetaSearch> makeCackooSearch(
-    cider::coverage::CoverageMeasurment& meassurer);
+    cider::coverage::CoverageMeasurment& meassurer,
+    cider::metasearch::MutationStrategy stategy);
 
 int metaPipeline(const std::string& libName,
                  const cider::coverage::Cmd& cmd,
-                 cider::recorder::ScriptRecordSessionPtr session);
+                 cider::recorder::ScriptRecordSessionPtr session,
+                 cider::metasearch::MutationStrategy stategy =
+                     cider::metasearch::MutationStrategy::ShuffleBytes);
 
 }  // namespace pipelines
 }  // namespace cider

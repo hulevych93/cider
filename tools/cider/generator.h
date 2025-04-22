@@ -35,6 +35,7 @@ struct generator : ast_handler {
 
   std::ostream& m_out;
   const MetadataStorage& m_metadata;
+  bool m_isException = false;
 };
 
 struct header_generator final : public generator {
