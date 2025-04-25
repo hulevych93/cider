@@ -3,6 +3,12 @@
 
 #include "metapipeline.h"
 
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+
+#include "recorder/details/generator.h"
+
 namespace cider {
 namespace pipelines {
 

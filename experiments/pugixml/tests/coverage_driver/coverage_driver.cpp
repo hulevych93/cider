@@ -3,6 +3,8 @@
 
 #include "experiments/pipelines/metapipeline.h"
 
+#include <iostream>
+
 extern int run_tests(const char* temp_);
 
 int main(int argc, char* argv[]) {

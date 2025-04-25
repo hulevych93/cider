@@ -3,6 +3,8 @@
 
 #include "experiments/pipelines/metapipeline.h"
 
+#include <iostream>
+
 extern int test_chess_board();
 extern int test_primitives();
 extern int test_polymorphic_shapes();
@@ -17,8 +19,8 @@ int main(int argc, char* argv[]) {
   auto session = cider::recorder::makeLuaRecordingSession("bitmap_cplus");
 
   try {
-    // test_chess_board();
-    //test_primitives();
+    test_chess_board();
+    // test_primitives();
     // test_polymorphic_shapes();
     // test_read_bitmap();
     // test_rotation();

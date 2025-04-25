@@ -3,6 +3,8 @@
 
 #include "experiments/pipelines/metapipeline.h"
 
+#include <iostream>
+
 extern void test_value();
 extern void test_marshal();
 
@@ -12,8 +14,8 @@ int main(int argc, char* argv[]) {
   auto session = cider::recorder::makeLuaRecordingSession("hjson");
 
   try {
-    test_value();
-    // test_marshal();
+    // test_value();
+    test_marshal();
   } catch (const std::exception& e) {
     std::cout << e.what();
   }

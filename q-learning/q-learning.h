@@ -9,25 +9,18 @@
 #include "coverage/coverage.h"
 #include "coverage/measurer.h"
 
-#include <random>
+#include "agent.h"
 
 namespace cider {
 namespace qleaning {
 
-using MeassureCallback = std::function<cider::coverage::ReportOpt(
-    const std::vector<recorder::Action>&)>;
+const double LEARNING_RATE = 0.05;
+const double DISCOUNT_FACTOR = 0.8;
 
-struct Settings final {
-  int populationSize = 10;
-  double Pa = 0.25;
-  size_t maxIterationsWithoutUpdates = 500U;
-  MeassureCallback meassure;
-};
-
-struct Nest final {
-  std::vector<recorder::Action> actions;
-  coverage::RootReport cov;
-};
+void learningSession(cider::coverage::CoverageMeasurment& meassurer,
+                     const QActionList& list,
+                     QValuesAgent& agent,
+                     const int episodes);
 
 }  // namespace qleaning
 }  // namespace cider

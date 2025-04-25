@@ -1,21 +1,22 @@
 # Copyright (C) 2022-2024 Hulevych Mykhailo
 # SPDX-License-Identifier: MIT
 
-cider_project(bitmap++_driver)
+cider_project(bitmap++_learning_driver)
 
-add_executable(bitmap++_driver coverage_driver.cpp)
+add_executable(bitmap++_learning_driver learning_driver.cpp)
 
-target_link_libraries(bitmap++_driver PUBLIC
+target_link_libraries(bitmap++_learning_driver PUBLIC
   coverage
   metaheuristics
   pipelines
   bitmap++_tests
+  q-learning
   ${BitmapPlusPlus_LIBRARIES}
 )
 
 if(ENABLE_COVERAGE_DRIVER)
-  add_custom_target(bitmap++_coverage_driver_run
-      COMMAND bitmap++_driver
+  add_custom_target(bitmap++_learning_driver_run
+      COMMAND bitmap++_learning_driver
       "${CMAKE_SOURCE_DIR}/experiments/BitmapPlusPlus/tests/bitmap++_tests"
       "${EXPERIMENT_BITMAPPLUSPLUS_BUILD_DIR}/src"
       "${CMAKE_BINARY_DIR}/experiments/BitmapPlusPlus/tests/player"

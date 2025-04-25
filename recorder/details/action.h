@@ -16,15 +16,18 @@ struct Function final {
   const char* name = nullptr;
   Params params;
   Param retVal;
+  size_t index = 0;
 };
 
 struct ClassMethod final {
   const void* objectAddress;
   Function method;
+  size_t index = 0;
 };
 
 struct ClassDestructor final {
   const void* objectAddress;
+  size_t index = 0;
 };
 
 enum class UnaryOpType { Minus };
@@ -33,6 +36,7 @@ struct ClassUnaryOp final {
   const void* objectAddress;
   UnaryOpType opName = UnaryOpType::Minus;
   Param retVal;
+  size_t index = 0;
 };
 
 enum class BinaryOpType { Assignment };
@@ -41,6 +45,7 @@ struct ClassBinaryOp final {
   const void* objectAddress;
   BinaryOpType opName = BinaryOpType::Assignment;
   Param param;
+  size_t index = 0;
 };
 
 using Action = std::variant<Function,
@@ -48,6 +53,8 @@ using Action = std::variant<Function,
                             ClassBinaryOp,
                             ClassUnaryOp,
                             ClassDestructor>;
+
+bool operator==(const Action& lhs, const Action& rhs);
 
 namespace details {
 
@@ -114,3 +121,100 @@ inline Action makeAction(const void* object) {
 
 }  // namespace recorder
 }  // namespace cider
+
+namespace std {
+
+template <>
+struct hash<cider::recorder::Nil> {
+  size_t operator()(const cider::recorder::Nil&) const noexcept {
+    return 0x9e3779b9;  // Fixed arbitrary value since Nil has no internal state
+  }
+};
+
+template <typename T>
+inline void hash_combine(size_t& seed, const T& val) {
+  seed ^= hash<T>{}(val) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+}
+
+template <>
+struct hash<cider::recorder::Param> {
+  size_t operator()(const cider::recorder::Param& param) const {
+    return std::visit(
+        [](const auto& val) -> size_t {
+          return hash<std::decay_t<decltype(val)>>{}(val);
+        },
+        param);
+  }
+};
+
+template <>
+struct hash<cider::recorder::Params> {
+  size_t operator()(const cider::recorder::Params& params) const {
+    size_t seed = 0;
+    for (const auto& param : params) {
+      hash_combine(seed, param);
+    }
+    return seed;
+  }
+};
+
+template <>
+struct hash<cider::recorder::Function> {
+  size_t operator()(const cider::recorder::Function& func) const {
+    size_t seed = hash<std::string>{}(func.name);
+    hash_combine(seed, func.params);
+    hash_combine(seed, func.retVal);
+    return seed;
+  }
+};
+
+template <>
+struct hash<cider::recorder::ClassMethod> {
+  size_t operator()(const cider::recorder::ClassMethod& method) const {
+    size_t seed = reinterpret_cast<size_t>(method.objectAddress);
+    hash_combine(seed, method.method);
+    return seed;
+  }
+};
+
+template <>
+struct hash<cider::recorder::ClassDestructor> {
+  size_t operator()(const cider::recorder::ClassDestructor& destructor) const {
+    return reinterpret_cast<size_t>(destructor.objectAddress);
+  }
+};
+
+template <>
+struct hash<cider::recorder::ClassUnaryOp> {
+  size_t operator()(const cider::recorder::ClassUnaryOp& op) const {
+    size_t seed = reinterpret_cast<size_t>(op.objectAddress);
+    hash_combine(seed, static_cast<int>(op.opName));
+    hash_combine(seed, op.retVal);
+    return seed;
+  }
+};
+
+template <>
+struct hash<cider::recorder::ClassBinaryOp> {
+  size_t operator()(const cider::recorder::ClassBinaryOp& op) const {
+    size_t seed = reinterpret_cast<size_t>(op.objectAddress);
+    hash_combine(seed, static_cast<int>(op.opName));
+    hash_combine(seed, op.param);
+    return seed;
+  }
+};
+
+template <>
+struct hash<cider::recorder::Action> {
+  size_t operator()(const cider::recorder::Action& action) const {
+    return std::visit(
+        [](const auto& val) -> size_t {
+          size_t hashValue = typeid(std::decay_t<decltype(val)>).hash_code();
+          hash_combine(hashValue, val);
+          return hashValue;
+        },
+        action);
+  }
+};
+
+}  // namespace std
