@@ -83,8 +83,9 @@ Search::Search(const Settings& settings)
 void Search::initialize(const std::vector<recorder::Action>& actions) {
   _initial.actions = actions;
 
-  if (const auto& covOpt = _settings.meassure(_initial.actions)) {
-    _initial.cov = covOpt.value();
+  const auto objValue = _settings.objFunc(_initial.actions);
+  if (objValue > std::numeric_limits<double>::epsilon()) {
+    _initial.objVal = objValue;
   } else {
     throw std::logic_error{"Bad initial script."};
   }
@@ -108,11 +109,9 @@ void Search::run() {
       auto& nest = _memory[i];
       auto newNest = generateNest(nest);
       if (newNest.has_value()) {
-        std::cout << "Candidate: ";
-        cider::coverage::printTableEntry(std::cout, i, newNest->cov.report);
-        if (newNest->cov > nest.cov) {
-          std::cout << " <- ";
-          cider::coverage::printTableEntry(std::cout, i, nest.cov.report);
+        std::cout << "Candidate: " << newNest->objVal << std::endl;
+        if (newNest->objVal > nest.objVal) {
+          std::cout << " <- " << nest.objVal << std::endl;
           nest = *newNest;
           iterWithoutUpdates = 0U;
         }
@@ -120,7 +119,7 @@ void Search::run() {
     }
 
     std::sort(_memory.begin(), _memory.end(),
-              [](const auto& a, const auto& b) { return a.cov > b.cov; });
+              [](const auto& a, const auto& b) { return a.objVal > b.objVal; });
 
     for (int i = _settings.populationSize -
                  int(_settings.Pa * _settings.populationSize);
@@ -138,30 +137,26 @@ std::optional<Nest> Search::generateNest(const Nest& nest) const {
   levyFlight(_gen, newNest.actions,
              [&](auto& action) { std::visit(mutator, action); });
 
-  if (const auto& covOpt = _settings.meassure(newNest.actions)) {
-    newNest.cov = covOpt.value();
+  const auto objValue = _settings.objFunc(newNest.actions);
+  if (objValue > std::numeric_limits<double>::epsilon()) {
+    newNest.objVal = objValue;
     return newNest;
   }
 
   return std::nullopt;
 }
 
-void printTableEntry(std::ostream& ss,
-                     const cider::coverage::CoverageReport& report) {
-  ss << report.lineCov.percent << "\t" << report.branchCov.percent << "\t"
-     << report.funcCov.percent << std::endl;
-}
-
 const Nest& Search::getBest() const {
   const auto& best = *std::max_element(_memory.begin(), _memory.end());
-  std::cout << "Best :";
-  printTableEntry(std::cout, best.cov.report);
+  std::cout << "Best :" << best.objVal << std::endl;
   return best;
 }
 
 void Search::dump() {
+  int idx = 0;
   for (const auto& cuckoo : _memory) {
-    printTableEntry(std::cout, cuckoo.cov.report);
+    std::cout << "Nest[" << idx << "]: " << cuckoo.objVal << std::endl;
+    ++idx;
   }
 }
 

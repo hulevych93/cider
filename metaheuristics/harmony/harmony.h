@@ -6,9 +6,6 @@
 #include "recorder/details/action.h"
 #include "recorder/details/params.h"
 
-#include "coverage/coverage.h"
-#include "coverage/measurer.h"
-
 #include "metaheuristics/args_mutator.h"
 #include "metaheuristics/metasearch.h"
 
@@ -21,7 +18,7 @@ struct Settings final {
   double harmonyMemoryConsiderationRate = 0.95;
   double mutationRate = 0.1;
   size_t maxIterationsWithoutUpdates = 500U;
-  MeassureCallback meassure;
+  ObjectiveFunction objFunc;
   MutationStrategy strategy = MutationStrategy::ShuffleBytes;
 };
 

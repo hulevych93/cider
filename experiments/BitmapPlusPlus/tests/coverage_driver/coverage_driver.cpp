@@ -14,13 +14,13 @@ extern int test_variant_shapes();
 extern int test_write_bitmap();
 
 int main(int argc, char* argv[]) {
-  cider::coverage::Cmd cmd(argc, argv);
+  cider::Cmd cmd(argc, argv);
 
   auto session = cider::recorder::makeLuaRecordingSession("bitmap_cplus");
 
   try {
-    test_chess_board();
-    // test_primitives();
+    // test_chess_board();
+    test_primitives();
     // test_polymorphic_shapes();
     // test_read_bitmap();
     // test_rotation();
@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
     std::cout << e.what();
   }
 
-  return cider::pipelines::metaPipeline(
+  return cider::pipelines::metaCfgPipeline(
       "bitmap_cplus", cmd, std::move(session),
       cider::metasearch::MutationStrategy::LevyFlight);
 }

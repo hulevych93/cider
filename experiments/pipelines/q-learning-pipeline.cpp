@@ -10,22 +10,23 @@
 #include "q-learning/q-learning.h"
 #include "q-learning/scenario.h"
 
+#include "coverage/cfg_measurer.h"
+#include "coverage/gcov_measurer.h"
+
 using namespace cider::qleaning;
 
 namespace cider {
 namespace pipelines {
 
+namespace {
+
+template <typename ObjFunc>
 int qlearningPipeline(
     const std::string& libName,
-    const cider::coverage::Cmd& cmd,
-    const std::vector<cider::recorder::ScriptRecordSessionPtr>& sessions) {
+    const std::vector<cider::recorder::ScriptRecordSessionPtr>& sessions,
+    const ObjFunc& func) {
   try {
     QValuesAgent agent;
-
-    int index = 0;
-    std::string log = std::to_string(index) + "_qlearning_log.txt";
-    cider::coverage::CoverageMeasurment measurer{cmd, log.c_str(),
-                                                 libName.c_str()};
 
     for (const auto& session : sessions) {
       std::cout << "InstructionsCount: " << session->getInstructionsCount()
@@ -33,19 +34,24 @@ int qlearningPipeline(
 
       const auto& initial = session->getInstructions();
 
-      learningSession(measurer, initial, agent, 200U);
+      learningSession(func, initial, agent, 500U);
     }
 
-    std::ofstream debug("qtree.txt");
+    std::ofstream debug("qtable_cfg.txt");
 
     std::ostringstream oss;
     const auto& actions = sessions[0]->getInstructions();
     for (size_t i = 0; i < actions.size(); ++i) {
-        oss << actionToShortString(actions[i]) << "-" << actionToFullString(actions[i]) << std::endl;
+      oss << actionToShortString(actions[i]) << "\t"
+          << actionToFullString(actions[i]) << std::endl;
     }
     debug << oss.str();
-    debug << "Coverage: " << std::endl;
-    cider::coverage::printTableEntry(debug, 0, measurer(actions).value().report);
+    debug << "Coverage: " << func(actions);
+    debug << std::endl << std::endl;
+
+    auto generator = cider::recorder::makeLuaGenerator(libName);
+    debug << "Script:\n "
+          << cider::recorder::generateScript(generator, actions, 999999U);
 
     debug << std::endl << std::endl;
     agent.print(debug);
@@ -56,6 +62,48 @@ int qlearningPipeline(
   }
 
   return 0;
+}
+
+}  // namespace
+
+int qlearningGcovrPipeline(
+    const std::string& libName,
+    const cider::Cmd& cmd,
+    const std::vector<cider::recorder::ScriptRecordSessionPtr>& sessions) {
+  std::string log = "gcov_qlearning_log.txt";
+  cider::gcov_coverage::CoverageMeasurment measurer{cmd, log.c_str(),
+                                                    libName.c_str()};
+
+  const auto objFunc =
+      [&](const std::vector<cider::recorder::Action>& actions) -> double {
+    const auto rootReport = measurer(actions);
+    if (rootReport.has_value()) {
+      return rootReport->report.lineCov.percent;
+    }
+    return 0.0f;
+  };
+
+  return qlearningPipeline(libName, sessions, objFunc);
+}
+
+int qlearningCfgPipeline(
+    const std::string& libName,
+    const cider::Cmd& cmd,
+    const std::vector<cider::recorder::ScriptRecordSessionPtr>& sessions) {
+  std::string log = "cfg_qlearning_log.txt";
+  cider::cfg_coverage::CoverageMeasurment measurer{cmd, log.c_str(),
+                                                   libName.c_str()};
+
+  const auto objFunc =
+      [&](const std::vector<cider::recorder::Action>& actions) -> double {
+    const auto rootReport = measurer(actions);
+    if (rootReport.has_value()) {
+      return rootReport->getPercentage();
+    }
+    return 0.0f;
+  };
+
+  return qlearningPipeline(libName, sessions, objFunc);
 }
 
 }  // namespace pipelines

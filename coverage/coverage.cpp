@@ -3,55 +3,24 @@
 
 #include "coverage.h"
 
-#include <nlohmann/json.hpp>
-
-#include <process.hpp>
-
+#include <assert.h>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 
-namespace tpl = TinyProcessLib;
-
 namespace cider {
-namespace coverage {
 
-CoverageReport parseCoverageReport(const nlohmann::json& value) {
-  CoverageReport report;
-  report.branchCov.covered = value["branch_covered"];
-  report.branchCov.total = value["branch_total"];
-  report.branchCov.percent = value["branch_percent"];
+Cmd::Cmd(int argc, char* argv[]) {
+  assert(argc == 6);
+  workingDir = argv[1];
+  baseDir = argv[2];
+  objectDir = argv[3];
+  binPath = argv[4];
+  covDir = argv[5];
 
-  report.funcCov.covered = value["function_covered"];
-  report.funcCov.total = value["function_total"];
-  report.funcCov.percent = value["function_percent"];
-
-  report.lineCov.covered = value["line_covered"];
-  report.lineCov.total = value["line_total"];
-  report.lineCov.percent = value["line_percent"];
-  return report;
-}
-
-std::optional<RootReport> parseJsonCovReport(const std::string& json,
-                                             const bool deep) {
-  RootReport report;
-  try {
-    const auto parsedReport = nlohmann::json::parse(json);
-    report.root = parsedReport["root"];
-    report.report = parseCoverageReport(parsedReport);
-
-    if (deep) {
-      for (const auto& file : parsedReport["files"]) {
-        FileReport fileReport;
-        fileReport.name = file["filename"];
-        fileReport.report = parseCoverageReport(file);
-        report.files.emplace_back(fileReport);
-      }
-    }
-  } catch (...) {
-    return std::nullopt;
-  }
-  return report;
+  std::cout << "workingDir: " << workingDir << ", baseDir: " << baseDir
+            << ", objectDir: " << objectDir << ", binPath: " << binPath
+            << ", covDir: " << covDir << std::endl;
 }
 
 std::string loadFile(const std::string& path) {
@@ -67,51 +36,4 @@ std::string loadFile(const std::string& path) {
   return script;
 }
 
-bool cleanCoverage(const std::string& workingDir) {
-  tpl::Process process(
-      std::string{"find "} + workingDir + " -name \"*.gcda\" -delete", "",
-      [](const char* data, std::size_t) { std::cout << data; },
-      [](const char* data, std::size_t) { std::cout << data; });
-  return process.get_exit_status() == 0;
-}
-
-bool runScript(const std::string& binary,
-               const std::string& workingDir,
-               const std::string& script) {
-  tpl::Process process(
-      binary, workingDir, [&](const char* data, std::size_t) {},
-      [](const char* data, std::size_t) {}, true);
-  process.write(script.data(), script.size());
-  process.close_stdin();
-
-  if (process.get_exit_status() != 0) {
-    std::cout << "status: " << process.get_exit_status() << std::endl;
-    static bool fl = false;
-    if (!fl) {
-      std::ofstream os("trace.txt");
-      os << script;
-      fl = true;
-    }
-  }
-
-  return process.get_exit_status() == 0;
-}
-
-bool runCoverage(const std::string& base,
-                 const std::string& objectDir,
-                 std::function<void(const char*, std::size_t)> callback) {
-  tpl::Process process("gcovr --json-summary --json-summary-pretty -r" + base +
-                           " --object-directory=" + objectDir,
-                       "", callback, nullptr);
-  return process.get_exit_status() == 0;
-}
-
-void printTableEntry(std::ostream& ss,
-                     const size_t index,
-                     const cider::coverage::CoverageReport& report) {
-  ss << index << "\t" << report.lineCov.percent << "\t"
-     << report.branchCov.percent << "\t" << report.funcCov.percent << std::endl;
-}
-
-}  // namespace coverage
 }  // namespace cider

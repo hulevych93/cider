@@ -13,6 +13,8 @@ include_directories(.
 
 add_executable(hjson_player hjson_play.cpp ${TESTED_FILES})
 
+add_coverage_flags(hjson_player)
+
 target_link_libraries(hjson_player PUBLIC
   hjson_wrap
   hjson-models

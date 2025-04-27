@@ -6,7 +6,7 @@
 #include <fstream>
 #include <iostream>
 
-#include "coverage/coverage.h"
+#include "coverage/gcov_coverage.h"
 
 #include <assert.h>
 

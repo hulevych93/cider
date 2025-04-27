@@ -719,3 +719,14 @@ function(append_coverage_compiler_flags_to_target name)
     target_compile_options(${name}
         PRIVATE ${COVERAGE_COMPILER_FLAGS})
 endfunction()
+
+function(add_coverage_flags TARGET)
+    target_compile_options(${TARGET} PRIVATE
+        -fsanitize-coverage=trace-pc-guard
+        -O0
+        -g
+    )
+    target_link_options(${TARGET} PRIVATE
+        -fsanitize-coverage=trace-pc-guard,edge
+    )
+endfunction()

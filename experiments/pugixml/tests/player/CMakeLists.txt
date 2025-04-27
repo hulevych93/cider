@@ -13,6 +13,8 @@ include_directories(.
 
 add_executable(pugixml_player player.cpp ${TESTED_FILES})
 
+add_coverage_flags(pugixml_player)
+
 target_link_libraries(pugixml_player PUBLIC
   pugixml_wrap
   pugixml-models

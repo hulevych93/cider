@@ -58,7 +58,7 @@ void QValuesAgent::printAlternatives(const Scenario& scenario) const {
   const auto qValuesIter = m_qtable.find(state);
   if (qValuesIter != m_qtable.cend()) {
     for (const auto action : qValuesIter->second) {
-      std::cout << actionToShortString(action.first) << " - " << action.second
+      std::cout << actionToShortString(action.first) << "\t" << action.second
                 << std::endl;
     }
   }
@@ -107,9 +107,10 @@ void QValuesAgent::updateQValues(const std::string& state,
 void QValuesAgent::print(std::ostream& ss) const {
   ss << "Q-table: " << m_qtable.size() << std::endl;
   for (const auto& entry : m_qtable) {
-      ss << entry.first << std::endl;
+    ss << entry.first << std::endl;
     for (const auto action : entry.second) {
-      ss << actionToShortString(action.first) << " - " << action.second << std::endl;
+      ss << actionToShortString(action.first) << "\t" << action.second
+         << std::endl;
     }
     ss << std::endl;
   }

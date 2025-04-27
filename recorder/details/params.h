@@ -8,6 +8,7 @@
 
 #include <memory>
 #include <optional>
+#include <sstream>
 #include <string>
 
 #include "utils/type_utils.h"
@@ -111,6 +112,7 @@ struct UserDataValueParam {
   virtual std::string generateCode(const std::string& moduleName,
                                    CodeSink& sink) const = 0;
   virtual bool mutate(const IParamMutator&) = 0;
+  virtual void print(std::ostream& os) const { os << "Nan"; }
 };
 
 struct UserDataReferenceParam : UserDataValueParam {
@@ -118,7 +120,7 @@ struct UserDataReferenceParam : UserDataValueParam {
   virtual ~UserDataReferenceParam() = default;
   virtual LocalVar registerLocal(CodeSink& sink) = 0;
 
-  bool mutate(const IParamMutator&) { return false; }
+  bool mutate(const IParamMutator&) override { return false; }
 };
 
 template <typename Type>
@@ -168,6 +170,8 @@ struct ReferenceUserDataValueParamImpl final : public UserDataReferenceParam {
   LocalVar registerLocal(CodeSink& sink) override {
     return sink.registerLocalVar(_address);
   }
+
+  void print(std::ostream& os) const override { os << "obj@" << _address; }
 
  private:
   const void* _address;

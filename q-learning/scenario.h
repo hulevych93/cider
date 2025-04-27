@@ -5,9 +5,6 @@
 
 #include "recorder/details/action.h"
 
-#include "coverage/coverage.h"
-#include "coverage/measurer.h"
-
 #include <unordered_set>
 
 #include "agent.h"
@@ -18,13 +15,11 @@ namespace qleaning {
 std::string actionToFullString(const QAction& action);
 std::string actionToShortString(const QAction& action);
 
-using MeassureCallback =
-    std::function<cider::coverage::ReportOpt(const std::vector<QAction>&)>;
+using ObjectiveFunction = std::function<double(const std::vector<QAction>&)>;
 
 class Scenario final {
  public:
-  Scenario(const QActionList& initial,
-           const MeassureCallback& meassurer);
+  Scenario(const QActionList& initial, const ObjectiveFunction& objFunc);
 
   void add(const QAction& action);
   void rollback();
@@ -41,13 +36,13 @@ class Scenario final {
 
  private:
   QActionList m_actions;
-  mutable coverage::RootReport m_lastCov;
+  mutable double m_lastObjVal = 0.0f;
 
   QActionSet m_availableActions;
   const int m_size;
-  coverage::RootReport m_initialCov;
+  double m_initialObjVal = 0.0f;
 
-  MeassureCallback m_meassurer;
+  ObjectiveFunction m_objFunc;
 };
 
 }  // namespace qleaning

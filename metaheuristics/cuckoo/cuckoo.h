@@ -6,9 +6,6 @@
 #include "recorder/details/action.h"
 #include "recorder/details/params.h"
 
-#include "coverage/coverage.h"
-#include "coverage/measurer.h"
-
 #include "metaheuristics/args_mutator.h"
 #include "metaheuristics/metasearch.h"
 
@@ -22,7 +19,7 @@ struct Settings final {
   int populationSize = 10;
   double Pa = 0.25;
   size_t maxIterationsWithoutUpdates = 50U;
-  MeassureCallback meassure;
+  ObjectiveFunction objFunc;
   MutationStrategy strategy = MutationStrategy::ShuffleBytes;
 };
 

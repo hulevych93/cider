@@ -297,7 +297,8 @@ ScriptGenerator makeLuaGenerator(const std::string& moduleName) {
 
 std::string generateScript(ScriptGenerator& generator,
                            const std::vector<cider::recorder::Action>& actions,
-                           const size_t limit) {
+                           const size_t limit,
+                           const bool ignoreErrors) {
   size_t count = 0;
   for (const auto& action : actions) {
     try {
@@ -307,6 +308,9 @@ std::string generateScript(ScriptGenerator& generator,
       }
       ++count;
     } catch (const std::exception&) {
+        if(!ignoreErrors) {
+          return "";
+        }
     }
   }
   return generator.getScript();

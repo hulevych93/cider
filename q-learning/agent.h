@@ -72,16 +72,16 @@ class TeacherAgent final : public Agent {
   QActionList m_list;
 };
 
-template<typename Func>
+template <typename Func>
 std::string actionsToString(const QActionList& actions, Func&& func) {
-    std::ostringstream oss;
-    for (size_t i = 0; i < actions.size(); ++i) {
-        oss << func(actions[i]) << ";";
-    }
-    if(actions.empty()) {
-        oss << "Empty";
-    }
-    return oss.str();
+  std::ostringstream oss;
+  for (size_t i = 0; i < actions.size(); ++i) {
+    oss << func(actions[i]) << ";";
+  }
+  if (actions.empty()) {
+    oss << "Empty";
+  }
+  return oss.str();
 }
 
 }  // namespace qleaning

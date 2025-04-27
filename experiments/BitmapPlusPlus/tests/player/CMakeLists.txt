@@ -13,6 +13,8 @@ include_directories(.
 
 add_executable(bitmap++_player player.cpp ${TESTED_FILES})
 
+add_coverage_flags(bitmap++_player)
+
 target_link_libraries(bitmap++_player PUBLIC
   bitmap++_wrap
   bitmap++-models

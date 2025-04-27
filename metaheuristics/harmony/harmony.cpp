@@ -56,8 +56,9 @@ Search::Search(const Settings& settings)
 void Search::initialize(const std::vector<recorder::Action>& actions) {
   _initial.actions = actions;
 
-  if (const auto& covOpt = _settings.meassure(_initial.actions)) {
-    _initial.cov = covOpt.value();
+  const auto objValue = _settings.objFunc(_initial.actions);
+  if (objValue > std::numeric_limits<double>::epsilon()) {
+    _initial.objVal = objValue;
   } else {
     throw std::logic_error{"Bad initial script."};
   }
@@ -111,18 +112,19 @@ std::optional<Harmony> Search::mutateHarmony(const Harmony& harmony) const {
     return std::nullopt;
   }
 
-  if (const auto& covOpt = _settings.meassure(mutatedHarmony.actions)) {
-    mutatedHarmony.cov = covOpt.value();
-    std::cout << "Candidate: ";
-    cider::coverage::printTableEntry(std::cout, 0, mutatedHarmony.cov.report);
+  const auto objValue = _settings.objFunc(mutatedHarmony.actions);
+  if (objValue > std::numeric_limits<double>::epsilon()) {
+    mutatedHarmony.objVal = objValue;
+    std::cout << "Candidate: " << objValue << std::endl;
     return mutatedHarmony;
   }
+
   return std::nullopt;
 }
 
 bool Search::updateHarmonyMemory(const Harmony& harmony) {
   auto& worstHarmony = getWorst();
-  if (harmony.cov > worstHarmony.cov) {
+  if (harmony.objVal > worstHarmony.objVal) {
     worstHarmony = harmony;
     dump();
     return true;
@@ -139,14 +141,15 @@ Harmony& Search::getWorst() {
 const Harmony& Search::getBest() const {
   const auto& best =
       *std::max_element(_harmonyMemory.begin(), _harmonyMemory.end());
-  std::cout << "Best :";
-  cider::coverage::printTableEntry(std::cout, 0, best.cov.report);
+  std::cout << "Best :" << best.objVal << std::endl;
   return best;
 }
 
 void Search::dump() {
+  int idx = 0;
   for (const auto& harmony : _harmonyMemory) {
-    cider::coverage::printTableEntry(std::cout, 0, harmony.cov.report);
+    std::cout << "Harmony[" << idx << "]: " << harmony.objVal << std::endl;
+    ++idx;
   }
 }
 

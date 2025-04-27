@@ -6,18 +6,16 @@
 #include "recorder/details/action.h"
 #include "recorder/details/params.h"
 
-#include "coverage/coverage.h"
-#include "coverage/measurer.h"
-
 #include "agent.h"
+#include "scenario.h"
 
 namespace cider {
 namespace qleaning {
 
 const double LEARNING_RATE = 0.05;
-const double DISCOUNT_FACTOR = 0.8;
+const double DISCOUNT_FACTOR = 0.85;
 
-void learningSession(cider::coverage::CoverageMeasurment& meassurer,
+void learningSession(const ObjectiveFunction& objFunc,
                      const QActionList& list,
                      QValuesAgent& agent,
                      const int episodes);

@@ -2,16 +2,19 @@
 // SPDX-License-Identifier: MIT
 
 #include "coverage/coverage.h"
-#include "coverage/measurer.h"
-
 #include "recorder/recorder.h"
 
 namespace cider {
 namespace pipelines {
 
-int qlearningPipeline(
+int qlearningGcovrPipeline(
     const std::string& libName,
-    const cider::coverage::Cmd& cmd,
+    const cider::Cmd& cmd,
+    const std::vector<cider::recorder::ScriptRecordSessionPtr>& sessions);
+
+int qlearningCfgPipeline(
+    const std::string& libName,
+    const cider::Cmd& cmd,
     const std::vector<cider::recorder::ScriptRecordSessionPtr>& sessions);
 
 }  // namespace pipelines

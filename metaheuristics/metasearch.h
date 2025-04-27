@@ -6,28 +6,25 @@
 #include "recorder/details/action.h"
 #include "recorder/details/params.h"
 
-#include "coverage/coverage.h"
-#include "coverage/measurer.h"
-
 namespace cider {
 namespace metasearch {
 
 enum class Algorithm { HarmonySearch, CuckooSearch };
 
-using MeassureCallback = std::function<cider::coverage::ReportOpt(
-    const std::vector<recorder::Action>&)>;
+using ObjectiveFunction =
+    std::function<double(const std::vector<recorder::Action>&)>;
 
 struct Solution final {
   std::vector<recorder::Action> actions;
-  coverage::RootReport cov;
+  double objVal = 0.0f;
 };
 
 inline bool operator>(const Solution& left, const Solution& right) {
-  return left.cov > right.cov;
+  return left.objVal > right.objVal;
 }
 
 inline bool operator<(const Solution& left, const Solution& right) {
-  return left.cov < right.cov;
+  return left.objVal < right.objVal;
 }
 
 class IMetaSearch {

@@ -9,7 +9,7 @@ extern void test_value();
 extern void test_marshal();
 
 int main(int argc, char* argv[]) {
-  cider::coverage::Cmd cmd(argc, argv);
+  cider::Cmd cmd(argc, argv);
 
   auto session = cider::recorder::makeLuaRecordingSession("hjson");
 
@@ -20,5 +20,5 @@ int main(int argc, char* argv[]) {
     std::cout << e.what();
   }
 
-  return cider::pipelines::metaPipeline("hjson", cmd, std::move(session));
+  return cider::pipelines::metaCfgPipeline("hjson", cmd, std::move(session));
 }

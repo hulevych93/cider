@@ -8,7 +8,7 @@
 extern int run_tests(const char* temp_);
 
 int main(int argc, char* argv[]) {
-  cider::coverage::Cmd cmd(argc, argv);
+  cider::Cmd cmd(argc, argv);
 
   auto session = cider::recorder::makeLuaRecordingSession("pugixml");
 
@@ -18,5 +18,5 @@ int main(int argc, char* argv[]) {
     std::cout << e.what();
   }
 
-  return cider::pipelines::metaPipeline("pugixml", cmd, std::move(session));
+  return cider::pipelines::metaCfgPipeline("pugixml", cmd, std::move(session));
 }

@@ -69,7 +69,8 @@ action_id ScriptRecordSessionImpl::onActionBegins(const Action& action) {
   _log.emplace_back(ActionEntry{action, id, _nestingLevel});
 
   auto& entry = _log.back();
-  std::visit([index = _log.size()](auto& val) { val.index = index; }, entry.action);
+  std::visit([index = _log.size()](auto& val) { val.index = index; },
+             entry.action);
 
   ++_nestingLevel;
   ++_action_id;

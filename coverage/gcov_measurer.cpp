@@ -1,7 +1,7 @@
 // Copyright (C) 2022-2024 Hulevych Mykhailo
 // SPDX-License-Identifier: MIT
 
-#include "measurer.h"
+#include "gcov_measurer.h"
 
 #include <assert.h>
 
@@ -11,20 +11,7 @@
 #include "recorder/details/generator.h"
 
 namespace cider {
-namespace coverage {
-
-Cmd::Cmd(int argc, char* argv[]) {
-  assert(argc == 6);
-  workingDir = argv[1];
-  baseDir = argv[2];
-  objectDir = argv[3];
-  binPath = argv[4];
-  covDir = argv[5];
-
-  std::cout << "workingDir: " << workingDir << ", baseDir: " << baseDir
-            << ", objectDir: " << objectDir << ", binPath: " << binPath
-            << ", covDir: " << covDir << std::endl;
-}
+namespace gcov_coverage {
 
 CoverageMeasurment::CoverageMeasurment(const Cmd& cmd,
                                        const char* logName,
@@ -93,5 +80,5 @@ std::string StepperCoverageMeasurment::getScript(
   return result;
 }
 
-}  // namespace coverage
+}  // namespace gcov_coverage
 }  // namespace cider

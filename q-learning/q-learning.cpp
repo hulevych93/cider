@@ -3,22 +3,19 @@
 
 #include "q-learning.h"
 
-#include "scenario.h"
+#include <thread>
 
 namespace cider {
 namespace qleaning {
 
-void learningSession(cider::coverage::CoverageMeasurment& meassurer,
+void learningSession(const ObjectiveFunction& objFunc,
                      const QActionList& list,
                      QValuesAgent& agent,
                      const int episodes) {
   for (int i = 0; i < episodes; ++i) {
     const auto expRate = double(episodes - i) / episodes;
 
-    Scenario scenario(
-        list,
-        std::bind(&cider::coverage::CoverageMeasurment::operator(),
-                  std::ref(meassurer), std::placeholders::_1));
+    Scenario scenario(list, objFunc);
     auto nextState = scenario.toString();
 
     while (!scenario.isOver()) {
@@ -27,13 +24,12 @@ void learningSession(cider::coverage::CoverageMeasurment& meassurer,
 
       scenario.add(action);
       nextState = scenario.toString();
-      if(const auto rewardOpt = scenario.getReward())
-      {
-          agent.updateQValues(stateBeforeAction, nextState, action,
-                              rewardOpt.value(), LEARNING_RATE, DISCOUNT_FACTOR);
+      if (const auto rewardOpt = scenario.getReward()) {
+        agent.updateQValues(stateBeforeAction, nextState, action,
+                            rewardOpt.value(), LEARNING_RATE, DISCOUNT_FACTOR);
       } else {
-          scenario.rollback();
-          nextState = stateBeforeAction;
+        scenario.rollback();
+        nextState = stateBeforeAction;
       }
     }
   }

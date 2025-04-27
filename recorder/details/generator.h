@@ -69,7 +69,8 @@ ScriptGenerator makeLuaGenerator(const std::string& moduleName);
 
 std::string generateScript(ScriptGenerator& generator,
                            const std::vector<cider::recorder::Action>& actions,
-                           const size_t limit);
+                           const size_t limit,
+                           const bool ignoreErrors = true);
 
 }  // namespace recorder
 }  // namespace cider

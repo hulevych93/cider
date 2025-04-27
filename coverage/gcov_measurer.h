@@ -6,22 +6,12 @@
 #include "recorder/details/action.h"
 #include "recorder/details/params.h"
 
-#include "coverage/coverage.h"
+#include "coverage/gcov_coverage.h"
 
 #include <fstream>
 
 namespace cider {
-namespace coverage {
-
-struct Cmd final {
-  Cmd(int argc, char* argv[]);
-
-  std::string workingDir;
-  std::string baseDir;
-  std::string objectDir;
-  std::string binPath;
-  std::string covDir;
-};
+namespace gcov_coverage {
 
 using ReportOpt = std::optional<coverage::RootReport>;
 
@@ -53,5 +43,5 @@ struct StepperCoverageMeasurment final : CoverageMeasurment {
       const std::vector<cider::recorder::Action>& actions) const override;
 };
 
-}  // namespace coverage
+}  // namespace gcov_coverage
 }  // namespace cider
