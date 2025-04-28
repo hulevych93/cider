@@ -21,14 +21,3 @@ target_link_libraries(hjson_recorder PUBLIC
   hjson-models
   recorder
 )
-
-if(HJSON_ENABLE_COVERAGE)
-    setup_target_for_coverage_lcov(
-        NAME hjson_recoder_coverage
-        EXECUTABLE hjson_recorder
-        BASE_DIRECTORY "${EXPERIMENT_HJSON_BUILD_DIR}/src"
-        WORKING_DIR ${CMAKE_SOURCE_DIR}/experiments/hjson/tests/hjson_tests
-        EXCLUDE "${CIDER_GEN_DIR}/*" "${BASE_DIRECTORY}/*/v1/*" "/Applications/*"
-        DEPENDENCIES hjson_tests
-    )
-endif()

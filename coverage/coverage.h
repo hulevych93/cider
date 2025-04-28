@@ -17,6 +17,7 @@ struct Cmd final {
   std::string objectDir;
   std::string binPath;
   std::string covDir;
+  std::string resultsDir;
 };
 
 std::string loadFile(const std::string& path);

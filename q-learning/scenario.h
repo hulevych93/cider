@@ -12,7 +12,6 @@
 namespace cider {
 namespace qleaning {
 
-std::string actionToFullString(const QAction& action);
 std::string actionToShortString(const QAction& action);
 
 using ObjectiveFunction = std::function<double(const std::vector<QAction>&)>;

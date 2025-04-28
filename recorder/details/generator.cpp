@@ -308,9 +308,9 @@ std::string generateScript(ScriptGenerator& generator,
       }
       ++count;
     } catch (const std::exception&) {
-        if(!ignoreErrors) {
-          return "";
-        }
+      if (!ignoreErrors) {
+        return "";
+      }
     }
   }
   return generator.getScript();

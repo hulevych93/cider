@@ -158,6 +158,11 @@ std::string UserDataParamVisitor::operator()(
   return (*value).generateCode(_moduleName, _sink);
 }
 
+std::string UserDataParamVisitor::operator()(
+    const UserDataReferenceParamPtr& value) const {
+  return (*value).generateCode(_moduleName, _sink);
+}
+
 std::string produceParamCode(const std::string& moduleName,
                              const Param& param,
                              CodeSink& sink) {

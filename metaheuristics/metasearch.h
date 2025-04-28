@@ -19,6 +19,13 @@ struct Solution final {
   double objVal = 0.0f;
 };
 
+inline Solution deepCopy(const Solution& solution) {
+  Solution copy;
+  copy.objVal = solution.objVal;
+  copy.actions = deepCopy(solution.actions);
+  return copy;
+}
+
 inline bool operator>(const Solution& left, const Solution& right) {
   return left.objVal > right.objVal;
 }

@@ -54,7 +54,7 @@ Search::Search(const Settings& settings)
                                               settings.strategy)) {}
 
 void Search::initialize(const std::vector<recorder::Action>& actions) {
-  _initial.actions = actions;
+  _initial.actions = deepCopy(actions);
 
   const auto objValue = _settings.objFunc(_initial.actions);
   if (objValue > std::numeric_limits<double>::epsilon()) {
@@ -65,7 +65,7 @@ void Search::initialize(const std::vector<recorder::Action>& actions) {
 
   _harmonyMemory.resize(_settings.harmonyMemorySize);
   for (auto i = 0U; i < _settings.harmonyMemorySize; ++i) {
-    _harmonyMemory[i] = _initial;
+    _harmonyMemory[i] = deepCopy(_initial);
   }
 
   dump();
@@ -92,15 +92,15 @@ Harmony Search::generateHarmony(const Harmony& harmony) const {
   std::uniform_int_distribution<> distr(0, 10000);
   if (((double)distr(_gen) / 10000.f) <
       _settings.harmonyMemoryConsiderationRate) {
-    newHarmony = harmony;
+    newHarmony = deepCopy(harmony);
   } else {
-    newHarmony = _initial;
+    newHarmony = deepCopy(_initial);
   }
   return newHarmony;
 }
 
 std::optional<Harmony> Search::mutateHarmony(const Harmony& harmony) const {
-  Harmony mutatedHarmony = harmony;
+  Harmony mutatedHarmony = deepCopy(harmony);
 
   bool isMutated = false;
   for (auto& action : mutatedHarmony.actions) {
@@ -125,7 +125,7 @@ std::optional<Harmony> Search::mutateHarmony(const Harmony& harmony) const {
 bool Search::updateHarmonyMemory(const Harmony& harmony) {
   auto& worstHarmony = getWorst();
   if (harmony.objVal > worstHarmony.objVal) {
-    worstHarmony = harmony;
+    worstHarmony = deepCopy(harmony);
     dump();
     return true;
   }

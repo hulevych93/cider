@@ -20,6 +20,7 @@ if(ENABLE_COVERAGE_DRIVER)
       "${CMAKE_BINARY_DIR}/experiments/pugixml/tests/player"
       "${CMAKE_BINARY_DIR}/bin/pugixml_player"
       "${CMAKE_BINARY_DIR}/experiments/pugixml/tests/player"
+      "${CMAKE_BINARY_DIR}/experiments/pugixml/results/meta"
 
       WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/experiments/pugixml/tests/pugixml_tests"
       DEPENDS pugixml_player

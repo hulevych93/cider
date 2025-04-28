@@ -14,12 +14,13 @@ namespace qleaning {
 
 class Scenario;
 
-using QAction = recorder::Action;
 using QValue = double;
+using Script = std::string;
+
+using QAction = recorder::Action;
 using QActionList = std::vector<QAction>;
 using QActionSet = std::unordered_set<QAction>;
 using QValues = std::unordered_map<QAction, QValue>;
-using Script = std::string;
 using QTable = std::unordered_map<Script, QValues>;
 
 class Agent {
@@ -36,8 +37,6 @@ class QValuesAgent final : public Agent {
   QAction findBestOrRandomAvailableAction(const Scenario& scenario) const;
 
  public:
-  void printAlternatives(const Scenario& scenario) const;
-
   QAction chooseAction(const Scenario& scenario, const double exploration);
 
   QAction chooseAction(const Scenario& scenario) const override;
@@ -71,18 +70,6 @@ class TeacherAgent final : public Agent {
  private:
   QActionList m_list;
 };
-
-template <typename Func>
-std::string actionsToString(const QActionList& actions, Func&& func) {
-  std::ostringstream oss;
-  for (size_t i = 0; i < actions.size(); ++i) {
-    oss << func(actions[i]) << ";";
-  }
-  if (actions.empty()) {
-    oss << "Empty";
-  }
-  return oss.str();
-}
 
 }  // namespace qleaning
 }  // namespace cider

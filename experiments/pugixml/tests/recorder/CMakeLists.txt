@@ -21,14 +21,3 @@ target_link_libraries(pugixml_recorder PUBLIC
   pugixml-models
   recorder
 )
-
-if(PUGIXML_ENABLE_COVERAGE)
-    setup_target_for_coverage_lcov(
-        NAME pugixml_recoder_coverage
-        EXECUTABLE pugixml_recorder ${SCRIPT_PATH}
-        BASE_DIRECTORY "${EXPERIMENT_PUGIXML_BUILD_DIR}/src"
-        WORKING_DIR ${CMAKE_SOURCE_DIR}/experiments/pugixml/tests/pugixml_tests
-        EXCLUDE "${CIDER_GEN_DIR}/*" "${BASE_DIRECTORY}/*/v1/*" "/Applications/*"
-        DEPENDENCIES pugixml_tests
-    )
-endif()

@@ -54,6 +54,10 @@ using Action = std::variant<Function,
                             ClassUnaryOp,
                             ClassDestructor>;
 
+Action deepCopy(const Action& action);
+
+void print(std::ostream& os, const Action& action);
+
 bool operator==(const Action& lhs, const Action& rhs);
 
 namespace details {

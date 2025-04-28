@@ -81,7 +81,7 @@ Search::Search(const Settings& settings)
       _mutator(cider::metasearch::makeMutator(_gen, 1.0f, settings.strategy)) {}
 
 void Search::initialize(const std::vector<recorder::Action>& actions) {
-  _initial.actions = actions;
+  _initial.actions = deepCopy(actions);
 
   const auto objValue = _settings.objFunc(_initial.actions);
   if (objValue > std::numeric_limits<double>::epsilon()) {
@@ -92,7 +92,7 @@ void Search::initialize(const std::vector<recorder::Action>& actions) {
 
   _memory.resize(_settings.populationSize);
   for (auto i = 0U; i < _settings.populationSize; ++i) {
-    _memory[i] = _initial;
+    _memory[i] = deepCopy(_initial);
   }
 
   dump();
@@ -112,7 +112,7 @@ void Search::run() {
         std::cout << "Candidate: " << newNest->objVal << std::endl;
         if (newNest->objVal > nest.objVal) {
           std::cout << " <- " << nest.objVal << std::endl;
-          nest = *newNest;
+          nest = deepCopy(*newNest);
           iterWithoutUpdates = 0U;
         }
       }
@@ -124,14 +124,14 @@ void Search::run() {
     for (int i = _settings.populationSize -
                  int(_settings.Pa * _settings.populationSize);
          i < _settings.populationSize; ++i) {
-      _memory[i] = _initial;
+      _memory[i] = deepCopy(_initial);
     }
   }
   dump();
 }
 
 std::optional<Nest> Search::generateNest(const Nest& nest) const {
-  Nest newNest = nest;
+  Nest newNest = deepCopy(nest);
 
   ActionMutator mutator(_gen, *_mutator);
   levyFlight(_gen, newNest.actions,

@@ -22,10 +22,10 @@ std::unique_ptr<cider::metasearch::IMetaSearch> makeHarmonySearch(
     const cider::metasearch::ObjectiveFunction& objFunc,
     cider::metasearch::MutationStrategy stategy) {
   cider::metasearch::harmony::Settings settings;
-  settings.mutationRate = 0.01;
-  settings.harmonyMemoryConsiderationRate = 0.5;
+  settings.mutationRate = 0.05;
+  settings.harmonyMemoryConsiderationRate = 0.2;
   settings.harmonyMemorySize = 5;
-  settings.maxIterationsWithoutUpdates = 80;
+  settings.maxIterationsWithoutUpdates = 200;
   settings.strategy = stategy;
   settings.objFunc = objFunc;
 
@@ -63,7 +63,7 @@ int metaPipeline(const std::string& libName,
     }
 
     std::cout << "Stepper works[" << libName << "]" << std::endl;
-    cider::gcov_coverage::CoverageMeasurment stepper{cmd, "Sdf",
+    cider::gcov_coverage::CoverageMeasurment stepper{cmd, "meta_stepper.txt",
                                                      libName.c_str()};
     stepper(session->getInstructions());
 

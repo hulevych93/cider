@@ -99,7 +99,7 @@ struct IParamMutator {
       typename EnumType,
       typename std::enable_if_t<std::is_enum_v<EnumType>, void*> = nullptr>
   bool operator()(EnumType& value) const {
-    mutateAggregate(*this, value);
+    return mutateAggregate(*this, value);
   }
 
   virtual bool operator()(recorder::UserDataValueParamPtr& value) const = 0;
@@ -112,15 +112,20 @@ struct UserDataValueParam {
   virtual std::string generateCode(const std::string& moduleName,
                                    CodeSink& sink) const = 0;
   virtual bool mutate(const IParamMutator&) = 0;
-  virtual void print(std::ostream& os) const { os << "Nan"; }
+  virtual void print(std::ostream& os) const { os << "obj@value"; }
+  virtual UserDataValueParamPtr deepCopy() const = 0;
 };
 
-struct UserDataReferenceParam : UserDataValueParam {
+struct UserDataReferenceParam {
  public:
   virtual ~UserDataReferenceParam() = default;
+  virtual std::string generateCode(const std::string& moduleName,
+                                   CodeSink& sink) const = 0;
   virtual LocalVar registerLocal(CodeSink& sink) = 0;
 
-  bool mutate(const IParamMutator&) override { return false; }
+  bool mutate(const IParamMutator&) { return false; }
+  virtual void print(std::ostream& os) const { os << "obj@ref"; }
+  virtual UserDataReferenceParamPtr deepCopy() const = 0;
 };
 
 template <typename Type>
@@ -130,6 +135,30 @@ std::string produceAggregateCode(const std::string& moduleName,
 
 template <typename Type>
 bool mutateAggregate(const IParamMutator& mutator, Type&);
+
+Param deepCopy(const Param& param);
+
+void print(std::ostream& os, const Param& param);
+
+template <typename Type>
+std::vector<Type> deepCopy(const std::vector<Type>& container) {
+  std::vector<Type> out;
+  out.reserve(container.size());
+  for (const auto& element : container) {
+    out.push_back(deepCopy(element));
+  }
+  return out;
+}
+
+template <typename Type>
+void print(std::ostream& os, const std::vector<Type>& container) {
+  for (size_t i = 0; i < container.size(); ++i) {
+    print(os, container[i]);
+    if (i + 1 != container.size()) {
+      os << ", ";
+    }
+  }
+}
 
 namespace details {
 
@@ -154,6 +183,11 @@ struct AggregateUserDataValueParamImpl final : public UserDataValueParam {
     return mutateAggregate(mutator, _param);
   }
 
+  UserDataValueParamPtr deepCopy() const override {
+    return std::make_shared<AggregateUserDataValueParamImpl>(
+        std::forward<Type>(_param));
+  }
+
  private:
   ParamType _param;
 };
@@ -172,6 +206,10 @@ struct ReferenceUserDataValueParamImpl final : public UserDataReferenceParam {
   }
 
   void print(std::ostream& os) const override { os << "obj@" << _address; }
+
+  UserDataReferenceParamPtr deepCopy() const override {
+    return std::make_shared<ReferenceUserDataValueParamImpl>(_address);
+  }
 
  private:
   const void* _address;
@@ -291,7 +329,7 @@ Param makeParam(std::optional<Type> arg) {
 }
 
 inline Param makeParam(std::nullopt_t) {
-  return Nil{};
+  return Param(Nil{});
 }
 
 }  // namespace recorder

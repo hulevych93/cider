@@ -16,7 +16,14 @@ namespace gcov_coverage {
 CoverageMeasurment::CoverageMeasurment(const Cmd& cmd,
                                        const char* logName,
                                        const char* module)
-    : _cmd(cmd), _report(logName), _module(module) {}
+    : _cmd(cmd), _module(module) {
+
+    std::filesystem::path outPath(cmd.resultsDir);
+    std::filesystem::create_directories(outPath);
+    outPath /= logName;
+    std::cout << "Out file: " << outPath << std::endl;
+    _report.open(outPath, std::ios::out | std::ios::trunc);
+}
 
 ReportOpt CoverageMeasurment::operator()(
     const std::vector<cider::recorder::Action>& actions) {
@@ -60,8 +67,10 @@ std::string CoverageMeasurment::getScript(
 }
 
 StepperCoverageMeasurment::StepperCoverageMeasurment(const Cmd& cmd,
+                                                     const char* logName,
                                                      const char* module)
-    : CoverageMeasurment(cmd, "stepper.txt", module) {}
+    : CoverageMeasurment(cmd, logName, module) {
+}
 
 void StepperCoverageMeasurment::measure(
     const std::vector<cider::recorder::Action>& actions) {

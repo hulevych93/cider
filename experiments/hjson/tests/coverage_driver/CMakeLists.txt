@@ -20,6 +20,7 @@ if(ENABLE_COVERAGE_DRIVER)
       "${CMAKE_BINARY_DIR}/experiments/hjson/tests/player"
       "${CMAKE_BINARY_DIR}/bin/hjson_player"
       "${CMAKE_BINARY_DIR}"
+      "${CMAKE_BINARY_DIR}/experiments/hjson/results/meta"
 
       WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/experiments/hjson/tests/hjson_tests"
       DEPENDS hjson_player

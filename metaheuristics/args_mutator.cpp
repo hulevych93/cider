@@ -81,7 +81,7 @@ struct ParamMutator final : cider::recorder::IParamMutator {
     return value->mutate(*this);
   }
 
-  bool operator()(recorder::UserDataReferenceParamPtr& value) const override {
+  bool operator()(recorder::UserDataReferenceParamPtr&) const override {
     return false;
   }
 

@@ -1,9 +1,7 @@
-// Copyright (C) 2022-2024 Hulevych Mykhailo
+// Copyright (C) 2022-2025 Hulevych Mykhailo
 // SPDX-License-Identifier: MIT
 
 #include "q-learning.h"
-
-#include <thread>
 
 namespace cider {
 namespace qleaning {
@@ -11,7 +9,9 @@ namespace qleaning {
 void learningSession(const ObjectiveFunction& objFunc,
                      const QActionList& list,
                      QValuesAgent& agent,
-                     const int episodes) {
+                     const int episodes,
+                     const double learningRate,
+                     const double discountFactor) {
   for (int i = 0; i < episodes; ++i) {
     const auto expRate = double(episodes - i) / episodes;
 
@@ -26,7 +26,7 @@ void learningSession(const ObjectiveFunction& objFunc,
       nextState = scenario.toString();
       if (const auto rewardOpt = scenario.getReward()) {
         agent.updateQValues(stateBeforeAction, nextState, action,
-                            rewardOpt.value(), LEARNING_RATE, DISCOUNT_FACTOR);
+                            rewardOpt.value(), learningRate, discountFactor);
       } else {
         scenario.rollback();
         nextState = stateBeforeAction;

@@ -11,16 +11,18 @@
 namespace cider {
 
 Cmd::Cmd(int argc, char* argv[]) {
-  assert(argc == 6);
+  assert(argc == 7);
   workingDir = argv[1];
   baseDir = argv[2];
   objectDir = argv[3];
   binPath = argv[4];
   covDir = argv[5];
+  resultsDir = argv[6];
 
   std::cout << "workingDir: " << workingDir << ", baseDir: " << baseDir
             << ", objectDir: " << objectDir << ", binPath: " << binPath
-            << ", covDir: " << covDir << std::endl;
+            << ", covDir: " << covDir << ", resultsDir: " << resultsDir
+            << std::endl;
 }
 
 std::string loadFile(const std::string& path) {

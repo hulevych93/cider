@@ -20,8 +20,12 @@ namespace pipelines {
 
 namespace {
 
+const double LEARNING_RATE = 0.05;
+const double DISCOUNT_FACTOR = 0.85;
+
 template <typename ObjFunc>
 int qlearningPipeline(
+    const std::string& resultsDir,
     const std::string& libName,
     const std::vector<cider::recorder::ScriptRecordSessionPtr>& sessions,
     const ObjFunc& func) {
@@ -34,16 +38,20 @@ int qlearningPipeline(
 
       const auto& initial = session->getInstructions();
 
-      learningSession(func, initial, agent, 500U);
+      learningSession(func, initial, agent, 10U, LEARNING_RATE,
+                      DISCOUNT_FACTOR);
     }
 
-    std::ofstream debug("qtable_cfg.txt");
+    std::filesystem::path outPath(resultsDir);
+    std::filesystem::create_directories(outPath);
+    std::ofstream debug(outPath / "qtable_cfg.txt");
 
     std::ostringstream oss;
     const auto& actions = sessions[0]->getInstructions();
     for (size_t i = 0; i < actions.size(); ++i) {
-      oss << actionToShortString(actions[i]) << "\t"
-          << actionToFullString(actions[i]) << std::endl;
+      oss << actionToShortString(actions[i]) << "\t";
+      print(oss, actions[i]);
+      oss << std::endl;
     }
     debug << oss.str();
     debug << "Coverage: " << func(actions);
@@ -83,7 +91,7 @@ int qlearningGcovrPipeline(
     return 0.0f;
   };
 
-  return qlearningPipeline(libName, sessions, objFunc);
+  return qlearningPipeline(cmd.resultsDir, libName, sessions, objFunc);
 }
 
 int qlearningCfgPipeline(
@@ -103,7 +111,7 @@ int qlearningCfgPipeline(
     return 0.0f;
   };
 
-  return qlearningPipeline(libName, sessions, objFunc);
+  return qlearningPipeline(cmd.resultsDir, libName, sessions, objFunc);
 }
 
 }  // namespace pipelines

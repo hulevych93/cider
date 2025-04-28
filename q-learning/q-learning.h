@@ -12,13 +12,12 @@
 namespace cider {
 namespace qleaning {
 
-const double LEARNING_RATE = 0.05;
-const double DISCOUNT_FACTOR = 0.85;
-
 void learningSession(const ObjectiveFunction& objFunc,
                      const QActionList& list,
                      QValuesAgent& agent,
-                     const int episodes);
+                     int episodes,
+                     double learningRate,
+                     double discountFactor);
 
 }  // namespace qleaning
 }  // namespace cider

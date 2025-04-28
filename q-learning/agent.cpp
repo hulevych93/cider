@@ -53,17 +53,6 @@ QAction QValuesAgent::findBestOrRandomAvailableAction(
   }
 }
 
-void QValuesAgent::printAlternatives(const Scenario& scenario) const {
-  const auto state = scenario.toString();
-  const auto qValuesIter = m_qtable.find(state);
-  if (qValuesIter != m_qtable.cend()) {
-    for (const auto action : qValuesIter->second) {
-      std::cout << actionToShortString(action.first) << "\t" << action.second
-                << std::endl;
-    }
-  }
-}
-
 QAction QValuesAgent::chooseAction(const Scenario& scenario,
                                    const double exploration) {
   QAction action;

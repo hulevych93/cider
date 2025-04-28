@@ -6,24 +6,6 @@
 namespace cider {
 namespace qleaning {
 
-void printParam(std::ostream& os, const cider::recorder::Param& param) {
-  std::visit(
-      [&](auto&& value) {
-        using T = std::decay_t<decltype(value)>;
-
-        if constexpr (std::is_same_v<
-                          T, cider::recorder::UserDataReferenceParamPtr>) {
-          if (value) {
-            value->print(os);
-            os << " ";
-          } else {
-            os << "null_userdataref";
-          }
-        }
-      },
-      param);
-}
-
 std::string actionToShortString(const QAction& action) {
   return "A" + std::visit(
                    [](auto&& act) -> std::string {
@@ -32,59 +14,16 @@ std::string actionToShortString(const QAction& action) {
                    action);
 }
 
-std::string actionToFullString(const QAction& action) {
-  return std::visit(
-      [](auto&& act) -> std::string {
-        using T = std::decay_t<decltype(act)>;
-
-        if constexpr (std::is_same_v<T, cider::recorder::Function>) {
-          std::ostringstream oss;
-          printParam(oss, act.retVal);
-          oss << act.name << "(";
-          for (size_t i = 0; i < act.params.size(); ++i) {
-            oss << "x" + std::to_string(i);
-            if (i + 1 < act.params.size())
-              oss << ", ";
-          }
-          oss << ")";
-          return oss.str();
-        } else if constexpr (std::is_same_v<T, cider::recorder::ClassMethod>) {
-          std::ostringstream oss;
-          printParam(oss, act.method.retVal);
-          oss << "obj@" << act.objectAddress << "->" << act.method.name << "(";
-          for (size_t i = 0; i < act.method.params.size(); ++i) {
-            oss << "x" + std::to_string(i);
-            if (i + 1 < act.method.params.size())
-              oss << ", ";
-          }
-          oss << ")";
-          return oss.str();
-        } else if constexpr (std::is_same_v<T,
-                                            cider::recorder::ClassBinaryOp>) {
-          std::string opStr =
-              (act.opName == cider::recorder::BinaryOpType::Assignment) ? "="
-                                                                        : "?";
-          std::ostringstream oss;
-          oss << "obj@" << act.objectAddress << " " << opStr << " "
-              << "x0";
-          return oss.str();
-        } else if constexpr (std::is_same_v<T, cider::recorder::ClassUnaryOp>) {
-          std::string opStr =
-              (act.opName == cider::recorder::UnaryOpType::Minus) ? "-" : "?";
-          std::ostringstream oss;
-          oss << opStr << "obj@" << act.objectAddress;
-          return oss.str();
-        } else if constexpr (std::is_same_v<T,
-                                            cider::recorder::ClassDestructor>) {
-          return "destroy(obj@" +
-                 std::to_string(
-                     reinterpret_cast<uintptr_t>(act.objectAddress)) +
-                 ")";
-        } else {
-          return "UnknownAction";
-        }
-      },
-      action);
+template <typename Func>
+std::string actionsToString(const QActionList& actions, Func&& func) {
+  std::ostringstream oss;
+  for (size_t i = 0; i < actions.size(); ++i) {
+    oss << func(actions[i]) << ";";
+  }
+  if (actions.empty()) {
+    oss << "Empty";
+  }
+  return oss.str();
 }
 
 Scenario::Scenario(const QActionList& initial, const ObjectiveFunction& objFunc)

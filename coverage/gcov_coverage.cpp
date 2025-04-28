@@ -83,17 +83,6 @@ bool runScript(const std::string& binary,
       [](const char* data, std::size_t) {}, true);
   process.write(script.data(), script.size());
   process.close_stdin();
-
-  if (process.get_exit_status() != 0) {
-    std::cout << "status: " << process.get_exit_status() << std::endl;
-    static bool fl = false;
-    if (!fl) {
-      std::ofstream os("trace.txt");
-      os << script;
-      fl = true;
-    }
-  }
-
   return process.get_exit_status() == 0;
 }
 

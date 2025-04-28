@@ -35,7 +35,7 @@ struct CoverageMeasurment {
 };
 
 struct StepperCoverageMeasurment final : CoverageMeasurment {
-  explicit StepperCoverageMeasurment(const Cmd& cmd, const char* module);
+  explicit StepperCoverageMeasurment(const Cmd& cmd, const char* logName, const char* module);
 
   void measure(const std::vector<cider::recorder::Action>& actions);
 

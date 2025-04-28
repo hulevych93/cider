@@ -22,6 +22,7 @@ if(ENABLE_COVERAGE_DRIVER)
       "${CMAKE_BINARY_DIR}/experiments/BitmapPlusPlus/tests/player"
       "${CMAKE_BINARY_DIR}/bin/bitmap++_player"
       "${CMAKE_BINARY_DIR}"
+      "${CMAKE_BINARY_DIR}/experiments/BitmapPlusPlus/results/learning"
 
       WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/experiments/BitmapPlusPlus/tests/bitmap++_tests"
       DEPENDS bitmap++_player
