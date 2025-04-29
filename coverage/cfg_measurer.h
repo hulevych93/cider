@@ -15,10 +15,28 @@ namespace cfg_coverage {
 
 using CfgCoverageOpt = std::optional<cfg_coverage::Coverage>;
 
+class ICoverageLogger {
+ public:
+  virtual ~ICoverageLogger() = default;
+  virtual void log(size_t index, const Coverage& coverage) const = 0;
+};
+
+class FileLogger : public ICoverageLogger {
+ public:
+  FileLogger(const std::string& logDir, const std::string& logFileName);
+
+  void log(size_t index, const Coverage& coverage) const override;
+
+ private:
+  mutable std::ofstream _report;
+};
+
 struct CoverageMeasurment final {
-  explicit CoverageMeasurment(const Cmd& cmd,
-                              const char* logName,
-                              const char* module);
+  CoverageMeasurment(const Cmd& cmd, const char* module);
+
+  void setLogger(std::unique_ptr<ICoverageLogger> logger) {
+    m_logger = std::move(logger);
+  }
 
   CfgCoverageOpt operator()(
       const std::vector<cider::recorder::Action>& actions);
@@ -28,7 +46,7 @@ struct CoverageMeasurment final {
 
  private:
   const Cmd& _cmd;
-  mutable std::ofstream _report;
+  std::unique_ptr<ICoverageLogger> m_logger;
 
  protected:
   mutable size_t _index = 1U;

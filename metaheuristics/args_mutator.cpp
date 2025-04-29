@@ -13,6 +13,23 @@
 namespace cider {
 namespace metasearch {
 
+std::ostream& operator<<(std::ostream& os, MutationStrategy strategy) {
+  switch (strategy) {
+    case MutationStrategy::ChangeBits:
+      os << "ChangeBits";
+      break;
+    case MutationStrategy::ShuffleBytes:
+      os << "ShuffleBytes";
+      break;
+    case MutationStrategy::LevyFlight:
+      os << "LevyFlight";
+      break;
+    default:
+      break;
+  }
+  return os;
+}
+
 namespace {
 
 size_t randomInRange(std::mt19937& gen, const size_t from, const size_t to) {
@@ -98,6 +115,7 @@ struct ParamMutator final : cider::recorder::IParamMutator {
           return true;
           break;
         case MutationStrategy::LevyFlight:
+          levy_flight(value);
           return true;
           break;
         default:
@@ -110,9 +128,6 @@ struct ParamMutator final : cider::recorder::IParamMutator {
   bool shouldMutate() const {
     const bool shouldMutate =
         ((double)randomInRange(_gen, 0, 10000.f) / 10000.f) < _mutationRate;
-    if (shouldMutate) {
-      // std::cout << "rnd: " << rnd << "fl: " << shouldMutate << std::endl;
-    }
     return shouldMutate;
   }
 
@@ -133,6 +148,31 @@ struct ParamMutator final : cider::recorder::IParamMutator {
     auto* startData = reinterpret_cast<char*>(&value);
     size_t ShuffleAmount = randomInRange(_gen, 0, sizeof(Type) - 1);
     startData[ShuffleAmount] ^= 1 << randomInRange(_gen, 0, 7);
+  }
+
+  template <typename Type>
+  void levy_flight(Type& value) const {
+    std::cauchy_distribution<> levy_dist(0.0, 1.0);  // location=0, scale=1
+    const double step = levy_dist(_gen) * 10.0;  // scale up for stronger jumps
+
+    Type delta = static_cast<Type>(step);
+
+    // Avoid zero mutation (do something at least)
+    if (delta == 0) {
+      delta = (std::uniform_int_distribution<>(0, 1)(_gen) == 0) ? 1 : -1;
+    }
+
+    // Apply mutation with bounds check
+    if constexpr (std::is_signed_v<Type>) {
+      value = std::clamp<Type>(value + delta, std::numeric_limits<Type>::min(),
+                               std::numeric_limits<Type>::max());
+    } else {
+      if (delta < 0 && static_cast<std::uint64_t>(-delta) > value) {
+        value = 0;
+      } else {
+        value += delta;
+      }
+    }
   }
 };
 }  // namespace

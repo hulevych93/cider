@@ -9,6 +9,6 @@ set_source_files_properties(${TESTED_FILES}
 set(SCRIPT_PATH "${CMAKE_BINARY_DIR}/experiments/pugixml/tests/script.lua")
 
 add_subdirectory(pugixml_tests)
-add_subdirectory(recorder)
-add_subdirectory(player)
-add_subdirectory(coverage_driver)
+add_subdirectory(pugixml_recorder)
+add_subdirectory(pugixml_player)
+add_subdirectory(pugixml_driver)

@@ -13,44 +13,41 @@
 namespace cider {
 namespace gcov_coverage {
 
-CoverageMeasurment::CoverageMeasurment(const Cmd& cmd,
-                                       const char* logName,
-                                       const char* module)
-    : _cmd(cmd), _module(module) {
-
-    std::filesystem::path outPath(cmd.resultsDir);
-    std::filesystem::create_directories(outPath);
-    outPath /= logName;
-    std::cout << "Out file: " << outPath << std::endl;
-    _report.open(outPath, std::ios::out | std::ios::trunc);
+FileLogger::FileLogger(const std::string& logDir,
+                       const std::string& logFileName) {
+  std::filesystem::path outPath(logDir);
+  std::filesystem::create_directories(outPath);
+  outPath /= logFileName;
+  std::cout << "Out file: " << outPath << std::endl;
+  _report.open(outPath, std::ios::out | std::ios::trunc);
 }
+
+void FileLogger::log(size_t index, const RootReport& coverage) const {
+  printTableEntry(_report, index, coverage.report);
+}
+
+CoverageMeasurment::CoverageMeasurment(const Cmd& cmd, const char* module)
+    : _cmd(cmd), _module(module) {}
 
 ReportOpt CoverageMeasurment::operator()(
     const std::vector<cider::recorder::Action>& actions) {
   const auto script = getScript(actions);
 
-  assert(cider::coverage::cleanCoverage(_cmd.covDir));
+  assert(cleanCoverage(_cmd.covDir));
 
-  const auto result =
-      cider::coverage::runScript(_cmd.binPath, _cmd.workingDir, script);
+  const auto result = runScript(_cmd.binPath, _cmd.workingDir, script);
   if (result) {
     std::string jsonReport;
-    assert(cider::coverage::runCoverage(
-        _cmd.baseDir, _cmd.objectDir, [&](const char* data, std::size_t size) {
-          jsonReport += std::string{data, size};
-        }));
+    assert(runCoverage(_cmd.baseDir, _cmd.objectDir,
+                       [&](const char* data, std::size_t size) {
+                         jsonReport += std::string{data, size};
+                       }));
 
-    const auto rootReport =
-        cider::coverage::parseJsonCovReport(jsonReport, false);
+    const auto rootReport = parseJsonCovReport(jsonReport, false);
     assert(rootReport.has_value());
 
-    cider::coverage::printTableEntry(_report, _index, rootReport->report);
-
-    for (const auto& fileReport : rootReport->files) {
-      auto filePath = std::filesystem::path{fileReport.name};
-      filePath.replace_extension("txt");
-      std::ofstream fileStream(filePath, std::ios::app);
-      cider::coverage::printTableEntry(fileStream, _index, fileReport.report);
+    if (m_logger) {
+      m_logger->log(_index, rootReport.value());
     }
 
     return rootReport.value();
@@ -67,10 +64,8 @@ std::string CoverageMeasurment::getScript(
 }
 
 StepperCoverageMeasurment::StepperCoverageMeasurment(const Cmd& cmd,
-                                                     const char* logName,
                                                      const char* module)
-    : CoverageMeasurment(cmd, logName, module) {
-}
+    : CoverageMeasurment(cmd, module) {}
 
 void StepperCoverageMeasurment::measure(
     const std::vector<cider::recorder::Action>& actions) {

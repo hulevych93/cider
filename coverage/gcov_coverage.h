@@ -11,7 +11,7 @@
 #include "coverage/coverage.h"
 
 namespace cider {
-namespace coverage {
+namespace gcov_coverage {
 
 struct Coverage final {
   std::uint32_t covered = 0U;
@@ -74,12 +74,7 @@ struct RootReport final {
     return *this;
   }
 };
-/**
- * @brief parseJsonCovReport
- * @param json to parse
- * @param deep false means only root report
- * @return report
- */
+
 std::optional<RootReport> parseJsonCovReport(const std::string& json,
                                              bool deep = false);
 
@@ -99,23 +94,19 @@ void printTableEntry(std::ostream& ss,
                      const size_t index,
                      const CoverageReport& report);
 
-inline bool operator>(const coverage::CoverageReport& left,
-                      const coverage::CoverageReport& right) {
+inline bool operator>(const CoverageReport& left, const CoverageReport& right) {
   return left.lineCov.percent > right.lineCov.percent;
 }
 
-inline bool operator>(const coverage::RootReport& left,
-                      const coverage::RootReport& right) {
+inline bool operator>(const RootReport& left, const RootReport& right) {
   return left.report > right.report;
 }
 
-inline bool operator<(const coverage::CoverageReport& left,
-                      const coverage::CoverageReport& right) {
+inline bool operator<(const CoverageReport& left, const CoverageReport& right) {
   return left.lineCov.covered < right.lineCov.covered;
 }
 
-inline bool operator<(const coverage::RootReport& left,
-                      const coverage::RootReport& right) {
+inline bool operator<(const RootReport& left, const RootReport& right) {
   return left.report < right.report;
 }
 
@@ -138,5 +129,5 @@ inline bool operator==(const RootReport& lhs, const RootReport& rhs) {
          lhs.files == rhs.files;
 }
 
-}  // namespace coverage
+}  // namespace gcov_coverage
 }  // namespace cider

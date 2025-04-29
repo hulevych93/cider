@@ -9,9 +9,16 @@
 
 namespace cider {
 
+enum class PipelineType {
+  HarmonySearch = 0,
+  CackooSearch = 1,
+  QLearningAgent = 2
+};
+
 struct Cmd final {
   Cmd(int argc, char* argv[]);
 
+  PipelineType pipelineType = PipelineType::HarmonySearch;
   std::string workingDir;
   std::string baseDir;
   std::string objectDir;

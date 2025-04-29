@@ -12,6 +12,22 @@ namespace cider {
 namespace metasearch {
 namespace harmony {
 
+std::ostream& operator<<(std::ostream& os, const Settings& settings) {
+  os << "HS_";
+  os << "hms[";
+  os << settings.harmonyMemorySize;
+  os << "]_mr[";
+  os << settings.mutationRate;
+  os << "]_hmcs[";
+  os << settings.harmonyMemoryConsiderationRate;
+  os << "]_itwu[";
+  os << settings.maxIterationsWithoutUpdates;
+  os << "]_st[";
+  os << settings.strategy;
+  os << "]";
+  return os;
+}
+
 namespace {
 
 struct ActionMutator final {

@@ -13,6 +13,20 @@ namespace cider {
 namespace metasearch {
 namespace cuckoo {
 
+std::ostream& operator<<(std::ostream& os, const Settings& settings) {
+  os << "CS_";
+  os << "ps[";
+  os << settings.populationSize;
+  os << "]_pa[";
+  os << settings.Pa;
+  os << "]_itwu[";
+  os << settings.maxIterationsWithoutUpdates;
+  os << "]_st[";
+  os << settings.strategy;
+  os << "]";
+  return os;
+}
+
 namespace {
 
 template <typename ContainerType, typename Func>
@@ -114,6 +128,7 @@ void Search::run() {
           std::cout << " <- " << nest.objVal << std::endl;
           nest = deepCopy(*newNest);
           iterWithoutUpdates = 0U;
+          dump();
         }
       }
     }

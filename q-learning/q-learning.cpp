@@ -6,16 +6,26 @@
 namespace cider {
 namespace qleaning {
 
-void learningSession(const ObjectiveFunction& objFunc,
+std::ostream& operator<<(std::ostream& os, const Settings& settings) {
+  os << "QL_";
+  os << "lr[";
+  os << settings.learningRate;
+  os << "]_df[";
+  os << settings.discountFactor;
+  os << "]_epds[";
+  os << settings.episodes;
+  os << "]";
+  return os;
+}
+
+void learningSession(const Settings& settings,
                      const QActionList& list,
-                     QValuesAgent& agent,
-                     const int episodes,
-                     const double learningRate,
-                     const double discountFactor) {
+                     QValuesAgent& agent) {
+  const auto episodes = settings.episodes;
   for (int i = 0; i < episodes; ++i) {
     const auto expRate = double(episodes - i) / episodes;
 
-    Scenario scenario(list, objFunc);
+    Scenario scenario(list, settings.objFunc);
     auto nextState = scenario.toString();
 
     while (!scenario.isOver()) {
@@ -26,7 +36,8 @@ void learningSession(const ObjectiveFunction& objFunc,
       nextState = scenario.toString();
       if (const auto rewardOpt = scenario.getReward()) {
         agent.updateQValues(stateBeforeAction, nextState, action,
-                            rewardOpt.value(), learningRate, discountFactor);
+                            rewardOpt.value(), settings.learningRate,
+                            settings.discountFactor);
       } else {
         scenario.rollback();
         nextState = stateBeforeAction;

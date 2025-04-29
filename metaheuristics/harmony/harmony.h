@@ -22,6 +22,8 @@ struct Settings final {
   MutationStrategy strategy = MutationStrategy::ShuffleBytes;
 };
 
+std::ostream& operator<<(std::ostream& os, const Settings& settings);
+
 using Harmony = Solution;
 
 class Search final : public IMetaSearch {

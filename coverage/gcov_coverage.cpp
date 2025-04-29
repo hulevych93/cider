@@ -14,7 +14,7 @@
 namespace tpl = TinyProcessLib;
 
 namespace cider {
-namespace coverage {
+namespace gcov_coverage {
 
 CoverageReport parseCoverageReport(const nlohmann::json& value) {
   CoverageReport report;
@@ -97,10 +97,10 @@ bool runCoverage(const std::string& base,
 
 void printTableEntry(std::ostream& ss,
                      const size_t index,
-                     const cider::coverage::CoverageReport& report) {
+                     const CoverageReport& report) {
   ss << index << "\t" << report.lineCov.percent << "\t"
      << report.branchCov.percent << "\t" << report.funcCov.percent << std::endl;
 }
 
-}  // namespace coverage
+}  // namespace gcov_coverage
 }  // namespace cider

@@ -17,7 +17,6 @@ include_directories(${CMAKE_SOURCE_DIR})
 
 OPTION(ENABLE_COVERAGE "Without this coverage won't be meassured" ON)
 OPTION(CIDER_ENABLE_COVERAGE "Coverage target for cider tests" OFF)
-OPTION(ENABLE_COVERAGE_DRIVER "Experimental coverage run targets" ON)
 
 enable_testing()
 
@@ -33,6 +32,7 @@ add_subdirectory(coverage)
 add_subdirectory(metaheuristics)
 add_subdirectory(q-learning)
 add_subdirectory(tools/cider)
+add_subdirectory(pipelines)
 add_subdirectory(tools/coverage/table_printer)
 
 if(ENABLE_COVERAGE)
@@ -61,7 +61,34 @@ if(CIDER_ENABLE_COVERAGE)
         EXCLUDE "tools/*" "tests/models/*" "${BUILD_FILES_DIR}/*" "${CIDER_GEN_DIR}/*" "${BASE_DIRECTORY}/*/v1/*" "/Applications/*")
 endif()
 
-add_subdirectory(experiments/pipelines)
 add_subdirectory(experiments/hjson)
 add_subdirectory(experiments/pugixml)
 add_subdirectory(experiments/BitmapPlusPlus)
+
+add_custom_target(run_all_HS
+    DEPENDS
+        bitmap++_HS_run
+        hjson_HS_run
+        pugixml_HS_run
+)
+
+add_custom_target(run_all_CS
+    DEPENDS
+        bitmap++_CS_run
+        hjson_CS_run
+        pugixml_CS_run
+)
+
+add_custom_target(run_all_QL
+    DEPENDS
+        bitmap++_QL_run
+        hjson_QL_run
+        pugixml_QL_run
+)
+
+add_custom_target(run_all
+    DEPENDS
+        run_all_HS
+        run_all_CS
+        run_all_QL
+)

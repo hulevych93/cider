@@ -11,15 +11,18 @@
 namespace cider {
 
 Cmd::Cmd(int argc, char* argv[]) {
-  assert(argc == 7);
-  workingDir = argv[1];
-  baseDir = argv[2];
-  objectDir = argv[3];
-  binPath = argv[4];
-  covDir = argv[5];
-  resultsDir = argv[6];
+  assert(argc == 8);
 
-  std::cout << "workingDir: " << workingDir << ", baseDir: " << baseDir
+  pipelineType = static_cast<PipelineType>(std::atoi(argv[1]));
+  workingDir = argv[2];
+  baseDir = argv[3];
+  objectDir = argv[4];
+  binPath = argv[5];
+  covDir = argv[6];
+  resultsDir = argv[7];
+
+  std::cout << "pipelineType: " << (int)pipelineType
+            << ", workingDir: " << workingDir << ", baseDir: " << baseDir
             << ", objectDir: " << objectDir << ", binPath: " << binPath
             << ", covDir: " << covDir << ", resultsDir: " << resultsDir
             << std::endl;

@@ -36,9 +36,9 @@ int main(int argc, char* argv[]) {
 
     auto idx = 1U;
     for (const auto& path : files) {
-      const auto jsonReport = cider::coverage::loadFile(path);
+      const auto jsonReport = cider::loadFile(path);
       const auto rootReport =
-          cider::coverage::parseJsonCovReport(jsonReport, true);
+          cider::gcov_coverage::parseJsonCovReport(jsonReport, true);
       assert(rootReport.has_value());
 
       printTableEntry(rootTable, idx, rootReport->report);

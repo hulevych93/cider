@@ -12,17 +12,21 @@
 namespace cider {
 namespace cfg_coverage {
 
-CoverageMeasurment::CoverageMeasurment(const Cmd& cmd,
-                                       const char* logName,
-                                       const char* module)
-    : _cmd(cmd), _module(module) {
-
-    std::filesystem::path outPath(cmd.resultsDir);
-    std::filesystem::create_directories(outPath);
-    outPath /= logName;
-    std::cout << "Out file: " << outPath << std::endl;
-    _report.open(outPath, std::ios::out | std::ios::trunc);
+FileLogger::FileLogger(const std::string& logDir,
+                       const std::string& logFileName) {
+  std::filesystem::path outPath(logDir);
+  std::filesystem::create_directories(outPath);
+  outPath /= logFileName;
+  std::cout << "Out file: " << outPath << std::endl;
+  _report.open(outPath, std::ios::out | std::ios::trunc);
 }
+
+void FileLogger::log(size_t index, const Coverage& coverage) const {
+  printTableEntry(_report, index, coverage);
+}
+
+CoverageMeasurment::CoverageMeasurment(const Cmd& cmd, const char* module)
+    : _cmd(cmd), _module(module) {}
 
 CfgCoverageOpt CoverageMeasurment::operator()(
     const std::vector<cider::recorder::Action>& actions) {
@@ -43,7 +47,9 @@ CfgCoverageOpt CoverageMeasurment::operator()(
       const auto rootReport = parseJsonCovReport(jsonStr);
       assert(rootReport.has_value());
       if (rootReport->status) {
-        printTableEntry(_report, _index, rootReport.value());
+        if (m_logger) {
+          m_logger->log(_index, rootReport.value());
+        }
         return rootReport.value();
       }
     } catch (...) {

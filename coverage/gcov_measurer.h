@@ -13,12 +13,30 @@
 namespace cider {
 namespace gcov_coverage {
 
-using ReportOpt = std::optional<coverage::RootReport>;
+using ReportOpt = std::optional<RootReport>;
+
+class ICoverageLogger {
+ public:
+  virtual ~ICoverageLogger() = default;
+  virtual void log(size_t index, const RootReport& coverage) const = 0;
+};
+
+class FileLogger : public ICoverageLogger {
+ public:
+  FileLogger(const std::string& logDir, const std::string& logFileName);
+
+  void log(size_t index, const RootReport& coverage) const override;
+
+ private:
+  mutable std::ofstream _report;
+};
 
 struct CoverageMeasurment {
-  explicit CoverageMeasurment(const Cmd& cmd,
-                              const char* logName,
-                              const char* module);
+  CoverageMeasurment(const Cmd& cmd, const char* module);
+
+  void setLogger(std::unique_ptr<ICoverageLogger> logger) {
+    m_logger = std::move(logger);
+  }
 
   ReportOpt operator()(const std::vector<cider::recorder::Action>& actions);
 
@@ -27,15 +45,15 @@ struct CoverageMeasurment {
 
  private:
   const Cmd& _cmd;
-  mutable std::ofstream _report;
+  std::unique_ptr<ICoverageLogger> m_logger;
 
  protected:
-  mutable size_t _index = 1U;
+  mutable size_t _index = 0U;
   const char* _module;
 };
 
 struct StepperCoverageMeasurment final : CoverageMeasurment {
-  explicit StepperCoverageMeasurment(const Cmd& cmd, const char* logName, const char* module);
+  StepperCoverageMeasurment(const Cmd& cmd, const char* module);
 
   void measure(const std::vector<cider::recorder::Action>& actions);
 
