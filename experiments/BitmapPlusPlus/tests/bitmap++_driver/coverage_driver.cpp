@@ -1,8 +1,7 @@
 // Copyright (C) 2022-2025 Hulevych Mykhailo
 // SPDX-License-Identifier: MIT
 
-#include "pipelines/metapipeline.h"
-#include "pipelines/q-learning-pipeline.h"
+#include "pipelines/pipeline.h"
 
 #include <iostream>
 
@@ -26,6 +25,8 @@ void record(std::vector<cider::recorder::ScriptRecordSessionPtr>& out, F&& f) {
 }
 
 int main(int argc, char* argv[]) {
+  constexpr const char* LibraryName = "bitmap_cplus";
+
   cider::Cmd cmd(argc, argv);
 
   std::vector<cider::recorder::ScriptRecordSessionPtr> sessions;
@@ -39,25 +40,21 @@ int main(int argc, char* argv[]) {
   // record(sessions, []() { test_write_bitmap(); });
 
   record(sessions, []() {
-    test_chess_board();
-    test_variant_shapes();
+    // test_chess_board();
+    // test_variant_shapes();
     test_polymorphic_shapes();
-    test_read_bitmap();
-    test_rotation();
-    test_variant_shapes();
-    test_write_bitmap();
+    // test_read_bitmap();
+    // test_rotation();
+    // test_variant_shapes();
+    // test_write_bitmap();
   });
 
-  if (cmd.pipelineType == cider::PipelineType::HarmonySearch ||
-      cmd.pipelineType == cider::PipelineType::CackooSearch) {
-    for (const auto& session : sessions) {
-      cider::pipelines::metaCfgPipeline("bitmap_cplus", cmd,
-                                        std::move(session));
-    }
-    return 0;
+  auto pipeline = cider::pipelines::makePipeline(LibraryName, cmd);
 
-  } else {
-    return cider::pipelines::qlearningCfgPipeline("bitmap_cplus", cmd,
-                                                  std::move(sessions));
+  for (const auto& session : sessions) {
+    std::vector<cider::recorder::Action> output;
+    pipeline.run(session->getInstructions(), output);
   }
+
+  return 0;
 }

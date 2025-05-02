@@ -18,7 +18,7 @@ FileLogger::FileLogger(const std::string& logDir,
   std::filesystem::create_directories(outPath);
   outPath /= logFileName;
   std::cout << "Out file: " << outPath << std::endl;
-  _report.open(outPath, std::ios::out | std::ios::trunc);
+  _report.open(outPath, std::ios::out | std::ios::app);
 }
 
 void FileLogger::log(size_t index, const Coverage& coverage) const {

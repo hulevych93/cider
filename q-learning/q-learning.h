@@ -12,18 +12,36 @@
 namespace cider {
 namespace qleaning {
 
-struct Settings final {
+struct LearningSettings final {
   double learningRate = 0.1;
   double discountFactor = 0.9;
   size_t episodes = 50U;
+  size_t maxRollback = 30U;
   ObjectiveFunction objFunc;
 };
 
-std::ostream& operator<<(std::ostream& os, const Settings& settings);
+std::ostream& operator<<(std::ostream& os, const LearningSettings& settings);
 
-void learningSession(const Settings& settings,
+void learningSession(const LearningSettings& settings,
                      const QActionList& list,
                      QValuesAgent& agent);
+
+enum class GenerationStrategyType { Greedy, EGreedy, Boltzmann };
+
+struct GenerationSettings final {
+  GenerationStrategyType strategy = GenerationStrategyType::Greedy;
+  float epsilon = 0.1f;      // for ε-Greedy
+  float temperature = 1.0f;  // for Boltzmann
+  size_t maxSteps = 10;
+  ObjectiveFunction objFunc;
+};
+
+std::ostream& operator<<(std::ostream& os, const GenerationSettings& settings);
+
+bool gererationSession(const GenerationSettings& settings,
+                       const QValuesAgent& agent,
+                       const QActionList& initial,
+                       QActionList& out);
 
 }  // namespace qleaning
 }  // namespace cider

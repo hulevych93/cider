@@ -12,7 +12,9 @@ namespace cider {
 enum class PipelineType {
   HarmonySearch = 0,
   CackooSearch = 1,
-  QLearningAgent = 2
+  QLearningAgent = 2,
+  QLearningAgentPlusHarmonySearch = 3,
+  QLearningAgentPlusCackooSearch = 4
 };
 
 struct Cmd final {

@@ -1,8 +1,7 @@
 // Copyright (C) 2022-2024 Hulevych Mykhailo
 // SPDX-License-Identifier: MIT
 
-#include "pipelines/metapipeline.h"
-#include "pipelines/q-learning-pipeline.h"
+#include "pipelines/pipeline.h"
 
 #include <iostream>
 
@@ -20,21 +19,20 @@ void record(std::vector<cider::recorder::ScriptRecordSessionPtr>& out, F&& f) {
 }
 
 int main(int argc, char* argv[]) {
+  constexpr const char* LibraryName = "pugixml";
+
   cider::Cmd cmd(argc, argv);
 
   std::vector<cider::recorder::ScriptRecordSessionPtr> sessions;
 
   record(sessions, [&]() { run_tests(argv[0]); });
 
-  if (cmd.pipelineType == cider::PipelineType::HarmonySearch ||
-      cmd.pipelineType == cider::PipelineType::CackooSearch) {
-    for (const auto& session : sessions) {
-      cider::pipelines::metaCfgPipeline("pugixml", cmd, std::move(session));
-    }
-    return 0;
+  auto pipeline = cider::pipelines::makePipeline(LibraryName, cmd);
 
-  } else {
-    return cider::pipelines::qlearningCfgPipeline("pugixml", cmd,
-                                                  std::move(sessions));
+  for (const auto& session : sessions) {
+    std::vector<cider::recorder::Action> output;
+    pipeline.run(session->getInstructions(), output);
   }
+
+  return 0;
 }

@@ -23,6 +23,8 @@ class Scenario final {
   void add(const QAction& action);
   void rollback();
 
+  QActionList getCurrentState() const;
+
   std::optional<QValue> getReward() const;
 
   std::string toString() const;

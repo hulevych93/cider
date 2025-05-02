@@ -6,9 +6,12 @@
 #include "scenario.h"
 
 #include <iostream>
+#include <random>
 
 namespace cider {
 namespace qleaning {
+
+QValuesAgent::QValuesAgent() : _gen(_rd()) {}
 
 QActionList QValuesAgent::getBestFromAvailable(const QActionList& available,
                                                const QValues& values) {
@@ -53,8 +56,8 @@ QAction QValuesAgent::findBestOrRandomAvailableAction(
   }
 }
 
-QAction QValuesAgent::chooseAction(const Scenario& scenario,
-                                   const double exploration) {
+QAction QValuesAgent::chooseEGreedyAction(const Scenario& scenario,
+                                          const double exploration) const {
   QAction action;
   if (rand() / static_cast<double>(RAND_MAX) < exploration) {
     action = scenario.getRandomAction();
@@ -64,8 +67,38 @@ QAction QValuesAgent::chooseAction(const Scenario& scenario,
   return action;
 }
 
-QAction QValuesAgent::chooseAction(const Scenario& scenario) const {
+QAction QValuesAgent::chooseGreedyAction(const Scenario& scenario) const {
   return findBestOrRandomAvailableAction(scenario);
+}
+
+QAction QValuesAgent::chooseBolzmanAction(const Scenario& scenario,
+                                          const double temperature) const {
+  QAction action;
+  const auto qValuesIt = m_qtable.find(scenario.toString());
+  if (qValuesIt == m_qtable.cend()) {
+    action = scenario.getRandomAction();
+  } else {
+    const auto& qValues = qValuesIt->second;
+    std::vector<float> probabilities(qValues.size());
+    float sum = 0.0f;
+    auto qValIt = qValues.begin();
+    for (size_t i = 0; i < qValues.size(); ++i, ++qValIt) {
+      const auto& value = qValIt->second;
+      probabilities[i] = std::exp(value / temperature);
+      sum += probabilities[i];
+    }
+    for (float& p : probabilities)
+      p /= sum;
+
+    std::discrete_distribution<int> dist(probabilities.begin(),
+                                         probabilities.end());
+    const auto index = dist(_gen);
+    qValIt = qValues.begin();
+    for (size_t i = 0; ++i <= index; ++i, ++qValIt)
+      ;
+    action = qValIt->first;
+  }
+  return action;
 }
 
 void QValuesAgent::updateQValues(const std::string& state,
@@ -103,10 +136,6 @@ void QValuesAgent::print(std::ostream& ss) const {
     }
     ss << std::endl;
   }
-}
-
-QAction RandomAgent::chooseAction(const Scenario& scenario) const {
-  return scenario.getRandomAction();
 }
 
 }  // namespace qleaning

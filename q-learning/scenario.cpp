@@ -14,11 +14,10 @@ std::string actionToShortString(const QAction& action) {
                    action);
 }
 
-template <typename Func>
-std::string actionsToString(const QActionList& actions, Func&& func) {
+std::string actionsToString(const QActionList& actions) {
   std::ostringstream oss;
   for (size_t i = 0; i < actions.size(); ++i) {
-    oss << func(actions[i]) << ";";
+    oss << actionToShortString(actions[i]) << ";";
   }
   if (actions.empty()) {
     oss << "Empty";
@@ -43,10 +42,22 @@ Scenario::Scenario(const QActionList& initial, const ObjectiveFunction& objFunc)
 
 void Scenario::add(const QAction& action) {
   m_actions.push_back(action);
+
+  const auto avIt = m_availableActions.find(action);
+  if (avIt != m_availableActions.cend()) {
+    m_availableActions.erase(avIt);
+  }
 }
 
 void Scenario::rollback() {
+  const auto& action = m_actions.back();
+  m_availableActions.emplace(action);
+
   m_actions.pop_back();
+}
+
+QActionList Scenario::getCurrentState() const {
+  return m_actions;
 }
 
 bool Scenario::isOver() const {
@@ -73,7 +84,7 @@ std::optional<QValue> Scenario::getReward() const {
 }
 
 std::string Scenario::toString() const {
-  return actionsToString(m_actions, actionToShortString);
+  return actionsToString(m_actions);
 }
 
 QActionList Scenario::getAvailableActions() const {

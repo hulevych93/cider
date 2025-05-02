@@ -7,6 +7,7 @@
 
 #include <unordered_set>
 
+#include <random>
 #include <sstream>
 
 namespace cider {
@@ -23,23 +24,20 @@ using QActionSet = std::unordered_set<QAction>;
 using QValues = std::unordered_map<QAction, QValue>;
 using QTable = std::unordered_map<Script, QValues>;
 
-class Agent {
- public:
-  virtual ~Agent() = default;
-
-  virtual QAction chooseAction(const Scenario& scenario) const = 0;
-};
-
-class QValuesAgent final : public Agent {
+class QValuesAgent final {
   static QActionList getBestFromAvailable(const QActionList& available,
                                           const QValues& values);
 
   QAction findBestOrRandomAvailableAction(const Scenario& scenario) const;
 
  public:
-  QAction chooseAction(const Scenario& scenario, const double exploration);
+  QValuesAgent();
 
-  QAction chooseAction(const Scenario& scenario) const override;
+  QAction chooseBolzmanAction(const Scenario& scenario,
+                              const double temperature) const;
+  QAction chooseEGreedyAction(const Scenario& scenario,
+                              const double exploration) const;
+  QAction chooseGreedyAction(const Scenario& scenario) const;
 
   void updateQValues(const std::string& state,
                      const std::string& nextState,
@@ -48,27 +46,15 @@ class QValuesAgent final : public Agent {
                      const double learningRate,
                      const double discount);
 
+  QValues getQValues(const std::string& state);
+
   void print(std::ostream& os) const;
 
  private:
   QTable m_qtable;
-};
 
-class RandomAgent final : public Agent {
- public:
-  QAction chooseAction(const Scenario& scenario) const override;
-};
-
-class TeacherAgent final : public Agent {
- public:
-  TeacherAgent();
-
-  QAction chooseAction(const Scenario& scenario) const override {
-    return m_list[0];  // TODO
-  }
-
- private:
-  QActionList m_list;
+  std::random_device _rd;
+  mutable std::mt19937 _gen;
 };
 
 }  // namespace qleaning

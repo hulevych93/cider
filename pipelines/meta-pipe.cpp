@@ -1,7 +1,7 @@
 // Copyright (C) 2022-2025 Hulevych Mykhailo
 // SPDX-License-Identifier: MIT
 
-#include "metapipeline.h"
+#include "meta-pipe.h"
 
 #include <filesystem>
 #include <fstream>
@@ -18,6 +18,8 @@
 namespace cider {
 namespace pipelines {
 
+namespace {
+
 std::unique_ptr<cider::metasearch::IMetaSearch> makeHarmonySearch(
     const cider::metasearch::ObjectiveFunction& objFunc,
     std::string& filePrefix) {
@@ -25,7 +27,7 @@ std::unique_ptr<cider::metasearch::IMetaSearch> makeHarmonySearch(
   settings.mutationRate = 0.05;
   settings.harmonyMemoryConsiderationRate = 0.2;
   settings.harmonyMemorySize = 5;
-  settings.maxIterationsWithoutUpdates = 200;
+  settings.maxIterationsWithoutUpdates = 40;
   settings.strategy = cider::metasearch::MutationStrategy::ShuffleBytes;
   settings.objFunc = objFunc;
 
@@ -42,7 +44,7 @@ std::unique_ptr<cider::metasearch::IMetaSearch> makeCackooSearch(
   cider::metasearch::cuckoo::Settings settings;
   settings.populationSize = 5;
   settings.Pa = 0.1;
-  settings.maxIterationsWithoutUpdates = 200;
+  settings.maxIterationsWithoutUpdates = 40;
   settings.strategy = cider::metasearch::MutationStrategy::LevyFlight;
   settings.objFunc = objFunc;
 
@@ -53,16 +55,16 @@ std::unique_ptr<cider::metasearch::IMetaSearch> makeCackooSearch(
   return std::make_unique<cider::metasearch::cuckoo::Search>(settings);
 }
 
-int metaPipeline(const std::string& libName,
-                 const cider::Cmd& cmd,
-                 const std::string& prefix,
-                 std::unique_ptr<cider::metasearch::IMetaSearch> metaSearch,
-                 cider::recorder::ScriptRecordSessionPtr session) {
+bool metaPipeline(const std::string& libName,
+                  const cider::Cmd& cmd,
+                  const std::string& prefix,
+                  std::unique_ptr<cider::metasearch::IMetaSearch> metaSearch,
+                  const Actions& input,
+                  Actions& output) {
   try {
-    std::cout << "InstructionsCount: " << session->getInstructionsCount()
-              << std::endl;
+    std::cout << "InstructionsCount: " << input.size() << std::endl;
 
-    metaSearch->initialize(session->getInstructions());
+    metaSearch->initialize(input);
     metaSearch->run();
     const auto& bestActions = metaSearch->getBest().actions;
 
@@ -75,8 +77,6 @@ int metaPipeline(const std::string& libName,
                               (prefix + "_optimized_" + libName + ".lua"));
     output_file << script;
 
-    std::cout << "Stepper works[" << libName << "]" << std::endl;
-
     {
       cider::gcov_coverage::CoverageMeasurment stepper{cmd, libName.c_str()};
 
@@ -84,7 +84,7 @@ int metaPipeline(const std::string& libName,
           cmd.resultsDir, prefix + "_" + "gcov_nitial_stepper_log.txt");
       stepper.setLogger(std::move(fileLog));
 
-      stepper(session->getInstructions());
+      stepper(input);
     }
 
     {
@@ -96,17 +96,22 @@ int metaPipeline(const std::string& libName,
 
       stepper(bestActions);
     }
+
+    output = bestActions;
   } catch (const std::exception& e) {
     std::cerr << e.what();
-    return 1;
+    return false;
   }
 
-  return 0;
+  return true;
 }
 
-int metaGcovrPipeline(const std::string& libName,
-                      const cider::Cmd& cmd,
-                      cider::recorder::ScriptRecordSessionPtr session) {
+bool metaGcovrPipeline(PipelineType type,
+                       const std::string& metadata,
+                       const std::string& libName,
+                       const cider::Cmd& cmd,
+                       const Actions& input,
+                       Actions& output) {
   cider::gcov_coverage::CoverageMeasurment measurer{cmd, libName.c_str()};
 
   const auto objFunc =
@@ -121,22 +126,26 @@ int metaGcovrPipeline(const std::string& libName,
   std::unique_ptr<cider::metasearch::IMetaSearch> metaSearch;
 
   std::string prefix;
-  if (cmd.pipelineType == cider::PipelineType::HarmonySearch) {
+  if (type == cider::PipelineType::HarmonySearch) {
     metaSearch = makeHarmonySearch(objFunc, prefix);
   } else {
     metaSearch = makeCackooSearch(objFunc, prefix);
   }
 
   auto fileLog = std::make_unique<cider::gcov_coverage::FileLogger>(
-      cmd.resultsDir, prefix + "_gcov_meta_log.txt");
+      cmd.resultsDir + '/' + metadata, prefix + "_gcov_meta_log.txt");
   measurer.setLogger(std::move(fileLog));
 
-  return metaPipeline(libName, cmd, prefix, std::move(metaSearch), session);
+  return metaPipeline(libName, cmd, prefix, std::move(metaSearch), input,
+                      output);
 }
 
-int metaCfgPipeline(const std::string& libName,
-                    const cider::Cmd& cmd,
-                    cider::recorder::ScriptRecordSessionPtr session) {
+bool metaCfgPipeline(PipelineType type,
+                     const std::string& metadata,
+                     const std::string& libName,
+                     const cider::Cmd& cmd,
+                     const Actions& input,
+                     Actions& output) {
   cider::cfg_coverage::CoverageMeasurment measurer{cmd, libName.c_str()};
 
   const auto objFunc =
@@ -151,17 +160,38 @@ int metaCfgPipeline(const std::string& libName,
   std::unique_ptr<cider::metasearch::IMetaSearch> metaSearch;
 
   std::string prefix;
-  if (cmd.pipelineType == cider::PipelineType::HarmonySearch) {
+  if (type == cider::PipelineType::HarmonySearch) {
     metaSearch = makeHarmonySearch(objFunc, prefix);
   } else {
     metaSearch = makeCackooSearch(objFunc, prefix);
   }
 
   auto fileLog = std::make_unique<cider::cfg_coverage::FileLogger>(
-      cmd.resultsDir, prefix + "_cfg_meta_log.txt");
+      cmd.resultsDir + '/' + metadata, prefix + "_cfg_meta_log.txt");
   measurer.setLogger(std::move(fileLog));
 
-  return metaPipeline(libName, cmd, prefix, std::move(metaSearch), session);
+  return metaPipeline(libName, cmd, prefix, std::move(metaSearch), input,
+                      output);
+}
+
+}  // namespace
+
+bool HarmonySearchStage::process(const std::string& metadata,
+                                 const std::string& libName,
+                                 const cider::Cmd& cmd,
+                                 const Actions& input,
+                                 Actions& out) {
+  return metaCfgPipeline(PipelineType::HarmonySearch, metadata, libName, cmd,
+                         input, out);
+}
+
+bool CackooSearchStage::process(const std::string& metadata,
+                                const std::string& libName,
+                                const cider::Cmd& cmd,
+                                const Actions& input,
+                                Actions& out) {
+  return metaCfgPipeline(PipelineType::CackooSearch, metadata, libName, cmd,
+                         input, out);
 }
 
 }  // namespace pipelines
