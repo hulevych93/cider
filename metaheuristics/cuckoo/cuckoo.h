@@ -37,6 +37,10 @@ class Search final : public IMetaSearch {
 
   const Nest& getBest() const override;
 
+  void setLogger(std::unique_ptr<IResultsLogger> logger) override {
+    _logger = std::move(logger);
+  }
+
  private:
   std::optional<Nest> generateNest(const Nest& nest) const;
 
@@ -50,6 +54,8 @@ class Search final : public IMetaSearch {
   std::vector<Nest> _memory;
   Nest _initial;
   std::unique_ptr<recorder::IParamMutator> _mutator;
+
+  std::unique_ptr<IResultsLogger> _logger;
 };
 
 }  // namespace cuckoo

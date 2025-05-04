@@ -33,6 +33,7 @@ bool ReportStage::process(const std::string& metadata,
     };
 
     objFunc(input);
+    objFunc(output);
   }
 
   output = input;

@@ -16,10 +16,12 @@
 namespace cider {
 namespace pipelines {
 
+Pipeline::Pipeline(const std::string& libName, const cider::Cmd& cmd)
+    : _libName(libName), _cmd(cmd), _report(std::make_unique<ReportStage>()) {}
+
 Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
   Pipeline pipeline(libName, cmd);
   const auto pipelineType = cmd.pipelineType;
-  pipeline.addStage(std::make_unique<ReportStage>());
   switch (pipelineType) {
     case PipelineType::HarmonySearch:
       pipeline.addStage(std::make_unique<HarmonySearchStage>());
@@ -41,7 +43,6 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
     default:
       break;
   }
-  pipeline.addStage(std::make_unique<ReportStage>());
   return pipeline;
 }
 

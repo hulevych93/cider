@@ -34,5 +34,8 @@ int main(int argc, char* argv[]) {
     pipeline.run(session->getInstructions(), output);
   }
 
+  std::cout << "Program finished. Press Enter to exit...";
+  std::cin.get();
+
   return 0;
 }

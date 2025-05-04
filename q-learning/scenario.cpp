@@ -7,11 +7,9 @@ namespace cider {
 namespace qleaning {
 
 std::string actionToShortString(const QAction& action) {
-  return "A" + std::visit(
-                   [](auto&& act) -> std::string {
-                     return std::to_string(act.index);
-                   },
-                   action);
+  return std::visit(
+      [](auto&& act) -> std::string { return std::to_string(act.index); },
+      action);
 }
 
 std::string actionsToString(const QActionList& actions) {

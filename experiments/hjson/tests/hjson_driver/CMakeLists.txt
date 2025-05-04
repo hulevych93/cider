@@ -11,6 +11,7 @@ target_link_libraries(hjson_driver PUBLIC
   pipelines
   hjson_tests
   q-learning
+  ${Python3_LIBRARIES}
 )
 
 # Helper macro for HJSON run targets

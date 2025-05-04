@@ -109,6 +109,10 @@ void Search::initialize(const std::vector<recorder::Action>& actions) {
     _memory[i] = deepCopy(_initial);
   }
 
+  if (_logger) {
+    _logger->log(0U, getBest());
+  }
+
   dump();
 }
 
@@ -129,6 +133,10 @@ void Search::run() {
           nest = deepCopy(*newNest);
           iterWithoutUpdates = 0U;
           dump();
+
+          if (_logger) {
+            _logger->log(iteration, getBest());
+          }
         }
       }
     }

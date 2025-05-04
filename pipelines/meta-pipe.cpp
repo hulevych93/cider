@@ -25,9 +25,9 @@ std::unique_ptr<cider::metasearch::IMetaSearch> makeHarmonySearch(
     std::string& filePrefix) {
   cider::metasearch::harmony::Settings settings;
   settings.mutationRate = 0.05;
-  settings.harmonyMemoryConsiderationRate = 0.2;
+  settings.harmonyMemoryConsiderationRate = 0.4;
   settings.harmonyMemorySize = 5;
-  settings.maxIterationsWithoutUpdates = 40;
+  settings.maxIterationsWithoutUpdates = 200;
   settings.strategy = cider::metasearch::MutationStrategy::ShuffleBytes;
   settings.objFunc = objFunc;
 
@@ -44,7 +44,7 @@ std::unique_ptr<cider::metasearch::IMetaSearch> makeCackooSearch(
   cider::metasearch::cuckoo::Settings settings;
   settings.populationSize = 5;
   settings.Pa = 0.1;
-  settings.maxIterationsWithoutUpdates = 40;
+  settings.maxIterationsWithoutUpdates = 200;
   settings.strategy = cider::metasearch::MutationStrategy::LevyFlight;
   settings.objFunc = objFunc;
 
@@ -63,6 +63,9 @@ bool metaPipeline(const std::string& libName,
                   Actions& output) {
   try {
     std::cout << "InstructionsCount: " << input.size() << std::endl;
+
+    metaSearch->setLogger(
+        std::make_unique<cider::metasearch::MathplotLogger>());
 
     metaSearch->initialize(input);
     metaSearch->run();

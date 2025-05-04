@@ -97,6 +97,10 @@ void Search::run() {
     if (auto mutated = mutateHarmony(newHarmony)) {
       if (updateHarmonyMemory(*mutated)) {
         iterWithoutUpdates = 0U;
+
+        if (_logger) {
+          _logger->log(iteration, getBest());
+        }
       }
     }
   }

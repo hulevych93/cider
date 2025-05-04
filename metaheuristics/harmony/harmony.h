@@ -36,6 +36,10 @@ class Search final : public IMetaSearch {
 
   const Harmony& getBest() const override;
 
+  void setLogger(std::unique_ptr<IResultsLogger> logger) override {
+    _logger = std::move(logger);
+  }
+
  private:
   Harmony generateHarmony(const Harmony& harmony) const;
   std::optional<Harmony> mutateHarmony(const Harmony& harmony) const;
@@ -53,6 +57,8 @@ class Search final : public IMetaSearch {
   std::vector<Harmony> _harmonyMemory;
   Harmony _initial;
   std::unique_ptr<recorder::IParamMutator> _mutator;
+
+  std::unique_ptr<IResultsLogger> _logger;
 };
 
 }  // namespace harmony

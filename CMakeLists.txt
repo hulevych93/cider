@@ -17,6 +17,7 @@ include_directories(${CMAKE_SOURCE_DIR})
 
 OPTION(ENABLE_COVERAGE "Without this coverage won't be meassured" ON)
 OPTION(CIDER_ENABLE_COVERAGE "Coverage target for cider tests" OFF)
+OPTION(ENABLE_MATHPLOT_LOG "Enable online results plotting" OFF)
 
 enable_testing()
 
@@ -27,6 +28,22 @@ add_subdirectory(thirdparty/cppast)
 add_subdirectory(thirdparty/cxxopts)
 add_subdirectory(thirdparty/nlohmann)
 add_subdirectory(thirdparty/tpl)
+
+if(ENABLE_MATHPLOT_LOG)
+    # Try to find Python 3.11 first
+    find_program(PYTHON3_11_EXECUTABLE NAMES python3.11)
+
+    if(PYTHON3_11_EXECUTABLE)
+        message(STATUS "Using Python 3.11: ${PYTHON3_11_EXECUTABLE}")
+        set(Python3_EXECUTABLE ${PYTHON3_11_EXECUTABLE} CACHE FILEPATH "Use Python 3.11 if available")
+    endif()
+
+    find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+
+    message("Python ${Python3_EXECUTABLE}")
+
+    add_subdirectory(thirdparty/mathplotlib)
+endif()
 
 add_subdirectory(coverage)
 add_subdirectory(metaheuristics)

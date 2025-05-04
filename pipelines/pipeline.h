@@ -25,8 +25,7 @@ class IPipe {
 
 class Pipeline final {
  public:
-  Pipeline(const std::string& libName, const cider::Cmd& cmd)
-      : _libName(libName), _cmd(cmd) {}
+  Pipeline(const std::string& libName, const cider::Cmd& cmd);
 
   void addStage(std::unique_ptr<IPipe> pipe) {
     _pipes.emplace_back(std::move(pipe));
@@ -42,6 +41,7 @@ class Pipeline final {
       }
       in = deepCopy(out);
     }
+    _report->process(dateTime, _libName, _cmd, input, out);
     output = out;
     return true;
   }
@@ -52,15 +52,8 @@ class Pipeline final {
   std::string _libName;
   cider::Cmd _cmd;
   std::vector<std::unique_ptr<IPipe>> _pipes;
-};
 
-class ReportPipe : public IPipe {
- public:
-  bool process(const std::string& metadata,
-               const std::string& libName,
-               const cider::Cmd& cmd,
-               const Actions& input,
-               Actions& out) override;
+  std::unique_ptr<IPipe> _report;
 };
 
 Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd);

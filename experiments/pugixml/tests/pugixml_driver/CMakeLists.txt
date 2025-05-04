@@ -11,6 +11,7 @@ target_link_libraries(pugixml_driver PUBLIC
   pipelines
   pugixml_tests
   q-learning
+  ${Python3_LIBRARIES}
 )
 
 # Helper macro for pugixml run targets with modes

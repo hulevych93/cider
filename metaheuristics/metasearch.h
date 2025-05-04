@@ -34,6 +34,13 @@ inline bool operator<(const Solution& left, const Solution& right) {
   return left.objVal < right.objVal;
 }
 
+class IResultsLogger {
+ public:
+  virtual ~IResultsLogger() = default;
+
+  virtual void log(size_t iteration, const Solution& best) const = 0;
+};
+
 class IMetaSearch {
  public:
   virtual ~IMetaSearch() = default;
@@ -43,6 +50,16 @@ class IMetaSearch {
   virtual void run() = 0;
 
   virtual const Solution& getBest() const = 0;
+
+  virtual void setLogger(std::unique_ptr<IResultsLogger> logger) = 0;
+};
+
+class MathplotLogger : public IResultsLogger {
+ public:
+  void log(size_t index, const Solution& best) const override;
+
+ private:
+  mutable std::vector<double> x_, y_;
 };
 
 }  // namespace metasearch

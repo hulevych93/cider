@@ -3,6 +3,8 @@
 
 #include "q-learning.h"
 
+#include <iostream>
+
 namespace cider {
 namespace qleaning {
 
@@ -43,17 +45,48 @@ std::ostream& operator<<(std::ostream& os, const GenerationSettings& settings) {
   return os;
 }
 
+void prelearningSession(const LearningSettings& settings,
+                        const QActionList& list,
+                        QValuesAgent& agent) {
+  Scenario scenario(list, settings.objFunc);
+  auto nextState = scenario.toString();
+
+  int index = 0U;
+  while (!scenario.isOver()) {
+    const auto stateBeforeAction = nextState;
+    const auto& action = list[index++];
+    if ((index % 50) == 0) {
+      std::cout << "Index: " << index << std::endl;
+    }
+
+    scenario.add(action);
+    nextState = scenario.toString();
+    if (const auto rewardOpt = scenario.getReward()) {
+      agent.updateQValues(stateBeforeAction, nextState, action,
+                          rewardOpt.value(), settings.learningRate,
+                          settings.discountFactor);
+    } else {
+      throw std::logic_error{"failed to run on initial sequence."};
+    }
+  }
+}
+
 void learningSession(const LearningSettings& settings,
                      const QActionList& list,
                      QValuesAgent& agent) {
+  prelearningSession(settings, list, agent);
+
   const auto episodes = settings.episodes;
   for (int i = 0; i < episodes; ++i) {
     const auto expRate = double(episodes - i) / episodes;
+    std::cout << "Episode: " << i << std::endl;
 
     Scenario scenario(list, settings.objFunc);
     auto nextState = scenario.toString();
 
     size_t rollbackCount = 0;
+
+    int index = 0U;
     while (!scenario.isOver()) {
       const auto stateBeforeAction = nextState;
       const auto action = agent.chooseEGreedyAction(scenario, expRate);
@@ -65,6 +98,10 @@ void learningSession(const LearningSettings& settings,
                             rewardOpt.value(), settings.learningRate,
                             settings.discountFactor);
         rollbackCount = 0U;
+        ++index;
+        if ((index % 50) == 0) {
+          std::cout << "Index: " << index << std::endl;
+        }
       } else {
         scenario.rollback();
         nextState = stateBeforeAction;
