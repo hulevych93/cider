@@ -19,6 +19,7 @@ target_link_libraries(bitmap++_player PUBLIC
   bitmap++_wrap
   bitmap++-models
   scripting
+  serialization
   recorder
   coverage
   ${Lua_LIBRARIES}

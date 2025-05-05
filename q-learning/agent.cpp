@@ -5,6 +5,9 @@
 
 #include "scenario.h"
 
+#include "serialization/deserializer.h"
+#include "serialization/serializer.h"
+
 #include <iostream>
 #include <random>
 
@@ -12,6 +15,27 @@ namespace cider {
 namespace qleaning {
 
 QValuesAgent::QValuesAgent() : _gen(_rd()) {}
+
+bool QValuesAgent::load(const std::string& filePath) {
+  try {
+    serialization::Deserializer deserializer(filePath);
+    deserializer >> m_qtable;
+  } catch (...) {
+    return false;
+  }
+  return true;
+}
+
+bool QValuesAgent::save(const std::string& filePath) {
+  try {
+    serialization::Serializer serializer;
+    serializer << m_qtable;
+    serializer.save(filePath);
+  } catch (...) {
+    return false;
+  }
+  return true;
+}
 
 QActionList QValuesAgent::getBestFromAvailable(const QActionList& available,
                                                const QValues& values) {

@@ -39,6 +39,8 @@ cider_tool_generate(${SWIG_MODULE_NAME} "PugixmlHooked" "${HDRS_OUT}" ${GEN_DIR}
 
 list(APPEND GEN_SRC_FILES "${GEN_DIR}/${SWIG_MODULE_NAME}_lua.cpp")
 list(APPEND GEN_SRC_FILES "${GEN_DIR}/${SWIG_MODULE_NAME}_mutator.cpp")
+list(APPEND GEN_SRC_FILES "${GEN_DIR}/${SWIG_MODULE_NAME}_serialization.cpp")
+list(APPEND GEN_SRC_FILES "${GEN_DIR}/${SWIG_MODULE_NAME}_deserialization.cpp")
 
 add_library(pugixml-models ${GEN_SRC_FILES})
 add_dependencies(pugixml_tests pugixml-models)
@@ -57,6 +59,7 @@ target_link_libraries(pugixml_tests PUBLIC
   pugixml_wrap
   pugixml-models
   recorder
+  serialization
   ${Pugixml_LIBRARIES}
   ${PLATFORM_LIBRARIES}
 )

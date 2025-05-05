@@ -20,6 +20,7 @@ target_link_libraries(pugixml_player PUBLIC
   pugixml-models
   scripting
   recorder
+  serialization
   coverage
   ${Lua_LIBRARIES}
   ${PLATFORM_LIBRARIES}

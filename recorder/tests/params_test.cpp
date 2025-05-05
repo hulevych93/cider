@@ -43,6 +43,22 @@ bool mutateAggregate(const IParamMutator&, TestEnum&) {
   return false;
 }
 
+bool serializeAggregate(const TestStruct&, serialization::Serializer&) {
+  return true;
+}
+
+bool deserializeAggregate(TestStruct&, const serialization::Deserializer&) {
+  return true;
+}
+
+bool serializeAggregate(const TestEnum&, serialization::Serializer&) {
+  return true;
+}
+
+bool deserializeAggregate(TestEnum&, const serialization::Deserializer&) {
+  return true;
+}
+
 TEST_F(ParamsTestSuite, makeParamBool) {
   EXPECT_NO_THROW(std::get<bool>(makeParam(static_cast<bool>(10))));
 }

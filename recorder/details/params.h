@@ -15,6 +15,8 @@
 
 #include "recorder/details/sink.h"
 
+#include "serialization/serializable.h"
+
 namespace cider {
 namespace recorder {
 
@@ -24,9 +26,16 @@ using UserDataValueParamPtr = std::shared_ptr<UserDataValueParam>;
 struct UserDataReferenceParam;
 using UserDataReferenceParamPtr = std::shared_ptr<UserDataReferenceParam>;
 
-struct Nil final {
+struct Nil final : serialization::SerializableTag {
   bool operator==(const Nil&) const { return true; }
 };
+
+inline bool serialize(const Nil&, serialization::Serializer&) {
+  return true;
+}
+inline bool deserialize(Nil&, const serialization::Deserializer&) {
+  return true;
+}
 
 using IntegerTypeList = TypeList<char,
                                  unsigned char,
@@ -106,7 +115,7 @@ struct IParamMutator {
   virtual bool operator()(recorder::UserDataReferenceParamPtr& value) const = 0;
 };
 
-struct UserDataValueParam {
+struct UserDataValueParam : public serialization::ISerializable {
  public:
   virtual ~UserDataValueParam() = default;
   virtual std::string generateCode(const std::string& moduleName,
@@ -114,9 +123,12 @@ struct UserDataValueParam {
   virtual bool mutate(const IParamMutator&) = 0;
   virtual void print(std::ostream& os) const { os << "obj@value"; }
   virtual UserDataValueParamPtr deepCopy() const = 0;
+
+  static std::shared_ptr<UserDataValueParam> Create(
+      const serialization::Deserializer& deserializer);
 };
 
-struct UserDataReferenceParam {
+struct UserDataReferenceParam : public serialization::ISerializable {
  public:
   virtual ~UserDataReferenceParam() = default;
   virtual std::string generateCode(const std::string& moduleName,
@@ -126,7 +138,16 @@ struct UserDataReferenceParam {
   bool mutate(const IParamMutator&) { return false; }
   virtual void print(std::ostream& os) const { os << "obj@ref"; }
   virtual UserDataReferenceParamPtr deepCopy() const = 0;
+
+  static std::shared_ptr<UserDataReferenceParam> Create(
+      const serialization::Deserializer& deserializer);
 };
+
+template <typename Type>
+bool serializeAggregate(const Type&, serialization::Serializer&);
+
+template <typename Type>
+bool deserializeAggregate(Type&, const serialization::Deserializer&);
 
 template <typename Type>
 std::string produceAggregateCode(const std::string& moduleName,
@@ -162,12 +183,22 @@ void print(std::ostream& os, const std::vector<Type>& container) {
 
 namespace details {
 
+using CreateFn = std::function<std::shared_ptr<UserDataValueParam>()>;
+
+inline std::unordered_map<size_t, CreateFn>&
+createUserDataValueParamRegistry() {
+  static std::unordered_map<size_t, CreateFn> instance;
+  return instance;
+}
+
 template <typename Type>
 struct AggregateUserDataValueParamImpl final : public UserDataValueParam {
  public:
   using ParamType = typename std::remove_pointer_t<std::decay_t<Type>>;
+  static const bool ensureRegistered;
 
  public:
+  AggregateUserDataValueParamImpl() = default;
   AggregateUserDataValueParamImpl(Type&& param)
       : _param(std::forward<Type>(param)) {}
   AggregateUserDataValueParamImpl(ParamType* param) : _param(*param) {}
@@ -184,17 +215,46 @@ struct AggregateUserDataValueParamImpl final : public UserDataValueParam {
   }
 
   UserDataValueParamPtr deepCopy() const override {
-    return std::make_shared<AggregateUserDataValueParamImpl>(
-        std::forward<Type>(_param));
+    auto obj = std::make_shared<AggregateUserDataValueParamImpl<Type>>();
+    obj->_param = _param;
+    return obj;
+  }
+
+  bool serialize(serialization::Serializer& serializer) const override {
+    const std::size_t key = type_key<Type>();
+    serializer << key;
+    return serializeAggregate(_param, serializer);
+  }
+
+  bool deserialize(const serialization::Deserializer& deserializer) override {
+    return deserializeAggregate(_param, deserializer);
   }
 
  private:
   ParamType _param;
 };
 
+template <typename Type>
+struct AutoRegisterType {
+  static bool Register() {
+    const std::size_t key = type_key<Type>();
+    createUserDataValueParamRegistry()[key] =
+        []() -> std::shared_ptr<UserDataValueParam> {
+      return std::make_shared<AggregateUserDataValueParamImpl<Type>>();
+    };
+    return true;
+  }
+};
+
+template <typename T>
+const bool AggregateUserDataValueParamImpl<T>::ensureRegistered =
+    AutoRegisterType<T>::Register();
+
 struct ReferenceUserDataValueParamImpl final : public UserDataReferenceParam {
  public:
-  ReferenceUserDataValueParamImpl(const void* address) : _address(address) {}
+  ReferenceUserDataValueParamImpl() = default;
+  ReferenceUserDataValueParamImpl(const void* address)
+      : _address((void*)address) {}
   ~ReferenceUserDataValueParamImpl() override = default;
 
   std::string generateCode(const std::string&, CodeSink& sink) const override {
@@ -211,8 +271,18 @@ struct ReferenceUserDataValueParamImpl final : public UserDataReferenceParam {
     return std::make_shared<ReferenceUserDataValueParamImpl>(_address);
   }
 
+  bool serialize(serialization::Serializer& serializer) const override {
+    serializer << _address;
+    return true;
+  }
+
+  bool deserialize(const serialization::Deserializer& deserializer) override {
+    deserializer >> _address;
+    return true;
+  }
+
  private:
-  const void* _address;
+  void* _address = nullptr;
 };
 
 template <typename Type>
@@ -222,6 +292,7 @@ constexpr bool isAggregate =
 template <typename Type,
           typename std::enable_if_t<isAggregate<Type>, void*> = nullptr>
 std::shared_ptr<UserDataValueParam> makeUserData(Type&& arg) {
+  (void)AggregateUserDataValueParamImpl<Type>::ensureRegistered;
   return std::make_shared<AggregateUserDataValueParamImpl<Type>>(
       std::forward<Type>(arg));
 }
@@ -229,6 +300,7 @@ std::shared_ptr<UserDataValueParam> makeUserData(Type&& arg) {
 template <typename Type,
           typename std::enable_if_t<isAggregate<Type>, void*> = nullptr>
 std::shared_ptr<UserDataValueParam> makeUserData(Type* arg) {
+  (void)AggregateUserDataValueParamImpl<Type>::ensureRegistered;
   return std::make_shared<AggregateUserDataValueParamImpl<Type>>(arg);
 }
 

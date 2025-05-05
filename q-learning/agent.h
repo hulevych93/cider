@@ -33,6 +33,9 @@ class QValuesAgent final {
  public:
   QValuesAgent();
 
+  bool load(const std::string& filePath);
+  bool save(const std::string& filePath);
+
   QAction chooseBolzmanAction(const Scenario& scenario,
                               const double temperature) const;
   QAction chooseEGreedyAction(const Scenario& scenario,

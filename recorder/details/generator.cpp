@@ -214,7 +214,8 @@ ScriptGenerator::~ScriptGenerator() = default;
 
 void ScriptGenerator::operator()(const Function& context) {
   const auto result = processResult(context.retVal);
-  const auto mutatedName = _langContext.functionNameMutator(context.name);
+  const auto mutatedName =
+      _langContext.functionNameMutator(context.name.c_str());
 
   const auto codeTemplate = _langContext.funcProducer(
       _module.c_str(), mutatedName.c_str(), !result.name.empty(), result.isNew,
@@ -227,7 +228,7 @@ void ScriptGenerator::operator()(const Function& context) {
 void ScriptGenerator::operator()(const ClassMethod& context) {
   const auto result = processResult(context.method.retVal);
   const auto mutatedName =
-      _langContext.functionNameMutator(context.method.name);
+      _langContext.functionNameMutator(context.method.name.c_str());
 
   const auto codeTemplate = _langContext.funcProducer(
       _module.c_str(), mutatedName.c_str(), !result.name.empty(), result.isNew,

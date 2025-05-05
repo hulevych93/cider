@@ -25,7 +25,7 @@ LearningSettings getLearningSettings(std::string& prefix) {
   LearningSettings settings;
   settings.discountFactor = 0.85;
   settings.learningRate = 0.15;
-  settings.episodes = 50U;
+  settings.episodes = 10U;
 
   std::stringstream os;
   os << settings;
@@ -54,13 +54,13 @@ bool qlearningPipeline(QValuesAgent& agent,
                        const Actions& input,
                        Actions& output) {
   try {
-    std::cout << "InstructionsCount: " << input.size() << std::endl;
-
-    learningSession(learningSettings, input, agent);
-
     std::filesystem::path outPath(resultsDir);
     std::filesystem::create_directories(outPath);
     std::ofstream debug(outPath / (prefix + "qtable_cfg.txt"));
+
+    std::cout << "InstructionsCount: " << input.size() << std::endl;
+
+    learningSession(learningSettings, input, agent);
 
     std::ostringstream oss;
 
@@ -89,6 +89,7 @@ bool qlearningPipeline(QValuesAgent& agent,
     debug << "Coverage: " << learningSettings.objFunc(output);
     debug << std::endl << std::endl;
 
+    agent.save(outPath / (prefix + "agent.img"));
   } catch (const std::exception& e) {
     std::cerr << e.what();
     return false;

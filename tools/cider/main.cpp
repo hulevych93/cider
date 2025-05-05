@@ -12,12 +12,14 @@
 #include <cppast/cpp_entity.hpp>
 
 #include "ast_handler.h"
+#include "deserialization.h"
 #include "generator.h"
 #include "lua.h"
 #include "mutator.h"
 #include "namespaces_stack.h"
 #include "options.h"
 #include "printers.h"
+#include "serialization.h"
 #include "swig.h"
 #include "utils.h"
 
@@ -181,8 +183,16 @@ int main(int argc, char* argv[]) {
       std::ofstream mutatorStream(outMutatorFilePath + "_mutator.cpp");
       mutator_generator mutGen{mutatorStream, outDir, metadata};
 
+      std::ofstream serStream(outMutatorFilePath + "_serialization.cpp");
+      serialization_generator serGen{serStream, outDir, metadata};
+
+      std::ofstream deserStream(outMutatorFilePath + "_deserialization.cpp");
+      deserialization_generator deserGen{deserStream, outDir, metadata};
+
       for (const auto& file : files) {
         handleFile(mutGen, *file);
+        handleFile(serGen, *file);
+        handleFile(deserGen, *file);
       }
     }
 

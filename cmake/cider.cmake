@@ -22,6 +22,8 @@ function(cider_tool_generate MODULE_NAME NAMESPACE FILES OUTPUT_DIR)
                               ${GEN_DIR}/${MODULE_NAME}.swig
                               ${GEN_DIR}/${MODULE_NAME}_lua.cpp
                               ${GEN_DIR}/${MODULE_NAME}_mutator.cpp
+                              ${GEN_DIR}/${MODULE_NAME}_serialization.cpp
+                              ${GEN_DIR}/${MODULE_NAME}_deserialization.cpp
                        COMMAND "${CIDER_EXECUTABLE}" --out_dir=${OUTPUT_DIR}
                        --integration_file="${CMAKE_SOURCE_DIR}/tools/ast.cpp"
                        --swig_directory="${CMAKE_SOURCE_DIR}/swig"

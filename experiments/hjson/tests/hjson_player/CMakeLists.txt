@@ -20,6 +20,7 @@ target_link_libraries(hjson_player PUBLIC
   hjson-models
   scripting
   recorder
+  serialization
   coverage
   ${Lua_LIBRARIES}
   ${PLATFORM_LIBRARIES}

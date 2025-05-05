@@ -52,6 +52,23 @@ constexpr const char* MarkerEnd = "CFG_COV_END";
 namespace cider {
 namespace cfg_coverage {
 
+Coverage& Coverage::operator=(const Coverage& rhs) {
+  if (this != &rhs) {
+    covered = rhs.covered;
+    total = rhs.total;
+  }
+  return *this;
+}
+
+double Coverage::getPercentage() const {
+  if (total == 0)
+    return 0.0f;
+  auto result = double(covered) / double(total);
+  if (result < percentageThreshold)
+    result = 0.0f;
+  return result;
+}
+
 Coverage& Coverage::alignTo(const Coverage& startingPoint) {
   assert(total == startingPoint.total);
   assert(covered >= startingPoint.covered);

@@ -19,22 +19,9 @@ struct Coverage final {
   std::uint32_t total = 0U;
   bool status = true;
 
-  double getPercentage() const {
-    if (total == 0)
-      return 0.0f;
-    auto result = double(covered) / double(total);
-    if (result < percentageThreshold)
-      result = 0.0f;
-    return result;
-  }
+  double getPercentage() const;
 
-  Coverage& operator=(const Coverage& rhs) {
-    if (this != &rhs) {
-      covered = rhs.covered;
-      total = rhs.total;
-    }
-    return *this;
-  }
+  Coverage& operator=(const Coverage& rhs);
 
   void dump() const;
 

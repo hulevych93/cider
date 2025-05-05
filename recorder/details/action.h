@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "serialization/serializable.h"
+
 #include "recorder/details/params.h"
 #include "recorder/details/sink.h"
 
@@ -12,40 +14,40 @@
 namespace cider {
 namespace recorder {
 
-struct Function final {
-  const char* name = nullptr;
+struct Function final : serialization::SerializableTag {
+  std::string name;
   Params params;
   Param retVal;
-  size_t index = 0;
+  unsigned int index = 0;
 };
 
-struct ClassMethod final {
-  const void* objectAddress;
+struct ClassMethod final : serialization::SerializableTag {
+  void* objectAddress = nullptr;
   Function method;
-  size_t index = 0;
+  unsigned int index = 0;
 };
 
-struct ClassDestructor final {
-  const void* objectAddress;
-  size_t index = 0;
+struct ClassDestructor final : serialization::SerializableTag {
+  void* objectAddress = nullptr;
+  unsigned int index = 0;
 };
 
 enum class UnaryOpType { Minus };
 
-struct ClassUnaryOp final {
-  const void* objectAddress;
+struct ClassUnaryOp final : serialization::SerializableTag {
+  void* objectAddress = nullptr;
   UnaryOpType opName = UnaryOpType::Minus;
   Param retVal;
-  size_t index = 0;
+  unsigned int index = 0;
 };
 
 enum class BinaryOpType { Assignment };
 
-struct ClassBinaryOp final {
-  const void* objectAddress;
+struct ClassBinaryOp final : serialization::SerializableTag {
+  void* objectAddress = nullptr;
   BinaryOpType opName = BinaryOpType::Assignment;
   Param param;
-  size_t index = 0;
+  unsigned int index = 0;
 };
 
 using Action = std::variant<Function,
@@ -59,6 +61,24 @@ Action deepCopy(const Action& action);
 void print(std::ostream& os, const Action& action);
 
 bool operator==(const Action& lhs, const Action& rhs);
+
+bool serialize(const Function& obj, serialization::Serializer& serializer);
+bool serialize(const ClassMethod& obj, serialization::Serializer& serializer);
+bool serialize(const ClassBinaryOp& obj, serialization::Serializer& serializer);
+bool serialize(const ClassUnaryOp& obj, serialization::Serializer& serializer);
+bool serialize(const ClassDestructor& obj,
+               serialization::Serializer& serializer);
+
+bool deserialize(Function& obj,
+                 const serialization::Deserializer& deserializer);
+bool deserialize(ClassMethod& obj,
+                 const serialization::Deserializer& deserializer);
+bool deserialize(ClassBinaryOp& obj,
+                 const serialization::Deserializer& deserializer);
+bool deserialize(ClassUnaryOp& obj,
+                 const serialization::Deserializer& deserializer);
+bool deserialize(ClassDestructor& obj,
+                 const serialization::Deserializer& deserializer);
 
 namespace details {
 
@@ -93,7 +113,11 @@ template <typename ReturnType, typename... ParamsTypes>
 Action makeAction(const char* function,
                   const ReturnType& retVal,
                   const ParamsTypes&... params) {
-  return Function{function, details::packParams(params...), makeParam(retVal)};
+  Function obj;
+  obj.name = function;
+  obj.params = details::packParams(params...);
+  obj.retVal = makeParam(retVal);
+  return obj;
 }  // LCOV_EXCL_LINE
 
 template <typename ReturnType, typename... ParamsTypes>
@@ -101,26 +125,40 @@ Action makeAction(const void* object,
                   const char* methodName,
                   const ReturnType& retVal,
                   const ParamsTypes&... params) {
-  return ClassMethod{object, methodName, details::packParams(params...),
-                     makeParam(retVal)};
+  ClassMethod obj;
+  obj.method.name = methodName;
+  obj.objectAddress = (void*)object;
+  obj.method.params = details::packParams(params...);
+  obj.method.retVal = makeParam(retVal);
+  return obj;
 }  // LCOV_EXCL_LINE
 
 template <typename ParamType>
 Action makeAction(const void* object,
                   BinaryOpType type,
                   const ParamType& param) {
-  return ClassBinaryOp{object, type, makeParam(param)};
+  ClassBinaryOp obj;
+  obj.objectAddress = (void*)object;
+  obj.opName = type;
+  obj.param = makeParam(param);
+  return obj;
 }  // LCOV_EXCL_LINE
 
 template <typename ReturnType>
 Action makeAction(const void* object,
                   const ReturnType& retVal,
                   UnaryOpType type) {
-  return ClassUnaryOp{object, type, makeParam(retVal)};
+  ClassUnaryOp obj;
+  obj.objectAddress = (void*)object;
+  obj.opName = type;
+  obj.retVal = makeParam(retVal);
+  return obj;
 }  // LCOV_EXCL_LINE
 
 inline Action makeAction(const void* object) {
-  return ClassDestructor{object};
+  ClassDestructor obj;
+  obj.objectAddress = (void*)object;
+  return obj;
 }  // LCOV_EXCL_LINE
 
 }  // namespace recorder

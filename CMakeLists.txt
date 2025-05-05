@@ -46,6 +46,7 @@ if(ENABLE_MATHPLOT_LOG)
 endif()
 
 add_subdirectory(coverage)
+add_subdirectory(serialization)
 add_subdirectory(metaheuristics)
 add_subdirectory(q-learning)
 add_subdirectory(tools/cider)
@@ -68,6 +69,7 @@ if(ENABLE_TESTS)
 
   add_subdirectory(tests)
   add_subdirectory(recorder/tests)
+  add_subdirectory(serialization/tests)
 endif()
 
 if(CIDER_ENABLE_COVERAGE)

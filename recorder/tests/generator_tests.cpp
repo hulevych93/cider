@@ -42,6 +42,16 @@ bool mutateAggregate(const IParamMutator&, GeneratorTestSuite::SomeParam&) {
   return false;
 }
 
+bool serializeAggregate(const GeneratorTestSuite::SomeParam&,
+                        serialization::Serializer&) {
+  return true;
+}
+
+bool deserializeAggregate(GeneratorTestSuite::SomeParam&,
+                          const serialization::Deserializer&) {
+  return true;
+}
+
 TEST_F(GeneratorTestSuite, scriptErrorMsg) {
   LanguageContext context;
 

@@ -52,5 +52,21 @@ void print(std::ostream& os, const cider::recorder::Param& param) {
       param);
 }
 
+std::shared_ptr<UserDataReferenceParam> UserDataReferenceParam::Create(
+    const serialization::Deserializer&) {
+  return std::make_shared<details::ReferenceUserDataValueParamImpl>();
+}
+
+std::shared_ptr<UserDataValueParam> UserDataValueParam::Create(
+    const serialization::Deserializer& deserializer) {
+  std::size_t key = 0;
+  deserializer >> key;
+  auto it = details::createUserDataValueParamRegistry().find(key);
+  if (it != details::createUserDataValueParamRegistry().end()) {
+    return it->second();
+  }
+  throw std::runtime_error{"Cant' deserialize UserDataValueParam"};
+}
+
 }  // namespace recorder
 }  // namespace cider

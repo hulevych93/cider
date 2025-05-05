@@ -9,7 +9,7 @@ namespace recorder {
 namespace {
 
 bool operator==(const Function& lhs, const Function& rhs) {
-  return std::strcmp(lhs.name, rhs.name) == 0 && lhs.params == rhs.params &&
+  return lhs.name == rhs.name && lhs.params == rhs.params &&
          lhs.retVal == rhs.retVal;
 }
 
@@ -31,6 +31,87 @@ bool operator==(const ClassBinaryOp& lhs, const ClassBinaryOp& rhs) {
          lhs.param == rhs.param;
 }
 }  // namespace
+
+bool serialize(const Function& obj, serialization::Serializer& serializer) {
+  serializer << obj.name;
+  serializer << obj.params;
+  serializer << obj.retVal;
+  serializer << obj.index;
+  return true;
+}
+
+bool serialize(const ClassMethod& obj, serialization::Serializer& serializer) {
+  serializer << obj.objectAddress;
+  serializer << obj.method;
+  serializer << obj.index;
+  return true;
+}
+
+bool serialize(const ClassDestructor& obj,
+               serialization::Serializer& serializer) {
+  serializer << obj.objectAddress;
+  serializer << obj.index;
+  return true;
+}
+
+bool serialize(const ClassUnaryOp& obj, serialization::Serializer& serializer) {
+  serializer << obj.objectAddress;
+  serializer << obj.opName;
+  serializer << obj.retVal;
+  serializer << obj.index;
+  return true;
+}
+
+bool serialize(const ClassBinaryOp& obj,
+               serialization::Serializer& serializer) {
+  serializer << obj.objectAddress;
+  serializer << obj.opName;
+  serializer << obj.param;
+  serializer << obj.index;
+  return true;
+}
+
+bool deserialize(Function& obj,
+                 const serialization::Deserializer& deserializer) {
+  deserializer >> obj.name;
+  deserializer >> obj.params;
+  deserializer >> obj.retVal;
+  deserializer >> obj.index;
+  return true;
+}
+
+bool deserialize(ClassMethod& obj,
+                 const serialization::Deserializer& deserializer) {
+  deserializer >> obj.objectAddress;
+  deserializer >> obj.method;
+  deserializer >> obj.index;
+  return true;
+}
+
+bool deserialize(ClassDestructor& obj,
+                 const serialization::Deserializer& deserializer) {
+  deserializer >> obj.objectAddress;
+  deserializer >> obj.index;
+  return true;
+}
+
+bool deserialize(ClassUnaryOp& obj,
+                 const serialization::Deserializer& deserializer) {
+  deserializer >> obj.objectAddress;
+  deserializer >> obj.opName;
+  deserializer >> obj.retVal;
+  deserializer >> obj.index;
+  return true;
+}
+
+bool deserialize(ClassBinaryOp& obj,
+                 const serialization::Deserializer& deserializer) {
+  deserializer >> obj.objectAddress;
+  deserializer >> obj.opName;
+  deserializer >> obj.param;
+  deserializer >> obj.index;
+  return true;
+}
 
 bool operator==(const Action& lhs, const Action& rhs) {
   if (lhs.index() != rhs.index())

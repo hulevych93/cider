@@ -11,6 +11,7 @@ target_include_directories(recorder_test PRIVATE ${GTest_INCLUDE_DIRS})
 
 target_link_libraries(recorder_test
     recorder
+    serialization
     ${GTest_LIBRARIES}
     ${PLATFORM_LIBRARIES}
 )

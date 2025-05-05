@@ -41,6 +41,8 @@ cider_tool_generate(${SWIG_MODULE_NAME} "BitmapPlusPlusHooked" "${HDRS_OUT}" ${G
 
 list(APPEND GEN_SRC_FILES "${GEN_DIR}/${SWIG_MODULE_NAME}_lua.cpp")
 list(APPEND GEN_SRC_FILES "${GEN_DIR}/${SWIG_MODULE_NAME}_mutator.cpp")
+list(APPEND GEN_SRC_FILES "${GEN_DIR}/${SWIG_MODULE_NAME}_serialization.cpp")
+list(APPEND GEN_SRC_FILES "${GEN_DIR}/${SWIG_MODULE_NAME}_deserialization.cpp")
 
 add_library(bitmap++-models ${GEN_SRC_FILES})
 add_dependencies(bitmap++_tests bitmap++-models)
@@ -59,6 +61,7 @@ target_link_libraries(bitmap++_tests PUBLIC
   bitmap++_wrap
   bitmap++-models
   recorder
+  serialization
   ${BitmapPlusPlus_LIBRARIES}
   ${PLATFORM_LIBRARIES}
 )

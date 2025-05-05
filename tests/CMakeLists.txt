@@ -37,6 +37,8 @@ cider_tool_generate(${SWIG_MODULE_NAME} "hook" "${HDRS_OUT}" ${GEN_DIR})
 
 list(APPEND GEN_SRC_FILES "${GEN_DIR}/${SWIG_MODULE_NAME}_lua.cpp")
 list(APPEND GEN_SRC_FILES "${GEN_DIR}/${SWIG_MODULE_NAME}_mutator.cpp")
+list(APPEND GEN_SRC_FILES "${GEN_DIR}/${SWIG_MODULE_NAME}_serialization.cpp")
+list(APPEND GEN_SRC_FILES "${GEN_DIR}/${SWIG_MODULE_NAME}_deserialization.cpp")
 
 add_library(cider-models ${GEN_SRC_FILES})
 
@@ -63,6 +65,7 @@ target_link_libraries(tests
     cider-models
     models
     scripting
+    serialization
     ${GTest_LIBRARIES}
     ${Lua_LIBRARIES}
     ${PLATFORM_LIBRARIES}

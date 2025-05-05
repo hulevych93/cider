@@ -24,10 +24,10 @@ std::unique_ptr<cider::metasearch::IMetaSearch> makeHarmonySearch(
     const cider::metasearch::ObjectiveFunction& objFunc,
     std::string& filePrefix) {
   cider::metasearch::harmony::Settings settings;
-  settings.mutationRate = 0.05;
-  settings.harmonyMemoryConsiderationRate = 0.4;
-  settings.harmonyMemorySize = 5;
-  settings.maxIterationsWithoutUpdates = 200;
+  settings.mutationRate = 0.1;
+  settings.harmonyMemoryConsiderationRate = 0.6;
+  settings.harmonyMemorySize = 1;
+  settings.maxIterationsWithoutUpdates = 50;
   settings.strategy = cider::metasearch::MutationStrategy::ShuffleBytes;
   settings.objFunc = objFunc;
 
@@ -139,8 +139,8 @@ bool metaGcovrPipeline(PipelineType type,
       cmd.resultsDir + '/' + metadata, prefix + "_gcov_meta_log.txt");
   measurer.setLogger(std::move(fileLog));
 
-  return metaPipeline(libName, cmd, prefix, std::move(metaSearch), input,
-                      output);
+  return metaPipeline(libName, cmd, metadata + '/' + prefix,
+                      std::move(metaSearch), input, output);
 }
 
 bool metaCfgPipeline(PipelineType type,
@@ -173,8 +173,8 @@ bool metaCfgPipeline(PipelineType type,
       cmd.resultsDir + '/' + metadata, prefix + "_cfg_meta_log.txt");
   measurer.setLogger(std::move(fileLog));
 
-  return metaPipeline(libName, cmd, prefix, std::move(metaSearch), input,
-                      output);
+  return metaPipeline(libName, cmd, metadata + '/' + prefix,
+                      std::move(metaSearch), input, output);
 }
 
 }  // namespace
