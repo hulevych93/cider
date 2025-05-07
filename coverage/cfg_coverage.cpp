@@ -3,8 +3,6 @@
 
 #include "cfg_coverage.h"
 
-#include <nlohmann/json.hpp>
-
 #include <process.hpp>
 
 #include <filesystem>
@@ -52,10 +50,24 @@ constexpr const char* MarkerEnd = "CFG_COV_END";
 namespace cider {
 namespace cfg_coverage {
 
+namespace {
+
+std::vector<std::uint8_t> bitpack(const std::uint8_t* map, size_t size) {
+  std::vector<std::uint8_t> packed((size + 7) / 8, 0);
+  for (size_t i = 0; i < size; ++i) {
+    packed[i / 8] |= (map[i] ? 1 : 0) << (i % 8);
+  }
+  return packed;
+}
+
+}  // namespace
+
 Coverage& Coverage::operator=(const Coverage& rhs) {
   if (this != &rhs) {
     covered = rhs.covered;
     total = rhs.total;
+    status = rhs.status;
+    coveredTracks = rhs.coveredTracks;
   }
   return *this;
 }
@@ -76,6 +88,23 @@ Coverage& Coverage::alignTo(const Coverage& startingPoint) {
   return *this;
 }
 
+bool serialize(const Coverage& obj, serialization::Serializer& serializer) {
+  serializer << obj.covered;
+  serializer << obj.total;
+  serializer << obj.status;
+  serializer << obj.coveredTracks;
+  return true;
+}
+
+bool deserialize(Coverage& obj,
+                 const serialization::Deserializer& deserializer) {
+  deserializer >> obj.covered;
+  deserializer >> obj.total;
+  deserializer >> obj.status;
+  deserializer >> obj.coveredTracks;
+  return true;
+}
+
 void Coverage::dump() const {
   std::cout << covered << ":" << total << std::endl;
 }
@@ -83,7 +112,7 @@ void Coverage::dump() const {
 void dumpCoverageToCout(bool status, const Coverage& startPoint) {
   auto coverage = getCoverage();
   coverage.alignTo(startPoint).status = status;
-  const auto covJson = setializeJsonCovReport(coverage);
+  const auto covJson = setializeCovReport(coverage);
   std::cout << MarkerStart << covJson << MarkerEnd << coverage.getPercentage();
 }
 
@@ -92,14 +121,17 @@ Coverage getCoverage() {
   coverage.total = max_guard_id;
 
   for (size_t i = 1; i <= max_guard_id; ++i) {
-    if (coverage_map[i])
+    if (coverage_map[i]) {
       ++coverage.covered;
+    }
   }
+
+  coverage.coveredTracks = bitpack(coverage_map, max_guard_id);
 
   return coverage;
 }
 
-std::string readCoverageJsonFromStream(const std::string& input) {
+std::string readCoverageFromStream(const std::string& input) {
   std::string result;
 
   auto startPos = input.find(MarkerStart);
@@ -116,31 +148,29 @@ std::string readCoverageJsonFromStream(const std::string& input) {
   return result;
 }
 
-Coverage parseCoverageReport(const nlohmann::json& value) {
-  Coverage report;
-  report.covered = value["covered"];
-  report.total = value["total"];
-  report.status = value["status"];
-  return report;
-}
-
-std::optional<Coverage> parseJsonCovReport(const std::string& json) {
+std::optional<Coverage> deserializeCovReport(const std::string& buffer) {
   std::optional<Coverage> report;
   try {
-    const auto parsedReport = nlohmann::json::parse(json);
-    report = parseCoverageReport(parsedReport);
+    serialization::Deserializer deserializer(buffer.data(), buffer.size());
+    Coverage cov;
+    deserializer >> cov;
+    report = std::move(cov);
   } catch (...) {
-    return std::nullopt;
   }
+
   return report;
 }
 
-std::string setializeJsonCovReport(const Coverage& report) {
-  nlohmann::json value;
-  value["covered"] = report.covered;
-  value["total"] = report.total;
-  value["status"] = report.status;
-  return value.dump();
+std::string setializeCovReport(const Coverage& report) {
+  try {
+    serialization::Serializer serializer;
+    serializer << report;
+    return std::string(reinterpret_cast<const char*>(serializer.getData()),
+                       serializer.getSize());
+  } catch (...) {
+  }
+
+  return {};
 }
 
 bool runScript(const std::string& binary,

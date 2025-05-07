@@ -18,18 +18,15 @@ struct Function final : serialization::SerializableTag {
   std::string name;
   Params params;
   Param retVal;
-  unsigned int index = 0;
 };
 
 struct ClassMethod final : serialization::SerializableTag {
   void* objectAddress = nullptr;
   Function method;
-  unsigned int index = 0;
 };
 
 struct ClassDestructor final : serialization::SerializableTag {
   void* objectAddress = nullptr;
-  unsigned int index = 0;
 };
 
 enum class UnaryOpType { Minus };
@@ -38,7 +35,6 @@ struct ClassUnaryOp final : serialization::SerializableTag {
   void* objectAddress = nullptr;
   UnaryOpType opName = UnaryOpType::Minus;
   Param retVal;
-  unsigned int index = 0;
 };
 
 enum class BinaryOpType { Assignment };
@@ -47,7 +43,6 @@ struct ClassBinaryOp final : serialization::SerializableTag {
   void* objectAddress = nullptr;
   BinaryOpType opName = BinaryOpType::Assignment;
   Param param;
-  unsigned int index = 0;
 };
 
 using Action = std::variant<Function,
@@ -160,6 +155,36 @@ inline Action makeAction(const void* object) {
   obj.objectAddress = (void*)object;
   return obj;
 }  // LCOV_EXCL_LINE
+
+struct ActionMutator final {
+  explicit ActionMutator(const recorder::IParamMutator& mutator)
+      : _mutator(mutator) {}
+
+  bool operator()(recorder::Function& context) {
+    bool isMutated = false;
+    for (auto& param : context.params) {
+      isMutated |= std::visit(_mutator, param);
+    }
+    return isMutated;
+  }
+
+  bool operator()(recorder::ClassMethod& context) {
+    bool isMutated = false;
+    for (auto& param : context.method.params) {
+      isMutated |= std::visit(_mutator, param);
+    }
+    return isMutated;
+  }
+
+  bool operator()(recorder::ClassBinaryOp& context) {
+    return std::visit(_mutator, context.param);
+  }
+
+  bool operator()(recorder::ClassUnaryOp&) { return false; }
+  bool operator()(recorder::ClassDestructor&) { return false; }
+
+  const recorder::IParamMutator& _mutator;
+};
 
 }  // namespace recorder
 }  // namespace cider

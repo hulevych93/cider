@@ -16,7 +16,7 @@ struct LearningSettings final {
   double learningRate = 0.1;
   double discountFactor = 0.9;
   size_t episodes = 50U;
-  size_t maxRollback = 30U;
+  size_t maxRollback = 10U;
   ObjectiveFunction objFunc;
 };
 
@@ -32,7 +32,7 @@ struct GenerationSettings final {
   GenerationStrategyType strategy = GenerationStrategyType::Greedy;
   float epsilon = 0.1f;      // for ε-Greedy
   float temperature = 1.0f;  // for Boltzmann
-  size_t maxSteps = 10;
+  size_t maxRollback = 10U;
   ObjectiveFunction objFunc;
 };
 

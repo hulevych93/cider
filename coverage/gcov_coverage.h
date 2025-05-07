@@ -18,8 +18,6 @@ struct Coverage final {
   std::uint32_t total = 0U;
   double percent = 0.0;
 
-  bool isNull() const { return percent == 0.0; }
-
   Coverage& operator=(const Coverage& rhs) {
     if (this != &rhs) {
       covered = rhs.covered;
@@ -34,8 +32,6 @@ struct CoverageReport final {
   Coverage lineCov;
   Coverage branchCov;
   Coverage funcCov;
-
-  bool isNull() const { return lineCov.isNull(); }
 
   CoverageReport& operator=(const CoverageReport& rhs) {
     if (this != &rhs) {

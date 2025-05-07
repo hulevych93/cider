@@ -68,5 +68,77 @@ std::shared_ptr<UserDataValueParam> UserDataValueParam::Create(
   throw std::runtime_error{"Cant' deserialize UserDataValueParam"};
 }
 
+namespace details {
+
+struct ParamNullableMutator final : cider::recorder::IParamMutator {
+  std::optional<size_t> random(const size_t, const size_t) const override {
+    return 0U;
+  }
+
+  bool operator()(recorder::IntegerType& value) const {
+    return std::visit([this](auto& val) { return (*this)(val); }, value);
+  }
+
+  bool operator()(recorder::Nil&) const override { return false; }
+
+  bool operator()(bool& value) const override {
+    value = false;
+    return false;
+  }
+
+  bool operator()(double& value) const override { return mutate<>(value); }
+  bool operator()(float& value) const override { return mutate<>(value); }
+  bool operator()(char*& value) const override { return false; }
+  bool operator()(std::string& value) const override {
+    value.clear();
+    return true;
+  }
+  bool operator()(std::wstring& value) const override {
+    value.clear();
+    return true;
+  }
+
+  bool operator()(char& value) const override { return mutate<>(value); }
+  bool operator()(short& value) const override { return mutate<>(value); }
+  bool operator()(int& value) const override { return mutate<>(value); }
+  bool operator()(long& value) const override { return mutate<>(value); }
+  bool operator()(long long& value) const override { return mutate<>(value); }
+  bool operator()(unsigned char& value) const override {
+    return mutate<>(value);
+  }
+  bool operator()(unsigned short& value) const override {
+    return mutate<>(value);
+  }
+  bool operator()(unsigned int& value) const override {
+    return mutate<>(value);
+  }
+  bool operator()(unsigned long& value) const override {
+    return mutate<>(value);
+  }
+  bool operator()(unsigned long long& value) const override {
+    return mutate<>(value);
+  }
+
+  bool operator()(recorder::UserDataValueParamPtr& value) const override {
+    return value->mutate(*this);
+  }
+
+  bool operator()(recorder::UserDataReferenceParamPtr&) const override {
+    return false;
+  }
+
+  template <typename Type>
+  static bool mutate(Type& value) {
+    value = 1U;
+    return true;
+  }
+};
+
+}  // namespace details
+
+std::unique_ptr<IParamMutator> makeNullableMutator() {
+  return std::make_unique<details::ParamNullableMutator>();
+}
+
 }  // namespace recorder
 }  // namespace cider

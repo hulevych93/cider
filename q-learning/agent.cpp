@@ -14,7 +14,7 @@
 namespace cider {
 namespace qleaning {
 
-QValuesAgent::QValuesAgent() : _gen(_rd()) {}
+QValuesAgent::QValuesAgent() : _gen(rd()) {}
 
 bool QValuesAgent::load(const std::string& filePath) {
   try {
@@ -66,38 +66,49 @@ QActionList QValuesAgent::getBestFromAvailable(const QActionList& available,
   return bestValues;
 }
 
-QAction QValuesAgent::findBestOrRandomAvailableAction(
+std::optional<QAction> QValuesAgent::findBestOrRandomAvailableAction(
     const Scenario& scenario) const {
   const auto state = scenario.toString();
   const auto qValuesIter = m_qtable.find(state);
   const auto& availableActions = scenario.getAvailableActions();
+  if (availableActions.empty()) {
+    return std::nullopt;
+  }
   if (qValuesIter != m_qtable.cend()) {
     const auto& qValues =
         getBestFromAvailable(availableActions, qValuesIter->second);
-    return qValues[rand() % qValues.size()];
+    std::uniform_int_distribution<size_t> indexDist(0, qValues.size() - 1);
+    return qValues[indexDist(_gen)];
   } else {
-    return availableActions[rand() % availableActions.size()];
+    std::uniform_int_distribution<size_t> indexDist(
+        0, availableActions.size() - 1);
+    return availableActions[indexDist(_gen)];
   }
 }
 
-QAction QValuesAgent::chooseEGreedyAction(const Scenario& scenario,
-                                          const double exploration) const {
-  QAction action;
-  if (rand() / static_cast<double>(RAND_MAX) < exploration) {
+std::optional<QAction> QValuesAgent::chooseEGreedyAction(
+    const Scenario& scenario,
+    const double exploration) const {
+  std::optional<QAction> action;
+  std::uniform_real_distribution<double> dist(0.0, 1.0);
+  if (dist(_gen) < exploration) {
     action = scenario.getRandomAction();
-  } else {
+  }
+  if (!action.has_value()) {
     action = findBestOrRandomAvailableAction(scenario);
   }
   return action;
 }
 
-QAction QValuesAgent::chooseGreedyAction(const Scenario& scenario) const {
+std::optional<QAction> QValuesAgent::chooseGreedyAction(
+    const Scenario& scenario) const {
   return findBestOrRandomAvailableAction(scenario);
 }
 
-QAction QValuesAgent::chooseBolzmanAction(const Scenario& scenario,
-                                          const double temperature) const {
-  QAction action;
+std::optional<QAction> QValuesAgent::chooseBolzmanAction(
+    const Scenario& scenario,
+    const double temperature) const {
+  std::optional<QAction> action;
   const auto qValuesIt = m_qtable.find(scenario.toString());
   if (qValuesIt == m_qtable.cend()) {
     action = scenario.getRandomAction();
@@ -155,7 +166,7 @@ void QValuesAgent::print(std::ostream& ss) const {
   for (const auto& entry : m_qtable) {
     ss << entry.first << std::endl;
     for (const auto action : entry.second) {
-      ss << actionToShortString(action.first) << "\t" << action.second
+      ss << actionToGenericRepro(action.first) << "\t" << action.second
          << std::endl;
     }
     ss << std::endl;

@@ -36,21 +36,18 @@ bool serialize(const Function& obj, serialization::Serializer& serializer) {
   serializer << obj.name;
   serializer << obj.params;
   serializer << obj.retVal;
-  serializer << obj.index;
   return true;
 }
 
 bool serialize(const ClassMethod& obj, serialization::Serializer& serializer) {
   serializer << obj.objectAddress;
   serializer << obj.method;
-  serializer << obj.index;
   return true;
 }
 
 bool serialize(const ClassDestructor& obj,
                serialization::Serializer& serializer) {
   serializer << obj.objectAddress;
-  serializer << obj.index;
   return true;
 }
 
@@ -58,7 +55,6 @@ bool serialize(const ClassUnaryOp& obj, serialization::Serializer& serializer) {
   serializer << obj.objectAddress;
   serializer << obj.opName;
   serializer << obj.retVal;
-  serializer << obj.index;
   return true;
 }
 
@@ -67,7 +63,6 @@ bool serialize(const ClassBinaryOp& obj,
   serializer << obj.objectAddress;
   serializer << obj.opName;
   serializer << obj.param;
-  serializer << obj.index;
   return true;
 }
 
@@ -76,7 +71,6 @@ bool deserialize(Function& obj,
   deserializer >> obj.name;
   deserializer >> obj.params;
   deserializer >> obj.retVal;
-  deserializer >> obj.index;
   return true;
 }
 
@@ -84,14 +78,12 @@ bool deserialize(ClassMethod& obj,
                  const serialization::Deserializer& deserializer) {
   deserializer >> obj.objectAddress;
   deserializer >> obj.method;
-  deserializer >> obj.index;
   return true;
 }
 
 bool deserialize(ClassDestructor& obj,
                  const serialization::Deserializer& deserializer) {
   deserializer >> obj.objectAddress;
-  deserializer >> obj.index;
   return true;
 }
 
@@ -100,7 +92,6 @@ bool deserialize(ClassUnaryOp& obj,
   deserializer >> obj.objectAddress;
   deserializer >> obj.opName;
   deserializer >> obj.retVal;
-  deserializer >> obj.index;
   return true;
 }
 
@@ -109,7 +100,6 @@ bool deserialize(ClassBinaryOp& obj,
   deserializer >> obj.objectAddress;
   deserializer >> obj.opName;
   deserializer >> obj.param;
-  deserializer >> obj.index;
   return true;
 }
 

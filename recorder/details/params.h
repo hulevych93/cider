@@ -404,5 +404,7 @@ inline Param makeParam(std::nullopt_t) {
   return Param(Nil{});
 }
 
+std::unique_ptr<IParamMutator> makeNullableMutator();
+
 }  // namespace recorder
 }  // namespace cider

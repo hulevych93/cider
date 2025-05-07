@@ -12,13 +12,22 @@
 namespace cider {
 namespace qleaning {
 
-std::string actionToShortString(const QAction& action);
+std::string actionToGenericRepro(const QAction& action);
 
-using ObjectiveFunction = std::function<double(const std::vector<QAction>&)>;
+struct ObjectiveValue final {
+  double coverage = 0.0;
+  std::vector<std::uint8_t> coveredTracks;
+};
+
+using ObjectiveFunction =
+    std::function<ObjectiveValue(const std::vector<QAction>&)>;
 
 class Scenario final {
  public:
-  Scenario(const QActionList& initial, const ObjectiveFunction& objFunc);
+  Scenario(std::mt19937& gen,
+           int maxStateDepth,
+           const QActionList& initial,
+           const ObjectiveFunction& objFunc);
 
   void add(const QAction& action);
   void rollback();
@@ -31,17 +40,21 @@ class Scenario final {
 
   QActionList getAvailableActions() const;
 
-  QAction getRandomAction() const;
+  std::optional<QAction> getRandomAction() const;
 
   bool isOver() const;
 
  private:
+  std::mt19937& m_gen;
+
+  int m_maxStateDepth = 0;
+
   QActionList m_actions;
-  mutable double m_lastObjVal = 0.0f;
+  mutable ObjectiveValue m_lastObjVal;
 
   QActionSet m_availableActions;
   const int m_size;
-  double m_initialObjVal = 0.0f;
+  ObjectiveValue m_initialObjVal;
 
   ObjectiveFunction m_objFunc;
 };

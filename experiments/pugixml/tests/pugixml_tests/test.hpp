@@ -33,7 +33,7 @@ struct test_runner {
   static const char* _temp_path;
 };
 
-int run_tests(const char* temp);
+int run_tests(const char* temp, int);
 
 bool test_string_equal(const pugi::char_t* lhs, const pugi::char_t* rhs);
 

@@ -28,40 +28,6 @@ std::ostream& operator<<(std::ostream& os, const Settings& settings) {
   return os;
 }
 
-namespace {
-
-struct ActionMutator final {
-  explicit ActionMutator(const recorder::IParamMutator& mutator)
-      : _mutator(mutator) {}
-
-  bool operator()(recorder::Function& context) {
-    bool isMutated = false;
-    for (auto& param : context.params) {
-      isMutated |= std::visit(_mutator, param);
-    }
-    return isMutated;
-  }
-
-  bool operator()(recorder::ClassMethod& context) {
-    bool isMutated = false;
-    for (auto& param : context.method.params) {
-      isMutated |= std::visit(_mutator, param);
-    }
-    return isMutated;
-  }
-
-  bool operator()(recorder::ClassBinaryOp& context) {
-    return std::visit(_mutator, context.param);
-  }
-
-  bool operator()(recorder::ClassUnaryOp&) { return false; }
-  bool operator()(recorder::ClassDestructor&) { return false; }
-
-  const recorder::IParamMutator& _mutator;
-};
-
-}  // namespace
-
 Search::Search(const Settings& settings)
     : _gen(_rd()),
       _settings(settings),
@@ -124,7 +90,7 @@ std::optional<Harmony> Search::mutateHarmony(const Harmony& harmony) const {
 
   bool isMutated = false;
   for (auto& action : mutatedHarmony.actions) {
-    ActionMutator mutator(*_mutator);
+    recorder::ActionMutator mutator(*_mutator);
     isMutated |= std::visit(mutator, action);
   }
 

@@ -5,6 +5,8 @@
 
 #include <iostream>
 
+#include <assert.h>
+
 namespace cider {
 namespace qleaning {
 
@@ -40,7 +42,7 @@ std::ostream& operator<<(std::ostream& os, const GenerationSettings& settings) {
   os << "st[" << strategyName;
   os << "]_eps[" << settings.epsilon;
   os << "]_temp[" << settings.temperature;
-  os << "]_maxSt[" << settings.maxSteps;
+  os << "]_maxSt[" << settings.maxRollback;
   os << " ]";
   return os;
 }
@@ -48,7 +50,8 @@ std::ostream& operator<<(std::ostream& os, const GenerationSettings& settings) {
 void prelearningSession(const LearningSettings& settings,
                         const QActionList& list,
                         QValuesAgent& agent) {
-  Scenario scenario(list, settings.objFunc);
+  Scenario scenario(agent.getSeed(), settings.maxRollback, list,
+                    settings.objFunc);
   auto nextState = scenario.toString();
 
   int index = 0U;
@@ -61,6 +64,7 @@ void prelearningSession(const LearningSettings& settings,
 
     scenario.add(action);
     nextState = scenario.toString();
+    assert(!nextState.empty());
     if (const auto rewardOpt = scenario.getReward()) {
       agent.updateQValues(stateBeforeAction, nextState, action,
                           rewardOpt.value(), settings.learningRate,
@@ -81,18 +85,24 @@ void learningSession(const LearningSettings& settings,
     const auto expRate = double(episodes - i) / episodes;
     std::cout << "Episode: " << i << std::endl;
 
-    Scenario scenario(list, settings.objFunc);
+    Scenario scenario(agent.getSeed(), settings.maxRollback, list,
+                      settings.objFunc);
     auto nextState = scenario.toString();
 
     size_t rollbackCount = 0;
+    size_t failCounter = 0;
 
     int index = 0U;
     while (!scenario.isOver()) {
       const auto stateBeforeAction = nextState;
-      const auto action = agent.chooseEGreedyAction(scenario, expRate);
-
+      const auto actionOpt = agent.chooseEGreedyAction(scenario, expRate);
+      if (!actionOpt.has_value()) {
+        break;
+      }
+      const auto action = actionOpt.value();
       scenario.add(action);
       nextState = scenario.toString();
+      assert(!nextState.empty());
       if (const auto rewardOpt = scenario.getReward()) {
         agent.updateQValues(stateBeforeAction, nextState, action,
                             rewardOpt.value(), settings.learningRate,
@@ -100,12 +110,14 @@ void learningSession(const LearningSettings& settings,
         rollbackCount = 0U;
         ++index;
         if ((index % 50) == 0) {
-          std::cout << "Index: " << index << std::endl;
+          std::cout << "Index: " << index << ", Fails: " << failCounter
+                    << std::endl;
         }
       } else {
         scenario.rollback();
         nextState = stateBeforeAction;
         ++rollbackCount;
+        failCounter++;
         if (rollbackCount > settings.maxRollback) {
           break;
         }
@@ -119,29 +131,44 @@ bool gererationSession(const GenerationSettings& settings,
                        const QActionList& initial,
                        QActionList& out) {
   out.clear();
-  Scenario scenario(initial, settings.objFunc);
 
-  for (size_t t = 0; t < settings.maxSteps; ++t) {
-    QAction selected;
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  Scenario scenario(gen, settings.maxRollback, initial, settings.objFunc);
+
+  size_t rollbackCount = 0;
+
+  while (!scenario.isOver()) {
+    std::optional<QAction> selectedOpt;
 
     switch (settings.strategy) {
       case GenerationStrategyType::Greedy:
-        selected = agent.chooseGreedyAction(scenario);
+        selectedOpt = agent.chooseGreedyAction(scenario);
         break;
-
       case GenerationStrategyType::EGreedy:
-        selected = agent.chooseEGreedyAction(scenario, settings.epsilon);
+        selectedOpt = agent.chooseEGreedyAction(scenario, settings.epsilon);
         break;
-
       case GenerationStrategyType::Boltzmann:
-        selected = agent.chooseBolzmanAction(scenario, settings.temperature);
+        selectedOpt = agent.chooseBolzmanAction(scenario, settings.temperature);
         break;
     }
 
+    if (!selectedOpt.has_value()) {
+      break;
+    }
+    const auto selected = selectedOpt.value();
+
     scenario.add(selected);
     const auto rewardOpt = scenario.getReward();
-    if (!rewardOpt.has_value()) {
+    if (rewardOpt.has_value()) {
+      rollbackCount = 0U;
+
+    } else {
       scenario.rollback();
+      ++rollbackCount;
+      if (rollbackCount > settings.maxRollback) {
+        break;
+      }
     }
   }
 

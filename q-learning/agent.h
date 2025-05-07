@@ -28,19 +28,20 @@ class QValuesAgent final {
   static QActionList getBestFromAvailable(const QActionList& available,
                                           const QValues& values);
 
-  QAction findBestOrRandomAvailableAction(const Scenario& scenario) const;
+  std::optional<QAction> findBestOrRandomAvailableAction(
+      const Scenario& scenario) const;
 
  public:
-  QValuesAgent();
+  explicit QValuesAgent();
 
   bool load(const std::string& filePath);
   bool save(const std::string& filePath);
 
-  QAction chooseBolzmanAction(const Scenario& scenario,
-                              const double temperature) const;
-  QAction chooseEGreedyAction(const Scenario& scenario,
-                              const double exploration) const;
-  QAction chooseGreedyAction(const Scenario& scenario) const;
+  std::optional<QAction> chooseBolzmanAction(const Scenario& scenario,
+                                             const double temperature) const;
+  std::optional<QAction> chooseEGreedyAction(const Scenario& scenario,
+                                             const double exploration) const;
+  std::optional<QAction> chooseGreedyAction(const Scenario& scenario) const;
 
   void updateQValues(const std::string& state,
                      const std::string& nextState,
@@ -53,10 +54,12 @@ class QValuesAgent final {
 
   void print(std::ostream& os) const;
 
+  std::mt19937& getSeed() { return _gen; }
+
  private:
   QTable m_qtable;
 
-  std::random_device _rd;
+  std::random_device rd;
   mutable std::mt19937 _gen;
 };
 

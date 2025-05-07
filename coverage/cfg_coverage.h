@@ -8,16 +8,21 @@
 #include <optional>
 #include <string>
 
+#include "serialization/serializable.h"
+
 #include "coverage/coverage.h"
 
 namespace cider {
 namespace cfg_coverage {
 
-struct Coverage final {
+struct Coverage final : serialization::SerializableTag {
   constexpr static const double percentageThreshold = 0.005;
+
   std::uint32_t covered = 0U;
   std::uint32_t total = 0U;
   bool status = true;
+
+  std::vector<std::uint8_t> coveredTracks;
 
   double getPercentage() const;
 
@@ -28,15 +33,20 @@ struct Coverage final {
   Coverage& alignTo(const Coverage& startingPoint);
 };
 
+bool serialize(const Coverage& obj, serialization::Serializer& serializer);
+
+bool deserialize(Coverage& obj,
+                 const serialization::Deserializer& deserializer);
+
 void dumpCoverageToCout(bool status, const Coverage& startPoint);
 
 Coverage getCoverage();
 
-std::string readCoverageJsonFromStream(const std::string& input);
+std::string readCoverageFromStream(const std::string& input);
 
-std::optional<Coverage> parseJsonCovReport(const std::string& json);
+std::optional<Coverage> deserializeCovReport(const std::string& buffer);
 
-std::string setializeJsonCovReport(const Coverage& report);
+std::string setializeCovReport(const Coverage& report);
 
 bool runScript(const std::string& binary,
                const std::string& workingDir,

@@ -210,7 +210,7 @@ pugi::PugixmlHooked::xml_encoding get_native_encoding() {
 #endif
 }
 
-int run_tests(const char* temp_) {
+int run_tests(const char* temp_, int test_index) {
   // setup temp path as the executable folder
   std::string temp = temp_;
   std::string::size_type slash = temp.find_last_of("\\/");
@@ -228,6 +228,11 @@ int run_tests(const char* temp_) {
                             // this function" bug workaround
 
     for (test = test_runner::_tests; test; test = test->_next) {
+      if (test_index != -1 && total != test_index) {
+        total++;
+        continue;
+      }
+
       total++;
       passed += run_test(test, test->_name, custom_allocate);
 

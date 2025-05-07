@@ -24,10 +24,10 @@ std::unique_ptr<cider::metasearch::IMetaSearch> makeHarmonySearch(
     const cider::metasearch::ObjectiveFunction& objFunc,
     std::string& filePrefix) {
   cider::metasearch::harmony::Settings settings;
-  settings.mutationRate = 0.1;
-  settings.harmonyMemoryConsiderationRate = 0.6;
-  settings.harmonyMemorySize = 1;
-  settings.maxIterationsWithoutUpdates = 50;
+  settings.mutationRate = 0.05;
+  settings.harmonyMemoryConsiderationRate = 0.4;
+  settings.harmonyMemorySize = 5;
+  settings.maxIterationsWithoutUpdates = 200;
   settings.strategy = cider::metasearch::MutationStrategy::ShuffleBytes;
   settings.objFunc = objFunc;
 

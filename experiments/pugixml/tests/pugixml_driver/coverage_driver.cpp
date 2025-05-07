@@ -5,7 +5,7 @@
 
 #include <iostream>
 
-extern int run_tests(const char* temp_);
+extern int run_tests(const char* temp_, int test_index);
 
 template <typename F>
 void record(std::vector<cider::recorder::ScriptRecordSessionPtr>& out, F&& f) {
@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
 
   std::vector<cider::recorder::ScriptRecordSessionPtr> sessions;
 
-  record(sessions, [&]() { run_tests(argv[0]); });
+  record(sessions, [&]() { run_tests(argv[0], 3); });
 
   auto pipeline = cider::pipelines::makePipeline(LibraryName, cmd);
 
