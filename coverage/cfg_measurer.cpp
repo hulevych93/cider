@@ -28,7 +28,7 @@ void FileLogger::log(size_t index, const Coverage& coverage) const {
 CoverageMeasurment::CoverageMeasurment(const Cmd& cmd, const char* module)
     : _cmd(cmd), _module(module) {}
 
-CfgCoverageOpt CoverageMeasurment::operator()(
+CfgCoverageOpt CoverageMeasurment::getReport(
     const std::vector<cider::recorder::Action>& actions) {
   const auto script = getScript(actions);
   if (script.empty()) {

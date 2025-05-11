@@ -129,7 +129,7 @@ struct ParamNullableMutator final : cider::recorder::IParamMutator {
 
   template <typename Type>
   static bool mutate(Type& value) {
-    value = 1U;
+    value = 0U;
     return true;
   }
 };

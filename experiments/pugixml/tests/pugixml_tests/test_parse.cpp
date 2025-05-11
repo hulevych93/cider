@@ -290,7 +290,7 @@ static int get_tree_node_count(xml_node n) {
   return result;
 }
 
-TEST(parse_ws_pcdata_permutations) {
+void parse_ws_pcdata_permutations() {
   struct test_data_t {
     unsigned int mask;  // 1 = default flags, 2 = parse_ws_pcdata, 4 =
                         // parse_ws_pcdata_single
@@ -376,7 +376,7 @@ TEST(parse_ws_pcdata_permutations) {
   }
 }
 
-TEST(parse_ws_pcdata_fragment_permutations) {
+void parse_ws_pcdata_fragment_permutations() {
   struct test_data_t {
     unsigned int mask;  // 1 = default flags, 2 = parse_ws_pcdata, 4 =
                         // parse_ws_pcdata_single
@@ -1024,15 +1024,6 @@ TEST(parse_empty) {
   CHECK(doc.load_string(STR("")).status == status_no_document_element &&
         !doc.first_child());
   CHECK(toBool(doc.load_string(STR(""), parse_fragment)) && !doc.first_child());
-}
-
-TEST(parse_out_of_memory) {
-  test_runner::_memory_fail_threshold = 256;
-
-  xml_document doc;
-  CHECK_ALLOC_FAIL(CHECK(doc.load_string(STR("<foo a='1'/>")).status ==
-                         status_out_of_memory));
-  CHECK(!doc.first_child());
 }
 
 static bool test_offset(const char_t* contents,

@@ -10,6 +10,42 @@
 #include <iostream>
 #include <random>
 
+namespace {
+const std::string LOWERCASE = "abcdefghijklmnopqrstuvwxyz";
+const std::string UPPERCASE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const std::string DIGITS = "0123456789";
+const std::string SYMBOLS = "!@#$%^&*()_-+=<>?/{}~|";
+
+// Aggregate all character sets
+const std::string ALL_CHARS = LOWERCASE + UPPERCASE + DIGITS + SYMBOLS;
+
+std::string generateRandomString(std::mt19937& gen, size_t length) {
+  std::uniform_int_distribution<size_t> dist(0, ALL_CHARS.size() - 1);
+
+  std::string randomStr;
+  randomStr.reserve(length);
+
+  for (size_t i = 0; i < length; ++i) {
+    randomStr += ALL_CHARS[dist(gen)];
+  }
+  return randomStr;
+}
+
+bool mutateString(std::mt19937& gen, std::string& input) {
+  std::uniform_int_distribution<size_t> charDist(0, ALL_CHARS.size() - 1);
+  if (input.empty()) {
+    input = generateRandomString(gen, charDist(gen));
+  } else {
+    std::uniform_int_distribution<size_t> indexDist(0, input.size() - 1);
+    for (size_t i = 0; i < input.size() / 5; ++i) {
+      input[indexDist(gen)] = ALL_CHARS[charDist(gen)];
+    }
+  }
+  return true;
+}
+
+}  // namespace
+
 namespace cider {
 namespace metasearch {
 
@@ -70,7 +106,9 @@ struct ParamMutator final : cider::recorder::IParamMutator {
   bool operator()(double& value) const override { return mutate<>(value); }
   bool operator()(float& value) const override { return mutate<>(value); }
   bool operator()(char*& value) const override { return false; }
-  bool operator()(std::string& value) const override { return false; }
+  bool operator()(std::string& value) const override {
+    return mutateString(_gen, value);
+  }
   bool operator()(std::wstring& value) const override { return false; }
 
   bool operator()(char& value) const override { return mutate<>(value); }

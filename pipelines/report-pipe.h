@@ -17,6 +17,8 @@ class ReportStage final : public IPipe {
                const cider::Cmd& cmd,
                const Actions& input,
                Actions& out) override;
+
+  std::string getLetter() const override { return "R"; }
 };
 
 }  // namespace pipelines

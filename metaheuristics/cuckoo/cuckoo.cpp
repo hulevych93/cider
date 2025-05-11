@@ -118,7 +118,7 @@ void Search::initialize(const std::vector<recorder::Action>& actions) {
 
 void Search::run() {
   size_t iterWithoutUpdates = 0U;
-  for (int iteration = 0;
+  for (int iteration = 1U;
        iterWithoutUpdates <= _settings.maxIterationsWithoutUpdates;
        ++iteration, ++iterWithoutUpdates) {
     std::cout << "Iter: " << iteration << std::endl;
@@ -127,7 +127,7 @@ void Search::run() {
       auto& nest = _memory[i];
       auto newNest = generateNest(nest);
       if (newNest.has_value()) {
-        std::cout << "Candidate: " << newNest->objVal << std::endl;
+        std::cout << newNest->objVal << std::endl;
         if (newNest->objVal > nest.objVal) {
           std::cout << " <- " << nest.objVal << std::endl;
           nest = deepCopy(*newNest);

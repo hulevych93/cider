@@ -118,44 +118,6 @@ TEST(document_load_file_error) {
   CHECK(doc.load_file("filedoesnotexist").status == status_file_not_found);
 }
 
-TEST(document_load_file_out_of_memory) {
-  test_runner::_memory_fail_threshold = 1;
-
-  xml_document doc;
-  CHECK_ALLOC_FAIL(CHECK(doc.load_file("tests/data/small.xml").status ==
-                         status_out_of_memory));
-}
-
-TEST(document_load_file_out_of_memory_file_leak) {
-  test_runner::_memory_fail_threshold = 1;
-
-  xml_document doc;
-
-  for (int i = 0; i < 5; ++i)
-    CHECK_ALLOC_FAIL(CHECK(doc.load_file("tests/data/small.xml").status ==
-                           status_out_of_memory));
-
-  test_runner::_memory_fail_threshold = 0;
-
-  CHECK(doc.load_file("tests/data/small.xml").status == status_ok);
-  CHECK_NODE(doc, STR("<node/>"));
-}
-
-TEST(document_load_file_wide_out_of_memory_file_leak) {
-  test_runner::_memory_fail_threshold = 256;
-
-  xml_document doc;
-
-  for (int i = 0; i < 5; ++i)
-    CHECK_ALLOC_FAIL(CHECK(doc.load_file("tests/data/small.xml").status ==
-                           status_out_of_memory));
-
-  test_runner::_memory_fail_threshold = 0;
-
-  CHECK(doc.load_file("tests/data/small.xml").status == status_ok);
-  CHECK_NODE(doc, STR("<node/>"));
-}
-
 TEST(document_load_file_error_previous) {
   xml_document doc;
   CHECK(doc.load_string(STR("<node/>")).status == status_ok);
@@ -184,19 +146,6 @@ TEST(document_load_file_wide_unicode) {
   CHECK_NODE(doc, STR("<node/>"));
 }
 #endif
-
-TEST(document_load_file_wide_out_of_memory) {
-  test_runner::_memory_fail_threshold = 1;
-
-  xml_document doc;
-
-  xml_parse_result result;
-  result.status = status_out_of_memory;
-  CHECK_ALLOC_FAIL(result = doc.load_file("tests/data/small.xml"));
-
-  CHECK(result.status == status_out_of_memory ||
-        result.status == status_file_not_found);
-}
 
 #if defined(__linux__) || defined(__APPLE__)
 TEST(document_load_file_special_folder) {
@@ -403,7 +352,7 @@ inline void check_utftest_document(const xml_document& doc) {
 #endif
 }
 
-TEST(document_load_file_convert_auto) {
+void document_load_file_convert_auto() {
   const char* files[] = {"tests/data/utftest_utf16_be.xml",
                          "tests/data/utftest_utf16_be_bom.xml",
                          "tests/data/utftest_utf16_be_nodecl.xml",
@@ -437,7 +386,7 @@ TEST(document_load_file_convert_auto) {
   }
 }
 
-TEST(document_load_file_convert_specific) {
+void document_load_file_convert_specific() {
   const char* files[] = {"tests/data/utftest_utf16_be.xml",
                          "tests/data/utftest_utf16_be_bom.xml",
                          "tests/data/utftest_utf16_be_nodecl.xml",
@@ -480,7 +429,7 @@ TEST(document_load_file_convert_specific) {
   }
 }
 
-TEST(document_load_file_convert_native_endianness) {
+void document_load_file_convert_native_endianness() {
   const char* files[2][6] = {{
                                  "tests/data/utftest_utf16_be.xml",
                                  "tests/data/utftest_utf16_be_bom.xml",

@@ -14,7 +14,13 @@ enum class PipelineType {
   CackooSearch = 1,
   QLearningAgent = 2,
   QLearningAgentPlusHarmonySearch = 3,
-  QLearningAgentPlusCackooSearch = 4
+  QLearningAgentPlusCackooSearch = 4,
+  QLearningAgentGeneration = 5
+};
+
+struct ObjectiveValue final {
+  double coverage = 0.0;
+  std::vector<std::uint8_t> coveredTracks;
 };
 
 struct Cmd final {

@@ -41,6 +41,8 @@ class Search final : public IMetaSearch {
     _logger = std::move(logger);
   }
 
+  IResultsLogger& getLogger() override { return *_logger; }
+
  private:
   std::optional<Nest> generateNest(const Nest& nest) const;
 

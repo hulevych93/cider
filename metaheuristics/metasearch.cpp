@@ -19,10 +19,17 @@ void MathplotLogger::log(size_t index, const Solution& solution) const {
 
   plt::clf();         // Clear previous frame
   plt::plot(x_, y_);  // Plot updated points
-  plt::xlabel("Index");
-  plt::ylabel("Coverage (%)");
-  plt::title("Coverage Over Time");
+  plt::xlabel("Iteration");
+  plt::ylabel("CFG Coverage (%)");
+  plt::title(" ");
+  plt::grid(true);
   plt::pause(0.01);  // Allow time for GUI to update
+#endif
+}
+
+void MathplotLogger::save(const std::string& path) {
+#ifdef ENABLE_MATHPLOT
+  plt::save(path, 1200);
 #endif
 }
 

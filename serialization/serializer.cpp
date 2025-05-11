@@ -43,10 +43,15 @@ void Serializer::save(const std::string& filePath) {
 void Serializer::Resize(size_t size) {
   const auto used = Used();
   if (size > m_size) {
+    size_t newSize = m_size > 0 ? m_size : 1;  // Start with 1 if m_size is 0
+    while (newSize < size) {
+      newSize *= 2;
+    }
+
     auto prevData = std::move(m_buffer);
     auto prevSize = m_size;
-    m_buffer = std::make_unique<std::uint8_t[]>(size);
-    m_size = size;
+    m_buffer = std::make_unique<std::uint8_t[]>(newSize);
+    m_size = newSize;
     memcpy(m_buffer.get(), prevData.get(), prevSize);
   } else {
     m_size = size;
@@ -54,7 +59,6 @@ void Serializer::Resize(size_t size) {
 
   m_base = m_buffer.get();
   m_pointer = m_buffer.get() + used;
-  m_size = size;
 }
 
 size_t Serializer::Used() const {

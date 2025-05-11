@@ -17,10 +17,15 @@ struct LearningSettings final {
   double discountFactor = 0.9;
   size_t episodes = 50U;
   size_t maxRollback = 10U;
+  size_t maxStateDepth = 5U;
   ObjectiveFunction objFunc;
 };
 
 std::ostream& operator<<(std::ostream& os, const LearningSettings& settings);
+
+void prelearningSession(const LearningSettings& settings,
+                        const QActionList& list,
+                        QValuesAgent& agent);
 
 void learningSession(const LearningSettings& settings,
                      const QActionList& list,
@@ -33,6 +38,7 @@ struct GenerationSettings final {
   float epsilon = 0.1f;      // for ε-Greedy
   float temperature = 1.0f;  // for Boltzmann
   size_t maxRollback = 10U;
+  size_t maxStateDepth = 5U;
   ObjectiveFunction objFunc;
 };
 

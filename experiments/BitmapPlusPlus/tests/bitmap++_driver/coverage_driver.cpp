@@ -13,15 +13,14 @@ extern int test_rotation();
 extern int test_variant_shapes();
 extern int test_write_bitmap();
 
-template <typename F>
-void record(std::vector<cider::recorder::ScriptRecordSessionPtr>& out, F&& f) {
-  auto session = cider::recorder::makeLuaRecordingSession("bitmap_cplus");
-  try {
-    f();
-  } catch (const std::exception& e) {
-    std::cout << e.what();
-  }
-  out.emplace_back(std::move(session));
+static void testAll() {
+  test_chess_board();
+  test_variant_shapes();
+  test_polymorphic_shapes();
+  test_read_bitmap();
+  test_rotation();
+  test_variant_shapes();
+  test_write_bitmap();
 }
 
 int main(int argc, char* argv[]) {
@@ -31,30 +30,26 @@ int main(int argc, char* argv[]) {
 
   std::vector<cider::recorder::ScriptRecordSessionPtr> sessions;
 
-  // record(sessions, []() { test_chess_board(); });
-  // record(sessions, []() { test_variant_shapes(); });
-  // record(sessions, []() { test_polymorphic_shapes(); });
-  // record(sessions, []() { test_read_bitmap(); });
-  // record(sessions, []() { test_rotation(); });
-  // record(sessions, []() { test_variant_shapes(); });
-  // record(sessions, []() { test_write_bitmap(); });
+  if (0) {
+    RECORD_TEST_SCRIPT(LibraryName, test_chess_board, sessions);
+    RECORD_TEST_SCRIPT(LibraryName, test_variant_shapes, sessions);
+    RECORD_TEST_SCRIPT(LibraryName, test_polymorphic_shapes, sessions);
+    RECORD_TEST_SCRIPT(LibraryName, test_read_bitmap, sessions);
+    RECORD_TEST_SCRIPT(LibraryName, test_rotation, sessions);
+    RECORD_TEST_SCRIPT(LibraryName, test_variant_shapes, sessions);
+    RECORD_TEST_SCRIPT(LibraryName, test_write_bitmap, sessions);
+  } else {
+    RECORD_TEST_SCRIPT(LibraryName, testAll, sessions);
+  }
 
-  record(sessions, []() {
-    // test_chess_board();
-    // test_variant_shapes();
-    test_polymorphic_shapes();
-    // test_read_bitmap();
-    // test_rotation();
-    // test_variant_shapes();
-    // test_write_bitmap();
-  });
+  std::sort(sessions.begin(), sessions.end(),
+            [](const cider::recorder::ScriptRecordSessionPtr& a,
+               const cider::recorder::ScriptRecordSessionPtr& b) {
+              return a->getInstructions().size() > b->getInstructions().size();
+            });
 
   auto pipeline = cider::pipelines::makePipeline(LibraryName, cmd);
-
-  for (const auto& session : sessions) {
-    std::vector<cider::recorder::Action> output;
-    pipeline.run(session->getInstructions(), output);
-  }
+  pipeline.run(sessions);
 
   std::cout << "Program finished. Press Enter to exit...";
   std::cin.get();

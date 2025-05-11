@@ -18,6 +18,8 @@ class HarmonySearchStage final : public IPipe {
                const cider::Cmd& cmd,
                const Actions& input,
                Actions& out) override;
+
+  std::string getLetter() const override { return "HS"; }
 };
 
 class CackooSearchStage final : public IPipe {
@@ -27,6 +29,19 @@ class CackooSearchStage final : public IPipe {
                const cider::Cmd& cmd,
                const Actions& input,
                Actions& out) override;
+
+  std::string getLetter() const override { return "CS"; }
+};
+
+class ResetArgumentsStage final : public IPipe {
+ public:
+  bool process(const std::string& metadata,
+               const std::string& libName,
+               const cider::Cmd& cmd,
+               const Actions& input,
+               Actions& out) override;
+
+  std::string getLetter() const override { return "RA"; }
 };
 
 }  // namespace pipelines

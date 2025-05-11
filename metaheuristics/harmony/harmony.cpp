@@ -50,12 +50,16 @@ void Search::initialize(const std::vector<recorder::Action>& actions) {
     _harmonyMemory[i] = deepCopy(_initial);
   }
 
+  if (_logger) {
+    _logger->log(0U, getBest());
+  }
+
   dump();
 }
 
 void Search::run() {
   size_t iterWithoutUpdates = 0U;
-  for (int iteration = 0;
+  for (int iteration = 1U;
        iterWithoutUpdates <= _settings.maxIterationsWithoutUpdates;
        ++iteration, ++iterWithoutUpdates) {
     std::cout << "Iter: " << iteration << std::endl;
@@ -101,7 +105,7 @@ std::optional<Harmony> Search::mutateHarmony(const Harmony& harmony) const {
   const auto objValue = _settings.objFunc(mutatedHarmony.actions);
   if (objValue > std::numeric_limits<double>::epsilon()) {
     mutatedHarmony.objVal = objValue;
-    std::cout << "Candidate: " << objValue << std::endl;
+    std::cout << objValue << std::endl;
     return mutatedHarmony;
   }
 

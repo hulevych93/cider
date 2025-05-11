@@ -8,15 +8,9 @@
 extern void test_value();
 extern void test_marshal();
 
-template <typename F>
-void record(std::vector<cider::recorder::ScriptRecordSessionPtr>& out, F&& f) {
-  auto session = cider::recorder::makeLuaRecordingSession("hjson");
-  try {
-    f();
-  } catch (const std::exception& e) {
-    std::cout << e.what();
-  }
-  out.emplace_back(std::move(session));
+static void testAll() {
+  test_value();
+  test_marshal();
 }
 
 int main(int argc, char* argv[]) {
@@ -26,20 +20,21 @@ int main(int argc, char* argv[]) {
 
   std::vector<cider::recorder::ScriptRecordSessionPtr> sessions;
 
-  // record(sessions, []() { test_value(); });
-  // record(sessions, []() { test_marshal(); });
+  if (0) {
+    RECORD_TEST_SCRIPT(LibraryName, test_value, sessions);
+    RECORD_TEST_SCRIPT(LibraryName, test_marshal, sessions);
+  } else {
+    RECORD_TEST_SCRIPT(LibraryName, testAll, sessions);
+  }
 
-  record(sessions, []() {
-    test_value();
-    // test_marshal();
-  });
+  std::sort(sessions.begin(), sessions.end(),
+            [](const cider::recorder::ScriptRecordSessionPtr& a,
+               const cider::recorder::ScriptRecordSessionPtr& b) {
+              return a->getInstructions().size() > b->getInstructions().size();
+            });
 
   auto pipeline = cider::pipelines::makePipeline(LibraryName, cmd);
-
-  for (const auto& session : sessions) {
-    std::vector<cider::recorder::Action> output;
-    pipeline.run(session->getInstructions(), output);
-  }
+  pipeline.run(sessions);
 
   std::cout << "Program finished. Press Enter to exit...";
   std::cin.get();

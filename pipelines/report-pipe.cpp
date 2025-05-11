@@ -7,6 +7,7 @@
 #include "coverage/coverage.h"
 #include "coverage/gcov_measurer.h"
 
+#include "recorder/details/generator.h"
 #include "recorder/recorder.h"
 
 namespace cider {
@@ -17,26 +18,45 @@ bool ReportStage::process(const std::string& metadata,
                           const cider::Cmd& cmd,
                           const Actions& input,
                           Actions& output) {
+  std::filesystem::path outPath(cmd.resultsDir);
+  outPath /= metadata;
+
+  auto generator = cider::recorder::makeLuaGenerator(libName);
+
   {
-    cider::gcov_coverage::CoverageMeasurment measurer{cmd, libName.c_str()};
-    auto fileLog = std::make_unique<cider::gcov_coverage::FileLogger>(
-        cmd.resultsDir + '/' + metadata, "report.txt");
-    measurer.setLogger(std::move(fileLog));
+    const auto script =
+        cider::recorder::generateScript(generator, input, 99999U);
 
-    const auto objFunc =
-        [&](const std::vector<cider::recorder::Action>& actions) -> double {
-      const auto rootReport = measurer(actions);
-      if (rootReport.has_value()) {
-        return rootReport->report.lineCov.percent;
-      }
-      return 0.0f;
-    };
-
-    objFunc(input);
-    objFunc(output);
+    std::ofstream output_file(outPath / (libName + ".lua"));
+    output_file << script;
   }
 
-  output = input;
+  {
+    const auto script =
+        cider::recorder::generateScript(generator, output, 99999U);
+
+    std::ofstream output_file(outPath / ("optimized_" + libName + ".lua"));
+    output_file << script;
+  }
+
+  {
+    cider::gcov_coverage::StepperCoverageMeasurment stepper{cmd,
+                                                            libName.c_str()};
+
+    stepper.setLogger(outPath.string(), "initial_log.txt");
+
+    stepper.measure(input);
+  }
+
+  {
+    cider::gcov_coverage::StepperCoverageMeasurment stepper{cmd,
+                                                            libName.c_str()};
+
+    stepper.setLogger(outPath.string(), "optimized_log.txt");
+
+    stepper.measure(output);
+  }
+
   return true;
 }
 

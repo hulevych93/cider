@@ -18,6 +18,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <iostream>
+
 #include <string>
 
 #ifndef PUGIXML_NO_EXCEPTIONS
@@ -210,7 +212,7 @@ pugi::PugixmlHooked::xml_encoding get_native_encoding() {
 #endif
 }
 
-int run_tests(const char* temp_, int test_index) {
+int run_tests(const char* temp_) {
   // setup temp path as the executable folder
   std::string temp = temp_;
   std::string::size_type slash = temp.find_last_of("\\/");
@@ -228,34 +230,52 @@ int run_tests(const char* temp_, int test_index) {
                             // this function" bug workaround
 
     for (test = test_runner::_tests; test; test = test->_next) {
-      if (test_index != -1 && total != test_index) {
-        total++;
-        continue;
-      }
-
       total++;
+
       passed += run_test(test, test->_name, custom_allocate);
 
-      if (g_memory_fail_triggered) {
-        // run tests that trigger memory failures twice - with an allocator that
-        // returns NULL and with an allocator that throws
-#ifndef PUGIXML_NO_EXCEPTIONS
-        total++;
-        passed +=
-            run_test(test, (test->_name + std::string(" (throw)")).c_str(),
-                     custom_allocate_throw);
-#endif
-      }
+      std::cout << "Run: " << test->_name << std::endl;
     }
 
-    unsigned int failed = total - passed;
+    return total - passed;
+  } catch (const std::exception& e) {
+    printf(e.what());
+    return 1;
+  }
 
-    if (failed != 0)
-      printf("FAILURE: %u out of %u tests failed.\n", failed, total);
-    else
-      printf("Success: %u tests passed.\n", total);
+  return 0;
+}
 
-    return failed;
+int run_tests(const char* temp_,
+              const std::function<int(const char* name,
+                                      std::function<int()>)>& callback) {
+  // setup temp path as the executable folder
+  std::string temp = temp_;
+  std::string::size_type slash = temp.find_last_of("\\/");
+  temp.erase((slash != std::string::npos) ? slash + 1 : 0);
+
+  test_runner::_temp_path = temp.c_str();
+
+  replace_memory_management();
+
+  try {
+    unsigned int total = 0;
+    unsigned int passed = 0;
+
+    test_runner* test = 0;  // gcc3 "variable might be used uninitialized in
+                            // this function" bug workaround
+
+    for (test = test_runner::_tests; test; test = test->_next) {
+      total++;
+
+      auto handler = [&]() -> int { return run_test(test, test->_name, custom_allocate); };
+
+      passed += callback(test->_name, std::move(handler));
+
+      std::cout << "Run: " << test->_name << std::endl;
+    }
+
+    return total - passed;
   } catch (const std::exception& e) {
     printf(e.what());
     return 1;

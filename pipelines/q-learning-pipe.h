@@ -11,16 +11,52 @@
 namespace cider {
 namespace pipelines {
 
-class QLearningStage final : public IPipe {
+class QPreLearningStage final : public IPipe {
  public:
+  QPreLearningStage();
+
   bool process(const std::string& metadata,
                const std::string& libName,
                const cider::Cmd& cmd,
                const Actions& input,
                Actions& out) override;
 
+  std::string getLetter() const override { return "QPL"; }
+
  private:
-  qleaning::QValuesAgent m_agent;
+  qleaning::QValuesAgent& m_agent;
+};
+
+class QLearningStage final : public IPipe {
+ public:
+  QLearningStage();
+
+  bool process(const std::string& metadata,
+               const std::string& libName,
+               const cider::Cmd& cmd,
+               const Actions& input,
+               Actions& out) override;
+
+  std::string getLetter() const override { return "QL"; }
+
+ private:
+  qleaning::QValuesAgent& m_agent;
+};
+
+class QGenerationStage final : public IPipe {
+ public:
+  QGenerationStage();
+
+  bool process(const std::string& metadata,
+               const std::string& libName,
+               const cider::Cmd& cmd,
+               const Actions& input,
+               Actions& out) override;
+
+  std::string getLetter() const override { return "G"; }
+
+ private:
+  qleaning::QValuesAgent& m_agent;
 };
 
 }  // namespace pipelines

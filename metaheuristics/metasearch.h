@@ -39,6 +39,8 @@ class IResultsLogger {
   virtual ~IResultsLogger() = default;
 
   virtual void log(size_t iteration, const Solution& best) const = 0;
+
+  virtual void save(const std::string& path) = 0;
 };
 
 class IMetaSearch {
@@ -52,11 +54,15 @@ class IMetaSearch {
   virtual const Solution& getBest() const = 0;
 
   virtual void setLogger(std::unique_ptr<IResultsLogger> logger) = 0;
+
+  virtual IResultsLogger& getLogger() = 0;
 };
 
 class MathplotLogger : public IResultsLogger {
  public:
   void log(size_t index, const Solution& best) const override;
+
+  void save(const std::string& path) override;
 
  private:
   mutable std::vector<double> x_, y_;

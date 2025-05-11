@@ -9,15 +9,12 @@
 
 #include "agent.h"
 
+#include "coverage/coverage.h"
+
 namespace cider {
 namespace qleaning {
 
 std::string actionToGenericRepro(const QAction& action);
-
-struct ObjectiveValue final {
-  double coverage = 0.0;
-  std::vector<std::uint8_t> coveredTracks;
-};
 
 using ObjectiveFunction =
     std::function<ObjectiveValue(const std::vector<QAction>&)>;
@@ -31,6 +28,10 @@ class Scenario final {
 
   void add(const QAction& action);
   void rollback();
+
+  void rollbackAndDrop();
+
+  void drop(const QAction& action);
 
   QActionList getCurrentState() const;
 

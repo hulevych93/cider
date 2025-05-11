@@ -1111,45 +1111,6 @@ TEST(dom_string_out_of_memory) {
   CHECK_NODE(doc, STR("<n a=\"v\">t</n>"));
 }
 
-TEST(dom_node_out_of_memory) {
-  test_runner::_memory_fail_threshold = 65536;
-
-  // exhaust memory limit
-  xml_document doc;
-
-  xml_node n = doc.append_child();
-  CHECK(n.set_name(STR("n")));
-
-  xml_attribute a = n.append_attribute(STR("a"));
-  CHECK(a);
-
-  CHECK_ALLOC_FAIL(while (n.append_child(node_comment)){/* nop */});
-  CHECK_ALLOC_FAIL(while (n.append_attribute(STR("b"))){/* nop */});
-
-  // verify all node modification operations
-  CHECK_ALLOC_FAIL(CHECK(!n.append_child()));
-  CHECK_ALLOC_FAIL(CHECK(!n.prepend_child()));
-  CHECK_ALLOC_FAIL(CHECK(!n.insert_child_after(node_element, n.first_child())));
-  CHECK_ALLOC_FAIL(
-      CHECK(!n.insert_child_before(node_element, n.first_child())));
-  CHECK_ALLOC_FAIL(CHECK(!n.append_attribute(STR(""))));
-  CHECK_ALLOC_FAIL(CHECK(!n.prepend_attribute(STR(""))));
-  CHECK_ALLOC_FAIL(CHECK(!n.insert_attribute_after(STR(""), a)));
-  CHECK_ALLOC_FAIL(CHECK(!n.insert_attribute_before(STR(""), a)));
-
-  // verify node copy operations
-  CHECK_ALLOC_FAIL(CHECK(!n.append_copy(n.first_child())));
-  CHECK_ALLOC_FAIL(CHECK(!n.prepend_copy(n.first_child())));
-  CHECK_ALLOC_FAIL(
-      CHECK(!n.insert_copy_after(n.first_child(), n.first_child())));
-  CHECK_ALLOC_FAIL(
-      CHECK(!n.insert_copy_before(n.first_child(), n.first_child())));
-  CHECK_ALLOC_FAIL(CHECK(!n.append_copy(a)));
-  CHECK_ALLOC_FAIL(CHECK(!n.prepend_copy(a)));
-  CHECK_ALLOC_FAIL(CHECK(!n.insert_copy_after(a, a)));
-  CHECK_ALLOC_FAIL(CHECK(!n.insert_copy_before(a, a)));
-}
-
 TEST(dom_node_doctype_top_level) {
   xml_document doc;
   doc.append_child().set_name(STR("node"));

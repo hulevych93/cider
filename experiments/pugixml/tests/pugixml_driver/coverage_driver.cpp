@@ -5,18 +5,12 @@
 
 #include <iostream>
 
-extern int run_tests(const char* temp_, int test_index);
+extern int run_tests(const char* temp_);
 
-template <typename F>
-void record(std::vector<cider::recorder::ScriptRecordSessionPtr>& out, F&& f) {
-  auto session = cider::recorder::makeLuaRecordingSession("pugixml");
-  try {
-    f();
-  } catch (const std::exception& e) {
-    std::cout << e.what();
-  }
-  out.emplace_back(std::move(session));
-}
+extern int run_tests(
+    const char* temp,
+    const std::function<int(const char* name,
+                            std::function<int()>)>& callback);
 
 int main(int argc, char* argv[]) {
   constexpr const char* LibraryName = "pugixml";
@@ -25,14 +19,24 @@ int main(int argc, char* argv[]) {
 
   std::vector<cider::recorder::ScriptRecordSessionPtr> sessions;
 
-  record(sessions, [&]() { run_tests(argv[0], 3); });
+  if (1) {
+      const auto callback = [&](const char* testName, const std::function<int()>& f) -> int {
+          return cider::recorder::recordScriptWithResult(LibraryName, testName, sessions, f);
+      };
+
+      run_tests(argv[0], callback);
+  } else {
+      cider::recorder::recordScript(LibraryName, "run_tests", sessions, [&]() { run_tests(argv[0]); });
+  }
+
+  std::sort(sessions.begin(), sessions.end(),
+            [](const cider::recorder::ScriptRecordSessionPtr& a,
+               const cider::recorder::ScriptRecordSessionPtr& b) {
+              return a->getInstructions().size() > b->getInstructions().size();
+            });
 
   auto pipeline = cider::pipelines::makePipeline(LibraryName, cmd);
-
-  for (const auto& session : sessions) {
-    std::vector<cider::recorder::Action> output;
-    pipeline.run(session->getInstructions(), output);
-  }
+  pipeline.run(sessions);
 
   std::cout << "Program finished. Press Enter to exit...";
   std::cin.get();

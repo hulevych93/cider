@@ -6,17 +6,6 @@
 namespace cider {
 namespace qleaning {
 
-bool hasNewCoverageBit(const std::vector<std::uint8_t>& current,
-                       const std::vector<std::uint8_t>& previous) {
-  const size_t size = std::min(current.size(), previous.size());
-  for (size_t i = 0; i < size; ++i) {
-    if ((current[i] & ~previous[i]) != 0) {
-      return true;  // New bit discovered
-    }
-  }
-  return false;  // No new bits
-}
-
 std::string actionToGenericRepro(const QAction& action) {
   std::stringstream os;
   std::visit(
@@ -61,6 +50,19 @@ std::string actionToGenericRepro(const QAction& action) {
   return os.str();
 }
 
+namespace {
+
+bool hasNewCoverageBit(const std::vector<std::uint8_t>& current,
+                       const std::vector<std::uint8_t>& previous) {
+  const size_t size = std::min(current.size(), previous.size());
+  for (size_t i = 0; i < size; ++i) {
+    if ((current[i] & ~previous[i]) != 0) {
+      return true;  // New bit discovered
+    }
+  }
+  return false;  // No new bits
+}
+
 std::string actionsToString(const QActionList& actions, size_t size) {
   std::ostringstream oss;
 
@@ -75,6 +77,53 @@ std::string actionsToString(const QActionList& actions, size_t size) {
   }
 
   return oss.str();
+}
+
+bool isOverFunc(const ObjectiveValue& objValue,
+                const ObjectiveValue& targetValue,
+                bool sizeOver) {
+  const auto coverageBigger = objValue.coverage > targetValue.coverage;
+  const auto coverageSame = abs(objValue.coverage - targetValue.coverage) <
+                            std::numeric_limits<double>::epsilon();
+  const auto over = coverageBigger || coverageSame || sizeOver;
+  if (over) {
+    std::cout << "[" << coverageBigger << "," << coverageSame << "," << sizeOver
+              << "]" << std::endl;
+  }
+  return over;
+}
+
+inline float normalize_reward(float reward) {
+  return reward / (1 + std::abs(reward));
+}
+
+}  // namespace
+
+std::optional<QValue> rewardFunction(const ObjectiveValue& objValue,
+                                     const ObjectiveValue& targetValue,
+                                     double bigReward,
+                                     double middleReward,
+                                     double penalty) {
+  if (objValue.coverage > std::numeric_limits<double>::epsilon()) {
+    const auto coverageBigger = objValue.coverage > targetValue.coverage;
+    const auto coverageSame = abs(objValue.coverage - targetValue.coverage) <
+                              std::numeric_limits<double>::epsilon();
+
+    std::cout << objValue.coverage << std::endl;
+    if (coverageBigger) {
+      return bigReward;
+    } else if (hasNewCoverageBit(objValue.coveredTracks,
+                                 targetValue.coveredTracks)) {
+      return middleReward;
+    } else if (coverageSame) {
+      return 0.00;
+    } else {
+      return penalty;
+    }
+
+  } else {
+    return std::nullopt;
+  }
 }
 
 Scenario::Scenario(std::mt19937& gen,
@@ -114,36 +163,46 @@ void Scenario::rollback() {
   m_actions.pop_back();
 }
 
+void Scenario::rollbackAndDrop() {
+  m_actions.pop_back();
+}
+
+void Scenario::drop(const QAction& action) {
+  const auto avIt = m_availableActions.find(action);
+  if (avIt != m_availableActions.cend()) {
+    m_availableActions.erase(avIt);
+  }
+}
+
 QActionList Scenario::getCurrentState() const {
   return m_actions;
 }
 
 bool Scenario::isOver() const {
-  return m_lastObjVal.coverage > m_initialObjVal.coverage ||
-         (abs(m_lastObjVal.coverage - m_initialObjVal.coverage) <
-          std::numeric_limits<double>::epsilon()) ||
-         (m_size <= m_actions.size());
+  const auto sizeOver = m_size <= m_actions.size();
+  return isOverFunc(m_lastObjVal, m_initialObjVal, sizeOver);
 }
 
 std::optional<QValue> Scenario::getReward() const {
   const auto objValue = m_objFunc(m_actions);
-  if (objValue.coverage > std::numeric_limits<double>::epsilon()) {
-    std::cout << "Candidate: " << objValue.coverage << std::endl;
 
-    if (objValue.coverage > m_lastObjVal.coverage) {
-      m_lastObjVal = objValue;
-      return 1.0;
-    } else if (hasNewCoverageBit(objValue.coveredTracks,
-                                 m_lastObjVal.coveredTracks)) {
-      m_lastObjVal = objValue;
-      return 0.5;
-    } else {
-      return 0.05;
-    }
+  std::optional<QValue> result;
 
+  const auto sizeOver = m_size <= m_actions.size();
+  if (isOverFunc(objValue, m_initialObjVal, sizeOver)) {
+    std::cout << "final" << std::endl;
+
+    result = rewardFunction(objValue, m_initialObjVal, 4.0, 2.0, -4.0);
   } else {
-    return std::nullopt;
+    result = rewardFunction(objValue, m_lastObjVal, 1.0, 0.5, -0.5);
   }
+
+  if (result.has_value()) {
+    m_lastObjVal = objValue;
+    result = normalize_reward(result.value());
+  }
+
+  return result;
 }
 
 std::string Scenario::toString() const {

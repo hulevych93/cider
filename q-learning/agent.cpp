@@ -11,10 +11,58 @@
 #include <iostream>
 #include <random>
 
+#ifdef ENABLE_MATHPLOT
+#include <matplotlibcpp.h>
+
+namespace plt = matplotlibcpp;
+#endif
+
 namespace cider {
 namespace qleaning {
 
-QValuesAgent::QValuesAgent() : _gen(rd()) {}
+void MathplotLogger::logReward(const double totalReward) const {
+#ifdef ENABLE_MATHPLOT
+  x_.push_back(static_cast<double>(_episode));
+  y_.push_back(totalReward);
+
+  plt::clf();         // Clear previous frame
+  plt::plot(x_, y_);  // Plot updated points
+  plt::title("Total Reward per Episode");
+  plt::xlabel("Episode");
+  plt::ylabel("Total Reward");
+  plt::grid(true);
+  plt::pause(0.01);  // Allow time for GUI to update
+#endif
+
+  ++_episode;
+}
+
+void MathplotLogger::logLoss(const double averageLoss) const {
+#ifdef ENABLE_MATHPLOT
+  x_.push_back(static_cast<double>(_episode));
+  y_.push_back(averageLoss);
+
+  plt::clf();
+  plt::plot(x_, y_);  // Plot updated points
+  plt::title(" ");
+  plt::xlabel("Episode");
+  plt::ylabel("Average Loss");
+  plt::grid(true);
+  plt::pause(0.01);
+#endif
+  ++_episode;
+}
+
+void MathplotLogger::save(const std::string& path) {
+#ifdef ENABLE_MATHPLOT
+  plt::save(path, 1200);
+#endif
+}
+
+QValuesAgent::QValuesAgent(const std::string& path)
+    : _gen(rd()), m_loaded(load(path)) {
+  std::cout << "Load agent: " << path << ", status: " << m_loaded << std::endl;
+}
 
 bool QValuesAgent::load(const std::string& filePath) {
   try {
@@ -114,6 +162,11 @@ std::optional<QAction> QValuesAgent::chooseBolzmanAction(
     action = scenario.getRandomAction();
   } else {
     const auto& qValues = qValuesIt->second;
+
+    if (qValues.empty()) {
+      return scenario.getRandomAction();
+    }
+
     std::vector<float> probabilities(qValues.size());
     float sum = 0.0f;
     auto qValIt = qValues.begin();
@@ -122,26 +175,35 @@ std::optional<QAction> QValuesAgent::chooseBolzmanAction(
       probabilities[i] = std::exp(value / temperature);
       sum += probabilities[i];
     }
+
+    if (sum == 0.0f || std::isinf(sum)) {
+      return scenario.getRandomAction();
+    }
+
     for (float& p : probabilities)
       p /= sum;
 
     std::discrete_distribution<int> dist(probabilities.begin(),
                                          probabilities.end());
     const auto index = dist(_gen);
+
     qValIt = qValues.begin();
-    for (size_t i = 0; ++i <= index; ++i, ++qValIt)
+    size_t i = 0;
+    for (; i < index; ++i, ++qValIt)
       ;
+
     action = qValIt->first;
   }
+
   return action;
 }
 
-void QValuesAgent::updateQValues(const std::string& state,
-                                 const std::string& nextState,
-                                 const QAction& action,
-                                 const double reward,
-                                 const double learningRate,
-                                 const double discount) {
+double QValuesAgent::updateQValues(const std::string& state,
+                                   const std::string& nextState,
+                                   const QAction& action,
+                                   const double reward,
+                                   const double learningRate,
+                                   const double discount) {
   auto& qValues = m_qtable[state];
   auto& qValue = qValues[action];
 
@@ -154,11 +216,20 @@ void QValuesAgent::updateQValues(const std::string& state,
     }
   }
 
-  qValue += learningRate * reward;
+  std::cout << "r: " << reward << ", mV: " << maxQValue << ", qv: " << qValue
+            << " -> ";
 
+  qValue += learningRate * reward;
   if (maxQValue != 0) {
     qValue += learningRate * (discount * maxQValue - qValue);
   }
+
+  float target = reward + discount * maxQValue;
+  float loss = 0.5f * (qValue - target) * (qValue - target);
+
+  std::cout << qValue << ", ls: " << loss << std::endl;
+
+  return loss;
 }
 
 void QValuesAgent::print(std::ostream& ss) const {

@@ -21,6 +21,8 @@ class IPipe {
                        const cider::Cmd& cmd,
                        const Actions& input,
                        Actions& out) = 0;
+
+  virtual std::string getLetter() const = 0;
 };
 
 class Pipeline final {
@@ -31,21 +33,15 @@ class Pipeline final {
     _pipes.emplace_back(std::move(pipe));
   }
 
-  bool run(const Actions& input, Actions& output) {
-    Actions in = deepCopy(input);
-    Actions out;
-    const auto dateTime = getDatetimeForDirName();
-    for (auto& pipe : _pipes) {
-      if (!pipe->process(dateTime, _libName, _cmd, in, out)) {
-        return false;
-      }
-      in = deepCopy(out);
-    }
-    _report->process(dateTime, _libName, _cmd, input, out);
-    output = out;
-    return true;
-  }
+  void enableReport();
 
+  bool run(
+      const std::vector<cider::recorder::ScriptRecordSessionPtr>& sessions);
+
+ private:
+  bool run(const std::string& metadata, const Actions& input);
+
+  const std::string pipelineConfig() const;
   static std::string getDatetimeForDirName();
 
  private:

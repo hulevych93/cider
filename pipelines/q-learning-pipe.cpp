@@ -10,7 +10,6 @@
 #include "q-learning/scenario.h"
 
 #include "coverage/cfg_measurer.h"
-#include "coverage/gcov_measurer.h"
 
 #include <iostream>
 
@@ -24,9 +23,9 @@ namespace {
 LearningSettings getLearningSettings(std::string& prefix) {
   LearningSettings settings;
   settings.discountFactor = 0.85;
-  settings.learningRate = 0.15;
-  settings.episodes = 20U;
-  settings.maxRollback = 5U;
+  settings.learningRate = 0.1;
+  settings.episodes = 500U;
+  settings.maxRollback = 20U;
 
   std::stringstream os;
   os << settings;
@@ -37,8 +36,8 @@ LearningSettings getLearningSettings(std::string& prefix) {
 GenerationSettings getGeneratorSettings(std::string& prefix) {
   GenerationSettings settings;
   settings.epsilon = 0.1;
-  settings.maxRollback = 5U;
-  settings.strategy = GenerationStrategyType::EGreedy;
+  settings.maxRollback = 50U;
+  settings.strategy = GenerationStrategyType::Greedy;
 
   std::stringstream os;
   os << "_" << settings;
@@ -48,18 +47,14 @@ GenerationSettings getGeneratorSettings(std::string& prefix) {
 
 bool qlearningPipeline(QValuesAgent& agent,
                        const LearningSettings& learningSettings,
-                       const GenerationSettings& generatorSettings,
                        const std::string& resultsDir,
                        const std::string& libName,
                        const std::string& prefix,
-                       const Actions& input,
-                       Actions& output) {
+                       const Actions& input) {
   try {
     std::filesystem::path outPath(resultsDir);
     std::filesystem::create_directories(outPath);
-    std::ofstream debug(outPath / (prefix + "qtable_cfg.txt"));
-
-    std::cout << "InstructionsCount: " << input.size() << std::endl;
+    std::ofstream debug(outPath / (prefix + "_qtable_cfg.txt"));
 
     learningSession(learningSettings, input, agent);
 
@@ -82,15 +77,10 @@ bool qlearningPipeline(QValuesAgent& agent,
     debug << std::endl << std::endl;
     agent.print(debug);
 
-    gererationSession(generatorSettings, agent, input, output);
+    agent.save(resultsDir + '/' + (prefix + "agent.img"));
 
-    debug << "Script generated:\n "
-          << cider::recorder::generateScript(generator, input, 999999U);
+    agent.getLogger().save(outPath /= "graph.png");
 
-    debug << "Coverage: " << learningSettings.objFunc(output).coverage;
-    debug << std::endl << std::endl;
-
-    agent.save(outPath / (prefix + "agent.img"));
   } catch (const std::exception& e) {
     std::cerr << e.what();
     return false;
@@ -99,88 +89,105 @@ bool qlearningPipeline(QValuesAgent& agent,
   return true;
 }
 
-bool qlearningGcovrPipeline(QValuesAgent& agent,
-                            const std::string& metadata,
-                            const std::string& libName,
-                            const cider::Cmd& cmd,
-                            const Actions& input,
-                            Actions& output) {
-  std::string prefix;
-  auto settings = getLearningSettings(prefix);
+bool qlearningGenerationPipeline(QValuesAgent& agent,
+                                 const GenerationSettings& generatorSettings,
+                                 const std::string& resultsDir,
+                                 const std::string& libName,
+                                 const std::string& prefix,
+                                 const Actions& input,
+                                 Actions& output) {
+  try {
+    std::filesystem::path outPath(resultsDir);
+    std::filesystem::create_directories(outPath);
+    std::ofstream debug(outPath / (prefix + "geneation_log.txt"));
 
-  std::string generatorPrefix;
-  auto genSettings = getGeneratorSettings(generatorPrefix);
-  prefix += generatorPrefix;
+    gererationSession(generatorSettings, agent, input, output);
 
-  cider::gcov_coverage::CoverageMeasurment measurer{cmd, libName.c_str()};
-  auto fileLog = std::make_unique<cider::gcov_coverage::FileLogger>(
-      cmd.resultsDir + '/' + metadata, prefix + "_gcov_qlearning_log.txt");
-  measurer.setLogger(std::move(fileLog));
+    auto generator = cider::recorder::makeLuaGenerator(libName);
+    debug << "Script generated:\n "
+          << cider::recorder::generateScript(generator, input, 999999U);
 
-  const auto objFunc = [&](const std::vector<cider::recorder::Action>& actions)
-      -> qleaning::ObjectiveValue {
-    const auto rootReport = measurer(actions);
-    qleaning::ObjectiveValue value;
-    if (rootReport.has_value()) {
-      value.coverage = rootReport->report.lineCov.percent;
-    }
-    return value;
-  };
+    debug << "Coverage: " << generatorSettings.objFunc(output).coverage;
+    debug << std::endl << std::endl;
 
-  settings.objFunc = objFunc;
-  genSettings.objFunc = objFunc;
+  } catch (const std::exception& e) {
+    std::cerr << e.what();
+    return false;
+  }
 
-  return qlearningPipeline(agent, settings, genSettings,
-                           cmd.resultsDir + '/' + metadata, libName, prefix,
-                           input, output);
-}
-
-bool qlearningCfgPipeline(QValuesAgent& agent,
-                          const std::string& metadata,
-                          const std::string& libName,
-                          const cider::Cmd& cmd,
-                          const Actions& input,
-                          Actions& output) {
-  std::string prefix;
-  auto settings = getLearningSettings(prefix);
-
-  std::string generatorPrefix;
-  auto genSettings = getGeneratorSettings(generatorPrefix);
-  prefix += generatorPrefix;
-
-  cider::cfg_coverage::CoverageMeasurment measurer{cmd, libName.c_str()};
-  auto fileLog = std::make_unique<cider::cfg_coverage::FileLogger>(
-      cmd.resultsDir + '/' + metadata, prefix + "_cfg_qlearning_log.txt");
-  measurer.setLogger(std::move(fileLog));
-
-  const auto objFunc = [&](const std::vector<cider::recorder::Action>& actions)
-      -> qleaning::ObjectiveValue {
-    const auto rootReport = measurer(actions);
-
-    qleaning::ObjectiveValue value;
-    if (rootReport.has_value()) {
-      value.coverage = rootReport->getPercentage();
-      value.coveredTracks = rootReport->coveredTracks;
-    }
-    return value;
-  };
-
-  settings.objFunc = objFunc;
-  genSettings.objFunc = objFunc;
-
-  return qlearningPipeline(agent, settings, genSettings,
-                           cmd.resultsDir + '/' + metadata, libName, prefix,
-                           input, output);
+  return true;
 }
 
 }  // namespace
+
+QPreLearningStage::QPreLearningStage() : m_agent(QValuesAgent::getInstance()) {}
+
+bool QPreLearningStage::process(const std::string& metadata,
+                                const std::string& libName,
+                                const cider::Cmd& cmd,
+                                const Actions& input,
+                                Actions& output) {
+  output = input;
+
+  if (m_agent.isLoaded()) {
+    std::cout << "Skip QPreLearningStage..." << std::endl;
+    return true;
+  }
+
+  std::string prefix;
+  auto settings = getLearningSettings(prefix);
+
+  cider::cfg_coverage::CoverageMeasurment measurer{cmd, libName.c_str()};
+  measurer.setLogger(cmd.resultsDir + '/' + metadata,
+                     prefix + "_cfg_pre_qlearning_log.txt");
+
+  settings.objFunc = measurer.getObjValueFunc();
+
+  prelearningSession(settings, input, m_agent);
+
+  return true;
+}
+
+QLearningStage::QLearningStage() : m_agent(QValuesAgent::getInstance()) {}
 
 bool QLearningStage::process(const std::string& metadata,
                              const std::string& libName,
                              const cider::Cmd& cmd,
                              const Actions& input,
                              Actions& output) {
-  return qlearningCfgPipeline(m_agent, metadata, libName, cmd, input, output);
+  output = input;
+
+  std::string prefix;
+  auto settings = getLearningSettings(prefix);
+
+  cider::cfg_coverage::CoverageMeasurment measurer{cmd, libName.c_str()};
+  measurer.setLogger(cmd.resultsDir + '/' + metadata,
+                     prefix + "_cfg_qlearning_log.txt");
+
+  settings.objFunc = measurer.getObjValueFunc();
+
+  return qlearningPipeline(m_agent, settings, cmd.resultsDir + '/' + metadata,
+                           libName, prefix, input);
+}
+
+QGenerationStage::QGenerationStage() : m_agent(QValuesAgent::getInstance()) {}
+
+bool QGenerationStage::process(const std::string& metadata,
+                               const std::string& libName,
+                               const cider::Cmd& cmd,
+                               const Actions& input,
+                               Actions& output) {
+  std::string prefix;
+  auto settings = getGeneratorSettings(prefix);
+
+  cider::cfg_coverage::CoverageMeasurment measurer{cmd, libName.c_str()};
+  measurer.setLogger(cmd.resultsDir + '/' + metadata,
+                     prefix + "_cfg_qlearning_generation_log.txt");
+
+  settings.objFunc = measurer.getObjValueFunc();
+  return qlearningGenerationPipeline(m_agent, settings,
+                                     cmd.resultsDir + '/' + metadata, libName,
+                                     prefix, input, output);
 }
 
 }  // namespace pipelines

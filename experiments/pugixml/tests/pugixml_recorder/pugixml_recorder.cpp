@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
 
   try {
     const auto start = std::chrono::system_clock::now();
-    run_tests(temp.c_str(), 0);
+    run_tests(temp.c_str());
 
     const auto end = std::chrono::system_clock::now();
     const auto elapsed = end - start;

@@ -34,11 +34,20 @@ class FileLogger : public ICoverageLogger {
 struct CoverageMeasurment {
   CoverageMeasurment(const Cmd& cmd, const char* module);
 
-  void setLogger(std::unique_ptr<ICoverageLogger> logger) {
-    m_logger = std::move(logger);
+  void setLogger(const std::string& logDir, const std::string& fileName) {
+    auto fileLog = std::make_unique<FileLogger>(logDir, fileName);
+    m_logger = std::move(fileLog);
   }
 
-  ReportOpt operator()(const std::vector<cider::recorder::Action>& actions);
+  ReportOpt getReport(const std::vector<cider::recorder::Action>& actions);
+
+  double operator()(const std::vector<cider::recorder::Action>& actions) {
+    const auto rootReport = getReport(actions);
+    if (rootReport.has_value()) {
+      return rootReport->report.lineCov.percent;
+    }
+    return 0.0f;
+  }
 
   virtual std::string getScript(
       const std::vector<cider::recorder::Action>& actions) const;
