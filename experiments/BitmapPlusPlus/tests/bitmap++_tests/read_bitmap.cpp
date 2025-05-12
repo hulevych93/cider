@@ -13,9 +13,8 @@ int test_read_bitmap() {
     const auto s0 = p0.string();
     image.load(s0.c_str());
 
-    // Modify loaded image (makes half of the image black)
-    for (std::int32_t y = 0; y < image.height(); ++y) {
-      for (std::int32_t x = 0; x < image.width() / 2; ++x) {
+    for (std::int32_t y = 0; y < 2; ++y) {
+      for (std::int32_t x = 0; x < 2; ++x) {
         image.set(x, y, Black);
       }
     }

@@ -37,8 +37,7 @@ int run_tests(const char* temp);
 
 int run_tests(
     const char* temp,
-    const std::function<int(const char* name,
-                            std::function<int()>)>& callback);
+    const std::function<int(const char* name, std::function<int()>)>& callback);
 
 bool test_string_equal(const pugi::char_t* lhs, const pugi::char_t* rhs);
 

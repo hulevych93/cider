@@ -4,6 +4,7 @@
 #include "pipeline.h"
 
 #include "meta-pipe.h"
+#include "paths.h"
 #include "q-learning-pipe.h"
 #include "report-pipe.h"
 
@@ -18,19 +19,27 @@ namespace pipelines {
 
 Pipeline::Pipeline(const std::string& libName, const cider::Cmd& cmd)
     : _libName(libName), _cmd(cmd) {
-  qleaning::QValuesAgent::getInstance(cmd.resultsDir + "/agent.img");
+  qleaning::getAgent(paths::getQTableAgentPath(cmd.resultsDir));
 }
 
 bool Pipeline::run(
     const std::vector<cider::recorder::ScriptRecordSessionPtr>& sessions) {
   const auto dateTime = getDatetimeForDirName();
   const auto config = pipelineConfig();
+
+  for (const auto& session : sessions) {
+    std::cout << "name: " << session->getName()
+              << "\t count op: " << session->getInstructionsCount()
+              << std::endl;
+  }
+
   int scrNum = 0;
   for (const auto& session : sessions) {
-    std::cout << "Session: " << scrNum
-                << ", name: " << session->getName() << ", instr: " << session->getInstructionsCount() << std::endl;
-    const auto metadata =
-        dateTime + '_' + config + '/' + session->getName() + '_' + std::to_string(scrNum);
+    std::cout << "num: " << scrNum << "\t name: " << session->getName()
+              << "\t count op: " << session->getInstructionsCount()
+              << std::endl;
+    const auto metadata = dateTime + '_' + config + '/' + session->getName() +
+                          '_' + std::to_string(scrNum);
     if (!run(metadata, session->getInstructions())) {
       return false;
     }

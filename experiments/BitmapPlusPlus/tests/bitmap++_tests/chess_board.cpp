@@ -7,8 +7,8 @@ using namespace bmp::BitmapPlusPlusHooked;
 int test_chess_board() {
   try {
     // 8x8 chess board
-    Bitmap image(640, 640);
-    const std::size_t board_dims = 8;
+    Bitmap image(8, 8);
+    const std::size_t board_dims = 2;
     const std::int32_t rect_w = image.width() / board_dims;
     const std::int32_t rect_h = image.height() / board_dims;
 

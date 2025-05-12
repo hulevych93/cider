@@ -10,6 +10,10 @@
 #include "recorder/details/generator.h"
 #include "recorder/recorder.h"
 
+#ifdef ENABLE_MATHPLOT
+#include "mathplot-log/mathplot-log.h"
+#endif
+
 namespace cider {
 namespace pipelines {
 
@@ -39,20 +43,30 @@ bool ReportStage::process(const std::string& metadata,
     output_file << script;
   }
 
+#ifdef ENABLE_MATHPLOT
+  auto logger = std::make_shared<cider::gcov_coverage::ComparativeLogger>(
+      outPath.string(), "comparage.png");
+#else
+  auto logger = std::make_shared<gcov_coverage::FileLogger>(outPath.string(),
+                                                            "comparage.txt");
+#endif
+
   {
     cider::gcov_coverage::StepperCoverageMeasurment stepper{cmd,
                                                             libName.c_str()};
 
-    stepper.setLogger(outPath.string(), "initial_log.txt");
+    stepper.setLogger(logger);
 
     stepper.measure(input);
   }
 
+  logger->other();
+
   {
     cider::gcov_coverage::StepperCoverageMeasurment stepper{cmd,
                                                             libName.c_str()};
 
-    stepper.setLogger(outPath.string(), "optimized_log.txt");
+    stepper.setLogger(logger);
 
     stepper.measure(output);
   }

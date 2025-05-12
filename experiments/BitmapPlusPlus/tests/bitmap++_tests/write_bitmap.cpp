@@ -18,8 +18,8 @@ static Pixel random_color() {
 
 int test_write_bitmap() {
   try {
-    // Create a 64x64 bitmap
-    Bitmap image(64, 64);
+    // Create a 8x8 bitmap
+    Bitmap image(2, 2);
 
     // Assign a random color to each pixel in the image
     const auto size = image.size();

@@ -12,19 +12,6 @@
 namespace cider {
 namespace cfg_coverage {
 
-FileLogger::FileLogger(const std::string& logDir,
-                       const std::string& logFileName) {
-  std::filesystem::path outPath(logDir);
-  std::filesystem::create_directories(outPath);
-  outPath /= logFileName;
-  std::cout << "Out file: " << outPath << std::endl;
-  _report.open(outPath, std::ios::out | std::ios::app);
-}
-
-void FileLogger::log(size_t index, const Coverage& coverage) const {
-  printTableEntry(_report, index, coverage);
-}
-
 CoverageMeasurment::CoverageMeasurment(const Cmd& cmd, const char* module)
     : _cmd(cmd), _module(module) {}
 

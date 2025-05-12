@@ -43,6 +43,11 @@ if(ENABLE_MATHPLOT_LOG)
     message("Python ${Python3_EXECUTABLE}")
 
     add_subdirectory(thirdparty/mathplotlib)
+    add_subdirectory(mathplot-log)
+
+    add_definitions(-DENABLE_MATHPLOT)
+
+    set(PLOT_LIBS mathplot-log ${Python3_LIBRARIES})
 endif()
 
 add_subdirectory(coverage)

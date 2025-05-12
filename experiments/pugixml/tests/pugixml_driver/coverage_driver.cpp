@@ -9,8 +9,7 @@ extern int run_tests(const char* temp_);
 
 extern int run_tests(
     const char* temp,
-    const std::function<int(const char* name,
-                            std::function<int()>)>& callback);
+    const std::function<int(const char* name, std::function<int()>)>& callback);
 
 int main(int argc, char* argv[]) {
   constexpr const char* LibraryName = "pugixml";
@@ -20,13 +19,16 @@ int main(int argc, char* argv[]) {
   std::vector<cider::recorder::ScriptRecordSessionPtr> sessions;
 
   if (1) {
-      const auto callback = [&](const char* testName, const std::function<int()>& f) -> int {
-          return cider::recorder::recordScriptWithResult(LibraryName, testName, sessions, f);
-      };
+    const auto callback = [&](const char* testName,
+                              const std::function<int()>& f) -> int {
+      return cider::recorder::recordScriptWithResult(LibraryName, testName,
+                                                     sessions, f);
+    };
 
-      run_tests(argv[0], callback);
+    run_tests(argv[0], callback);
   } else {
-      cider::recorder::recordScript(LibraryName, "run_tests", sessions, [&]() { run_tests(argv[0]); });
+    cider::recorder::recordScript(LibraryName, "run_tests", sessions,
+                                  [&]() { run_tests(argv[0]); });
   }
 
   std::sort(sessions.begin(), sessions.end(),

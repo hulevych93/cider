@@ -5,8 +5,6 @@
 
 #include "recorder/details/action.h"
 
-#include <unordered_set>
-
 #include "agent.h"
 
 #include "coverage/coverage.h"
@@ -28,9 +26,7 @@ class Scenario final {
 
   void add(const QAction& action);
   void rollback();
-
   void rollbackAndDrop();
-
   void drop(const QAction& action);
 
   QActionList getCurrentState() const;

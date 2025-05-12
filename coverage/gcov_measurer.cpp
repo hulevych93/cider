@@ -13,19 +13,6 @@
 namespace cider {
 namespace gcov_coverage {
 
-FileLogger::FileLogger(const std::string& logDir,
-                       const std::string& logFileName) {
-  std::filesystem::path outPath(logDir);
-  std::filesystem::create_directories(outPath);
-  outPath /= logFileName;
-  std::cout << "Out file: " << outPath << std::endl;
-  _report.open(outPath, std::ios::out | std::ios::app);
-}
-
-void FileLogger::log(size_t index, const RootReport& coverage) const {
-  printTableEntry(_report, index, coverage.report);
-}
-
 CoverageMeasurment::CoverageMeasurment(const Cmd& cmd, const char* module)
     : _cmd(cmd), _module(module) {}
 
@@ -70,18 +57,29 @@ StepperCoverageMeasurment::StepperCoverageMeasurment(const Cmd& cmd,
 void StepperCoverageMeasurment::measure(
     const std::vector<cider::recorder::Action>& actions) {
   std::cout << "actions size: " << actions.size() << std::endl;
+
+  if (m_logger) {
+    m_logger->log(0U, {});
+  }
+
+  if (actions.size() < 300) {
+    m_stepSize = 1;
+  } else {
+    m_stepSize = 5;
+  }
+
   for (; _index < actions.size();) {
     (*this)(actions);
+
+    assert(m_stepSize > 0);
+    _index += m_stepSize;
   }
 }
 
 std::string StepperCoverageMeasurment::getScript(
     const std::vector<cider::recorder::Action>& actions) const {
   auto generator = cider::recorder::makeLuaGenerator(_module);
-
-  auto result = cider::recorder::generateScript(generator, actions, _index);
-  _index += 5;
-  return result;
+  return cider::recorder::generateScript(generator, actions, _index);
 }
 
 }  // namespace gcov_coverage

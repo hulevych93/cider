@@ -28,7 +28,7 @@ function(cider_tool_generate MODULE_NAME NAMESPACE FILES OUTPUT_DIR)
                        --integration_file="${CMAKE_SOURCE_DIR}/tools/ast.cpp"
                        --swig_directory="${CMAKE_SOURCE_DIR}/swig"
                        --files="${OUT_PARAM}"
-                       --swig=${MODULE_NAME} --std=c++14 --lua --namespace=${NAMESPACE}
+                       --swig=${MODULE_NAME} --std=c++14 --lua --namespace=${NAMESPACE} 2>/dev/null
                        WORKING_DIRECTORY ${CIDER_DIRECTORY}
                        DEPENDS cider
                        COMMENT "Generating cider files...")

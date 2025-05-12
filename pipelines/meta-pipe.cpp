@@ -13,6 +13,10 @@
 #include "metaheuristics/cuckoo/cuckoo.h"
 #include "metaheuristics/harmony/harmony.h"
 
+#ifdef ENABLE_MATHPLOT
+#include "mathplot-log/mathplot-log.h"
+#endif
+
 namespace cider {
 namespace pipelines {
 
@@ -83,15 +87,15 @@ bool makeMetaPipeline(PipelineType type,
 
     measurer.setLogger(outPath.string(), "meta_log.txt");
 
-    metaSearch->setLogger(
-        std::make_unique<cider::metasearch::MathplotLogger>());
+#ifdef ENABLE_MATHPLOT
+    metaSearch->setLogger(std::make_unique<cider::metasearch::MathplotLogger>(
+        outPath, "meta_search.png"));
+#endif
 
     metaSearch->initialize(input);
     metaSearch->run();
 
     const auto& bestActions = metaSearch->getBest().actions;
-
-    metaSearch->getLogger().save(outPath /= "graph.png");
 
     output = bestActions;
   } catch (const std::exception& e) {

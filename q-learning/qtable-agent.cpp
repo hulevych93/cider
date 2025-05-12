@@ -1,7 +1,7 @@
 // Copyright (C) 2022-2025 Hulevych Mykhailo
 // SPDX-License-Identifier: MIT
 
-#include "agent.h"
+#include "qtable-agent.h"
 
 #include "scenario.h"
 
@@ -11,60 +11,15 @@
 #include <iostream>
 #include <random>
 
-#ifdef ENABLE_MATHPLOT
-#include <matplotlibcpp.h>
-
-namespace plt = matplotlibcpp;
-#endif
-
 namespace cider {
 namespace qleaning {
 
-void MathplotLogger::logReward(const double totalReward) const {
-#ifdef ENABLE_MATHPLOT
-  x_.push_back(static_cast<double>(_episode));
-  y_.push_back(totalReward);
-
-  plt::clf();         // Clear previous frame
-  plt::plot(x_, y_);  // Plot updated points
-  plt::title("Total Reward per Episode");
-  plt::xlabel("Episode");
-  plt::ylabel("Total Reward");
-  plt::grid(true);
-  plt::pause(0.01);  // Allow time for GUI to update
-#endif
-
-  ++_episode;
-}
-
-void MathplotLogger::logLoss(const double averageLoss) const {
-#ifdef ENABLE_MATHPLOT
-  x_.push_back(static_cast<double>(_episode));
-  y_.push_back(averageLoss);
-
-  plt::clf();
-  plt::plot(x_, y_);  // Plot updated points
-  plt::title(" ");
-  plt::xlabel("Episode");
-  plt::ylabel("Average Loss");
-  plt::grid(true);
-  plt::pause(0.01);
-#endif
-  ++_episode;
-}
-
-void MathplotLogger::save(const std::string& path) {
-#ifdef ENABLE_MATHPLOT
-  plt::save(path, 1200);
-#endif
-}
-
-QValuesAgent::QValuesAgent(const std::string& path)
+QTableAgent::QTableAgent(const std::string& path)
     : _gen(rd()), m_loaded(load(path)) {
   std::cout << "Load agent: " << path << ", status: " << m_loaded << std::endl;
 }
 
-bool QValuesAgent::load(const std::string& filePath) {
+bool QTableAgent::load(const std::string& filePath) {
   try {
     serialization::Deserializer deserializer(filePath);
     deserializer >> m_qtable;
@@ -74,7 +29,7 @@ bool QValuesAgent::load(const std::string& filePath) {
   return true;
 }
 
-bool QValuesAgent::save(const std::string& filePath) {
+bool QTableAgent::save(const std::string& filePath) const {
   try {
     serialization::Serializer serializer;
     serializer << m_qtable;
@@ -85,8 +40,8 @@ bool QValuesAgent::save(const std::string& filePath) {
   return true;
 }
 
-QActionList QValuesAgent::getBestFromAvailable(const QActionList& available,
-                                               const QValues& values) {
+QActionList QTableAgent::getBestFromAvailable(const QActionList& available,
+                                              const QValues& values) {
   QValues availableValues;
   for (const auto& action : available) {
     const auto qValueIter = values.find(action);
@@ -114,7 +69,7 @@ QActionList QValuesAgent::getBestFromAvailable(const QActionList& available,
   return bestValues;
 }
 
-std::optional<QAction> QValuesAgent::findBestOrRandomAvailableAction(
+std::optional<QAction> QTableAgent::findBestOrRandomAvailableAction(
     const Scenario& scenario) const {
   const auto state = scenario.toString();
   const auto qValuesIter = m_qtable.find(state);
@@ -134,7 +89,7 @@ std::optional<QAction> QValuesAgent::findBestOrRandomAvailableAction(
   }
 }
 
-std::optional<QAction> QValuesAgent::chooseEGreedyAction(
+std::optional<QAction> QTableAgent::chooseEGreedyAction(
     const Scenario& scenario,
     const double exploration) const {
   std::optional<QAction> action;
@@ -148,12 +103,12 @@ std::optional<QAction> QValuesAgent::chooseEGreedyAction(
   return action;
 }
 
-std::optional<QAction> QValuesAgent::chooseGreedyAction(
+std::optional<QAction> QTableAgent::chooseGreedyAction(
     const Scenario& scenario) const {
   return findBestOrRandomAvailableAction(scenario);
 }
 
-std::optional<QAction> QValuesAgent::chooseBolzmanAction(
+std::optional<QAction> QTableAgent::chooseBolzmanAction(
     const Scenario& scenario,
     const double temperature) const {
   std::optional<QAction> action;
@@ -198,12 +153,12 @@ std::optional<QAction> QValuesAgent::chooseBolzmanAction(
   return action;
 }
 
-double QValuesAgent::updateQValues(const std::string& state,
-                                   const std::string& nextState,
-                                   const QAction& action,
-                                   const double reward,
-                                   const double learningRate,
-                                   const double discount) {
+double QTableAgent::updateQValues(const std::string& state,
+                                  const std::string& nextState,
+                                  const QAction& action,
+                                  const double reward,
+                                  const double learningRate,
+                                  const double discount) {
   auto& qValues = m_qtable[state];
   auto& qValue = qValues[action];
 
@@ -216,7 +171,7 @@ double QValuesAgent::updateQValues(const std::string& state,
     }
   }
 
-  std::cout << "r: " << reward << ", mV: " << maxQValue << ", qv: " << qValue
+  std::cout << "lr: " << learningRate << ", r: " << reward << ", mV: " << maxQValue << ", qv: " << qValue
             << " -> ";
 
   qValue += learningRate * reward;
@@ -227,12 +182,12 @@ double QValuesAgent::updateQValues(const std::string& state,
   float target = reward + discount * maxQValue;
   float loss = 0.5f * (qValue - target) * (qValue - target);
 
-  std::cout << qValue << ", ls: " << loss << std::endl;
+  std::cout << qValue << ", loss: " << loss << std::endl;
 
   return loss;
 }
 
-void QValuesAgent::print(std::ostream& ss) const {
+void QTableAgent::print(std::ostream& ss) const {
   ss << "Q-table: " << m_qtable.size() << std::endl;
   for (const auto& entry : m_qtable) {
     ss << entry.first << std::endl;

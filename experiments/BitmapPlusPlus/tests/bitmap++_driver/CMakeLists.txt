@@ -11,7 +11,7 @@ target_link_libraries(bitmap++_driver PUBLIC
   pipelines
   bitmap++_tests
   q-learning
-  ${Python3_LIBRARIES}
+  ${PLOT_LIBS}
 )
 
 # Helper macro to define run targets with mode parameter

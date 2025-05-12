@@ -57,24 +57,24 @@ auto recordScript(const char* moduleName,
   out.emplace_back(std::move(session));
 }
 
-
 template <typename F>
-auto recordScriptWithResult(const char* moduleName,
-                  const char* testName,
-                  std::vector<cider::recorder::ScriptRecordSessionPtr>& out,
-                  F&& f) {
-    SessionSettings settings;
-    settings.testName = testName;
-    auto session = cider::recorder::makeLuaRecordingSession(moduleName, settings);
-    try {
-        auto res = f();
-        out.emplace_back(std::move(session));
-        return res;
+auto recordScriptWithResult(
+    const char* moduleName,
+    const char* testName,
+    std::vector<cider::recorder::ScriptRecordSessionPtr>& out,
+    F&& f) {
+  SessionSettings settings;
+  settings.testName = testName;
+  auto session = cider::recorder::makeLuaRecordingSession(moduleName, settings);
+  try {
+    auto res = f();
+    out.emplace_back(std::move(session));
+    return res;
 
-    } catch (const std::exception& e) {
-        std::cout << e.what();
-        throw;
-    }
+  } catch (const std::exception& e) {
+    std::cout << e.what();
+    throw;
+  }
 }
 
 #define RECORD_TEST_SCRIPT(MODULE_NAME, TEST_NAME, OUTPUT)         \

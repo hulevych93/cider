@@ -7,6 +7,7 @@
 #include "recorder/details/params.h"
 
 #include "coverage/cfg_coverage.h"
+#include "coverage/logger.h"
 
 #include <fstream>
 
@@ -14,22 +15,6 @@ namespace cider {
 namespace cfg_coverage {
 
 using CfgCoverageOpt = std::optional<cfg_coverage::Coverage>;
-
-class ICoverageLogger {
- public:
-  virtual ~ICoverageLogger() = default;
-  virtual void log(size_t index, const Coverage& coverage) const = 0;
-};
-
-class FileLogger : public ICoverageLogger {
- public:
-  FileLogger(const std::string& logDir, const std::string& logFileName);
-
-  void log(size_t index, const Coverage& coverage) const override;
-
- private:
-  mutable std::ofstream _report;
-};
 
 struct CoverageMeasurment final {
   CoverageMeasurment(const Cmd& cmd, const char* module);

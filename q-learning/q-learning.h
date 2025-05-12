@@ -7,6 +7,7 @@
 #include "recorder/details/params.h"
 
 #include "agent.h"
+#include "logger.h"
 #include "scenario.h"
 
 namespace cider {
@@ -25,11 +26,13 @@ std::ostream& operator<<(std::ostream& os, const LearningSettings& settings);
 
 void prelearningSession(const LearningSettings& settings,
                         const QActionList& list,
-                        QValuesAgent& agent);
+                        QAgent& agent);
 
 void learningSession(const LearningSettings& settings,
                      const QActionList& list,
-                     QValuesAgent& agent);
+                     QAgent& agent,
+                     IResultsLogger& logger,
+                     const std::function<void()>& dump);
 
 enum class GenerationStrategyType { Greedy, EGreedy, Boltzmann };
 
@@ -45,9 +48,11 @@ struct GenerationSettings final {
 std::ostream& operator<<(std::ostream& os, const GenerationSettings& settings);
 
 bool gererationSession(const GenerationSettings& settings,
-                       const QValuesAgent& agent,
+                       const QAgent& agent,
                        const QActionList& initial,
                        QActionList& out);
+
+QAgent& getAgent(const std::string& path = "");
 
 }  // namespace qleaning
 }  // namespace cider

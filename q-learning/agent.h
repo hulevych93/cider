@@ -14,87 +14,40 @@ namespace cider {
 namespace qleaning {
 
 class Scenario;
-
 using QValue = double;
 using Script = std::string;
-
 using QAction = recorder::Action;
 using QActionList = std::vector<QAction>;
 using QActionSet = std::unordered_set<QAction>;
-using QValues = std::unordered_map<QAction, QValue>;
-using QTable = std::unordered_map<Script, QValues>;
 
-class IResultsLogger {
+class QAgent {
  public:
-  virtual ~IResultsLogger() = default;
+  virtual ~QAgent() = default;
 
-  virtual void logReward(double totalReward) const = 0;
-  virtual void logLoss(double totalReward) const = 0;
+  virtual std::optional<QAction> chooseBolzmanAction(
+      const Scenario& scenario,
+      const double temperature) const = 0;
+  virtual std::optional<QAction> chooseEGreedyAction(
+      const Scenario& scenario,
+      const double exploration) const = 0;
+  virtual std::optional<QAction> chooseGreedyAction(
+      const Scenario& scenario) const = 0;
 
-  virtual void save(const std::string& path) = 0;
-};
+  virtual double updateQValues(const std::string& state,
+                               const std::string& nextState,
+                               const QAction& action,
+                               const double reward,
+                               const double learningRate,
+                               const double discount) = 0;
 
-class MathplotLogger : public IResultsLogger {
- public:
-  void logReward(const double totalReward) const override;
-  void logLoss(const double averageLoss) const override;
+  virtual void print(std::ostream& os) const = 0;
 
-  void save(const std::string& path) override;
+  virtual std::mt19937& getSeed() = 0;
 
- private:
-  mutable std::vector<double> x_, y_;
-  mutable int _episode = 0;
-};
+  virtual bool isLoaded() const = 0;
 
-class QValuesAgent final {
-  static QActionList getBestFromAvailable(const QActionList& available,
-                                          const QValues& values);
-
-  std::optional<QAction> findBestOrRandomAvailableAction(
-      const Scenario& scenario) const;
-
-  explicit QValuesAgent(const std::string& path);
-
- public:
-  static QValuesAgent& getInstance(const std::string& path = "") {
-    static QValuesAgent agent(path);
-    return agent;
-  }
-
-  bool isLoaded() const { return m_loaded; }
-
-  IResultsLogger& getLogger() { return _logger; }
-
-  bool load(const std::string& filePath);
-  bool save(const std::string& filePath);
-
-  std::optional<QAction> chooseBolzmanAction(const Scenario& scenario,
-                                             const double temperature) const;
-  std::optional<QAction> chooseEGreedyAction(const Scenario& scenario,
-                                             const double exploration) const;
-  std::optional<QAction> chooseGreedyAction(const Scenario& scenario) const;
-
-  double updateQValues(const std::string& state,
-                       const std::string& nextState,
-                       const QAction& action,
-                       const double reward,
-                       const double learningRate,
-                       const double discount);
-
-  QValues getQValues(const std::string& state);
-
-  void print(std::ostream& os) const;
-
-  std::mt19937& getSeed() { return _gen; }
-
- private:
-  QTable m_qtable;
-
-  std::random_device rd;
-  mutable std::mt19937 _gen;
-
-  MathplotLogger _logger;
-  bool m_loaded = false;
+  virtual bool load(const std::string& filePath) = 0;
+  virtual bool save(const std::string& filePath) const = 0;
 };
 
 }  // namespace qleaning

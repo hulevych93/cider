@@ -24,7 +24,7 @@ class QPreLearningStage final : public IPipe {
   std::string getLetter() const override { return "QPL"; }
 
  private:
-  qleaning::QValuesAgent& m_agent;
+  qleaning::QAgent& m_agent;
 };
 
 class QLearningStage final : public IPipe {
@@ -40,7 +40,7 @@ class QLearningStage final : public IPipe {
   std::string getLetter() const override { return "QL"; }
 
  private:
-  qleaning::QValuesAgent& m_agent;
+  qleaning::QAgent& m_agent;
 };
 
 class QGenerationStage final : public IPipe {
@@ -56,7 +56,7 @@ class QGenerationStage final : public IPipe {
   std::string getLetter() const override { return "G"; }
 
  private:
-  qleaning::QValuesAgent& m_agent;
+  qleaning::QAgent& m_agent;
 };
 
 }  // namespace pipelines

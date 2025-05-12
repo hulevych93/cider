@@ -7,6 +7,7 @@
 #include "recorder/details/params.h"
 
 #include "coverage/gcov_coverage.h"
+#include "coverage/logger.h"
 
 #include <fstream>
 
@@ -15,28 +16,11 @@ namespace gcov_coverage {
 
 using ReportOpt = std::optional<RootReport>;
 
-class ICoverageLogger {
- public:
-  virtual ~ICoverageLogger() = default;
-  virtual void log(size_t index, const RootReport& coverage) const = 0;
-};
-
-class FileLogger : public ICoverageLogger {
- public:
-  FileLogger(const std::string& logDir, const std::string& logFileName);
-
-  void log(size_t index, const RootReport& coverage) const override;
-
- private:
-  mutable std::ofstream _report;
-};
-
 struct CoverageMeasurment {
   CoverageMeasurment(const Cmd& cmd, const char* module);
 
-  void setLogger(const std::string& logDir, const std::string& fileName) {
-    auto fileLog = std::make_unique<FileLogger>(logDir, fileName);
-    m_logger = std::move(fileLog);
+  void setLogger(const std::shared_ptr<ICoverageLogger>& logger) {
+    m_logger = logger;
   }
 
   ReportOpt getReport(const std::vector<cider::recorder::Action>& actions);
@@ -52,13 +36,11 @@ struct CoverageMeasurment {
   virtual std::string getScript(
       const std::vector<cider::recorder::Action>& actions) const;
 
- private:
-  const Cmd& _cmd;
-  std::unique_ptr<ICoverageLogger> m_logger;
-
  protected:
+  const Cmd& _cmd;
   mutable size_t _index = 0U;
   const char* _module;
+  std::shared_ptr<ICoverageLogger> m_logger;
 };
 
 struct StepperCoverageMeasurment final : CoverageMeasurment {
@@ -68,6 +50,9 @@ struct StepperCoverageMeasurment final : CoverageMeasurment {
 
   std::string getScript(
       const std::vector<cider::recorder::Action>& actions) const override;
+
+ private:
+  unsigned int m_stepSize = 0;
 };
 
 }  // namespace gcov_coverage

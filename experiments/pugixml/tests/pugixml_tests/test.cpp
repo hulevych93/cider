@@ -247,8 +247,8 @@ int run_tests(const char* temp_) {
 }
 
 int run_tests(const char* temp_,
-              const std::function<int(const char* name,
-                                      std::function<int()>)>& callback) {
+              const std::function<int(const char* name, std::function<int()>)>&
+                  callback) {
   // setup temp path as the executable folder
   std::string temp = temp_;
   std::string::size_type slash = temp.find_last_of("\\/");
@@ -268,7 +268,9 @@ int run_tests(const char* temp_,
     for (test = test_runner::_tests; test; test = test->_next) {
       total++;
 
-      auto handler = [&]() -> int { return run_test(test, test->_name, custom_allocate); };
+      auto handler = [&]() -> int {
+        return run_test(test, test->_name, custom_allocate);
+      };
 
       passed += callback(test->_name, std::move(handler));
 

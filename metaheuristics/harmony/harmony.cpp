@@ -79,9 +79,8 @@ void Search::run() {
 
 Harmony Search::generateHarmony(const Harmony& harmony) const {
   Harmony newHarmony;
-  std::uniform_int_distribution<> distr(0, 10000);
-  if (((double)distr(_gen) / 10000.f) <
-      _settings.harmonyMemoryConsiderationRate) {
+  std::uniform_real_distribution<double> dist(0.0, 1.0);
+  if (dist(_gen) < _settings.harmonyMemoryConsiderationRate) {
     newHarmony = deepCopy(harmony);
   } else {
     newHarmony = deepCopy(_initial);

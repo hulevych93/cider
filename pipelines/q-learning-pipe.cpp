@@ -11,6 +11,10 @@
 
 #include "coverage/cfg_measurer.h"
 
+#ifdef ENABLE_MATHPLOT
+#include "mathplot-log/mathplot-log.h"
+#endif
+
 #include <iostream>
 
 using namespace cider::qleaning;
@@ -22,9 +26,9 @@ namespace {
 
 LearningSettings getLearningSettings(std::string& prefix) {
   LearningSettings settings;
-  settings.discountFactor = 0.85;
-  settings.learningRate = 0.1;
-  settings.episodes = 500U;
+  settings.discountFactor = 0.9;
+  settings.learningRate = 0.15;
+  settings.episodes = 4000U;
   settings.maxRollback = 20U;
 
   std::stringstream os;
@@ -45,25 +49,27 @@ GenerationSettings getGeneratorSettings(std::string& prefix) {
   return settings;
 }
 
-bool qlearningPipeline(QValuesAgent& agent,
+bool qlearningPipeline(QAgent& agent,
                        const LearningSettings& learningSettings,
-                       const std::string& resultsDir,
+                       const std::string& outDir,
                        const std::string& libName,
-                       const std::string& prefix,
                        const Actions& input) {
   try {
-    std::filesystem::path outPath(resultsDir);
-    std::filesystem::create_directories(outPath);
-    std::ofstream debug(outPath / (prefix + "_qtable_cfg.txt"));
+    std::filesystem::path outPath(outDir);
+    std::ofstream debug(outPath / "qtable_debug.txt");
 
-    learningSession(learningSettings, input, agent);
+#ifdef ENABLE_MATHPLOT
+    qleaning::MathplotLogger logger(outPath, "reward_loss.png");
+#else
+    qleaning::FileLogger logger(outPath, "reward_loss.txt");
+#endif
 
     std::ostringstream oss;
 
     for (size_t i = 0; i < input.size(); ++i) {
-      oss << actionToGenericRepro(input[i]) << "\t";
-      print(oss, input[i]);
-      oss << std::endl;
+        oss << actionToGenericRepro(input[i]) << "\t";
+        print(oss, input[i]);
+        oss << std::endl;
     }
 
     debug << oss.str();
@@ -74,12 +80,16 @@ bool qlearningPipeline(QValuesAgent& agent,
     debug << "Script:\n "
           << cider::recorder::generateScript(generator, input, 999999U);
 
+    auto dump = [&]() {
+        agent.print(debug);
+        agent.save(outPath / "qtable_agent.img");
+    };
+
+    learningSession(learningSettings, input, agent, logger, dump);
+
     debug << std::endl << std::endl;
-    agent.print(debug);
 
-    agent.save(resultsDir + '/' + (prefix + "agent.img"));
-
-    agent.getLogger().save(outPath /= "graph.png");
+    dump();
 
   } catch (const std::exception& e) {
     std::cerr << e.what();
@@ -89,17 +99,15 @@ bool qlearningPipeline(QValuesAgent& agent,
   return true;
 }
 
-bool qlearningGenerationPipeline(QValuesAgent& agent,
+bool qlearningGenerationPipeline(QAgent& agent,
                                  const GenerationSettings& generatorSettings,
-                                 const std::string& resultsDir,
+                                 const std::string& outDir,
                                  const std::string& libName,
-                                 const std::string& prefix,
                                  const Actions& input,
                                  Actions& output) {
   try {
-    std::filesystem::path outPath(resultsDir);
-    std::filesystem::create_directories(outPath);
-    std::ofstream debug(outPath / (prefix + "geneation_log.txt"));
+    std::filesystem::path outPath(outDir);
+    std::ofstream debug(outPath / "geneation_log.txt");
 
     gererationSession(generatorSettings, agent, input, output);
 
@@ -120,7 +128,7 @@ bool qlearningGenerationPipeline(QValuesAgent& agent,
 
 }  // namespace
 
-QPreLearningStage::QPreLearningStage() : m_agent(QValuesAgent::getInstance()) {}
+QPreLearningStage::QPreLearningStage() : m_agent(qleaning::getAgent()) {}
 
 bool QPreLearningStage::process(const std::string& metadata,
                                 const std::string& libName,
@@ -137,9 +145,13 @@ bool QPreLearningStage::process(const std::string& metadata,
   std::string prefix;
   auto settings = getLearningSettings(prefix);
 
+  std::filesystem::path outPath(cmd.resultsDir);
+  outPath /= metadata;
+  outPath /= prefix;
+  std::filesystem::create_directories(outPath);
+
   cider::cfg_coverage::CoverageMeasurment measurer{cmd, libName.c_str()};
-  measurer.setLogger(cmd.resultsDir + '/' + metadata,
-                     prefix + "_cfg_pre_qlearning_log.txt");
+  measurer.setLogger(outPath.string(), "cfg_pre_qlearning_log.txt");
 
   settings.objFunc = measurer.getObjValueFunc();
 
@@ -148,7 +160,7 @@ bool QPreLearningStage::process(const std::string& metadata,
   return true;
 }
 
-QLearningStage::QLearningStage() : m_agent(QValuesAgent::getInstance()) {}
+QLearningStage::QLearningStage() : m_agent(qleaning::getAgent()) {}
 
 bool QLearningStage::process(const std::string& metadata,
                              const std::string& libName,
@@ -160,17 +172,21 @@ bool QLearningStage::process(const std::string& metadata,
   std::string prefix;
   auto settings = getLearningSettings(prefix);
 
+  std::filesystem::path outPath(cmd.resultsDir);
+  outPath /= metadata;
+  outPath /= prefix;
+  std::filesystem::create_directories(outPath);
+
   cider::cfg_coverage::CoverageMeasurment measurer{cmd, libName.c_str()};
-  measurer.setLogger(cmd.resultsDir + '/' + metadata,
-                     prefix + "_cfg_qlearning_log.txt");
+  measurer.setLogger(outPath.string(), "cfg_qlearning_log.txt");
 
   settings.objFunc = measurer.getObjValueFunc();
 
-  return qlearningPipeline(m_agent, settings, cmd.resultsDir + '/' + metadata,
-                           libName, prefix, input);
+  return qlearningPipeline(m_agent, settings, outPath.string(),
+                           libName, input);
 }
 
-QGenerationStage::QGenerationStage() : m_agent(QValuesAgent::getInstance()) {}
+QGenerationStage::QGenerationStage() : m_agent(qleaning::getAgent()) {}
 
 bool QGenerationStage::process(const std::string& metadata,
                                const std::string& libName,
@@ -180,14 +196,17 @@ bool QGenerationStage::process(const std::string& metadata,
   std::string prefix;
   auto settings = getGeneratorSettings(prefix);
 
+  std::filesystem::path outPath(cmd.resultsDir);
+  outPath /= metadata;
+  outPath /= prefix;
+  std::filesystem::create_directories(outPath);
+
   cider::cfg_coverage::CoverageMeasurment measurer{cmd, libName.c_str()};
-  measurer.setLogger(cmd.resultsDir + '/' + metadata,
-                     prefix + "_cfg_qlearning_generation_log.txt");
+  measurer.setLogger(outPath.string(), "cfg_generation_log.txt");
 
   settings.objFunc = measurer.getObjValueFunc();
   return qlearningGenerationPipeline(m_agent, settings,
-                                     cmd.resultsDir + '/' + metadata, libName,
-                                     prefix, input, output);
+                                     outPath.string(), libName, input, output);
 }
 
 }  // namespace pipelines

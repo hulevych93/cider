@@ -83,9 +83,8 @@ void ScriptRecordSessionImpl::reset() {
   _action_id = 1u;
 }
 
-std::string ScriptRecordSessionImpl::getName() const
-{
-    return _settings.testName;
+std::string ScriptRecordSessionImpl::getName() const {
+  return _settings.testName;
 }
 
 }  // namespace recorder

@@ -3,6 +3,8 @@
 
 #include "q-learning.h"
 
+#include "q-learning/qtable-agent.h"
+
 #include <iostream>
 
 #include <assert.h>
@@ -51,7 +53,7 @@ std::ostream& operator<<(std::ostream& os, const GenerationSettings& settings) {
 
 void prelearningSession(const LearningSettings& settings,
                         const QActionList& list,
-                        QValuesAgent& agent) {
+                        QAgent& agent) {
   Scenario scenario(agent.getSeed(), settings.maxStateDepth, list,
                     settings.objFunc);
   auto nextState = scenario.toString();
@@ -79,13 +81,22 @@ void prelearningSession(const LearningSettings& settings,
 
 void learningSession(const LearningSettings& settings,
                      const QActionList& list,
-                     QValuesAgent& agent) {
+                     QAgent& agent,
+                     IResultsLogger& logger,
+                     const std::function<void()>& dump) {
   EpsilonGreedyAdaptor epsAdaptor(1, 0.999, 0.04, 3);
+
+  AdvancedAdaptiveLearningRate learningRateAdapter(settings.learningRate, 0.05, 1.0);
 
   const auto episodes = settings.episodes;
   for (int i = 0; i < episodes; ++i) {
     std::cout << "Episode: " << i << ", expRate: " << epsAdaptor.get_epsilon()
               << std::endl;
+
+    if((i % 100) == 0) {
+        std::cout << "dump" << std::endl;
+        dump();
+    }
 
     Scenario scenario(agent.getSeed(), settings.maxStateDepth, list,
                       settings.objFunc);
@@ -97,6 +108,7 @@ void learningSession(const LearningSettings& settings,
     float total_reward = 0.0f;
     float total_loss = 0.0f;
     ExponentialMovingAverage smoothLoss(0.1);
+
     int steps = 0;
 
     int index = 0U;
@@ -118,7 +130,7 @@ void learningSession(const LearningSettings& settings,
         if (rewardOpt.value() > 0) {
           const auto loss = agent.updateQValues(
               stateBeforeAction, nextState, action, rewardOpt.value(),
-              settings.learningRate, settings.discountFactor);
+              learningRateAdapter.get_learning_rate(), settings.discountFactor);
           total_loss += loss;
           smoothLoss.add_value(loss);
           total_reward += rewardOpt.value();
@@ -150,8 +162,11 @@ void learningSession(const LearningSettings& settings,
     std::cout << "Average Loss: " << average_loss << std::endl;
 
     epsAdaptor.adapt(average_loss);
+    learningRateAdapter.adapt(average_loss, total_reward);
 
-    agent.getLogger().logLoss(smoothLoss.get_average());
+    logger.logLoss(i, smoothLoss.get_average());
+    logger.logReward(i, total_reward);
+    logger.logLR(i, learningRateAdapter.get_learning_rate());
 
     total_loss = 0.0f;
     steps = 0;
@@ -159,7 +174,7 @@ void learningSession(const LearningSettings& settings,
 }
 
 bool gererationSession(const GenerationSettings& settings,
-                       const QValuesAgent& agent,
+                       const QAgent& agent,
                        const QActionList& initial,
                        QActionList& out) {
   out.clear();
@@ -209,6 +224,11 @@ bool gererationSession(const GenerationSettings& settings,
   out = scenario.getCurrentState();
 
   return true;
+}
+
+QAgent& getAgent(const std::string& path) {
+  static QTableAgent agent(path);
+  return agent;
 }
 
 }  // namespace qleaning
