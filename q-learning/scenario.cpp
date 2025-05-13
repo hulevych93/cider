@@ -103,6 +103,7 @@ std::optional<QValue> rewardFunction(const ObjectiveValue& objValue,
                                      const ObjectiveValue& targetValue,
                                      double bigReward,
                                      double middleReward,
+                                     double lowReward,
                                      double penalty) {
   if (objValue.coverage > std::numeric_limits<double>::epsilon()) {
     const auto coverageBigger = objValue.coverage > targetValue.coverage;
@@ -116,7 +117,7 @@ std::optional<QValue> rewardFunction(const ObjectiveValue& objValue,
                                  targetValue.coveredTracks)) {
       return middleReward;
     } else if (coverageSame) {
-      return 0.00;
+      return lowReward;
     } else {
       return penalty;
     }
@@ -192,14 +193,14 @@ std::optional<QValue> Scenario::getReward() const {
   if (isOverFunc(objValue, m_initialObjVal, sizeOver)) {
     std::cout << "final" << std::endl;
 
-    result = rewardFunction(objValue, m_initialObjVal, 4.0, 2.0, -4.0);
+    result = rewardFunction(objValue, m_initialObjVal, 4.0, 2.0, 1.0, -4.0);
   } else {
-    result = rewardFunction(objValue, m_lastObjVal, 1.0, 0.5, -0.5);
+    result = rewardFunction(objValue, m_lastObjVal, 1.0, 0.5, 0.1, -0.5);
   }
 
   if (result.has_value()) {
     m_lastObjVal = objValue;
-    result = normalize_reward(result.value());
+    result = result.value();
   }
 
   return result;

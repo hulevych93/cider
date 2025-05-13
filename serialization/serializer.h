@@ -85,8 +85,8 @@ class Serializer final {
   template <class K, class V>
   bool operator<<(const std::map<K, V>& container);
 
-  template <class K, class V>
-  bool operator<<(const std::unordered_map<K, V>& container);
+  template <class K, class V, class B, class N>
+  bool operator<<(const std::unordered_map<K, V, B, N>& container);
 
   template <class K, class V>
   bool operator<<(const std::pair<K, V>& pair);
@@ -197,8 +197,8 @@ bool Serializer::operator<<(const std::map<K, V>& container) {
   return AddContainer(container);
 }
 
-template <class K, class V>
-bool Serializer::operator<<(const std::unordered_map<K, V>& container) {
+template <class K, class V, class B, class N>
+bool Serializer::operator<<(const std::unordered_map<K, V, B, N>& container) {
   return AddContainer(container);
 }
 

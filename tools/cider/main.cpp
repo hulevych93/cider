@@ -12,8 +12,10 @@
 #include <cppast/cpp_entity.hpp>
 
 #include "ast_handler.h"
+#include "comparison.h"
 #include "deserialization.h"
 #include "generator.h"
+#include "hash.h"
 #include "lua.h"
 #include "mutator.h"
 #include "namespaces_stack.h"
@@ -189,10 +191,18 @@ int main(int argc, char* argv[]) {
       std::ofstream deserStream(outMutatorFilePath + "_deserialization.cpp");
       deserialization_generator deserGen{deserStream, outDir, metadata};
 
+      std::ofstream compStream(outMutatorFilePath + "_comparison.cpp");
+      comparator_generator compGen{compStream, outDir, metadata};
+
+      std::ofstream hashStream(outMutatorFilePath + "_hash.cpp");
+      hash_generator hashGen{hashStream, outDir, metadata};
+
       for (const auto& file : files) {
         handleFile(mutGen, *file);
         handleFile(serGen, *file);
         handleFile(deserGen, *file);
+        handleFile(compGen, *file);
+        handleFile(hashGen, *file);
       }
     }
 

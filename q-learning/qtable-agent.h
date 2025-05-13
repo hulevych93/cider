@@ -10,7 +10,14 @@
 namespace cider {
 namespace qleaning {
 
-using QValues = std::unordered_map<QAction, QValue>;
+struct FuzzyEqualPred {
+  bool operator()(const QAction& lhs, const QAction& rhs) const {
+    return recorder::fuzzyEqual(lhs, rhs);
+  }
+};
+
+using QValues =
+    std::unordered_map<QAction, QValue, std::hash<QAction>, FuzzyEqualPred>;
 using QTable = std::unordered_map<Script, QValues>;
 
 class QTableAgent final : public QAgent {
@@ -37,6 +44,8 @@ class QTableAgent final : public QAgent {
       const Scenario& scenario,
       const double exploration) const override;
   std::optional<QAction> chooseGreedyAction(
+      const Scenario& scenario) const override;
+  std::optional<QAction> chooseRandAction(
       const Scenario& scenario) const override;
 
   double updateQValues(const std::string& state,

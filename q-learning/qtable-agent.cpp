@@ -46,7 +46,7 @@ QActionList QTableAgent::getBestFromAvailable(const QActionList& available,
   for (const auto& action : available) {
     const auto qValueIter = values.find(action);
     if (qValueIter != values.cend()) {
-      availableValues.emplace(qValueIter->first, qValueIter->second);
+      availableValues.emplace(action, qValueIter->second);
     }
   }
 
@@ -106,6 +106,11 @@ std::optional<QAction> QTableAgent::chooseEGreedyAction(
 std::optional<QAction> QTableAgent::chooseGreedyAction(
     const Scenario& scenario) const {
   return findBestOrRandomAvailableAction(scenario);
+}
+
+std::optional<QAction> QTableAgent::chooseRandAction(
+    const Scenario& scenario) const {
+  return scenario.getRandomAction();
 }
 
 std::optional<QAction> QTableAgent::chooseBolzmanAction(
@@ -171,18 +176,16 @@ double QTableAgent::updateQValues(const std::string& state,
     }
   }
 
-  std::cout << "lr: " << learningRate << ", r: " << reward << ", mV: " << maxQValue << ", qv: " << qValue
-            << " -> ";
+  std::cout << "lr: " << learningRate << ", r: " << reward
+            << ", mV: " << maxQValue << ", qv: " << qValue << " -> ";
 
-  qValue += learningRate * reward;
-  if (maxQValue != 0) {
-    qValue += learningRate * (discount * maxQValue - qValue);
-  }
+  qValue += learningRate * (reward + discount * maxQValue - qValue);
 
   float target = reward + discount * maxQValue;
   float loss = 0.5f * (qValue - target) * (qValue - target);
 
-  std::cout << qValue << ", loss: " << loss << std::endl;
+  std::cout << qValue << ", target:" << target << ", loss: " << loss
+            << std::endl;
 
   return loss;
 }

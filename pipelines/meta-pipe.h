@@ -11,37 +11,34 @@
 namespace cider {
 namespace pipelines {
 
-class HarmonySearchStage final : public IPipe {
+class HarmonySearchStage final : public Pipe {
  public:
   bool process(const std::string& metadata,
                const std::string& libName,
                const cider::Cmd& cmd,
-               const Actions& input,
-               Actions& out) override;
+               const Actions& input) override;
 
   std::string getLetter() const override { return "HS"; }
 };
 
-class CackooSearchStage final : public IPipe {
+class CackooSearchStage final : public Pipe {
  public:
   bool process(const std::string& metadata,
                const std::string& libName,
                const cider::Cmd& cmd,
-               const Actions& input,
-               Actions& out) override;
+               const Actions& input) override;
 
   std::string getLetter() const override { return "CS"; }
 };
 
-class ResetArgumentsStage final : public IPipe {
+class MetaReportStage final : public Pipe {
  public:
   bool process(const std::string& metadata,
                const std::string& libName,
                const cider::Cmd& cmd,
-               const Actions& input,
-               Actions& out) override;
+               const Actions& input) override;
 
-  std::string getLetter() const override { return "RA"; }
+  std::string getLetter() const override { return "R"; }
 };
 
 }  // namespace pipelines

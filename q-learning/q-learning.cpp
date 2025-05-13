@@ -29,6 +29,8 @@ std::ostream& operator<<(std::ostream& os, const LearningSettings& settings) {
 std::ostream& operator<<(std::ostream& os, const GenerationSettings& settings) {
   os << "QL_GEN_";
   std::string strategyName;
+  std::string stopType;
+
   switch (settings.strategy) {
     case GenerationStrategyType::Greedy:
       strategyName = "Greedy";
@@ -43,11 +45,24 @@ std::ostream& operator<<(std::ostream& os, const GenerationSettings& settings) {
       strategyName = "Unknown";
   }
 
+  switch (settings.stopType) {
+    case GenerationStopType::LimitActions:
+      stopType = "LimitActions";
+      break;
+    case GenerationStopType::GreaterCoverage:
+      stopType = "GreaterCoverage";
+      break;
+    default:
+      strategyName = "Unknown";
+  }
+
   os << "st[" << strategyName;
   os << "]_eps[" << settings.epsilon;
   os << "]_temp[" << settings.temperature;
   os << "]_maxSt[" << settings.maxRollback;
-  os << " ]";
+  os << "]_stType[" << stopType;
+  os << "]_lim[" << settings.limitActions;
+  os << "]";
   return os;
 }
 
@@ -84,18 +99,18 @@ void learningSession(const LearningSettings& settings,
                      QAgent& agent,
                      IResultsLogger& logger,
                      const std::function<void()>& dump) {
-  EpsilonGreedyAdaptor epsAdaptor(1, 0.999, 0.04, 3);
-
-  AdvancedAdaptiveLearningRate learningRateAdapter(settings.learningRate, 0.05, 1.0);
+  AdvancedAdaptiveLearningRate learningRateAdapter(settings.learningRate, 0.05,
+                                                   0.5);
 
   const auto episodes = settings.episodes;
   for (int i = 0; i < episodes; ++i) {
-    std::cout << "Episode: " << i << ", expRate: " << epsAdaptor.get_epsilon()
-              << std::endl;
+    const auto expRate = double(episodes - i) / episodes;
 
-    if((i % 100) == 0) {
-        std::cout << "dump" << std::endl;
-        dump();
+    std::cout << "Episode: " << i << ", expRate: " << expRate << std::endl;
+
+    if ((i % 100) == 0) {
+      std::cout << "dump" << std::endl;
+      dump();
     }
 
     Scenario scenario(agent.getSeed(), settings.maxStateDepth, list,
@@ -115,8 +130,7 @@ void learningSession(const LearningSettings& settings,
     while (!scenario.isOver()) {
       ++steps;
       const auto stateBeforeAction = nextState;
-      const auto actionOpt =
-          agent.chooseEGreedyAction(scenario, epsAdaptor.get_epsilon());
+      const auto actionOpt = agent.chooseEGreedyAction(scenario, expRate);
       if (!actionOpt.has_value()) {
         std::cout << "No action" << std::endl;
         break;
@@ -142,10 +156,6 @@ void learningSession(const LearningSettings& settings,
           }
           continue;
         }
-
-        scenario.rollbackAndDrop();
-        nextState = stateBeforeAction;
-        continue;
       }
 
       scenario.rollback();
@@ -161,8 +171,8 @@ void learningSession(const LearningSettings& settings,
     float average_loss = total_loss / steps;
     std::cout << "Average Loss: " << average_loss << std::endl;
 
-    epsAdaptor.adapt(average_loss);
-    learningRateAdapter.adapt(average_loss, total_reward);
+    // epsAdaptor.adapt(average_loss);
+    learningRateAdapter.adapt(smoothLoss.get_average(), total_reward);
 
     logger.logLoss(i, smoothLoss.get_average());
     logger.logReward(i, total_reward);
@@ -185,7 +195,19 @@ bool gererationSession(const GenerationSettings& settings,
 
   size_t rollbackCount = 0;
 
-  while (!scenario.isOver()) {
+  auto stopPredicate = [&]() -> bool {
+    if (settings.stopType == GenerationStopType::GreaterCoverage) {
+      return scenario.isOver();
+    }
+
+    if (settings.stopType == GenerationStopType::LimitActions) {
+      return scenario.getSize() >= settings.limitActions;
+    }
+
+    throw std::runtime_error{"Wrong stop"};
+  };
+
+  while (!stopPredicate()) {
     std::optional<QAction> selectedOpt;
 
     switch (settings.strategy) {
@@ -197,6 +219,10 @@ bool gererationSession(const GenerationSettings& settings,
         break;
       case GenerationStrategyType::Boltzmann:
         selectedOpt = agent.chooseBolzmanAction(scenario, settings.temperature);
+        break;
+      case GenerationStrategyType::Random:
+        selectedOpt = agent.chooseRandAction(scenario);
+        std::cout << "rand" << std::endl;
         break;
     }
 
@@ -214,6 +240,7 @@ bool gererationSession(const GenerationSettings& settings,
     } else {
       scenario.rollback();
       ++rollbackCount;
+      std::cout << "rollback" << std::endl;
       if (rollbackCount > settings.maxRollback) {
         std::cout << "Max rollback" << std::endl;
         break;

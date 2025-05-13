@@ -13,6 +13,9 @@
 #include "metaheuristics/cuckoo/cuckoo.h"
 #include "metaheuristics/harmony/harmony.h"
 
+#include "recorder/details/generator.h"
+#include "recorder/recorder.h"
+
 #ifdef ENABLE_MATHPLOT
 #include "mathplot-log/mathplot-log.h"
 #endif
@@ -26,10 +29,10 @@ std::unique_ptr<cider::metasearch::IMetaSearch> makeHarmonySearch(
     const cider::metasearch::ObjectiveFunction& objFunc,
     std::string& filePrefix) {
   cider::metasearch::harmony::Settings settings;
-  settings.mutationRate = 0.05;
+  settings.mutationRate = 0.15;
   settings.harmonyMemoryConsiderationRate = 0.4;
   settings.harmonyMemorySize = 1;
-  settings.maxIterationsWithoutUpdates = 200;
+  settings.maxIterationsWithoutUpdates = 300;
   settings.strategy = cider::metasearch::MutationStrategy::ShuffleBytes;
   settings.objFunc = objFunc;
 
@@ -46,7 +49,7 @@ std::unique_ptr<cider::metasearch::IMetaSearch> makeCackooSearch(
   cider::metasearch::cuckoo::Settings settings;
   settings.populationSize = 1;
   settings.Pa = 0.1;
-  settings.maxIterationsWithoutUpdates = 200;
+  settings.maxIterationsWithoutUpdates = 300;
   settings.strategy = cider::metasearch::MutationStrategy::LevyFlight;
   settings.objFunc = objFunc;
 
@@ -111,33 +114,92 @@ bool makeMetaPipeline(PipelineType type,
 bool HarmonySearchStage::process(const std::string& metadata,
                                  const std::string& libName,
                                  const cider::Cmd& cmd,
-                                 const Actions& input,
-                                 Actions& out) {
-  return makeMetaPipeline<cfg_coverage::CoverageMeasurment>(
-      PipelineType::HarmonySearch, metadata, libName, cmd, input, out);
+                                 const Actions& input) {
+  Actions output;
+  auto res = makeMetaPipeline<cfg_coverage::CoverageMeasurment>(
+      PipelineType::HarmonySearch, metadata, libName, cmd, input, output);
+  pushResult(output);
+  return res;
 }
 
 bool CackooSearchStage::process(const std::string& metadata,
                                 const std::string& libName,
                                 const cider::Cmd& cmd,
-                                const Actions& input,
-                                Actions& out) {
-  return makeMetaPipeline<cfg_coverage::CoverageMeasurment>(
-      PipelineType::CackooSearch, metadata, libName, cmd, input, out);
+                                const Actions& input) {
+  Actions output;
+  auto res = makeMetaPipeline<cfg_coverage::CoverageMeasurment>(
+      PipelineType::CackooSearch, metadata, libName, cmd, input, output);
+  pushResult(output);
+  return res;
 }
 
-bool ResetArgumentsStage::process(const std::string& /*metadata*/,
-                                  const std::string& /*libName*/,
-                                  const cider::Cmd& /*cmd*/,
-                                  const Actions& input,
-                                  Actions& out) {
-  auto myInput = deepCopy(input);
+namespace {
+Actions resetArgs(const Actions& input) {
+  auto result = deepCopy(input);
   auto nuller = recorder::makeNullableMutator();
-  for (auto& action : myInput) {
+  for (auto& action : result) {
     recorder::ActionMutator mutator(*nuller);
     std::visit(mutator, action);
   }
-  out = myInput;
+  return result;
+}
+}  // namespace
+
+bool MetaReportStage::process(const std::string& metadata,
+                              const std::string& libName,
+                              const cider::Cmd& cmd,
+                              const Actions& input) {
+  std::filesystem::path outPath(cmd.resultsDir);
+  outPath /= metadata;
+
+  auto generator = cider::recorder::makeLuaGenerator(libName);
+
+  {
+    const auto script =
+        cider::recorder::generateScript(generator, input, 99999U);
+
+    std::ofstream output_file(outPath / (libName + ".lua"));
+    output_file << script;
+  }
+
+  const auto& output = getResults()[0];
+
+  {
+    const auto script =
+        cider::recorder::generateScript(generator, output, 99999U);
+
+    std::ofstream output_file(outPath / ("optimized_" + libName + ".lua"));
+    output_file << script;
+  }
+
+#ifdef ENABLE_MATHPLOT
+  auto logger = std::make_shared<cider::gcov_coverage::ComparativeLogger>(
+      outPath.string(), "comparage.png");
+#else
+  auto logger = std::make_shared<gcov_coverage::FileLogger>(outPath.string(),
+                                                            "comparage.txt");
+#endif
+
+  {
+    cider::gcov_coverage::StepperCoverageMeasurment stepper{cmd,
+                                                            libName.c_str()};
+
+    stepper.setLogger(logger);
+
+    stepper.measure(input);
+  }
+
+  logger->other();
+
+  {
+    cider::gcov_coverage::StepperCoverageMeasurment stepper{cmd,
+                                                            libName.c_str()};
+
+    stepper.setLogger(logger);
+
+    stepper.measure(output);
+  }
+
   return true;
 }
 

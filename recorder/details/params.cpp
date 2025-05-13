@@ -3,8 +3,41 @@
 
 #include "params.h"
 
+#include <iostream>
+
 namespace cider {
 namespace recorder {
+
+bool fuzzyEqual(const Param& lhs, const Param& rhs) {
+  if (lhs.index() != rhs.index())
+    return false;
+
+  return std::visit(
+      [](const auto& lhsVal, const auto& rhsVal) {
+        using LhsType = std::decay_t<decltype(lhsVal)>;
+        using RhsType = std::decay_t<decltype(rhsVal)>;
+        if constexpr (std::is_same_v<LhsType, RhsType>) {
+          if constexpr (std::is_same_v<LhsType, Nil> ||
+                        std::is_same_v<LhsType, bool> ||
+                        std::is_same_v<LhsType, double> ||
+                        std::is_same_v<LhsType, std::string> ||
+                        std::is_same_v<LhsType, std::wstring> ||
+                        std::is_same_v<LhsType, IntegerType>) {
+            return lhsVal == rhsVal;
+          } else if constexpr (std::is_same_v<LhsType, UserDataValueParamPtr> ||
+                               std::is_same_v<LhsType,
+                                              UserDataReferenceParamPtr>) {
+            return lhsVal->fuzzyEquals(*rhsVal);
+          } else {
+            static_assert(!sizeof(LhsType), "Unsupported type in Param");
+          }
+
+        } else {
+          return false;
+        }
+      },
+      lhs, rhs);
+}
 
 Param deepCopy(const Param& param) {
   return std::visit(
@@ -27,7 +60,7 @@ Param deepCopy(const Param& param) {
       param);
 }
 
-void print(std::ostream& os, const cider::recorder::Param& param) {
+std::ostream& print(std::ostream& os, const cider::recorder::Param& param) {
   std::visit(
       [&os](auto&& value) {
         using T = std::decay_t<decltype(value)>;
@@ -50,6 +83,7 @@ void print(std::ostream& os, const cider::recorder::Param& param) {
         }
       },
       param);
+  return os;
 }
 
 std::shared_ptr<UserDataReferenceParam> UserDataReferenceParam::Create(

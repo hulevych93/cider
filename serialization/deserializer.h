@@ -87,8 +87,8 @@ class Deserializer final {
   template <class T, class P, class A>
   bool operator>>(std::set<T, P, A>& container) const;
 
-  template <class K, class V>
-  bool operator>>(std::unordered_map<K, V>& container) const;
+  template <class K, class V, class B, class N>
+  bool operator>>(std::unordered_map<K, V, B, N>& container) const;
 
   template <class K, class V>
   bool operator>>(std::pair<K, V>& pair) const;
@@ -227,8 +227,8 @@ bool Deserializer::operator>>(std::set<T, P, A>& container) const {
   return GetContainerSingleSet(container);
 }
 
-template <class K, class V>
-bool Deserializer::operator>>(std::unordered_map<K, V>& container) const {
+template <class K, class V, class B, class N>
+bool Deserializer::operator>>(std::unordered_map<K, V, B, N>& container) const {
   return GetContainerPaired(container);
 }
 

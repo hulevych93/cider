@@ -32,6 +32,8 @@ class QAgent {
       const double exploration) const = 0;
   virtual std::optional<QAction> chooseGreedyAction(
       const Scenario& scenario) const = 0;
+  virtual std::optional<QAction> chooseRandAction(
+      const Scenario& scenario) const = 0;
 
   virtual double updateQValues(const std::string& state,
                                const std::string& nextState,

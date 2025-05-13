@@ -56,6 +56,7 @@ Action deepCopy(const Action& action);
 void print(std::ostream& os, const Action& action);
 
 bool operator==(const Action& lhs, const Action& rhs);
+bool fuzzyEqual(const Action& lhs, const Action& rhs);
 
 bool serialize(const Function& obj, serialization::Serializer& serializer);
 bool serialize(const ClassMethod& obj, serialization::Serializer& serializer);
@@ -192,40 +193,6 @@ struct ActionMutator final {
 namespace std {
 
 template <>
-struct hash<cider::recorder::Nil> {
-  size_t operator()(const cider::recorder::Nil&) const noexcept {
-    return 0x9e3779b9;  // Fixed arbitrary value since Nil has no internal state
-  }
-};
-
-template <typename T>
-inline void hash_combine(size_t& seed, const T& val) {
-  seed ^= hash<T>{}(val) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-}
-
-template <>
-struct hash<cider::recorder::Param> {
-  size_t operator()(const cider::recorder::Param& param) const {
-    return std::visit(
-        [](const auto& val) -> size_t {
-          return hash<std::decay_t<decltype(val)>>{}(val);
-        },
-        param);
-  }
-};
-
-template <>
-struct hash<cider::recorder::Params> {
-  size_t operator()(const cider::recorder::Params& params) const {
-    size_t seed = 0;
-    for (const auto& param : params) {
-      hash_combine(seed, param);
-    }
-    return seed;
-  }
-};
-
-template <>
 struct hash<cider::recorder::Function> {
   size_t operator()(const cider::recorder::Function& func) const {
     size_t seed = hash<std::string>{}(func.name);
@@ -238,24 +205,22 @@ struct hash<cider::recorder::Function> {
 template <>
 struct hash<cider::recorder::ClassMethod> {
   size_t operator()(const cider::recorder::ClassMethod& method) const {
-    size_t seed = reinterpret_cast<size_t>(method.objectAddress);
-    hash_combine(seed, method.method);
+    size_t seed = hash<decltype(method.method)>{}(method.method);
     return seed;
   }
 };
 
 template <>
 struct hash<cider::recorder::ClassDestructor> {
-  size_t operator()(const cider::recorder::ClassDestructor& destructor) const {
-    return reinterpret_cast<size_t>(destructor.objectAddress);
+  size_t operator()(const cider::recorder::ClassDestructor&) const {
+    return 0xce3b9d39;  // Fixed arbitrary value since Nil has no internal state
   }
 };
 
 template <>
 struct hash<cider::recorder::ClassUnaryOp> {
   size_t operator()(const cider::recorder::ClassUnaryOp& op) const {
-    size_t seed = reinterpret_cast<size_t>(op.objectAddress);
-    hash_combine(seed, static_cast<int>(op.opName));
+    size_t seed = static_cast<int>(op.opName);
     hash_combine(seed, op.retVal);
     return seed;
   }
@@ -264,8 +229,7 @@ struct hash<cider::recorder::ClassUnaryOp> {
 template <>
 struct hash<cider::recorder::ClassBinaryOp> {
   size_t operator()(const cider::recorder::ClassBinaryOp& op) const {
-    size_t seed = reinterpret_cast<size_t>(op.objectAddress);
-    hash_combine(seed, static_cast<int>(op.opName));
+    size_t seed = static_cast<int>(op.opName);
     hash_combine(seed, op.param);
     return seed;
   }

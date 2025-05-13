@@ -11,29 +11,43 @@ namespace cider {
 namespace pipelines {
 
 using Actions = std::vector<recorder::Action>;
+using Results = std::vector<Actions>;
 
-class IPipe {
+class Pipeline;
+
+class Pipe {
  public:
-  virtual ~IPipe() = default;
+  virtual ~Pipe() = default;
 
   virtual bool process(const std::string& metadata,
                        const std::string& libName,
                        const cider::Cmd& cmd,
-                       const Actions& input,
-                       Actions& out) = 0;
+                       const Actions& input) = 0;
 
   virtual std::string getLetter() const = 0;
+
+ protected:
+  friend class Pipeline;
+
+  void setOwner(Pipeline* owner) { _owner = owner; }
+
+  void pushResult(const Actions& result);
+  const Results& getResults() const;
+
+ private:
+  Pipeline* _owner = nullptr;
 };
 
 class Pipeline final {
+  friend class Pipe;
+
  public:
   Pipeline(const std::string& libName, const cider::Cmd& cmd);
 
-  void addStage(std::unique_ptr<IPipe> pipe) {
+  void addStage(std::unique_ptr<Pipe> pipe) {
+    pipe->setOwner(this);
     _pipes.emplace_back(std::move(pipe));
   }
-
-  void enableReport();
 
   bool run(
       const std::vector<cider::recorder::ScriptRecordSessionPtr>& sessions);
@@ -47,9 +61,8 @@ class Pipeline final {
  private:
   std::string _libName;
   cider::Cmd _cmd;
-  std::vector<std::unique_ptr<IPipe>> _pipes;
-
-  std::unique_ptr<IPipe> _report;
+  std::vector<std::unique_ptr<Pipe>> _pipes;
+  std::vector<Actions> _results;
 };
 
 Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd);

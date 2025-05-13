@@ -6,7 +6,6 @@
 #include "meta-pipe.h"
 #include "paths.h"
 #include "q-learning-pipe.h"
-#include "report-pipe.h"
 
 #include <chrono>
 #include <ctime>
@@ -16,6 +15,14 @@
 
 namespace cider {
 namespace pipelines {
+
+void Pipe::pushResult(const Actions& result) {
+  _owner->_results.emplace_back(result);
+}
+
+const Results& Pipe::getResults() const {
+  return _owner->_results;
+}
 
 Pipeline::Pipeline(const std::string& libName, const cider::Cmd& cmd)
     : _libName(libName), _cmd(cmd) {
@@ -51,16 +58,11 @@ bool Pipeline::run(
 
 bool Pipeline::run(const std::string& metadata, const Actions& input) {
   try {
-    Actions in = deepCopy(input);
-    Actions out;
+    const Actions in = deepCopy(input);
     for (auto& pipe : _pipes) {
-      if (!pipe->process(metadata, _libName, _cmd, in, out)) {
+      if (!pipe->process(metadata, _libName, _cmd, in)) {
         return false;
       }
-      in = deepCopy(out);
-    }
-    if (_report) {
-      _report->process(metadata, _libName, _cmd, input, out);
     }
     return true;
   } catch (...) {
@@ -87,21 +89,17 @@ std::string Pipeline::getDatetimeForDirName() {
   return oss.str();
 }
 
-void Pipeline::enableReport() {
-  _report = std::make_unique<ReportStage>();
-}
-
 Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
   Pipeline pipeline(libName, cmd);
   const auto pipelineType = cmd.pipelineType;
   switch (pipelineType) {
     case PipelineType::HarmonySearch:
       pipeline.addStage(std::make_unique<HarmonySearchStage>());
-      pipeline.enableReport();
+      pipeline.addStage(std::make_unique<MetaReportStage>());
       break;
     case PipelineType::CackooSearch:
       pipeline.addStage(std::make_unique<CackooSearchStage>());
-      pipeline.enableReport();
+      pipeline.addStage(std::make_unique<MetaReportStage>());
       break;
     case PipelineType::QLearningAgent:
       pipeline.addStage(std::make_unique<QPreLearningStage>());
@@ -110,16 +108,15 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
     case PipelineType::QLearningAgentPlusHarmonySearch:
       pipeline.addStage(std::make_unique<QGenerationStage>());
       pipeline.addStage(std::make_unique<HarmonySearchStage>());
-      pipeline.enableReport();
       break;
     case PipelineType::QLearningAgentPlusCackooSearch:
       pipeline.addStage(std::make_unique<QGenerationStage>());
       pipeline.addStage(std::make_unique<CackooSearchStage>());
-      pipeline.enableReport();
       break;
     case PipelineType::QLearningAgentGeneration:
       pipeline.addStage(std::make_unique<QGenerationStage>());
-      pipeline.enableReport();
+      pipeline.addStage(std::make_unique<QRandGenerationStage>());
+      pipeline.addStage(std::make_unique<GenerationReportStage>());
       break;
     default:
       break;

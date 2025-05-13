@@ -14,5 +14,5 @@ std::string getQTableAgentPath(const std::string& resultsDir) {
   return outPath.string();
 }
 
-}  // namespace pipelines
+}  // namespace paths
 }  // namespace cider

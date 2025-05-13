@@ -64,6 +64,28 @@ class ComparativeLogger : public ICoverageLogger {
   std::string m_path;
 };
 
+class TripleComparativeLogger : public ICoverageLogger {
+ public:
+  TripleComparativeLogger(const std::string& logDir,
+                          const std::string& logFileName);
+  ~TripleComparativeLogger() override;
+
+  void log(size_t index, const RootReport& coverage) const override;
+
+  void md(size_t md) { _md = md; }
+
+  void plot() const;
+
+ private:
+  mutable std::vector<double> i_, ilcov_, ibcov_;
+  mutable std::vector<double> j_, jlcov_, jbcov_;
+  mutable std::vector<double> k_, klcov_, kbcov_;
+
+  size_t _md = 0;
+
+  std::string m_path;
+};
+
 }  // namespace gcov_coverage
 
 namespace metasearch {

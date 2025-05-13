@@ -54,9 +54,9 @@ add_subdirectory(coverage)
 add_subdirectory(serialization)
 add_subdirectory(metaheuristics)
 add_subdirectory(q-learning)
-add_subdirectory(tools/cider)
 add_subdirectory(pipelines)
-add_subdirectory(tools/coverage/table_printer)
+
+add_subdirectory(tools/cider)
 
 if(ENABLE_COVERAGE)
     if(NOT "${CMAKE_BUILD_TYPE}" STREQUAL "DEBUG")

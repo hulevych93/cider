@@ -123,6 +123,8 @@ struct UserDataValueParam : public serialization::ISerializable {
   virtual bool mutate(const IParamMutator&) = 0;
   virtual void print(std::ostream& os) const { os << "obj@value"; }
   virtual UserDataValueParamPtr deepCopy() const = 0;
+  virtual bool fuzzyEquals(const UserDataValueParam& param) const = 0;
+  virtual size_t computeHash() const = 0;
 
   static std::shared_ptr<UserDataValueParam> Create(
       const serialization::Deserializer& deserializer);
@@ -138,6 +140,8 @@ struct UserDataReferenceParam : public serialization::ISerializable {
   bool mutate(const IParamMutator&) { return false; }
   virtual void print(std::ostream& os) const { os << "obj@ref"; }
   virtual UserDataReferenceParamPtr deepCopy() const = 0;
+  virtual bool fuzzyEquals(const UserDataReferenceParam& param) const = 0;
+  virtual size_t computeHash() const = 0;
 
   static std::shared_ptr<UserDataReferenceParam> Create(
       const serialization::Deserializer& deserializer);
@@ -157,9 +161,32 @@ std::string produceAggregateCode(const std::string& moduleName,
 template <typename Type>
 bool mutateAggregate(const IParamMutator& mutator, Type&);
 
+template <typename Type>
+bool compareAggregates(const Type& lhs, const Type& rhs);
+
+template <typename Type>
+size_t hashAggregate(const Type&);
+
 Param deepCopy(const Param& param);
 
-void print(std::ostream& os, const Param& param);
+std::ostream& print(std::ostream& os, const Param& param);
+
+bool fuzzyEqual(const Param& lhs, const Param& rhs);
+
+template <typename Type>
+bool fuzzyEqual(const std::vector<Type>& lc, const std::vector<Type>& rc) {
+  if (lc.size() != rc.size()) {
+    return false;
+  }
+  auto fIt = lc.cbegin();
+  auto sIt = rc.cbegin();
+  for (; fIt < lc.cend(); ++fIt, ++sIt) {
+    if (!fuzzyEqual(*fIt, *sIt)) {
+      return false;
+    }
+  }
+  return true;
+}
 
 template <typename Type>
 std::vector<Type> deepCopy(const std::vector<Type>& container) {
@@ -226,6 +253,14 @@ struct AggregateUserDataValueParamImpl final : public UserDataValueParam {
     return serializeAggregate(_param, serializer);
   }
 
+  bool fuzzyEquals(const UserDataValueParam& param) const override {
+    return compareAggregates(
+        _param,
+        static_cast<const AggregateUserDataValueParamImpl&>(param)._param);
+  }
+
+  virtual size_t computeHash() const override { return hashAggregate(_param); }
+
   bool deserialize(const serialization::Deserializer& deserializer) override {
     return deserializeAggregate(_param, deserializer);
   }
@@ -264,6 +299,14 @@ struct ReferenceUserDataValueParamImpl final : public UserDataReferenceParam {
   LocalVar registerLocal(CodeSink& sink) override {
     return sink.registerLocalVar(_address);
   }
+
+  bool fuzzyEquals(const UserDataReferenceParam&) const override {
+    // Fow now all references are the same in our model of
+    // state for qlearning approach.
+    return true;
+  }
+
+  virtual size_t computeHash() const override { return 0xceaad3f; }
 
   void print(std::ostream& os) const override { os << "obj@" << _address; }
 
@@ -408,3 +451,64 @@ std::unique_ptr<IParamMutator> makeNullableMutator();
 
 }  // namespace recorder
 }  // namespace cider
+
+namespace std {
+
+template <>
+struct hash<cider::recorder::Nil> {
+  size_t operator()(const cider::recorder::Nil&) const noexcept {
+    return 0x9e3779b9;  // Fixed arbitrary value since Nil has no internal state
+  }
+};
+
+template <typename T>
+inline void hash_combine(size_t& seed, const T& val) {
+  seed ^= hash<T>{}(val) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+}
+
+template <>
+struct hash<cider::recorder::Param> {
+  size_t operator()(const cider::recorder::Param& param) const {
+    return std::visit(
+        [](const auto& val) -> size_t {
+          using T = std::decay_t<decltype(val)>;
+
+          if constexpr (std::is_same_v<T, cider::recorder::Nil>) {
+            return 0x9e3779b9;  // Fixed arbitrary value since Nil has no
+                                // internal state
+          } else if constexpr (std::is_same_v<T, bool> ||
+                               std::is_same_v<T, double> ||
+                               std::is_same_v<T, std::string> ||
+                               std::is_same_v<T, std::wstring>) {
+            return hash<T>{}(val);
+          } else if constexpr (std::is_same_v<T,
+                                              cider::recorder::IntegerType>) {
+            return std::visit(
+                [](auto&& integer) {
+                  return hash<std::decay_t<decltype(integer)>>{}(integer);
+                },
+                val);
+          } else if constexpr (
+              std::is_same_v<T, cider::recorder::UserDataValueParamPtr> ||
+              std::is_same_v<T, cider::recorder::UserDataReferenceParamPtr>) {
+            return val->computeHash();
+          } else {
+            static_assert(!sizeof(T), "Unsupported type in Param");
+          }
+        },
+        param);
+  }
+};
+
+template <>
+struct hash<cider::recorder::Params> {
+  size_t operator()(const cider::recorder::Params& params) const {
+    size_t seed = 0;
+    for (const auto& param : params) {
+      hash_combine(seed, param);
+    }
+    return seed;
+  }
+};
+
+}  // namespace std

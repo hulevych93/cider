@@ -30,6 +30,28 @@ bool operator==(const ClassBinaryOp& lhs, const ClassBinaryOp& rhs) {
   return lhs.objectAddress == rhs.objectAddress && lhs.opName == rhs.opName &&
          lhs.param == rhs.param;
 }
+
+bool fuzzyEqual(const Function& lhs, const Function& rhs) {
+  return lhs.name == rhs.name && fuzzyEqual(lhs.params, rhs.params) &&
+         fuzzyEqual(lhs.retVal, rhs.retVal);
+}
+
+bool fuzzyEqual(const ClassMethod& lhs, const ClassMethod& rhs) {
+  return fuzzyEqual(lhs.method, rhs.method);
+}
+
+bool fuzzyEqual(const ClassDestructor&, const ClassDestructor&) {
+  return false;
+}
+
+bool fuzzyEqual(const ClassUnaryOp& lhs, const ClassUnaryOp& rhs) {
+  return lhs.opName == rhs.opName && fuzzyEqual(lhs.retVal, rhs.retVal);
+}
+
+bool fuzzyEqual(const ClassBinaryOp& lhs, const ClassBinaryOp& rhs) {
+  return lhs.opName == rhs.opName && fuzzyEqual(lhs.param, rhs.param);
+}
+
 }  // namespace
 
 bool serialize(const Function& obj, serialization::Serializer& serializer) {
@@ -113,6 +135,23 @@ bool operator==(const Action& lhs, const Action& rhs) {
         using RhsType = std::decay_t<decltype(rhsVal)>;
         if constexpr (std::is_same_v<LhsType, RhsType>) {
           return lhsVal == rhsVal;
+        } else {
+          return false;
+        }
+      },
+      lhs, rhs);
+}
+
+bool fuzzyEqual(const Action& lhs, const Action& rhs) {
+  if (lhs.index() != rhs.index())
+    return false;
+
+  return std::visit(
+      [](const auto& lhsVal, const auto& rhsVal) {
+        using LhsType = std::decay_t<decltype(lhsVal)>;
+        using RhsType = std::decay_t<decltype(rhsVal)>;
+        if constexpr (std::is_same_v<LhsType, RhsType>) {
+          return fuzzyEqual(lhsVal, rhsVal);
         } else {
           return false;
         }

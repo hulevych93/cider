@@ -34,9 +34,13 @@ void learningSession(const LearningSettings& settings,
                      IResultsLogger& logger,
                      const std::function<void()>& dump);
 
-enum class GenerationStrategyType { Greedy, EGreedy, Boltzmann };
+enum class GenerationStrategyType { Greedy, EGreedy, Boltzmann, Random };
+enum class GenerationStopType { LimitActions, GreaterCoverage };
 
 struct GenerationSettings final {
+  GenerationStopType stopType = GenerationStopType::GreaterCoverage;
+  size_t limitActions = 100U;
+
   GenerationStrategyType strategy = GenerationStrategyType::Greedy;
   float epsilon = 0.1f;      // for ε-Greedy
   float temperature = 1.0f;  // for Boltzmann

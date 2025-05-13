@@ -29,6 +29,8 @@ class Scenario final {
   void rollbackAndDrop();
   void drop(const QAction& action);
 
+  size_t getSize() const { return m_actions.size(); }
+
   QActionList getCurrentState() const;
 
   std::optional<QValue> getReward() const;
