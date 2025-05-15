@@ -11,17 +11,22 @@ include_directories(.
     ${GEN_DIR}
 )
 
-add_executable(hjson_player hjson_play.cpp ${TESTED_FILES})
-
-add_coverage_flags(hjson_player)
-
-target_link_libraries(hjson_player PUBLIC
-  hjson_wrap
-  hjson-models
-  scripting
-  recorder
-  serialization
-  coverage
-  ${Lua_LIBRARIES}
-  ${PLATFORM_LIBRARIES}
+set(PLAYER_LIBS
+    hjson_wrap
+    hjson-models
+    scripting
+    recorder
+    serialization
+    coverage
+    ${Lua_LIBRARIES}
+    ${PLATFORM_LIBRARIES}
 )
+
+add_executable(hjson_player hjson_play.cpp ${TESTED_FILES})
+target_link_libraries(hjson_player PUBLIC ${PLAYER_LIBS})
+
+add_library(hjson_traced STATIC ${TESTED_FILES})
+add_coverage_flags(hjson_traced)
+
+add_executable(hjson_player_cfg hjson_play.cpp)
+target_link_libraries(hjson_player_cfg PUBLIC ${PLAYER_LIBS} hjson_traced)

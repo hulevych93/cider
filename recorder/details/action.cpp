@@ -3,6 +3,8 @@
 
 #include "action.h"
 
+#include <iostream>
+
 namespace cider {
 namespace recorder {
 
@@ -41,7 +43,7 @@ bool fuzzyEqual(const ClassMethod& lhs, const ClassMethod& rhs) {
 }
 
 bool fuzzyEqual(const ClassDestructor&, const ClassDestructor&) {
-  return false;
+  return true;
 }
 
 bool fuzzyEqual(const ClassUnaryOp& lhs, const ClassUnaryOp& rhs) {
@@ -50,6 +52,26 @@ bool fuzzyEqual(const ClassUnaryOp& lhs, const ClassUnaryOp& rhs) {
 
 bool fuzzyEqual(const ClassBinaryOp& lhs, const ClassBinaryOp& rhs) {
   return lhs.opName == rhs.opName && fuzzyEqual(lhs.param, rhs.param);
+}
+
+bool semanticallyEqual(const Function& lhs, const Function& rhs) {
+  return lhs.name == rhs.name && lhs.params.size() == rhs.params.size();
+}
+
+bool semanticallyEqual(const ClassMethod& lhs, const ClassMethod& rhs) {
+  return semanticallyEqual(lhs.method, rhs.method);
+}
+
+bool semanticallyEqual(const ClassDestructor&, const ClassDestructor&) {
+  return true;
+}
+
+bool semanticallyEqual(const ClassUnaryOp& lhs, const ClassUnaryOp& rhs) {
+  return lhs.opName == rhs.opName;
+}
+
+bool semanticallyEqual(const ClassBinaryOp& lhs, const ClassBinaryOp& rhs) {
+  return lhs.opName == rhs.opName;
 }
 
 }  // namespace
@@ -159,6 +181,55 @@ bool fuzzyEqual(const Action& lhs, const Action& rhs) {
       lhs, rhs);
 }
 
+bool fuzzyEqual(const std::vector<Action>& lhs,
+                const std::vector<Action>& rhs) {
+  bool result = lhs.size() == rhs.size();
+  if (result) {
+    auto fIt = lhs.cbegin();
+    auto sIt = rhs.cbegin();
+    for (; fIt != lhs.cend(); ++fIt, ++sIt) {
+      result = fuzzyEqual(*fIt, *sIt);
+      if (!result) {
+        break;
+      }
+    }
+  }
+  return result;
+}
+
+bool semanticallyEqual(const Action& lhs, const Action& rhs) {
+  if (lhs.index() != rhs.index())
+    return false;
+
+  return std::visit(
+      [](const auto& lhsVal, const auto& rhsVal) {
+        using LhsType = std::decay_t<decltype(lhsVal)>;
+        using RhsType = std::decay_t<decltype(rhsVal)>;
+        if constexpr (std::is_same_v<LhsType, RhsType>) {
+          return semanticallyEqual(lhsVal, rhsVal);
+        } else {
+          return false;
+        }
+      },
+      lhs, rhs);
+}
+
+bool semanticallyEqual(const std::vector<Action>& lhs,
+                       const std::vector<Action>& rhs) {
+  bool result = lhs.size() == rhs.size();
+  if (result) {
+    auto fIt = lhs.cbegin();
+    auto sIt = rhs.cbegin();
+    for (; fIt != lhs.cend(); ++fIt, ++sIt) {
+      result = semanticallyEqual(*fIt, *sIt);
+      if (!result) {
+        break;
+      }
+    }
+  }
+  return result;
+}
+
 Action deepCopy(const Action& action) {
   return std::visit(
       [](auto&& value) -> Action {
@@ -205,31 +276,27 @@ void print(std::ostream& os, const Action& action) {
       [&os](auto&& value) {
         using T = std::decay_t<decltype(value)>;
 
-        if constexpr (std::is_same_v<T, cider::recorder::Function>) {
+        if constexpr (std::is_same_v<T, Function>) {
           print(os, value.retVal);
           os << " " << value.name << "(";
           print(os, value.params);
           os << ")";
-        } else if constexpr (std::is_same_v<T, cider::recorder::ClassMethod>) {
+        } else if constexpr (std::is_same_v<T, ClassMethod>) {
           print(os, value.method.retVal);
           os << " "
              << "obj@" << value.objectAddress << "->" << value.method.name
              << "(";
           print(os, value.method.params);
           os << ")";
-        } else if constexpr (std::is_same_v<T,
-                                            cider::recorder::ClassBinaryOp>) {
+        } else if constexpr (std::is_same_v<T, ClassBinaryOp>) {
           std::string opStr =
-              (value.opName == cider::recorder::BinaryOpType::Assignment) ? "="
-                                                                          : "?";
+              (value.opName == BinaryOpType::Assignment) ? "=" : "?";
           os << "obj@" << value.objectAddress << " " << opStr << " ";
           print(os, value.param);
-        } else if constexpr (std::is_same_v<T, cider::recorder::ClassUnaryOp>) {
-          std::string opStr =
-              (value.opName == cider::recorder::UnaryOpType::Minus) ? "-" : "?";
+        } else if constexpr (std::is_same_v<T, ClassUnaryOp>) {
+          std::string opStr = (value.opName == UnaryOpType::Minus) ? "-" : "?";
           os << opStr << "obj@" << value.objectAddress;
-        } else if constexpr (std::is_same_v<T,
-                                            cider::recorder::ClassDestructor>) {
+        } else if constexpr (std::is_same_v<T, ClassDestructor>) {
           os << "destroy(obj@" +
                     std::to_string(
                         reinterpret_cast<uintptr_t>(value.objectAddress)) +

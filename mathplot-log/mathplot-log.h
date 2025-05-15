@@ -22,6 +22,8 @@ class MathplotLogger : public ICoverageLogger {
 
   void log(size_t index, const Coverage& coverage) const override;
 
+  void plot() const;
+
  private:
   mutable std::vector<double> index_, _percents;
   std::string m_path;
@@ -37,6 +39,8 @@ class MathplotLogger : public ICoverageLogger {
   ~MathplotLogger() override;
 
   void log(size_t index, const RootReport& coverage) const override;
+
+  void plot() const;
 
  private:
   mutable std::vector<double> i_, lcov_, bcov_, fcov_;
@@ -77,9 +81,9 @@ class TripleComparativeLogger : public ICoverageLogger {
   void plot() const;
 
  private:
-  mutable std::vector<double> i_, ilcov_, ibcov_;
-  mutable std::vector<double> j_, jlcov_, jbcov_;
-  mutable std::vector<double> k_, klcov_, kbcov_;
+  mutable std::vector<double> i_, ibcov_;
+  mutable std::vector<double> j_, jbcov_;
+  mutable std::vector<double> k_, kbcov_;
 
   size_t _md = 0;
 
@@ -97,6 +101,8 @@ class MathplotLogger : public IResultsLogger {
 
   void log(size_t index, const Solution& best) const override;
 
+  void plot() const;
+
  private:
   mutable std::vector<double> x_, y_;
   std::string m_path;
@@ -113,15 +119,15 @@ class MathplotLogger : public IResultsLogger {
 
   void logReward(size_t episode, const double totalReward) const override;
   void logLoss(size_t episode, const double averageLoss) const override;
-  void logLR(size_t episode, double learningRate) const override;
 
   void plot() const;
 
  private:
   mutable std::vector<double> ieps_, rwrd_;
   mutable std::vector<double> jeps_, loss_;
-  mutable std::vector<double> keps_, lr_;
+
   std::string m_path;
+  mutable size_t _updateCounter = 0;
 };
 
 }  // namespace qleaning

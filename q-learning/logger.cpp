@@ -28,10 +28,5 @@ void FileLogger::logLoss(size_t episode, double averageLoss) const {
           << "LOSS: " << averageLoss << std::endl;
 }
 
-void FileLogger::logLR(size_t episode, double learningRate) const {
-  _report << "EPS: " << episode << "\t"
-          << "LR: " << learningRate << std::endl;
-}
-
 }  // namespace qleaning
 }  // namespace cider

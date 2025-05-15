@@ -449,25 +449,12 @@ inline Param makeParam(std::nullopt_t) {
 
 std::unique_ptr<IParamMutator> makeNullableMutator();
 
-}  // namespace recorder
-}  // namespace cider
-
-namespace std {
-
-template <>
-struct hash<cider::recorder::Nil> {
-  size_t operator()(const cider::recorder::Nil&) const noexcept {
-    return 0x9e3779b9;  // Fixed arbitrary value since Nil has no internal state
+struct FuzzyParamHash final {
+  template <typename T>
+  void hash_combine(size_t& seed, const T& val) const {
+    seed ^= (*this)(val) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
   }
-};
 
-template <typename T>
-inline void hash_combine(size_t& seed, const T& val) {
-  seed ^= hash<T>{}(val) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-}
-
-template <>
-struct hash<cider::recorder::Param> {
   size_t operator()(const cider::recorder::Param& param) const {
     return std::visit(
         [](const auto& val) -> size_t {
@@ -480,12 +467,12 @@ struct hash<cider::recorder::Param> {
                                std::is_same_v<T, double> ||
                                std::is_same_v<T, std::string> ||
                                std::is_same_v<T, std::wstring>) {
-            return hash<T>{}(val);
+            return std::hash<T>{}(val);
           } else if constexpr (std::is_same_v<T,
                                               cider::recorder::IntegerType>) {
             return std::visit(
                 [](auto&& integer) {
-                  return hash<std::decay_t<decltype(integer)>>{}(integer);
+                  return std::hash<std::decay_t<decltype(integer)>>{}(integer);
                 },
                 val);
           } else if constexpr (
@@ -498,10 +485,7 @@ struct hash<cider::recorder::Param> {
         },
         param);
   }
-};
 
-template <>
-struct hash<cider::recorder::Params> {
   size_t operator()(const cider::recorder::Params& params) const {
     size_t seed = 0;
     for (const auto& param : params) {
@@ -509,6 +493,20 @@ struct hash<cider::recorder::Params> {
     }
     return seed;
   }
+
+  size_t operator()(const cider::recorder::Nil&) const noexcept {
+    return 0x9e3779b9;  // Fixed arbitrary value since Nil has no internal state
+  }
 };
+
+}  // namespace recorder
+}  // namespace cider
+
+namespace std {
+
+template <typename T>
+inline void hash_combine(size_t& seed, const T& val) {
+  seed ^= hash<T>{}(val) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+}
 
 }  // namespace std

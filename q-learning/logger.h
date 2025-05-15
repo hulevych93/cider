@@ -16,7 +16,6 @@ class IResultsLogger {
 
   virtual void logReward(size_t episode, double totalReward) const = 0;
   virtual void logLoss(size_t episode, double averageLoss) const = 0;
-  virtual void logLR(size_t episode, double learningRate) const = 0;
 };
 
 class FileLogger : public IResultsLogger {
@@ -25,7 +24,6 @@ class FileLogger : public IResultsLogger {
 
   void logReward(size_t episode, double totalReward) const override;
   void logLoss(size_t episode, double averageLoss) const override;
-  void logLR(size_t episode, double learningRate) const override;
 
  private:
   mutable std::ofstream _report;

@@ -64,6 +64,7 @@ bool Pipeline::run(const std::string& metadata, const Actions& input) {
         return false;
       }
     }
+    _results.clear();
     return true;
   } catch (...) {
   }

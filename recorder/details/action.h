@@ -56,7 +56,13 @@ Action deepCopy(const Action& action);
 void print(std::ostream& os, const Action& action);
 
 bool operator==(const Action& lhs, const Action& rhs);
+
 bool fuzzyEqual(const Action& lhs, const Action& rhs);
+bool fuzzyEqual(const std::vector<Action>& lhs, const std::vector<Action>& rhs);
+
+bool semanticallyEqual(const Action& lhs, const Action& rhs);
+bool semanticallyEqual(const std::vector<Action>& lhs,
+                       const std::vector<Action>& rhs);
 
 bool serialize(const Function& obj, serialization::Serializer& serializer);
 bool serialize(const ClassMethod& obj, serialization::Serializer& serializer);
@@ -187,65 +193,132 @@ struct ActionMutator final {
   const recorder::IParamMutator& _mutator;
 };
 
-}  // namespace recorder
-}  // namespace cider
+struct FuzzyActionHash final {
+  FuzzyParamHash paramHash;
 
-namespace std {
+  template <typename T>
+  void hash_combine(size_t& seed, const T& val) const {
+    seed ^= (*this)(val) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+  }
 
-template <>
-struct hash<cider::recorder::Function> {
-  size_t operator()(const cider::recorder::Function& func) const {
-    size_t seed = hash<std::string>{}(func.name);
-    hash_combine(seed, func.params);
-    hash_combine(seed, func.retVal);
+  size_t operator()(const Function& func) const {
+    size_t seed = std::hash<std::string>{}(func.name);
+    paramHash.hash_combine(seed, func.params);
+    paramHash.hash_combine(seed, func.retVal);
     return seed;
   }
-};
 
-template <>
-struct hash<cider::recorder::ClassMethod> {
-  size_t operator()(const cider::recorder::ClassMethod& method) const {
-    size_t seed = hash<decltype(method.method)>{}(method.method);
+  size_t operator()(const ClassMethod& method) const {
+    size_t seed = (*this)(method.method);
     return seed;
   }
-};
 
-template <>
-struct hash<cider::recorder::ClassDestructor> {
-  size_t operator()(const cider::recorder::ClassDestructor&) const {
+  size_t operator()(const ClassDestructor&) const {
     return 0xce3b9d39;  // Fixed arbitrary value since Nil has no internal state
   }
-};
 
-template <>
-struct hash<cider::recorder::ClassUnaryOp> {
-  size_t operator()(const cider::recorder::ClassUnaryOp& op) const {
+  size_t operator()(const ClassUnaryOp& op) const {
     size_t seed = static_cast<int>(op.opName);
-    hash_combine(seed, op.retVal);
+    paramHash.hash_combine(seed, op.retVal);
     return seed;
   }
-};
 
-template <>
-struct hash<cider::recorder::ClassBinaryOp> {
-  size_t operator()(const cider::recorder::ClassBinaryOp& op) const {
+  size_t operator()(const ClassBinaryOp& op) const {
     size_t seed = static_cast<int>(op.opName);
-    hash_combine(seed, op.param);
+    paramHash.hash_combine(seed, op.param);
     return seed;
   }
-};
 
-template <>
-struct hash<cider::recorder::Action> {
-  size_t operator()(const cider::recorder::Action& action) const {
+  size_t operator()(const Action& action) const {
     return std::visit(
-        [](const auto& val) -> size_t {
+        [this](const auto& val) -> size_t {
           size_t hashValue = typeid(std::decay_t<decltype(val)>).hash_code();
           hash_combine(hashValue, val);
           return hashValue;
         },
         action);
   }
+
+  size_t operator()(const std::vector<Action>& actions) const {
+    size_t seed = 0xce3b9d39;
+    for (const auto& action : actions) {
+      hash_combine(seed, action);
+    }
+    return seed;
+  }
 };
 
-}  // namespace std
+struct SemanticActionHash final {
+  template <typename T>
+  void hash_combine(size_t& seed, const T& val) const {
+    seed ^= (*this)(val) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+  }
+
+  size_t operator()(const Function& func) const {
+    size_t seed = std::hash<std::string>{}(func.name);
+    std::hash_combine(seed, func.params.size());
+    return seed;
+  }
+
+  size_t operator()(const ClassMethod& method) const {
+    size_t seed = (*this)(method.method);
+    return seed;
+  }
+
+  size_t operator()(const ClassDestructor&) const {
+    return 0xce3b9d39;  // Fixed arbitrary value since Nil has no internal state
+  }
+
+  size_t operator()(const ClassUnaryOp& op) const {
+    size_t seed = static_cast<int>(op.opName);
+    return seed;
+  }
+
+  size_t operator()(const ClassBinaryOp& op) const {
+    size_t seed = static_cast<int>(op.opName);
+    return seed;
+  }
+
+  size_t operator()(const Action& action) const {
+    return std::visit(
+        [this](const auto& val) -> size_t {
+          size_t hashValue = typeid(std::decay_t<decltype(val)>).hash_code();
+          hash_combine(hashValue, val);
+          return hashValue;
+        },
+        action);
+  }
+
+  size_t operator()(const std::vector<Action>& actions) const {
+    size_t seed = 0xce3b9d39;
+    for (const auto& action : actions) {
+      hash_combine(seed, action);
+    }
+    return seed;
+  }
+};
+
+struct FuzzyEqualPred {
+  bool operator()(const Action& lhs, const Action& rhs) const {
+    return recorder::fuzzyEqual(lhs, rhs);
+  }
+
+  bool operator()(const std::vector<Action>& lhs,
+                  const std::vector<Action>& rhs) const {
+    return recorder::fuzzyEqual(lhs, rhs);
+  }
+};
+
+struct SemanticEqualPred {
+  bool operator()(const Action& lhs, const Action& rhs) const {
+    return recorder::semanticallyEqual(lhs, rhs);
+  }
+
+  bool operator()(const std::vector<Action>& lhs,
+                  const std::vector<Action>& rhs) const {
+    return recorder::semanticallyEqual(lhs, rhs);
+  }
+};
+
+}  // namespace recorder
+}  // namespace cider

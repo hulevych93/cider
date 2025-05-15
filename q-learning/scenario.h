@@ -7,55 +7,31 @@
 
 #include "agent.h"
 
-#include "coverage/coverage.h"
-
 namespace cider {
 namespace qleaning {
 
 std::string actionToGenericRepro(const QAction& action);
+std::string actionsToGenericRepro(const QActionList& actions);
 
-using ObjectiveFunction =
-    std::function<ObjectiveValue(const std::vector<QAction>&)>;
-
-class Scenario final {
+class IScenario {
  public:
-  Scenario(std::mt19937& gen,
-           int maxStateDepth,
-           const QActionList& initial,
-           const ObjectiveFunction& objFunc);
+  virtual ~IScenario() = default;
 
-  void add(const QAction& action);
-  void rollback();
-  void rollbackAndDrop();
-  void drop(const QAction& action);
+  virtual void add(const QAction& action) = 0;
+  virtual void rollback() = 0;
 
-  size_t getSize() const { return m_actions.size(); }
+  virtual size_t getSize() const = 0;
 
-  QActionList getCurrentState() const;
+  virtual QActionList getCurrentState() const = 0;
+  virtual QActionList getResult() const = 0;
 
-  std::optional<QValue> getReward() const;
+  virtual std::optional<QValue> getReward() const = 0;
 
-  std::string toString() const;
+  virtual QActionList getAvailableActions() const = 0;
 
-  QActionList getAvailableActions() const;
+  virtual std::optional<QAction> getRandomAction() const = 0;
 
-  std::optional<QAction> getRandomAction() const;
-
-  bool isOver() const;
-
- private:
-  std::mt19937& m_gen;
-
-  int m_maxStateDepth = 0;
-
-  QActionList m_actions;
-  mutable ObjectiveValue m_lastObjVal;
-
-  QActionSet m_availableActions;
-  const int m_size;
-  ObjectiveValue m_initialObjVal;
-
-  ObjectiveFunction m_objFunc;
+  virtual bool isOver() const = 0;
 };
 
 }  // namespace qleaning

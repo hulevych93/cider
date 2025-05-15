@@ -5,6 +5,7 @@
 
 #include <assert.h>
 
+#include <filesystem>
 #include <iostream>
 
 #include "recorder/details/generator.h"
@@ -22,8 +23,10 @@ CfgCoverageOpt CoverageMeasurment::getReport(
     return std::nullopt;
   }
 
+  const auto binaryPath = std::string{_cmd.binPath} + "_cfg";
+
   std::string jsonReport;
-  const auto result = runScript(_cmd.binPath, _cmd.workingDir, script,
+  const auto result = runScript(binaryPath, _cmd.workingDir, script,
                                 [&](const char* data, std::size_t size) {
                                   jsonReport += std::string{data, size};
                                 });

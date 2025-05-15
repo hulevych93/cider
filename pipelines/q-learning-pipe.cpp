@@ -29,7 +29,7 @@ LearningSettings getLearningSettings(std::string& prefix) {
   LearningSettings settings;
   settings.discountFactor = 0.85;
   settings.learningRate = 0.1;
-  settings.episodes = 500U;
+  settings.episodes = 1000U;
   settings.maxRollback = 20U;
 
   std::stringstream os;
@@ -40,9 +40,9 @@ LearningSettings getLearningSettings(std::string& prefix) {
 
 GenerationSettings getGeneratorSettings(std::string& prefix) {
   GenerationSettings settings;
-  settings.epsilon = 0.1;
+  settings.epsilon = 0.3;
   settings.maxRollback = 50U;
-  settings.strategy = GenerationStrategyType::Greedy;
+  settings.strategy = GenerationStrategyType::EGreedy;
 
   std::stringstream os;
   os << "_" << settings;
@@ -57,7 +57,7 @@ bool qlearningPipeline(QAgent& agent,
                        const Actions& input) {
   try {
     std::filesystem::path outPath(outDir);
-    std::ofstream debug(outPath / "qtable_debug.txt");
+    std::ofstream debug(outPath / "qtable_debug.txt", std::ios::trunc);
 
 #ifdef ENABLE_MATHPLOT
     qleaning::MathplotLogger logger(outPath, "reward_loss.png");
@@ -81,8 +81,10 @@ bool qlearningPipeline(QAgent& agent,
     debug << "Script:\n "
           << cider::recorder::generateScript(generator, input, 999999U);
 
-    auto dump = [&]() {
+    auto dump = [&agent, outPath]() {
+      std::ofstream debug(outPath / "qtable.txt", std::ios::trunc);
       agent.print(debug);
+
       agent.save(outPath / "qtable_agent.img");
     };
 

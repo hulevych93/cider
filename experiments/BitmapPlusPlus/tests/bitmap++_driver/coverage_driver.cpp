@@ -19,7 +19,7 @@ static void testAll() {
   test_polymorphic_shapes();
   test_read_bitmap();
   test_rotation();
-  test_variant_shapes();
+  test_primitives();
   test_write_bitmap();
 }
 
@@ -30,13 +30,13 @@ int main(int argc, char* argv[]) {
 
   std::vector<cider::recorder::ScriptRecordSessionPtr> sessions;
 
-  if (0) {
+  if (1) {
     RECORD_TEST_SCRIPT(LibraryName, test_chess_board, sessions);
     RECORD_TEST_SCRIPT(LibraryName, test_variant_shapes, sessions);
     RECORD_TEST_SCRIPT(LibraryName, test_polymorphic_shapes, sessions);
     RECORD_TEST_SCRIPT(LibraryName, test_read_bitmap, sessions);
     RECORD_TEST_SCRIPT(LibraryName, test_rotation, sessions);
-    RECORD_TEST_SCRIPT(LibraryName, test_variant_shapes, sessions);
+    RECORD_TEST_SCRIPT(LibraryName, test_primitives, sessions);
     RECORD_TEST_SCRIPT(LibraryName, test_write_bitmap, sessions);
   } else {
     RECORD_TEST_SCRIPT(LibraryName, testAll, sessions);

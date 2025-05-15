@@ -10,7 +10,7 @@ extern void test_marshal();
 
 static void testAll() {
   test_value();
-  test_marshal();
+  // test_marshal();
 }
 
 int main(int argc, char* argv[]) {

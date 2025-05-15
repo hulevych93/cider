@@ -10,22 +10,22 @@
 namespace cider {
 namespace qleaning {
 
-struct FuzzyEqualPred {
-  bool operator()(const QAction& lhs, const QAction& rhs) const {
-    return recorder::fuzzyEqual(lhs, rhs);
-  }
-};
+using QValues = std::unordered_map<QAction,
+                                   QValue,
+                                   recorder::FuzzyActionHash,
+                                   recorder::FuzzyEqualPred>;
 
-using QValues =
-    std::unordered_map<QAction, QValue, std::hash<QAction>, FuzzyEqualPred>;
-using QTable = std::unordered_map<Script, QValues>;
+using QTable = std::unordered_map<QActionList,
+                                  QValues,
+                                  recorder::SemanticActionHash,
+                                  recorder::SemanticEqualPred>;
 
 class QTableAgent final : public QAgent {
   static QActionList getBestFromAvailable(const QActionList& available,
                                           const QValues& values);
 
   std::optional<QAction> findBestOrRandomAvailableAction(
-      const Scenario& scenario) const;
+      const IScenario& scenario) const;
 
   explicit QTableAgent(const std::string& path);
 
@@ -38,18 +38,18 @@ class QTableAgent final : public QAgent {
   bool save(const std::string& filePath) const override;
 
   std::optional<QAction> chooseBolzmanAction(
-      const Scenario& scenario,
+      const IScenario& scenario,
       const double temperature) const override;
   std::optional<QAction> chooseEGreedyAction(
-      const Scenario& scenario,
+      const IScenario& scenario,
       const double exploration) const override;
   std::optional<QAction> chooseGreedyAction(
-      const Scenario& scenario) const override;
+      const IScenario& scenario) const override;
   std::optional<QAction> chooseRandAction(
-      const Scenario& scenario) const override;
+      const IScenario& scenario) const override;
 
-  double updateQValues(const std::string& state,
-                       const std::string& nextState,
+  double updateQValues(const QActionList& state,
+                       const QActionList& nextState,
                        const QAction& action,
                        const double reward,
                        const double learningRate,

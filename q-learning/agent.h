@@ -5,6 +5,8 @@
 
 #include "recorder/details/action.h"
 
+#include "coverage/coverage.h"
+
 #include <unordered_set>
 
 #include <random>
@@ -13,30 +15,34 @@
 namespace cider {
 namespace qleaning {
 
-class Scenario;
+class IScenario;
 using QValue = double;
 using Script = std::string;
 using QAction = recorder::Action;
 using QActionList = std::vector<QAction>;
-using QActionSet = std::unordered_set<QAction>;
+using QActionSet = std::
+    unordered_set<QAction, recorder::FuzzyActionHash, recorder::FuzzyEqualPred>;
+
+using ObjectiveFunction =
+    std::function<ObjectiveValue(const std::vector<QAction>&)>;
 
 class QAgent {
  public:
   virtual ~QAgent() = default;
 
   virtual std::optional<QAction> chooseBolzmanAction(
-      const Scenario& scenario,
+      const IScenario& scenario,
       const double temperature) const = 0;
   virtual std::optional<QAction> chooseEGreedyAction(
-      const Scenario& scenario,
+      const IScenario& scenario,
       const double exploration) const = 0;
   virtual std::optional<QAction> chooseGreedyAction(
-      const Scenario& scenario) const = 0;
+      const IScenario& scenario) const = 0;
   virtual std::optional<QAction> chooseRandAction(
-      const Scenario& scenario) const = 0;
+      const IScenario& scenario) const = 0;
 
-  virtual double updateQValues(const std::string& state,
-                               const std::string& nextState,
+  virtual double updateQValues(const QActionList& state,
+                               const QActionList& nextState,
                                const QAction& action,
                                const double reward,
                                const double learningRate,

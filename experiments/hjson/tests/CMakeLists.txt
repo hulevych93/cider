@@ -9,8 +9,6 @@ set(TESTED_FILES ${EXPERIMENT_HJSON_BUILD_DIR}/src/hjson_value.cpp
 set_source_files_properties(${TESTED_FILES}
                             PROPERTIES GENERATED TRUE)
 
-set(SCRIPT_PATH "${CMAKE_BINARY_DIR}/experiments/hjson/tests/script.lua")
-
 add_subdirectory(hjson_tests)
 add_subdirectory(hjson_recorder)
 add_subdirectory(hjson_player)

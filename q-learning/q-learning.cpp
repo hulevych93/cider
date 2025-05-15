@@ -3,6 +3,7 @@
 
 #include "q-learning.h"
 
+#include "q-learning/q-scenario.h"
 #include "q-learning/qtable-agent.h"
 
 #include <iostream>
@@ -69,9 +70,9 @@ std::ostream& operator<<(std::ostream& os, const GenerationSettings& settings) {
 void prelearningSession(const LearningSettings& settings,
                         const QActionList& list,
                         QAgent& agent) {
-  Scenario scenario(agent.getSeed(), settings.maxStateDepth, list,
-                    settings.objFunc);
-  auto nextState = scenario.toString();
+  QScenario scenario(agent.getSeed(), settings.maxStateDepth, list,
+                     settings.objFunc);
+  auto nextState = scenario.getCurrentState();
 
   int index = 0U;
   while (!scenario.isOver()) {
@@ -82,7 +83,7 @@ void prelearningSession(const LearningSettings& settings,
     }
 
     scenario.add(action);
-    nextState = scenario.toString();
+    nextState = scenario.getCurrentState();
     assert(!nextState.empty());
     if (const auto rewardOpt = scenario.getReward()) {
       agent.updateQValues(stateBeforeAction, nextState, action,
@@ -99,12 +100,10 @@ void learningSession(const LearningSettings& settings,
                      QAgent& agent,
                      IResultsLogger& logger,
                      const std::function<void()>& dump) {
-  AdvancedAdaptiveLearningRate learningRateAdapter(settings.learningRate, 0.05,
-                                                   0.5);
-
-  const auto episodes = settings.episodes;
-  for (int i = 0; i < episodes; ++i) {
-    const auto expRate = double(episodes - i) / episodes;
+  for (int i = 0; i < settings.episodes; ++i) {
+    const auto rl1 =
+        settings.learningRate + double(i) / settings.episodes * 0.7f;
+    const auto expRate = double(settings.episodes - i) / settings.episodes;
 
     std::cout << "Episode: " << i << ", expRate: " << expRate << std::endl;
 
@@ -113,19 +112,18 @@ void learningSession(const LearningSettings& settings,
       dump();
     }
 
-    Scenario scenario(agent.getSeed(), settings.maxStateDepth, list,
-                      settings.objFunc);
-    auto nextState = scenario.toString();
+    QScenario scenario(agent.getSeed(), settings.maxStateDepth, list,
+                       settings.objFunc);
+    auto nextState = scenario.getCurrentState();
 
     size_t rollbackCount = 0;
     size_t failCounter = 0;
 
     float total_reward = 0.0f;
     float total_loss = 0.0f;
-    ExponentialMovingAverage smoothLoss(0.1);
+    ExponentialMovingAverage smoothLoss(0.5);
 
     int steps = 0;
-
     int index = 0U;
     while (!scenario.isOver()) {
       ++steps;
@@ -137,25 +135,23 @@ void learningSession(const LearningSettings& settings,
       }
       const auto action = actionOpt.value();
       scenario.add(action);
-      nextState = scenario.toString();
+      nextState = scenario.getCurrentState();
       assert(!nextState.empty());
 
       if (const auto rewardOpt = scenario.getReward()) {
-        if (rewardOpt.value() > 0) {
-          const auto loss = agent.updateQValues(
-              stateBeforeAction, nextState, action, rewardOpt.value(),
-              learningRateAdapter.get_learning_rate(), settings.discountFactor);
-          total_loss += loss;
-          smoothLoss.add_value(loss);
-          total_reward += rewardOpt.value();
-          rollbackCount = 0U;
-          ++index;
-          if ((index % 50) == 0) {
-            std::cout << "Index: " << index << ", Fails: " << failCounter
-                      << std::endl;
-          }
-          continue;
+        const auto loss = agent.updateQValues(stateBeforeAction, nextState,
+                                              action, rewardOpt.value(), rl1,
+                                              settings.discountFactor);
+        total_loss += loss;
+        smoothLoss.add_value(loss);
+        total_reward += rewardOpt.value();
+        rollbackCount = 0U;
+        ++index;
+        if ((index % 50) == 0) {
+          std::cout << "Index: " << index << ", Fails: " << failCounter
+                    << std::endl;
         }
+        continue;
       }
 
       scenario.rollback();
@@ -168,15 +164,11 @@ void learningSession(const LearningSettings& settings,
       }
     }
 
-    float average_loss = total_loss / steps;
+    const float average_loss = total_loss / steps;
     std::cout << "Average Loss: " << average_loss << std::endl;
-
-    // epsAdaptor.adapt(average_loss);
-    learningRateAdapter.adapt(smoothLoss.get_average(), total_reward);
 
     logger.logLoss(i, smoothLoss.get_average());
     logger.logReward(i, total_reward);
-    logger.logLR(i, learningRateAdapter.get_learning_rate());
 
     total_loss = 0.0f;
     steps = 0;
@@ -191,7 +183,7 @@ bool gererationSession(const GenerationSettings& settings,
 
   std::random_device rd;
   std::mt19937 gen(rd());
-  Scenario scenario(gen, settings.maxStateDepth, initial, settings.objFunc);
+  QScenario scenario(gen, settings.maxStateDepth, initial, settings.objFunc);
 
   size_t rollbackCount = 0;
 
@@ -248,7 +240,7 @@ bool gererationSession(const GenerationSettings& settings,
     }
   }
 
-  out = scenario.getCurrentState();
+  out = scenario.getResult();
 
   return true;
 }

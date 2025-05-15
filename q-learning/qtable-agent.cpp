@@ -70,8 +70,8 @@ QActionList QTableAgent::getBestFromAvailable(const QActionList& available,
 }
 
 std::optional<QAction> QTableAgent::findBestOrRandomAvailableAction(
-    const Scenario& scenario) const {
-  const auto state = scenario.toString();
+    const IScenario& scenario) const {
+  const auto state = scenario.getCurrentState();
   const auto qValuesIter = m_qtable.find(state);
   const auto& availableActions = scenario.getAvailableActions();
   if (availableActions.empty()) {
@@ -90,7 +90,7 @@ std::optional<QAction> QTableAgent::findBestOrRandomAvailableAction(
 }
 
 std::optional<QAction> QTableAgent::chooseEGreedyAction(
-    const Scenario& scenario,
+    const IScenario& scenario,
     const double exploration) const {
   std::optional<QAction> action;
   std::uniform_real_distribution<double> dist(0.0, 1.0);
@@ -104,20 +104,20 @@ std::optional<QAction> QTableAgent::chooseEGreedyAction(
 }
 
 std::optional<QAction> QTableAgent::chooseGreedyAction(
-    const Scenario& scenario) const {
+    const IScenario& scenario) const {
   return findBestOrRandomAvailableAction(scenario);
 }
 
 std::optional<QAction> QTableAgent::chooseRandAction(
-    const Scenario& scenario) const {
+    const IScenario& scenario) const {
   return scenario.getRandomAction();
 }
 
 std::optional<QAction> QTableAgent::chooseBolzmanAction(
-    const Scenario& scenario,
+    const IScenario& scenario,
     const double temperature) const {
   std::optional<QAction> action;
-  const auto qValuesIt = m_qtable.find(scenario.toString());
+  const auto qValuesIt = m_qtable.find(scenario.getCurrentState());
   if (qValuesIt == m_qtable.cend()) {
     action = scenario.getRandomAction();
   } else {
@@ -158,8 +158,8 @@ std::optional<QAction> QTableAgent::chooseBolzmanAction(
   return action;
 }
 
-double QTableAgent::updateQValues(const std::string& state,
-                                  const std::string& nextState,
+double QTableAgent::updateQValues(const QActionList& state,
+                                  const QActionList& nextState,
                                   const QAction& action,
                                   const double reward,
                                   const double learningRate,
@@ -193,7 +193,7 @@ double QTableAgent::updateQValues(const std::string& state,
 void QTableAgent::print(std::ostream& ss) const {
   ss << "Q-table: " << m_qtable.size() << std::endl;
   for (const auto& entry : m_qtable) {
-    ss << entry.first << std::endl;
+    ss << actionsToGenericRepro(entry.first) << std::endl;
     for (const auto action : entry.second) {
       ss << actionToGenericRepro(action.first) << "\t" << action.second
          << std::endl;
