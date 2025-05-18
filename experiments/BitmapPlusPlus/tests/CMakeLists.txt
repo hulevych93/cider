@@ -9,6 +9,5 @@ set_source_files_properties(${TESTED_FILES}
                             PROPERTIES GENERATED TRUE)
 
 add_subdirectory(bitmap++_tests)
-add_subdirectory(bitmap++_recorder)
 add_subdirectory(bitmap++_player)
 add_subdirectory(bitmap++_driver)

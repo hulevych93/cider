@@ -55,49 +55,46 @@ bool qlearningPipeline(QAgent& agent,
                        const std::string& outDir,
                        const std::string& libName,
                        const Actions& input) {
-  try {
-    std::filesystem::path outPath(outDir);
-    std::ofstream debug(outPath / "qtable_debug.txt", std::ios::trunc);
+  std::filesystem::path outPath(outDir);
+  std::ofstream debug(outPath / "qtable_debug.txt", std::ios::trunc);
 
 #ifdef ENABLE_MATHPLOT
-    qleaning::MathplotLogger logger(outPath, "reward_loss.png");
+  qleaning::MathplotLogger logger(outPath, "reward_loss.png");
 #else
-    qleaning::FileLogger logger(outPath, "reward_loss.txt");
+  qleaning::FileLogger logger(outPath, "reward_loss.txt");
 #endif
 
-    std::ostringstream oss;
+  std::ostringstream oss;
 
-    for (size_t i = 0; i < input.size(); ++i) {
-      oss << actionToGenericRepro(input[i]) << "\t";
-      print(oss, input[i]);
-      oss << std::endl;
-    }
-
-    debug << oss.str();
-    debug << "Coverage: " << learningSettings.objFunc(input).coverage;
-    debug << std::endl << std::endl;
-
-    auto generator = cider::recorder::makeLuaGenerator(libName);
-    debug << "Script:\n "
-          << cider::recorder::generateScript(generator, input, 999999U);
-
-    auto dump = [&agent, outPath]() {
-      std::ofstream debug(outPath / "qtable.txt", std::ios::trunc);
-      agent.print(debug);
-
-      agent.save(outPath / "qtable_agent.img");
-    };
-
-    learningSession(learningSettings, input, agent, logger, dump);
-
-    debug << std::endl << std::endl;
-
-    dump();
-
-  } catch (const std::exception& e) {
-    std::cerr << e.what();
-    return false;
+  for (size_t i = 0; i < input.size(); ++i) {
+    oss << actionToGenericRepro(input[i]) << "\t";
+    print(oss, input[i]);
+    oss << std::endl;
   }
+
+  debug << oss.str();
+  debug << "Coverage: " << learningSettings.objFunc(input).coverage;
+  debug << std::endl << std::endl;
+
+  auto generator = cider::recorder::makeLuaGenerator(libName);
+  debug << "Script:\n "
+        << cider::recorder::generateScript(generator, input, 999999U);
+
+  RewardCounter rwCounter;
+  auto dump = [&agent, &rwCounter, outPath]() {
+    std::ofstream debug(outPath / "qtable.txt", std::ios::trunc);
+    agent.print(debug);
+
+    print(debug, rwCounter);
+
+    agent.save(outPath / "qtable_agent.img");
+  };
+
+  learningSession(rwCounter, learningSettings, input, agent, logger, dump);
+
+  debug << std::endl << std::endl;
+
+  dump();
 
   return true;
 }

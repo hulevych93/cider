@@ -7,6 +7,5 @@ set_source_files_properties(${TESTED_FILES}
                             PROPERTIES GENERATED TRUE)
 
 add_subdirectory(pugixml_tests)
-add_subdirectory(pugixml_recorder)
 add_subdirectory(pugixml_player)
 add_subdirectory(pugixml_driver)

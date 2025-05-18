@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
 
   std::vector<cider::recorder::ScriptRecordSessionPtr> sessions;
 
-  if (1) {
+  if (0) {
     const auto callback = [&](const char* testName,
                               const std::function<int()>& f) -> int {
       return cider::recorder::recordScriptWithResult(LibraryName, testName,
@@ -30,12 +30,6 @@ int main(int argc, char* argv[]) {
     cider::recorder::recordScript(LibraryName, "run_tests", sessions,
                                   [&]() { run_tests(argv[0]); });
   }
-
-  std::sort(sessions.begin(), sessions.end(),
-            [](const cider::recorder::ScriptRecordSessionPtr& a,
-               const cider::recorder::ScriptRecordSessionPtr& b) {
-              return a->getInstructions().size() > b->getInstructions().size();
-            });
 
   auto pipeline = cider::pipelines::makePipeline(LibraryName, cmd);
   pipeline.run(sessions);

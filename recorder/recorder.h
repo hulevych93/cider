@@ -23,7 +23,7 @@ struct SessionSettings final {
   bool printLines = false;
   bool enableGC = false;
   bool ignoreErrors = false;
-  const char* testName = nullptr;
+  std::string testName;
 };
 
 class IScriptRecordSession {

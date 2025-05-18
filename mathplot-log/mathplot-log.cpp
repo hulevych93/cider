@@ -67,6 +67,7 @@ void MathplotLogger::plot() const {
 
 MathplotLogger::~MathplotLogger() {
   plt::save(ensurePngExtension(m_path), 1200);
+  plt::close();
 }
 
 }  // namespace cfg_coverage
@@ -114,6 +115,7 @@ ComparativeLogger::ComparativeLogger(const std::string& logDir,
 
 ComparativeLogger::~ComparativeLogger() {
   plt::save(ensurePngExtension(m_path), 1200);
+  plt::close();
 }
 
 void ComparativeLogger::log(size_t index, const RootReport& coverage) const {
@@ -170,6 +172,7 @@ TripleComparativeLogger::TripleComparativeLogger(const std::string& logDir,
 
 TripleComparativeLogger::~TripleComparativeLogger() {
   plt::save(ensurePngExtension(m_path), 1200);
+  plt::close();
 }
 
 void TripleComparativeLogger::log(size_t index,
@@ -192,31 +195,25 @@ void TripleComparativeLogger::plot() const {
   plt::clf();  // Clear previous frame
 
   plt::plot(i_, ibcov_,
-            std::map<std::string, std::string>{{"label", "BRCOV"},
+            std::map<std::string, std::string>{{"label", "Original"},
                                                {"color", "green"},
                                                {"linestyle", "-"},
-                                               {"marker", "o"},
-                                               {"markersize", "2.5"},
                                                {"linewidth", "1.0"}});
 
   plt::plot(j_, jbcov_,
-            std::map<std::string, std::string>{{"label", "BRCOV Target"},
+            std::map<std::string, std::string>{{"label", "QLearning-Based"},
                                                {"color", "blue"},
-                                               {"linestyle", "-"},
-                                               {"marker", "x"},
-                                               {"markersize", "2.5"},
+                                               {"linestyle", "--"},
                                                {"linewidth", "1.0"}});
 
   plt::plot(k_, kbcov_,
-            std::map<std::string, std::string>{{"label", "BRCOV Rand"},
+            std::map<std::string, std::string>{{"label", "Random"},
                                                {"color", "black"},
-                                               {"linestyle", "-"},
-                                               {"marker", "v"},
-                                               {"markersize", "2.5"},
+                                               {"linestyle", "-."},
                                                {"linewidth", "1.0"}});
 
-  plt::xlabel("Script instructions count");
-  plt::ylabel("Coverage (%)");
+  plt::xlabel("Instructions count");
+  plt::ylabel("Branch Coverage (%)");
   plt::title(" ");
   plt::grid(true);
   plt::legend();     // Show legend with labels
@@ -250,6 +247,7 @@ void MathplotLogger::plot() const {
 
 MathplotLogger::~MathplotLogger() {
   plt::save(ensurePngExtension(m_path), 1200);
+  plt::close();
 }
 
 }  // namespace metasearch
@@ -277,7 +275,7 @@ void MathplotLogger::logLoss(size_t episode, const double averageLoss) const {
 }
 
 void MathplotLogger::plot() const {
-  if ((_updateCounter++ % 30) != 0) {
+  if ((_updateCounter++ % 40) != 0) {
     return;
   }
 
@@ -307,6 +305,7 @@ void MathplotLogger::plot() const {
 
 MathplotLogger::~MathplotLogger() {
   plt::save(ensurePngExtension(m_path), 1200);
+  plt::close();
 }
 
 }  // namespace qleaning

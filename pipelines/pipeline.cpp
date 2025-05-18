@@ -34,13 +34,7 @@ bool Pipeline::run(
   const auto dateTime = getDatetimeForDirName();
   const auto config = pipelineConfig();
 
-  for (const auto& session : sessions) {
-    std::cout << "name: " << session->getName()
-              << "\t count op: " << session->getInstructionsCount()
-              << std::endl;
-  }
-
-  int scrNum = 0;
+  auto scrNum = 0;
   for (const auto& session : sessions) {
     std::cout << "num: " << scrNum << "\t name: " << session->getName()
               << "\t count op: " << session->getInstructionsCount()
@@ -48,7 +42,7 @@ bool Pipeline::run(
     const auto metadata = dateTime + '_' + config + '/' + session->getName() +
                           '_' + std::to_string(scrNum);
     if (!run(metadata, session->getInstructions())) {
-      return false;
+      std::cout << "pipeline failed." << std::endl;
     }
     ++scrNum;
   }
@@ -57,18 +51,17 @@ bool Pipeline::run(
 }
 
 bool Pipeline::run(const std::string& metadata, const Actions& input) {
-  try {
-    const Actions in = deepCopy(input);
-    for (auto& pipe : _pipes) {
+  const Actions in = deepCopy(input);
+  for (auto& pipe : _pipes) {
+    try {
       if (!pipe->process(metadata, _libName, _cmd, in)) {
         return false;
       }
+    } catch (...) {
     }
-    _results.clear();
-    return true;
-  } catch (...) {
   }
-  return false;
+  _results.clear();
+  return true;
 }
 
 const std::string Pipeline::pipelineConfig() const {

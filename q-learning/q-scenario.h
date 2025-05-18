@@ -15,7 +15,8 @@ namespace qleaning {
 
 class QScenario final : public IScenario {
  public:
-  QScenario(std::mt19937& gen,
+  QScenario(RewardCounter& counter,
+            std::mt19937& gen,
             int maxStateDepth,
             const QActionList& initial,
             const ObjectiveFunction& objFunc);
@@ -45,10 +46,12 @@ class QScenario final : public IScenario {
   mutable ObjectiveValue m_lastObjVal;
 
   QActionSet m_availableActions;
-  const int m_size;
+  const int m_initialSize;
   ObjectiveValue m_initialObjVal;
 
   ObjectiveFunction m_objFunc;
+
+  RewardCounter& m_rwCounter;
 };
 
 }  // namespace qleaning

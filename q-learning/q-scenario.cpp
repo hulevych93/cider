@@ -36,35 +36,36 @@ bool isOverFunc(const ObjectiveValue& objValue,
   return over;
 }
 
-inline float normalize_reward(float reward) {
+inline double normalize_reward(double reward) {
   return reward / (1 + std::abs(reward));
 }
 
-}  // namespace
-
 std::optional<QValue> rewardFunction(
+    RewardCounter& rwCounter,
     const ObjectiveValue& objValue,
     const ObjectiveValue& targetValue,
     double biggerCoverageReward,
     double newTracksReward,
     const std::function<double()>& sameCoverageReward,
     double penalty) {
-  const auto threshold = 0.01;
-
   if (objValue.coverage > std::numeric_limits<double>::epsilon()) {
     const auto coverageBigger = objValue.coverage > targetValue.coverage;
-    const auto coverageSame =
-        abs(objValue.coverage - targetValue.coverage) < threshold;
+    const auto coverageSame = abs(objValue.coverage - targetValue.coverage) <
+                              std::numeric_limits<double>::epsilon();
 
     std::cout << objValue.coverage << std::endl;
+
     if (coverageBigger) {
+      rwCounter.covGrow++;
       return biggerCoverageReward;
-    } else if (hasNewCoverageBit(objValue.coveredTracks,
-                                 targetValue.coveredTracks)) {
+    } else if (coverageSame && hasNewCoverageBit(objValue.coveredTracks,
+                                                 targetValue.coveredTracks)) {
+      rwCounter.trackGrow++;
       return newTracksReward;
     } else if (coverageSame) {
       return sameCoverageReward();
     } else {
+      rwCounter.penalty++;
       return -penalty;
     }
 
@@ -73,13 +74,36 @@ std::optional<QValue> rewardFunction(
   }
 }
 
-QScenario::QScenario(std::mt19937& gen,
+double calculateContinuousMultiplier(RewardCounter& rwCounter,
+                                     size_t initialSize,
+                                     size_t currentSize) {
+  if (currentSize < initialSize) {
+    rwCounter.scriptLower++;
+    double ratio = static_cast<double>(initialSize - currentSize) / initialSize;
+    double multiplier = 1.0 + ratio;
+    return std::min(2.0, multiplier);
+  } else if (currentSize > initialSize) {
+    rwCounter.scriptBigger++;
+    double ratio = static_cast<double>(currentSize - initialSize) / initialSize;
+    double multiplier = 0.5 - 0.3 * ratio;
+    return std::max(0.2, multiplier);
+  } else {
+    rwCounter.scriptSame++;
+    return 0.5;
+  }
+}
+
+}  // namespace
+
+QScenario::QScenario(RewardCounter& counter,
+                     std::mt19937& gen,
                      int maxStateDepth,
                      const QActionList& initial,
                      const ObjectiveFunction& objFunc)
-    : m_gen(gen),
+    : m_rwCounter(counter),
+      m_gen(gen),
       m_maxStateDepth(maxStateDepth),
-      m_size(initial.size()),
+      m_initialSize(initial.size()),
       m_objFunc(objFunc) {
   for (const auto& action : initial) {
     m_availableActions.emplace(action);
@@ -134,26 +158,44 @@ std::optional<QValue> QScenario::getReward() const {
 
   if (isOverFunc(objValue, m_initialObjVal, m_availableActions.empty())) {
     result = rewardFunction(
-        objValue, m_initialObjVal, 10.0, 5.0, []() { return 3.0; }, 5.0);
+        m_rwCounter, objValue, m_initialObjVal, 5.0, 5.0, []() { return 1.0; },
+        5.0);
   } else {
     result = rewardFunction(
-        objValue, m_lastObjVal, 1.0, 0.5,
+        m_rwCounter, objValue, m_lastObjVal, 0.2, 0.1,
         [&]() {
           assert(m_actions.size() >= 2U);
           if (cider::recorder::semanticallyEqual(
                   m_actions[m_actions.size() - 1],
                   m_actions[m_actions.size() - 2])) {
-            return -0.5;
+            if (m_actions.size() >= 3U) {
+              if (cider::recorder::semanticallyEqual(
+                      m_actions[m_actions.size() - 2],
+                      m_actions[m_actions.size() - 3])) {
+                m_rwCounter.threeSameAct++;
+                return -0.2;
+              }
+            }
+            m_rwCounter.twoSameAct++;
+            return -0.15;
           }
 
-          return 0.0;
+          m_rwCounter.sameCov++;
+          return -0.1;
         },
-        0.5);
+        0.1);
   }
 
   if (result.has_value()) {
     m_lastObjVal = objValue;
-    result = result.value();
+
+    const double lenghtMultiplier = calculateContinuousMultiplier(
+        m_rwCounter, m_initialSize, m_actions.size());
+
+    std::cout << "Multi: " << lenghtMultiplier << ", old: " << m_initialSize
+              << ", new: " << m_actions.size() << std::endl;
+
+    result = normalize_reward(result.value() * lenghtMultiplier);
   }
 
   return result;

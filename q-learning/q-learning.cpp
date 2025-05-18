@@ -7,6 +7,7 @@
 #include "q-learning/qtable-agent.h"
 
 #include <iostream>
+#include <thread>
 
 #include <assert.h>
 
@@ -23,6 +24,8 @@ std::ostream& operator<<(std::ostream& os, const LearningSettings& settings) {
   os << settings.discountFactor;
   os << "]_epds[";
   os << settings.episodes;
+  os << "],_mxStDp[";
+  os << settings.maxStateDepth;
   os << "]";
   return os;
 }
@@ -70,7 +73,8 @@ std::ostream& operator<<(std::ostream& os, const GenerationSettings& settings) {
 void prelearningSession(const LearningSettings& settings,
                         const QActionList& list,
                         QAgent& agent) {
-  QScenario scenario(agent.getSeed(), settings.maxStateDepth, list,
+  RewardCounter rwCounter;
+  QScenario scenario(rwCounter, agent.getSeed(), settings.maxStateDepth, list,
                      settings.objFunc);
   auto nextState = scenario.getCurrentState();
 
@@ -95,15 +99,16 @@ void prelearningSession(const LearningSettings& settings,
   }
 }
 
-void learningSession(const LearningSettings& settings,
+void learningSession(RewardCounter& rwCounter,
+                     const LearningSettings& settings,
                      const QActionList& list,
                      QAgent& agent,
                      IResultsLogger& logger,
                      const std::function<void()>& dump) {
   for (int i = 0; i < settings.episodes; ++i) {
     const auto rl1 =
-        settings.learningRate + double(i) / settings.episodes * 0.7f;
-    const auto expRate = double(settings.episodes - i) / settings.episodes;
+        settings.learningRate + (double(i) / settings.episodes) * 0.9f;
+    const auto expRate = 0.99f - (double(i) / (settings.episodes)) * 0.99f;
 
     std::cout << "Episode: " << i << ", expRate: " << expRate << std::endl;
 
@@ -112,7 +117,7 @@ void learningSession(const LearningSettings& settings,
       dump();
     }
 
-    QScenario scenario(agent.getSeed(), settings.maxStateDepth, list,
+    QScenario scenario(rwCounter, agent.getSeed(), settings.maxStateDepth, list,
                        settings.objFunc);
     auto nextState = scenario.getCurrentState();
 
@@ -152,12 +157,15 @@ void learningSession(const LearningSettings& settings,
                     << std::endl;
         }
         continue;
+      } else if (scenario.isOver()) {
+        break;
       }
 
       scenario.rollback();
       nextState = stateBeforeAction;
       ++rollbackCount;
       failCounter++;
+      std::cout << "rollback" << std::endl;
       if (rollbackCount > settings.maxRollback) {
         std::cout << "Max rollback" << std::endl;
         break;
@@ -183,7 +191,10 @@ bool gererationSession(const GenerationSettings& settings,
 
   std::random_device rd;
   std::mt19937 gen(rd());
-  QScenario scenario(gen, settings.maxStateDepth, initial, settings.objFunc);
+
+  RewardCounter rwCounter;
+  QScenario scenario(rwCounter, gen, settings.maxStateDepth, initial,
+                     settings.objFunc);
 
   size_t rollbackCount = 0;
 
@@ -228,7 +239,8 @@ bool gererationSession(const GenerationSettings& settings,
     const auto rewardOpt = scenario.getReward();
     if (rewardOpt.has_value()) {
       rollbackCount = 0U;
-
+    } else if (scenario.isOver()) {
+      break;
     } else {
       scenario.rollback();
       ++rollbackCount;

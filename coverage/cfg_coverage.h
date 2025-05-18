@@ -16,7 +16,7 @@ namespace cider {
 namespace cfg_coverage {
 
 struct Coverage final : serialization::SerializableTag {
-  constexpr static const double percentageThreshold = 0.005;
+  constexpr static const double percentageThreshold = 0.000000000005;
 
   std::uint32_t covered = 0U;
   std::uint32_t total = 0U;

@@ -18,7 +18,7 @@ struct LearningSettings final {
   double discountFactor = 0.9;
   size_t episodes = 50U;
   size_t maxRollback = 10U;
-  size_t maxStateDepth = 5U;
+  size_t maxStateDepth = 3U;
   ObjectiveFunction objFunc;
 };
 
@@ -28,7 +28,8 @@ void prelearningSession(const LearningSettings& settings,
                         const QActionList& list,
                         QAgent& agent);
 
-void learningSession(const LearningSettings& settings,
+void learningSession(RewardCounter& counter,
+                     const LearningSettings& settings,
                      const QActionList& list,
                      QAgent& agent,
                      IResultsLogger& logger,

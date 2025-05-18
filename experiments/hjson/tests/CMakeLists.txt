@@ -10,6 +10,5 @@ set_source_files_properties(${TESTED_FILES}
                             PROPERTIES GENERATED TRUE)
 
 add_subdirectory(hjson_tests)
-add_subdirectory(hjson_recorder)
 add_subdirectory(hjson_player)
 add_subdirectory(hjson_driver)
