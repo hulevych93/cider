@@ -22,7 +22,8 @@ bool fuzzyEqual(const Param& lhs, const Param& rhs) {
                         std::is_same_v<LhsType, double> ||
                         std::is_same_v<LhsType, std::string> ||
                         std::is_same_v<LhsType, std::wstring> ||
-                        std::is_same_v<LhsType, IntegerType>) {
+                        std::is_same_v<LhsType, IntegerType> ||
+                        std::is_same_v<LhsType, std::vector<std::string>>) {
             return lhsVal == rhsVal;
           } else if constexpr (std::is_same_v<LhsType, UserDataValueParamPtr> ||
                                std::is_same_v<LhsType,
@@ -48,7 +49,8 @@ Param deepCopy(const Param& param) {
                       std::is_same_v<T, double> ||
                       std::is_same_v<T, std::string> ||
                       std::is_same_v<T, std::wstring> ||
-                      std::is_same_v<T, IntegerType>) {
+                      std::is_same_v<T, IntegerType> ||
+                      std::is_same_v<T, std::vector<std::string>>) {
           return value;
         } else if constexpr (std::is_same_v<T, UserDataValueParamPtr> ||
                              std::is_same_v<T, UserDataReferenceParamPtr>) {
@@ -72,7 +74,19 @@ std::ostream& print(std::ostream& os, const cider::recorder::Param& param) {
                              std::is_same_v<T, std::string>) {
           os << value;
         } else if constexpr (std::is_same_v<T, std::wstring>) {
-          os << "Nan";
+          os << "Nan";  // TODO
+        } else if constexpr (std::is_same_v<T, std::vector<std::string>>) {
+          bool first = true;
+          if (value.empty()) {
+            os << "{}";
+          }
+          for (const auto& elem : value) {
+            if (!first) {
+              os << ',';
+            }
+            first = false;
+            os << elem;
+          }
         } else if constexpr (std::is_same_v<T, IntegerType>) {
           std::visit([&os](auto&& integer) { os << integer; }, value);
         } else if constexpr (std::is_same_v<T, UserDataValueParamPtr> ||
@@ -128,6 +142,11 @@ struct ParamNullableMutator final : cider::recorder::IParamMutator {
     return true;
   }
   bool operator()(std::wstring& value) const override {
+    value.clear();
+    return true;
+  }
+
+  bool operator()(std::vector<std::string>& value) const override {
     value.clear();
     return true;
   }

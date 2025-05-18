@@ -184,3 +184,46 @@ void pushError(lua_State* L, const char* message)
 
     }
 }
+
+%typemap(typecheck) const char* const []
+%{
+    $1 = lua_isnil(L, $input) || lua_istable(L, $input);
+%}
+
+%typemap(in) const char* const []
+{
+    $1 = 0;
+    if (!lua_isnil(L, $input)) {
+        if (!lua_istable(L, $input)) {
+            SWIG_fail_arg("$symname", $argnum, "Lua table");
+        }
+
+        std::vector<const char*> temp_vector;
+
+        lua_pushnil(L);  // Start iteration
+        while (lua_next(L, $input) != 0) {
+            if (lua_isstring(L, -1)) {
+                temp_vector.push_back(lua_tostring(L, -1));
+            }
+            lua_pop(L, 1);  // Remove value, keep key for next iteration
+        }
+
+        // Add nullptr as a sentinel value
+        temp_vector.push_back(nullptr);
+
+        // Allocate memory for the array and copy pointers
+        char** allocated_array = new char*[temp_vector.size()];
+        for (size_t i = 0; i < temp_vector.size(); ++i) {
+            allocated_array[i] = const_cast<char*>(temp_vector[i]);
+        }
+
+        $1 = allocated_array;
+    }
+}
+
+%typemap(freearg) const char* const []
+{
+   if ($1) {
+      delete[] $1;
+   }
+}

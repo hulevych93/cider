@@ -50,8 +50,13 @@ using IntegerTypeList = TypeList<char,
 
 using IntegerType = utils::ApplyTypeList<std::variant, IntegerTypeList>;
 
-using GeneratorTypesList =
-    TypeList<Nil, bool, IntegerType, double, std::string, std::wstring>;
+using GeneratorTypesList = TypeList<Nil,
+                                    bool,
+                                    IntegerType,
+                                    double,
+                                    std::string,
+                                    std::wstring,
+                                    std::vector<std::string>>;
 
 using Param = utils::ApplyTypeList<
     std::variant,
@@ -81,6 +86,7 @@ struct IParamMutator {
   virtual bool operator()(char*& value) const = 0;
   virtual bool operator()(std::string& value) const = 0;
   virtual bool operator()(std::wstring& value) const = 0;
+  virtual bool operator()(std::vector<std::string>& value) const = 0;
   virtual bool operator()(float& value) const = 0;
 
   bool operator()(recorder::IntegerType& value) const {
@@ -381,6 +387,13 @@ constexpr bool isStringConvertibleType =
     !isUserData<Type>;
 
 template <typename Type>
+constexpr bool isStringVectorConvertibleType =
+    !std::is_same_v<std::decay_t<Type>, std::vector<std::string>> &&
+    std::is_constructible_v<std::vector<std::string>,
+                            std::remove_reference_t<std::remove_cv_t<Type>>> &&
+    !isUserData<Type>;
+
+template <typename Type>
 constexpr bool isWStringConvertibleType =
     !std::is_same_v<std::decay_t<Type>, std::string> &&
     std::is_constructible_v<std::wstring,
@@ -403,6 +416,24 @@ template <
     typename std::enable_if_t<isStringConvertibleType<Type>, void*> = nullptr>
 Param makeParamImpl(Type arg) {
   return std::string{std::move(arg)};
+}
+
+inline Param makeParamImpl(const char* const argv[]) {
+  std::vector<std::string> vec;
+
+  if (argv == nullptr) {
+    return vec;
+  }
+
+  int argc = 0;
+  for (auto argvp = argv; *argvp; ++argc, ++argvp)
+    ;
+
+  vec.resize(static_cast<decltype(vec)::size_type>(argc));
+  std::transform(argv, argv + argc, vec.begin(),
+                 [](const char* const arg) { return arg; });
+
+  return vec;
 }
 
 template <
@@ -457,7 +488,7 @@ struct FuzzyParamHash final {
 
   size_t operator()(const cider::recorder::Param& param) const {
     return std::visit(
-        [](const auto& val) -> size_t {
+        [this](const auto& val) -> size_t {
           using T = std::decay_t<decltype(val)>;
 
           if constexpr (std::is_same_v<T, cider::recorder::Nil>) {
@@ -468,6 +499,12 @@ struct FuzzyParamHash final {
                                std::is_same_v<T, std::string> ||
                                std::is_same_v<T, std::wstring>) {
             return std::hash<T>{}(val);
+          } else if constexpr (std::is_same_v<T, std::vector<std::string>>) {
+            size_t seed = 0x9b371cb9;
+            for (const auto& el : val) {
+              hash_combine(seed, el);
+            }
+            return seed;
           } else if constexpr (std::is_same_v<T,
                                               cider::recorder::IntegerType>) {
             return std::visit(

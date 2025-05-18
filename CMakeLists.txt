@@ -88,6 +88,7 @@ endif()
 add_subdirectory(experiments/hjson)
 add_subdirectory(experiments/pugixml)
 add_subdirectory(experiments/BitmapPlusPlus)
+add_subdirectory(experiments/Argh)
 
 add_custom_target(run_all_HS
     DEPENDS

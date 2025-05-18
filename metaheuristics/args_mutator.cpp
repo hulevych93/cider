@@ -111,6 +111,14 @@ struct ParamMutator final : cider::recorder::IParamMutator {
   }
   bool operator()(std::wstring& value) const override { return false; }
 
+  bool operator()(std::vector<std::string>& value) const override {
+    bool result = true;
+    for (auto& elem : value) {
+      result &= mutateString(_gen, elem);
+    }
+    return result;
+  }
+
   bool operator()(char& value) const override { return mutate<>(value); }
   bool operator()(short& value) const override { return mutate<>(value); }
   bool operator()(int& value) const override { return mutate<>(value); }

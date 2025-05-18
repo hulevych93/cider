@@ -212,12 +212,19 @@ void printSetImpl(
 void printParamType(std::ostream& os,
                     const MetadataStorage& metadata,
                     const namespaces_stack& stack,
-                    const cpp_type& type) {
+                    const cpp_type& type,
+                    bool& arrayChar) {
   auto value = to_string(type);
   if (isUserData(type, stack.nativeScope(),
                  metadata)) {  // check that pointer to user defined type!
     replaceScope(stack.genScope(), value);
   }
+  if (value[value.size() - 1] == ']' && value[value.size() - 2] == '[') {
+    value.pop_back();
+    value.pop_back();
+    arrayChar = true;
+  }
+
   os << value;
 }
 
@@ -248,10 +255,14 @@ void printParamsDecl(
       first = false;
     }
 
-    printParamType(os, metadata, stack, param.type());
+    auto arrayChar = false;
+    printParamType(os, metadata, stack, param.type(), arrayChar);
     os << " ";
 
     printParamName(os, param, count);
+    if (arrayChar) {
+      os << "[]";
+    }
 
     if (declaration) {
       if (const auto& value = param.default_value()) {
@@ -916,7 +927,8 @@ void printVariableDecl(std::ostream& os,
                        const MetadataStorage& metadata,
                        const Type& e,
                        const namespaces_stack& stack) {
-  printParamType(os, metadata, stack, e.type());
+  bool dummy = false;
+  printParamType(os, metadata, stack, e.type(), dummy);
   os << " ";
   os << e.name();
   std::cerr << e.name() << " ";
@@ -951,7 +963,8 @@ void printAliasDecl(std::ostream& os,
                     const cppast::cpp_type_alias& e,
                     const namespaces_stack& stack) {
   os << "using " << e.name() << " = ";
-  printParamType(os, metadata, stack, e.underlying_type());
+  bool dummy = false;
+  printParamType(os, metadata, stack, e.underlying_type(), dummy);
   os << ";\n";
 }
 

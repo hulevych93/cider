@@ -149,6 +149,24 @@ std::string ParamVisitor::operator()(const std::wstring& value) const {
   return std::string{"'" + escape(toUtf8(value)) + "'"};
 }
 
+std::string ParamVisitor::operator()(
+    const std::vector<std::string>& value) const {
+  if (value.empty()) {
+    return "nil";
+  }
+  std::string result = "{";
+
+  auto first = true;
+  for (const auto& v : value) {
+    if (!first)
+      result += ',';
+    first = false;
+    result += (*this)(v);
+  }
+  result += "}";
+  return result;
+}
+
 UserDataParamVisitor::UserDataParamVisitor(const std::string& moduleName,
                                            CodeSink& sink)
     : ParamVisitor(moduleName), _sink(sink) {}
