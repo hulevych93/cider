@@ -15,14 +15,6 @@ namespace cider {
 namespace metasearch {
 namespace cuckoo {
 
-struct Settings final {
-  int populationSize = 10;
-  double Pa = 0.25;
-  size_t maxIterationsWithoutUpdates = 50U;
-  ObjectiveFunction objFunc;
-  MutationStrategy strategy = MutationStrategy::ShuffleBytes;
-};
-
 std::ostream& operator<<(std::ostream& os, const Settings& settings);
 
 using Nest = Solution;
@@ -31,7 +23,7 @@ class Search final : public IMetaSearch {
  public:
   explicit Search(const Settings& settings);
 
-  void initialize(const std::vector<recorder::Action>& actions) override;
+  void initialize(const ActionsCallback& callback) override;
 
   void run() override;
 
@@ -52,7 +44,8 @@ class Search final : public IMetaSearch {
 
   Settings _settings;
   std::vector<Nest> _memory;
-  Nest _initial;
+  ActionsCallback _actionsGenerator;
+
   std::unique_ptr<recorder::IParamMutator> _mutator;
 
   std::unique_ptr<IResultsLogger> _logger;

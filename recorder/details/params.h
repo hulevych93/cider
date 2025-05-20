@@ -50,13 +50,8 @@ using IntegerTypeList = TypeList<char,
 
 using IntegerType = utils::ApplyTypeList<std::variant, IntegerTypeList>;
 
-using GeneratorTypesList = TypeList<Nil,
-                                    bool,
-                                    IntegerType,
-                                    double,
-                                    std::string,
-                                    std::wstring,
-                                    std::vector<std::string>>;
+using GeneratorTypesList =
+    TypeList<Nil, bool, IntegerType, double, std::string, std::wstring>;
 
 using Param = utils::ApplyTypeList<
     std::variant,
@@ -418,23 +413,23 @@ Param makeParamImpl(Type arg) {
   return std::string{std::move(arg)};
 }
 
-inline Param makeParamImpl(const char* const argv[]) {
-  std::vector<std::string> vec;
+// inline Param makeParamImpl(const char* const argv[]) {
+//   std::vector<std::string> vec;
 
-  if (argv == nullptr) {
-    return vec;
-  }
+//  if (argv == nullptr) {
+//    return vec;
+//  }
 
-  int argc = 0;
-  for (auto argvp = argv; *argvp; ++argc, ++argvp)
-    ;
+//  int argc = 0;
+//  for (auto argvp = argv; *argvp; ++argc, ++argvp)
+//    ;
 
-  vec.resize(static_cast<decltype(vec)::size_type>(argc));
-  std::transform(argv, argv + argc, vec.begin(),
-                 [](const char* const arg) { return arg; });
+//  vec.resize(static_cast<decltype(vec)::size_type>(argc));
+//  std::transform(argv, argv + argc, vec.begin(),
+//                 [](const char* const arg) { return arg; });
 
-  return vec;
-}
+//  return vec;
+//}
 
 template <
     typename Type,

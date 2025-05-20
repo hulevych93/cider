@@ -78,7 +78,7 @@ double Coverage::getPercentage() const {
   auto result = double(covered) / double(total);
   if (result < percentageThreshold)
     result = 0.0f;
-  return result;
+  return result * 100.0f;
 }
 
 Coverage& Coverage::alignTo(const Coverage& startingPoint) {

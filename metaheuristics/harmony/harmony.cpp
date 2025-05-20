@@ -35,19 +35,21 @@ Search::Search(const Settings& settings)
                                               settings.mutationRate,
                                               settings.strategy)) {}
 
-void Search::initialize(const std::vector<recorder::Action>& actions) {
-  _initial.actions = deepCopy(actions);
+void Search::initialize(const ActionsCallback& callback) {
+  _actionsGenerator = callback;
 
-  const auto objValue = _settings.objFunc(_initial.actions);
-  if (objValue > std::numeric_limits<double>::epsilon()) {
-    _initial.objVal = objValue;
-  } else {
-    throw std::logic_error{"Bad initial script."};
-  }
-
-  _harmonyMemory.resize(_settings.harmonyMemorySize);
+  _harmonyMemory.reserve(_settings.harmonyMemorySize);
   for (auto i = 0U; i < _settings.harmonyMemorySize; ++i) {
-    _harmonyMemory[i] = deepCopy(_initial);
+    auto actions = _actionsGenerator();
+    const auto objValue = _settings.objFunc(actions);
+    if (objValue > std::numeric_limits<double>::epsilon()) {
+      Solution solution;
+      solution.actions = std::move(actions);
+      solution.objVal = objValue;
+      _harmonyMemory[i] = std::move(solution);
+    } else {
+      std::cout << "Bad script during nest generation" << std::endl;
+    }
   }
 
   if (_logger) {
@@ -62,6 +64,10 @@ void Search::run() {
   for (int iteration = 1U;
        iterWithoutUpdates <= _settings.maxIterationsWithoutUpdates;
        ++iteration, ++iterWithoutUpdates) {
+    if (_settings.maxIter != 0 && iteration > _settings.maxIter) {
+      break;
+    }
+
     std::cout << "Iter: " << iteration << std::endl;
     Harmony newHarmony = generateHarmony(getWorst());
     if (auto mutated = mutateHarmony(newHarmony)) {
@@ -83,7 +89,14 @@ Harmony Search::generateHarmony(const Harmony& harmony) const {
   if (dist(_gen) < _settings.harmonyMemoryConsiderationRate) {
     newHarmony = deepCopy(harmony);
   } else {
-    newHarmony = deepCopy(_initial);
+    auto actions = _actionsGenerator();
+    const auto objValue = _settings.objFunc(actions);
+    if (objValue > std::numeric_limits<double>::epsilon()) {
+      newHarmony.actions = std::move(actions);
+      newHarmony.objVal = objValue;
+    } else {
+      std::cout << "Bad script during nest generation" << std::endl;
+    }
   }
   return newHarmony;
 }

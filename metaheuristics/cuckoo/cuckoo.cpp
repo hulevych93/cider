@@ -94,19 +94,22 @@ Search::Search(const Settings& settings)
       _settings(settings),
       _mutator(cider::metasearch::makeMutator(_gen, 1.0f, settings.strategy)) {}
 
-void Search::initialize(const std::vector<recorder::Action>& actions) {
-  _initial.actions = deepCopy(actions);
+void Search::initialize(const ActionsCallback& callback) {
+  _actionsGenerator = callback;
 
-  const auto objValue = _settings.objFunc(_initial.actions);
-  if (objValue > std::numeric_limits<double>::epsilon()) {
-    _initial.objVal = objValue;
-  } else {
-    throw std::logic_error{"Bad initial script."};
-  }
-
-  _memory.resize(_settings.populationSize);
-  for (auto i = 0U; i < _settings.populationSize; ++i) {
-    _memory[i] = deepCopy(_initial);
+  _memory.reserve(_settings.populationSize);
+  for (auto i = 0U; i < _settings.populationSize;) {
+    auto actions = _actionsGenerator();
+    const auto objValue = _settings.objFunc(actions);
+    if (objValue > std::numeric_limits<double>::epsilon()) {
+      Nest newNest;
+      newNest.actions = std::move(actions);
+      newNest.objVal = objValue;
+      _memory.emplace_back(std::move(newNest));
+      ++i;
+    } else {
+      std::cout << "Bad script during nest generation" << std::endl;
+    }
   }
 
   if (_logger) {
@@ -122,6 +125,10 @@ void Search::run() {
        iterWithoutUpdates <= _settings.maxIterationsWithoutUpdates;
        ++iteration, ++iterWithoutUpdates) {
     std::cout << "Iter: " << iteration << std::endl;
+
+    if (_settings.maxIter != 0 && iteration > _settings.maxIter) {
+      break;
+    }
 
     for (int i = 0; i < _memory.size(); ++i) {
       auto& nest = _memory[i];
@@ -147,7 +154,16 @@ void Search::run() {
     for (int i = _settings.populationSize -
                  int(_settings.Pa * _settings.populationSize);
          i < _settings.populationSize; ++i) {
-      _memory[i] = deepCopy(_initial);
+      auto actions = _actionsGenerator();
+      const auto objValue = _settings.objFunc(actions);
+      if (objValue > std::numeric_limits<double>::epsilon()) {
+        Nest newNest;
+        newNest.actions = std::move(actions);
+        newNest.objVal = objValue;
+        _memory[i] = std::move(newNest);
+      } else {
+        std::cout << "Bad script during nest generation" << std::endl;
+      }
     }
   }
   dump();

@@ -37,13 +37,17 @@ class QScenario final : public IScenario {
 
   bool isOver() const override;
 
+  void store();
+
  private:
   std::mt19937& m_gen;
 
   int m_maxStateDepth = 0;
 
-  QActionList m_actions;
+  mutable QActionList m_actions;
   mutable ObjectiveValue m_lastObjVal;
+
+  mutable QActionList m_storage;
 
   QActionSet m_availableActions;
   const int m_initialSize;

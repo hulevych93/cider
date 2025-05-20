@@ -10,12 +10,19 @@
 namespace cider {
 
 enum class PipelineType {
-  HarmonySearch = 0,
-  CackooSearch = 1,
+  HarmonySearch = 0,  // +QLG
+  CackooSearch = 1,   // +QLG
   QLearningAgent = 2,
-  QLearningAgentPlusHarmonySearch = 3,
-  QLearningAgentPlusCackooSearch = 4,
-  QLearningAgentGeneration = 5
+  QLearningAgentGenerationStepper = 5,
+  QLearningAgentGenerationGreedyBoxStats = 6,
+  QLearningAgentGenerationBolzmanBoxStats = 7,
+  QLearningAgentGenerationBolzmanGreedyBoxStats = 8,
+
+  QLearningAgentGenerationGreedyLineBoxStats = 222,
+  QLearningAgentGenerationBolzmanLineBoxStats = 653,
+
+  QLearningScenariosAgent = 23,
+  DataSetPlot = 123
 };
 
 struct ObjectiveValue final {
@@ -33,6 +40,7 @@ struct Cmd final {
   std::string binPath;
   std::string covDir;
   std::string resultsDir;
+  std::string commonResultsDir;
 };
 
 std::string loadFile(const std::string& path);

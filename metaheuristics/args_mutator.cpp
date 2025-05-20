@@ -74,12 +74,19 @@ size_t randomInRange(std::mt19937& gen, const size_t from, const size_t to) {
 }  // namespace
 
 struct ParamMutator final : cider::recorder::IParamMutator {
-  ParamMutator(std::mt19937& gen, double rate, MutationStrategy strategy)
-      : _gen(gen), _mutationRate(rate), _strategy(strategy) {}
+  ParamMutator(std::mt19937& gen,
+               double rate,
+               MutationStrategy strategy,
+               bool mutateStrings)
+      : _gen(gen),
+        _mutationRate(rate),
+        _strategy(strategy),
+        _mtStr(mutateStrings) {}
 
   const MutationStrategy _strategy;
   double _mutationRate;
   std::mt19937& _gen;
+  const bool _mtStr;
 
   std::optional<size_t> random(const size_t from,
                                const size_t to) const override {
@@ -107,14 +114,19 @@ struct ParamMutator final : cider::recorder::IParamMutator {
   bool operator()(float& value) const override { return mutate<>(value); }
   bool operator()(char*& value) const override { return false; }
   bool operator()(std::string& value) const override {
-    return mutateString(_gen, value);
+    if (_mtStr) {
+      return mutateString(_gen, value);
+    }
+    return false;
   }
-  bool operator()(std::wstring& value) const override { return false; }
+  bool operator()(std::wstring& /*value*/) const override { return false; }
 
-  bool operator()(std::vector<std::string>& value) const override {
-    bool result = true;
-    for (auto& elem : value) {
-      result &= mutateString(_gen, elem);
+  bool operator()(std::vector<std::string>& values) const override {
+    bool result = false;
+    if (_mtStr) {
+      for (auto& elem : values) {
+        result |= mutateString(_gen, elem);
+      }
     }
     return result;
   }
@@ -223,9 +235,12 @@ struct ParamMutator final : cider::recorder::IParamMutator {
 };
 }  // namespace
 
-std::unique_ptr<recorder::IParamMutator>
-makeMutator(std::mt19937& gen, double mutationRate, MutationStrategy strategy) {
-  return std::make_unique<ParamMutator>(gen, mutationRate, strategy);
+std::unique_ptr<recorder::IParamMutator> makeMutator(std::mt19937& gen,
+                                                     double mutationRate,
+                                                     MutationStrategy strategy,
+                                                     bool mutateStrings) {
+  return std::make_unique<ParamMutator>(gen, mutationRate, strategy,
+                                        mutateStrings);
 }
 
 }  // namespace metasearch

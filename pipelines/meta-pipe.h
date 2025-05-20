@@ -13,32 +13,30 @@ namespace pipelines {
 
 class HarmonySearchStage final : public Pipe {
  public:
+  HarmonySearchStage(const metasearch::harmony::Settings& settings);
+
   bool process(const std::string& metadata,
                const std::string& libName,
-               const cider::Cmd& cmd,
-               const Actions& input) override;
+               const cider::Cmd& cmd) override;
 
   std::string getLetter() const override { return "HS"; }
+
+ private:
+  metasearch::harmony::Settings m_settings;
 };
 
 class CackooSearchStage final : public Pipe {
  public:
+  CackooSearchStage(const metasearch::cuckoo::Settings& settings);
+
   bool process(const std::string& metadata,
                const std::string& libName,
-               const cider::Cmd& cmd,
-               const Actions& input) override;
+               const cider::Cmd& cmd) override;
 
   std::string getLetter() const override { return "CS"; }
-};
 
-class MetaReportStage final : public Pipe {
- public:
-  bool process(const std::string& metadata,
-               const std::string& libName,
-               const cider::Cmd& cmd,
-               const Actions& input) override;
-
-  std::string getLetter() const override { return "R"; }
+ private:
+  metasearch::cuckoo::Settings m_settings;
 };
 
 }  // namespace pipelines

@@ -11,7 +11,7 @@
 namespace cider {
 
 Cmd::Cmd(int argc, char* argv[]) {
-  assert(argc == 8);
+  assert(argc == 9);
 
   pipelineType = static_cast<PipelineType>(std::atoi(argv[1]));
   workingDir = argv[2];
@@ -20,6 +20,7 @@ Cmd::Cmd(int argc, char* argv[]) {
   binPath = argv[5];
   covDir = argv[6];
   resultsDir = argv[7];
+  commonResultsDir = argv[8];
 
   std::cout << "pipelineType: " << (int)pipelineType
             << ", workingDir: " << workingDir << ", baseDir: " << baseDir

@@ -16,6 +16,37 @@ namespace tpl = TinyProcessLib;
 namespace cider {
 namespace gcov_coverage {
 
+bool serialize(const Coverage& obj, serialization::Serializer& serializer) {
+  serializer << obj.covered;
+  serializer << obj.total;
+  serializer << obj.percent;
+  return true;
+}
+
+bool deserialize(Coverage& obj,
+                 const serialization::Deserializer& deserializer) {
+  deserializer >> obj.covered;
+  deserializer >> obj.total;
+  deserializer >> obj.percent;
+  return true;
+}
+
+bool serialize(const CoverageReport& obj,
+               serialization::Serializer& serializer) {
+  serializer << obj.lineCov;
+  serializer << obj.branchCov;
+  serializer << obj.funcCov;
+  return true;
+}
+
+bool deserialize(CoverageReport& obj,
+                 const serialization::Deserializer& deserializer) {
+  deserializer >> obj.lineCov;
+  deserializer >> obj.branchCov;
+  deserializer >> obj.funcCov;
+  return true;
+}
+
 CoverageReport parseCoverageReport(const nlohmann::json& value) {
   CoverageReport report;
   report.branchCov.covered = value["branch_covered"];

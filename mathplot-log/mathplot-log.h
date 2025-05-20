@@ -13,6 +13,50 @@
 
 namespace cider {
 
+enum class PlotType { BrCov, LineCov, Both };
+
+constexpr const char* LineStyles[] = {
+    "--",  // dashed line
+    "-",   // solid line
+    "-.",  // dash-dot line
+    ":",   // dotted line
+};
+
+constexpr const char* ColorCodes[] = {
+    "k",  // black
+    "b",  // blue
+    "r",  // red
+    "g",  // green
+    "c",  // cyan
+    "m",  // magenta
+    "y",  // yellow
+};
+
+struct LinesBarPlotData final {
+  std::string label;
+  size_t oldLines = 0;
+  std::vector<size_t> newLines;
+};
+
+class LinesBarPlot final {
+ public:
+  LinesBarPlot(const std::string& logDir, const std::string& logFileName);
+  ~LinesBarPlot();
+
+  void log(size_t oldLines, size_t newLines);
+  void next(const std::string& label);
+
+  void plot() const;
+  void save();
+
+ private:
+  std::vector<LinesBarPlotData> _barData;
+  LinesBarPlotData* _current = nullptr;
+
+  std::string m_path;
+  bool m_saved = false;
+};
+
 namespace cfg_coverage {
 
 class MathplotLogger : public ICoverageLogger {
@@ -33,6 +77,62 @@ class MathplotLogger : public ICoverageLogger {
 
 namespace gcov_coverage {
 
+struct BoxPlotData final {
+  std::string label;
+  std::vector<double> data;
+  std::vector<size_t> lines;
+};
+
+class CoverageBoxPlot final : public ICoverageLogger {
+ public:
+  CoverageBoxPlot(const std::string& logDir,
+                  const std::string& logFileName,
+                  PlotType type = PlotType::BrCov);
+  ~CoverageBoxPlot() override;
+
+  void log(size_t index, const RootReport& coverage) const override;
+
+  void next(const std::string& label);
+  void linesCount(size_t lines);
+
+  void plot() const;
+  void save();
+
+ private:
+  PlotType _type;
+  std::vector<BoxPlotData> _boxData;
+  BoxPlotData* _current = nullptr;
+
+  std::string m_path;
+  bool m_saved = false;
+};
+
+struct BarPlotData final {
+  std::string label;
+  RootReport report;
+  size_t lines = 0;
+};
+
+class CoverageBarPlot final : public ICoverageLogger {
+ public:
+  CoverageBarPlot(const std::string& logDir, const std::string& logFileName);
+  ~CoverageBarPlot() override;
+
+  void log(size_t index, const RootReport& coverage) const override;
+
+  void next(const std::string& label);
+
+  void plot() const;
+  void save();
+
+ private:
+  std::vector<BarPlotData> _barData;
+  BarPlotData* _current = nullptr;
+
+  std::string m_path;
+  bool m_saved = false;
+};
+
 class MathplotLogger : public ICoverageLogger {
  public:
   MathplotLogger(const std::string& logDir, const std::string& logFileName);
@@ -47,47 +147,38 @@ class MathplotLogger : public ICoverageLogger {
   std::string m_path;
 };
 
-class ComparativeLogger : public ICoverageLogger {
- public:
-  ComparativeLogger(const std::string& logDir, const std::string& logFileName);
-  ~ComparativeLogger() override;
+struct Points {
+  std::string name;
+  const char* lineStyle = nullptr;
+  const char* color = nullptr;
 
-  void log(size_t index, const RootReport& coverage) const override;
-
-  void first() { m_first = true; }
-  void other() { m_first = false; }
-
-  void plot() const;
-
- private:
-  mutable std::vector<double> i_, ilcov_, ibcov_;
-  mutable std::vector<double> j_, jlcov_, jbcov_;
-
-  bool m_first = true;
-
-  std::string m_path;
+  std::vector<double> instructions;
+  std::vector<double> lineCov;
+  std::vector<double> brCov;
 };
 
-class TripleComparativeLogger : public ICoverageLogger {
+class StepperComparativeLogger : public ICoverageLogger {
  public:
-  TripleComparativeLogger(const std::string& logDir,
-                          const std::string& logFileName);
-  ~TripleComparativeLogger() override;
+  StepperComparativeLogger(const std::string& logDir,
+                           const std::string& logFileName,
+                           PlotType type = PlotType::BrCov);
+  ~StepperComparativeLogger() override;
 
   void log(size_t index, const RootReport& coverage) const override;
 
-  void md(size_t md) { _md = md; }
+  void next(const std::string& name);
 
   void plot() const;
 
  private:
-  mutable std::vector<double> i_, ibcov_;
-  mutable std::vector<double> j_, jbcov_;
-  mutable std::vector<double> k_, kbcov_;
-
-  size_t _md = 0;
+  PlotType _type;
+  mutable std::vector<Points> _graphs;
+  Points* _current = nullptr;
+  int _style = 0;
+  int _color = 0;
 
   std::string m_path;
+  mutable size_t _updateCounter = 0;
 };
 
 }  // namespace gcov_coverage

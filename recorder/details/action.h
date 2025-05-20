@@ -51,6 +51,8 @@ using Action = std::variant<Function,
                             ClassUnaryOp,
                             ClassDestructor>;
 
+using Actions = std::vector<Action>;
+
 Action deepCopy(const Action& action);
 
 void print(std::ostream& os, const Action& action);

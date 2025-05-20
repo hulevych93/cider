@@ -26,7 +26,7 @@ add_dependencies(bitmap++_tests ${CIDER_THIRDPARTY_TARGET_NAME})
 target_compile_definitions(bitmap++_tests PRIVATE "ROOT_DIR=\"${PROJECT_SOURCE_DIR}\"")
 target_compile_definitions(bitmap++_tests PRIVATE "BIN_DIR=\"${PROJECT_BINARY_DIR}\"")
 
-set(SWIG_MODULE_NAME "bitmap_cplus")
+set(SWIG_MODULE_NAME "bitmap_cplusplus")
 
 prv_collect_src(${BitmapPlusPlus_INCLUDE_DIRS} HDRS_OUT ".swig" ".cpp")
 

@@ -27,12 +27,12 @@ int main(int argc, char* argv[]) {
 
     run_tests(argv[0], callback);
   } else {
-    cider::recorder::recordScript(LibraryName, "run_tests", sessions,
+    cider::recorder::recordScript(LibraryName, "pugixml", sessions,
                                   [&]() { run_tests(argv[0]); });
   }
 
   auto pipeline = cider::pipelines::makePipeline(LibraryName, cmd);
-  pipeline.run(sessions);
+  pipeline.runOneByOne(sessions);
 
   std::cout << "Program finished. Press Enter to exit...";
   std::cin.get();

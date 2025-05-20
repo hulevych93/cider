@@ -9,11 +9,12 @@
 #include <vector>
 
 #include "coverage/coverage.h"
+#include "serialization/serializable.h"
 
 namespace cider {
 namespace gcov_coverage {
 
-struct Coverage final {
+struct Coverage final : serialization::SerializableTag {
   std::uint32_t covered = 0U;
   std::uint32_t total = 0U;
   double percent = 0.0;
@@ -28,7 +29,12 @@ struct Coverage final {
   }
 };
 
-struct CoverageReport final {
+bool serialize(const Coverage& obj, serialization::Serializer& serializer);
+
+bool deserialize(Coverage& obj,
+                 const serialization::Deserializer& deserializer);
+
+struct CoverageReport final : serialization::SerializableTag {
   Coverage lineCov;
   Coverage branchCov;
   Coverage funcCov;
@@ -42,6 +48,12 @@ struct CoverageReport final {
     return *this;
   }
 };
+
+bool serialize(const CoverageReport& obj,
+               serialization::Serializer& serializer);
+
+bool deserialize(CoverageReport& obj,
+                 const serialization::Deserializer& deserializer);
 
 struct FileReport final {
   std::string name;

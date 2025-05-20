@@ -13,15 +13,6 @@ namespace cider {
 namespace metasearch {
 namespace harmony {
 
-struct Settings final {
-  int harmonyMemorySize = 10;
-  double harmonyMemoryConsiderationRate = 0.95;
-  double mutationRate = 0.1;
-  size_t maxIterationsWithoutUpdates = 500U;
-  ObjectiveFunction objFunc;
-  MutationStrategy strategy = MutationStrategy::ShuffleBytes;
-};
-
 std::ostream& operator<<(std::ostream& os, const Settings& settings);
 
 using Harmony = Solution;
@@ -30,7 +21,7 @@ class Search final : public IMetaSearch {
  public:
   explicit Search(const Settings& settings);
 
-  void initialize(const std::vector<recorder::Action>& actions) override;
+  void initialize(const ActionsCallback& callback) override;
 
   void run() override;
 
@@ -55,7 +46,7 @@ class Search final : public IMetaSearch {
 
   Settings _settings;
   std::vector<Harmony> _harmonyMemory;
-  Harmony _initial;
+  ActionsCallback _actionsGenerator;
   std::unique_ptr<recorder::IParamMutator> _mutator;
 
   std::unique_ptr<IResultsLogger> _logger;

@@ -6,10 +6,10 @@
 #include "recorder/details/action.h"
 #include "recorder/details/params.h"
 
+#include "metaheuristics/args_mutator.h"
+
 namespace cider {
 namespace metasearch {
-
-enum class Algorithm { HarmonySearch, CuckooSearch };
 
 using ObjectiveFunction =
     std::function<double(const std::vector<recorder::Action>&)>;
@@ -41,11 +41,29 @@ class IResultsLogger {
   virtual void log(size_t iteration, const Solution& best) const = 0;
 };
 
+class CompositeLogger final : public IResultsLogger {
+ public:
+  void addLogger(std::shared_ptr<IResultsLogger> logger) {
+    loggers_.emplace_back(std::move(logger));
+  }
+
+  void log(size_t iteration, const Solution& best) const override {
+    for (const auto& logger : loggers_) {
+      logger->log(iteration, best);
+    }
+  }
+
+ private:
+  std::vector<std::shared_ptr<IResultsLogger>> loggers_;
+};
+
+using ActionsCallback = std::function<recorder::Actions()>;
+
 class IMetaSearch {
  public:
   virtual ~IMetaSearch() = default;
 
-  virtual void initialize(const std::vector<recorder::Action>& actions) = 0;
+  virtual void initialize(const ActionsCallback& callback) = 0;
 
   virtual void run() = 0;
 
@@ -53,6 +71,33 @@ class IMetaSearch {
 
   virtual void setLogger(std::unique_ptr<IResultsLogger> logger) = 0;
 };
+
+namespace cuckoo {
+
+struct Settings final {
+  int populationSize = 10;
+  double Pa = 0.25;
+  size_t maxIterationsWithoutUpdates = 50U;
+  size_t maxIter = 22;
+  ObjectiveFunction objFunc;
+  MutationStrategy strategy = MutationStrategy::ShuffleBytes;
+};
+
+}  // namespace cuckoo
+
+namespace harmony {
+
+struct Settings final {
+  int harmonyMemorySize = 10;
+  double harmonyMemoryConsiderationRate = 0.95;
+  double mutationRate = 0.1;
+  size_t maxIterationsWithoutUpdates = 500U;
+  size_t maxIter = 1000;
+  ObjectiveFunction objFunc;
+  MutationStrategy strategy = MutationStrategy::ShuffleBytes;
+};
+
+}  // namespace harmony
 
 }  // namespace metasearch
 }  // namespace cider

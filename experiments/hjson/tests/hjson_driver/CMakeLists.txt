@@ -25,6 +25,7 @@ function(add_hjson_run_target target_name mode)
             "${CMAKE_BINARY_DIR}/bin/hjson_player"
             "${CMAKE_BINARY_DIR}"
             "${CMAKE_BINARY_DIR}/results/hjson"
+            "${CMAKE_BINARY_DIR}/results/"
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/experiments/hjson/tests/hjson_tests"
         DEPENDS hjson_player
         VERBATIM
@@ -38,3 +39,12 @@ add_hjson_run_target(hjson_QL_run 2)
 add_hjson_run_target(hjson_QLHS_run 3)
 add_hjson_run_target(hjson_QLCS_run 4)
 add_hjson_run_target(hjson_QGEN_run 5)
+add_hjson_run_target(hjson_QGEN_STATS_run 6)
+add_hjson_run_target(hjson_QGEN_BZ_STATS_run 7)
+
+add_hjson_run_target(hjson_QGEN_GBZ_STATS_run 8)
+
+add_hjson_run_target(hjson_QGEN_G_LINE_STATS_run 222)
+add_hjson_run_target(hjson_QGEN_BZ_LINE_STATS_run 653)
+
+add_hjson_run_target(hjson_DAT_run 123)

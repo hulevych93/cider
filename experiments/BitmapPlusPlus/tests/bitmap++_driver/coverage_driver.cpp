@@ -13,7 +13,7 @@ extern int test_rotation();
 extern int test_variant_shapes();
 extern int test_write_bitmap();
 
-static void testAll() {
+static void bitmap_cplusplus() {
   test_chess_board();
   test_variant_shapes();
   test_polymorphic_shapes();
@@ -24,13 +24,13 @@ static void testAll() {
 }
 
 int main(int argc, char* argv[]) {
-  constexpr const char* LibraryName = "bitmap_cplus";
+  constexpr const char* LibraryName = "bitmap_cplusplus";
 
   cider::Cmd cmd(argc, argv);
 
   std::vector<cider::recorder::ScriptRecordSessionPtr> sessions;
 
-  if (1) {
+  if (0) {
     RECORD_TEST_SCRIPT(LibraryName, test_chess_board, sessions);
     RECORD_TEST_SCRIPT(LibraryName, test_variant_shapes, sessions);
     RECORD_TEST_SCRIPT(LibraryName, test_polymorphic_shapes, sessions);
@@ -39,7 +39,7 @@ int main(int argc, char* argv[]) {
     RECORD_TEST_SCRIPT(LibraryName, test_primitives, sessions);
     RECORD_TEST_SCRIPT(LibraryName, test_write_bitmap, sessions);
   } else {
-    RECORD_TEST_SCRIPT(LibraryName, testAll, sessions);
+    RECORD_TEST_SCRIPT(LibraryName, bitmap_cplusplus, sessions);
   }
 
   std::sort(sessions.begin(), sessions.end(),
@@ -49,7 +49,7 @@ int main(int argc, char* argv[]) {
             });
 
   auto pipeline = cider::pipelines::makePipeline(LibraryName, cmd);
-  pipeline.run(sessions);
+  pipeline.runOneByOne(sessions);
 
   std::cout << "Program finished. Press Enter to exit...";
   std::cin.get();

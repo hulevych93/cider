@@ -10,6 +10,12 @@ namespace paths {
 
 std::string getQTableAgentPath(const std::string& resultsDir);
 
+std::string getResultsPath(const std::string& resultsDir);
+
+std::string getBriefResultsPath(const std::string& resultsDir);
+
+std::string getSessionsResultsPath(const std::string& resultsDir);
+
 std::string getQLearningDir(const std::string& resultsDir,
                             const std::string& metadata,
                             const std::string& prefix);

@@ -25,63 +25,29 @@ namespace pipelines {
 
 namespace {
 
-std::unique_ptr<cider::metasearch::IMetaSearch> makeHarmonySearch(
-    const cider::metasearch::ObjectiveFunction& objFunc,
-    std::string& filePrefix) {
-  cider::metasearch::harmony::Settings settings;
-  settings.mutationRate = 0.15;
-  settings.harmonyMemoryConsiderationRate = 0.4;
-  settings.harmonyMemorySize = 1;
-  settings.maxIterationsWithoutUpdates = 300;
-  settings.strategy = cider::metasearch::MutationStrategy::ShuffleBytes;
-  settings.objFunc = objFunc;
-
-  std::stringstream os;
-  os << settings;
-  filePrefix = os.str();
-
-  return std::make_unique<cider::metasearch::harmony::Search>(settings);
-}
-
-std::unique_ptr<cider::metasearch::IMetaSearch> makeCackooSearch(
-    const cider::metasearch::ObjectiveFunction& objFunc,
-    std::string& filePrefix) {
-  cider::metasearch::cuckoo::Settings settings;
-  settings.populationSize = 1;
-  settings.Pa = 0.1;
-  settings.maxIterationsWithoutUpdates = 300;
-  settings.strategy = cider::metasearch::MutationStrategy::LevyFlight;
-  settings.objFunc = objFunc;
-
-  std::stringstream os;
-  os << settings;
-  filePrefix = os.str();
-
-  return std::make_unique<cider::metasearch::cuckoo::Search>(settings);
-}
-
-template <typename CoverageMetricsType>
-bool makeMetaPipeline(PipelineType type,
+template <typename CoverageMetricsType, typename SettingsType>
+bool makeMetaPipeline(SettingsType& settings,
                       const std::string& metadata,
                       const std::string& libName,
                       const cider::Cmd& cmd,
-                      const Actions& input,
-                      Actions& output) {
+                      const std::function<recorder::Actions()>& callback,
+                      recorder::Actions& output) {
   try {
     CoverageMetricsType measurer{cmd, libName.c_str()};
 
     std::unique_ptr<cider::metasearch::IMetaSearch> metaSearch;
 
-    std::string prefix;
-    switch (type) {
-      case cider::PipelineType::HarmonySearch:
-        metaSearch = makeHarmonySearch(std::ref(measurer), prefix);
-        break;
-      case cider::PipelineType::CackooSearch:
-        metaSearch = makeCackooSearch(std::ref(measurer), prefix);
-        break;
-      default:
-        throw std::logic_error{"wrong meta algorithm"};
+    std::stringstream os;
+    os << settings;
+    auto prefix = os.str();
+
+    settings.objFunc = std::ref(measurer);
+
+    if constexpr (std::is_same_v<SettingsType, metasearch::harmony::Settings>) {
+      metaSearch = std::make_unique<metasearch::harmony::Search>(settings);
+    } else if constexpr (std::is_same_v<SettingsType,
+                                        metasearch::cuckoo::Settings>) {
+      metaSearch = std::make_unique<metasearch::cuckoo::Search>(settings);
     }
 
     std::filesystem::path outPath(cmd.resultsDir);
@@ -95,7 +61,7 @@ bool makeMetaPipeline(PipelineType type,
         outPath, "meta_search.png"));
 #endif
 
-    metaSearch->initialize(input);
+    metaSearch->initialize(callback);
     metaSearch->run();
 
     const auto& bestActions = metaSearch->getBest().actions;
@@ -111,30 +77,80 @@ bool makeMetaPipeline(PipelineType type,
 
 }  // namespace
 
+HarmonySearchStage::HarmonySearchStage(
+    const metasearch::harmony::Settings& settings)
+    : m_settings(settings) {}
+
 bool HarmonySearchStage::process(const std::string& metadata,
                                  const std::string& libName,
-                                 const cider::Cmd& cmd,
-                                 const Actions& input) {
-  Actions output;
+                                 const cider::Cmd& cmd) {
+  std::function<recorder::Actions()> callback;
+
+  std::string dataName;
+
+  const auto& input = getInput();
+  if (input.actionsCallback) {
+    dataName = "HSQL";
+    callback = input.actionsCallback;
+  } else {
+    dataName = "HS";
+    callback = [input]() { return deepCopy(input.actions); };
+  }
+
+  recorder::Actions output;
   auto res = makeMetaPipeline<cfg_coverage::CoverageMeasurment>(
-      PipelineType::HarmonySearch, metadata, libName, cmd, input, output);
-  pushResult(output);
+      m_settings, metadata, libName, cmd, callback, output);
+  pushResult(dataName.c_str(), libName.c_str(), output);
+
+  cider::gcov_coverage::CoverageMeasurment gcov_measurer{cmd, libName.c_str()};
+
+  const auto report = gcov_measurer.getReport(output);
+  if (report.has_value()) {
+    pushResult(dataName.c_str(), libName.c_str(), input.actions.size(),
+               output.size(), report->report);
+  }
+
   return res;
 }
 
+CackooSearchStage::CackooSearchStage(
+    const metasearch::cuckoo::Settings& settings)
+    : m_settings(settings) {}
+
 bool CackooSearchStage::process(const std::string& metadata,
                                 const std::string& libName,
-                                const cider::Cmd& cmd,
-                                const Actions& input) {
-  Actions output;
+                                const cider::Cmd& cmd) {
+  std::function<recorder::Actions()> callback;
+
+  std::string dataName;
+
+  const auto& input = getInput();
+  if (input.actionsCallback) {
+    dataName = "CSQL";
+    callback = input.actionsCallback;
+  } else {
+    dataName = "CS";
+    callback = [input]() { return deepCopy(input.actions); };
+  }
+
+  recorder::Actions output;
   auto res = makeMetaPipeline<cfg_coverage::CoverageMeasurment>(
-      PipelineType::CackooSearch, metadata, libName, cmd, input, output);
-  pushResult(output);
+      m_settings, metadata, libName, cmd, callback, output);
+  pushResult(dataName.c_str(), libName.c_str(), output);
+
+  cider::gcov_coverage::CoverageMeasurment gcov_measurer{cmd, libName.c_str()};
+
+  const auto report = gcov_measurer.getReport(output);
+  if (report.has_value()) {
+    pushResult(dataName.c_str(), libName.c_str(), input.actions.size(),
+               output.size(), report->report);
+  }
+
   return res;
 }
 
 namespace {
-Actions resetArgs(const Actions& input) {
+recorder::Actions resetArgs(const recorder::Actions& input) {
   auto result = deepCopy(input);
   auto nuller = recorder::makeNullableMutator();
   for (auto& action : result) {
@@ -144,64 +160,6 @@ Actions resetArgs(const Actions& input) {
   return result;
 }
 }  // namespace
-
-bool MetaReportStage::process(const std::string& metadata,
-                              const std::string& libName,
-                              const cider::Cmd& cmd,
-                              const Actions& input) {
-  std::filesystem::path outPath(cmd.resultsDir);
-  outPath /= metadata;
-
-  auto generator = cider::recorder::makeLuaGenerator(libName);
-
-  {
-    const auto script =
-        cider::recorder::generateScript(generator, input, 99999U);
-
-    std::ofstream output_file(outPath / (libName + ".lua"));
-    output_file << script;
-  }
-
-  const auto& output = getResults()[0];
-
-  {
-    const auto script =
-        cider::recorder::generateScript(generator, output, 99999U);
-
-    std::ofstream output_file(outPath / ("optimized_" + libName + ".lua"));
-    output_file << script;
-  }
-
-#ifdef ENABLE_MATHPLOT
-  auto logger = std::make_shared<cider::gcov_coverage::ComparativeLogger>(
-      outPath.string(), "comparage.png");
-#else
-  auto logger = std::make_shared<gcov_coverage::FileLogger>(outPath.string(),
-                                                            "comparage.txt");
-#endif
-
-  {
-    cider::gcov_coverage::StepperCoverageMeasurment stepper{cmd,
-                                                            libName.c_str()};
-
-    stepper.setLogger(logger);
-
-    stepper.measure(input);
-  }
-
-  logger->other();
-
-  {
-    cider::gcov_coverage::StepperCoverageMeasurment stepper{cmd,
-                                                            libName.c_str()};
-
-    stepper.setLogger(logger);
-
-    stepper.measure(output);
-  }
-
-  return true;
-}
 
 }  // namespace pipelines
 }  // namespace cider

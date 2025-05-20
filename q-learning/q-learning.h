@@ -39,14 +39,16 @@ enum class GenerationStrategyType { Greedy, EGreedy, Boltzmann, Random };
 enum class GenerationStopType { LimitActions, GreaterCoverage };
 
 struct GenerationSettings final {
+  const char* configName = nullptr;
+
   GenerationStopType stopType = GenerationStopType::GreaterCoverage;
-  size_t limitActions = 100U;
+  size_t limitActions = 450U;
 
   GenerationStrategyType strategy = GenerationStrategyType::Greedy;
   float epsilon = 0.1f;      // for ε-Greedy
   float temperature = 1.0f;  // for Boltzmann
   size_t maxRollback = 10U;
-  size_t maxStateDepth = 5U;
+  size_t maxStateDepth = 3U;
   ObjectiveFunction objFunc;
 };
 

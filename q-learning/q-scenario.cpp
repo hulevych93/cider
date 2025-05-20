@@ -143,8 +143,18 @@ QActionList QScenario::getCurrentState() const {
   return QActionList{m_actions.end() - count, m_actions.end()};
 }
 
+void QScenario::store() {
+  std::copy(m_actions.cbegin(), m_actions.cend(),
+            std::back_inserter(m_storage));
+  m_actions.clear();
+  std::cout << "SIZE " << m_actions.size() << std::endl;
+}
+
 QActionList QScenario::getResult() const {
-  return m_actions;
+  std::copy(m_actions.cbegin(), m_actions.cend(),
+            std::back_inserter(m_storage));
+  m_actions.clear();
+  return m_storage;
 }
 
 bool QScenario::isOver() const {
@@ -152,7 +162,10 @@ bool QScenario::isOver() const {
 }
 
 std::optional<QValue> QScenario::getReward() const {
-  const auto objValue = m_objFunc(m_actions);
+  auto tempActions = m_storage;
+  std::copy(m_actions.cbegin(), m_actions.cend(),
+            std::back_inserter(tempActions));
+  const auto objValue = m_objFunc(tempActions);
 
   std::optional<QValue> result;
 
@@ -164,20 +177,21 @@ std::optional<QValue> QScenario::getReward() const {
     result = rewardFunction(
         m_rwCounter, objValue, m_lastObjVal, 0.2, 0.1,
         [&]() {
-          assert(m_actions.size() >= 2U);
-          if (cider::recorder::semanticallyEqual(
-                  m_actions[m_actions.size() - 1],
-                  m_actions[m_actions.size() - 2])) {
-            if (m_actions.size() >= 3U) {
-              if (cider::recorder::semanticallyEqual(
-                      m_actions[m_actions.size() - 2],
-                      m_actions[m_actions.size() - 3])) {
-                m_rwCounter.threeSameAct++;
-                return -0.2;
+          if (m_actions.size() >= 2U) {
+            if (cider::recorder::semanticallyEqual(
+                    m_actions[m_actions.size() - 1],
+                    m_actions[m_actions.size() - 2])) {
+              if (m_actions.size() >= 3U) {
+                if (cider::recorder::semanticallyEqual(
+                        m_actions[m_actions.size() - 2],
+                        m_actions[m_actions.size() - 3])) {
+                  m_rwCounter.threeSameAct++;
+                  return -0.2;
+                }
               }
+              m_rwCounter.twoSameAct++;
+              return -0.15;
             }
-            m_rwCounter.twoSameAct++;
-            return -0.15;
           }
 
           m_rwCounter.sameCov++;
@@ -190,10 +204,10 @@ std::optional<QValue> QScenario::getReward() const {
     m_lastObjVal = objValue;
 
     const double lenghtMultiplier = calculateContinuousMultiplier(
-        m_rwCounter, m_initialSize, m_actions.size());
+        m_rwCounter, m_initialSize, tempActions.size());
 
     std::cout << "Multi: " << lenghtMultiplier << ", old: " << m_initialSize
-              << ", new: " << m_actions.size() << std::endl;
+              << ", new: " << tempActions.size() << std::endl;
 
     result = normalize_reward(result.value() * lenghtMultiplier);
   }

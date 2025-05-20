@@ -15,7 +15,7 @@
 extern "C" {
 #endif
 
-int luaopen_bitmap_cplus(lua_State* L);
+int luaopen_bitmap_cplusplus(lua_State* L);
 
 #ifdef __cplusplus
 }
@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
     }
 
     auto lState = cider::scripting::get_lua();
-    luaopen_bitmap_cplus(lState.get());
+    luaopen_bitmap_cplusplus(lState.get());
 
     auto startCov = cider::cfg_coverage::getCoverage();
     const auto result =

@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
 
   std::vector<cider::recorder::ScriptRecordSessionPtr> sessions;
 
-  if (1) {
+  if (0) {
     const auto callback = [&](const char* testName,
                               const std::function<void()>& f) {
       cider::recorder::recordScript(LibraryName, testName, sessions, f);
@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
 
     run_tests(callback);
 
-    cider::recorder::recordScript(LibraryName, "testAll", sessions, [&]() {
+    cider::recorder::recordScript(LibraryName, "hjson", sessions, [&]() {
       for (const auto& test : tests) {
         test();
       }
@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
   }
 
   auto pipeline = cider::pipelines::makePipeline(LibraryName, cmd);
-  pipeline.run(sessions);
+  pipeline.runOneByOne(sessions);
 
   std::cout << "Program finished. Press Enter to exit...";
   std::cin.get();

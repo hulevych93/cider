@@ -25,6 +25,7 @@ function(add_pugixml_run_target target_name mode)
             "${CMAKE_BINARY_DIR}/bin/pugixml_player"
             "${CMAKE_BINARY_DIR}/experiments/pugixml/tests/pugixml_player"
             "${CMAKE_BINARY_DIR}/results/pugixml"
+            "${CMAKE_BINARY_DIR}/results/"
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/experiments/pugixml/tests/pugixml_tests"
         DEPENDS pugixml_player
         VERBATIM
@@ -38,3 +39,7 @@ add_pugixml_run_target(pugixml_QL_run 2)
 add_pugixml_run_target(pugixml_QLHS_run 3)
 add_pugixml_run_target(pugixml_QLCS_run 4)
 add_pugixml_run_target(pugixml_QLGEN_run 5)
+add_pugixml_run_target(pugixml_QGEN_STATS_run 6)
+add_pugixml_run_target(pugixml_QGEN_BZ_STATS_run 7)
+
+add_pugixml_run_target(pugixml_DAT_run 123)

@@ -15,9 +15,11 @@ enum class MutationStrategy { ShuffleBytes, ChangeBits, LevyFlight };
 
 std::ostream& operator<<(std::ostream& os, MutationStrategy strategy);
 
-std::unique_ptr<recorder::IParamMutator> makeMutator(std::mt19937& gen,
-                                                     double mutationRate,
-                                                     MutationStrategy strategy);
+std::unique_ptr<recorder::IParamMutator> makeMutator(
+    std::mt19937& gen,
+    double mutationRate,
+    MutationStrategy strategy,
+    bool mutateStrings = false);
 
 }  // namespace metasearch
 }  // namespace cider

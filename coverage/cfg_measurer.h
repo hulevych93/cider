@@ -24,6 +24,10 @@ struct CoverageMeasurment final {
     m_logger = std::move(fileLog);
   }
 
+  void setLogger(const std::shared_ptr<ICoverageLogger>& logger) {
+    m_logger = logger;
+  }
+
   CfgCoverageOpt getReport(const std::vector<cider::recorder::Action>& actions);
 
   double operator()(const std::vector<cider::recorder::Action>& actions) {
@@ -53,7 +57,7 @@ struct CoverageMeasurment final {
 
  private:
   const Cmd& _cmd;
-  std::unique_ptr<ICoverageLogger> m_logger;
+  std::shared_ptr<ICoverageLogger> m_logger;
 
  protected:
   mutable size_t _index = 1U;

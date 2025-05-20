@@ -23,7 +23,8 @@ bool QTableAgent::load(const std::string& filePath) {
   try {
     serialization::Deserializer deserializer(filePath);
     deserializer >> m_qtable;
-  } catch (...) {
+  } catch (const std::exception& e) {
+    std::cout << e.what() << std::endl;
     return false;
   }
   return true;
@@ -38,6 +39,20 @@ bool QTableAgent::save(const std::string& filePath) const {
     return false;
   }
   return true;
+}
+
+QValues getAvailableQValues(const QActionList& available,
+                            const QValues& values) {
+  QValues availableValues;
+  for (const auto& action : available) {
+    const auto qValueIter = values.find(action);
+    if (qValueIter != values.cend()) {
+      availableValues.emplace(action, qValueIter->second);
+    } else {
+      availableValues.emplace(action, 0.0001);
+    }
+  }
+  return availableValues;
 }
 
 QActionList QTableAgent::getBestFromAvailable(const QActionList& available,
@@ -78,11 +93,13 @@ std::optional<QAction> QTableAgent::findBestOrRandomAvailableAction(
     return std::nullopt;
   }
   if (qValuesIter != m_qtable.cend()) {
+    std::cout << "B3" << std::endl;
     const auto& qValues =
         getBestFromAvailable(availableActions, qValuesIter->second);
     std::uniform_int_distribution<size_t> indexDist(0, qValues.size() - 1);
     return qValues[indexDist(_gen)];
   } else {
+    std::cout << "BRand" << std::endl;
     std::uniform_int_distribution<size_t> indexDist(
         0, availableActions.size() - 1);
     return availableActions[indexDist(_gen)];
@@ -119,11 +136,19 @@ std::optional<QAction> QTableAgent::chooseBolzmanAction(
   std::optional<QAction> action;
   const auto qValuesIt = m_qtable.find(scenario.getCurrentState());
   if (qValuesIt == m_qtable.cend()) {
+    std::cout << "BRand" << std::endl;
     action = scenario.getRandomAction();
   } else {
-    const auto& qValues = qValuesIt->second;
+    const auto& availableActions = scenario.getAvailableActions();
+    if (availableActions.empty()) {
+      return std::nullopt;
+    }
+
+    const auto& qValues =
+        getAvailableQValues(availableActions, qValuesIt->second);
 
     if (qValues.empty()) {
+      std::cout << "BRand1" << std::endl;
       return scenario.getRandomAction();
     }
 
@@ -137,11 +162,13 @@ std::optional<QAction> QTableAgent::chooseBolzmanAction(
     }
 
     if (sum == 0.0f || std::isinf(sum)) {
+      std::cout << "BRand2" << std::endl;
       return scenario.getRandomAction();
     }
 
-    for (float& p : probabilities)
+    for (float& p : probabilities) {
       p /= sum;
+    }
 
     std::discrete_distribution<int> dist(probabilities.begin(),
                                          probabilities.end());
@@ -151,6 +178,8 @@ std::optional<QAction> QTableAgent::chooseBolzmanAction(
     size_t i = 0;
     for (; i < index; ++i, ++qValIt)
       ;
+
+    std::cout << "B3" << std::endl;
 
     action = qValIt->first;
   }

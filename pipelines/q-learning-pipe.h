@@ -13,73 +13,73 @@ namespace pipelines {
 
 class QPreLearningStage final : public Pipe {
  public:
-  QPreLearningStage();
+  QPreLearningStage(const qleaning::LearningSettings& settings);
 
   bool process(const std::string& metadata,
                const std::string& libName,
-               const cider::Cmd& cmd,
-               const Actions& input) override;
+               const cider::Cmd& cmd) override;
 
   std::string getLetter() const override { return "QPL"; }
 
  private:
+  qleaning::LearningSettings m_settings;
   qleaning::QAgent& m_agent;
 };
 
 class QLearningStage final : public Pipe {
  public:
-  QLearningStage();
+  explicit QLearningStage(const qleaning::LearningSettings& settings);
 
   bool process(const std::string& metadata,
                const std::string& libName,
-               const cider::Cmd& cmd,
-               const Actions& input) override;
+               const cider::Cmd& cmd) override;
 
   std::string getLetter() const override { return "QL"; }
 
  private:
+  qleaning::LearningSettings m_settings;
   qleaning::QAgent& m_agent;
 };
 
 class QGenerationStage final : public Pipe {
  public:
-  QGenerationStage();
+  QGenerationStage(const qleaning::GenerationSettings& settings,
+                   int numberOfRuns = 1);
 
   bool process(const std::string& metadata,
                const std::string& libName,
-               const cider::Cmd& cmd,
-               const Actions& input) override;
+               const cider::Cmd& cmd) override;
 
   std::string getLetter() const override { return "G"; }
 
  private:
   qleaning::QAgent& m_agent;
+  qleaning::GenerationSettings m_settings;
+  const int _numberOfRuns;
 };
 
 class QRandGenerationStage final : public Pipe {
  public:
-  QRandGenerationStage();
+  QRandGenerationStage(const qleaning::GenerationSettings& settings,
+                       int numberOfRuns = 1);
 
   bool process(const std::string& metadata,
                const std::string& libName,
-               const cider::Cmd& cmd,
-               const Actions& input) override;
+               const cider::Cmd& cmd) override;
 
   std::string getLetter() const override { return "RNDG"; }
 
  private:
   qleaning::QAgent& m_agent;
+  qleaning::GenerationSettings _settings;
+  const int _numberOfRuns;
 };
 
-class GenerationReportStage final : public Pipe {
- public:
-  bool process(const std::string& metadata,
-               const std::string& libName,
-               const cider::Cmd& cmd,
-               const Actions& input) override;
-
-  std::string getLetter() const override { return "RP"; }
-};
+bool generate(const qleaning::GenerationSettings& settings,
+              const std::string& libName,
+              const cider::Cmd& cmd,
+              const recorder::Actions& input,
+              recorder::Actions& output);
 
 }  // namespace pipelines
 }  // namespace cider

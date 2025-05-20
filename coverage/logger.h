@@ -19,6 +19,22 @@ class ICoverageLogger {
   virtual void log(size_t index, const Coverage& coverage) const = 0;
 };
 
+class CompositeLogger final : public ICoverageLogger {
+ public:
+  void addLogger(std::shared_ptr<ICoverageLogger> logger) {
+    loggers_.emplace_back(std::move(logger));
+  }
+
+  void log(size_t index, const Coverage& coverage) const override {
+    for (const auto& logger : loggers_) {
+      logger->log(index, coverage);
+    }
+  }
+
+ private:
+  std::vector<std::shared_ptr<ICoverageLogger>> loggers_;
+};
+
 class FileLogger : public ICoverageLogger {
  public:
   FileLogger(const std::string& logDir, const std::string& logFileName);
@@ -39,6 +55,22 @@ class ICoverageLogger {
  public:
   virtual ~ICoverageLogger() = default;
   virtual void log(size_t index, const RootReport& coverage) const = 0;
+};
+
+class CompositeLogger final : public ICoverageLogger {
+ public:
+  void addLogger(std::shared_ptr<ICoverageLogger> logger) {
+    loggers_.emplace_back(std::move(logger));
+  }
+
+  void log(size_t index, const RootReport& coverage) const override {
+    for (const auto& logger : loggers_) {
+      logger->log(index, coverage);
+    }
+  }
+
+ private:
+  std::vector<std::shared_ptr<ICoverageLogger>> loggers_;
 };
 
 class FileLogger : public ICoverageLogger {
