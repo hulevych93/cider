@@ -217,8 +217,8 @@ bool Pipeline::runOneByOne(
   }
 
   std::cout << "Save results: " << paths::getResultsPath(_cmd.resultsDir)
-            << ", status: "
-            << save(paths::getResultsPath(_cmd.resultsDir)) << std::endl;
+            << ", status: " << save(paths::getResultsPath(_cmd.resultsDir))
+            << std::endl;
 
   std::cout << "Save brief results: "
             << paths::getBriefResultsPath(_cmd.resultsDir) << ", status: "

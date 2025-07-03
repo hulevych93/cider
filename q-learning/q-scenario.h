@@ -10,6 +10,8 @@
 
 #include "coverage/coverage.h"
 
+#include "reward_counter.h"
+
 namespace cider {
 namespace qleaning {
 

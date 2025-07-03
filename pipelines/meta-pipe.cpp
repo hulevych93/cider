@@ -17,7 +17,7 @@
 #include "recorder/recorder.h"
 
 #ifdef ENABLE_MATHPLOT
-#include "mathplot-log/mathplot-log.h"
+#include "mathplot-log/monitoring/metasearch-basic-block-cov-plot.h"
 #endif
 
 namespace cider {
@@ -57,7 +57,7 @@ bool makeMetaPipeline(SettingsType& settings,
     measurer.setLogger(outPath.string(), "meta_log.txt");
 
 #ifdef ENABLE_MATHPLOT
-    metaSearch->setLogger(std::make_unique<cider::metasearch::MathplotLogger>(
+    metaSearch->setLogger(std::make_unique<cider::mathplot::MathplotLogger>(
         outPath, "meta_search.png"));
 #endif
 

@@ -13,7 +13,7 @@
 #include "coverage/gcov_measurer.h"
 
 #ifdef ENABLE_MATHPLOT
-#include "mathplot-log/mathplot-log.h"
+#include "mathplot-log/monitoring/q-learning-reward-loss-plot.h"
 #endif
 
 #include <iostream>
@@ -46,7 +46,7 @@ bool qlearningPipeline(QAgent& agent,
   std::ofstream debug(outPath / "qtable_debug.txt", std::ios::trunc);
 
 #ifdef ENABLE_MATHPLOT
-  qleaning::MathplotLogger logger(outPath, "reward_loss.png");
+  mathplot::MathplotLogger logger(outPath, "reward_loss.png");
 #else
   qleaning::FileLogger logger(outPath, "reward_loss.txt");
 #endif

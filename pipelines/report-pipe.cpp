@@ -13,7 +13,10 @@
 #include "coverage/gcov_measurer.h"
 
 #ifdef ENABLE_MATHPLOT
-#include "mathplot-log/mathplot-log.h"
+#include "mathplot-log/output/comp-coverage-box-plot.h"
+#include "mathplot-log/output/comp-coverage-grow-plot.h"
+#include "mathplot-log/output/comp-dataset-coverage-bar-plot.h"
+#include "mathplot-log/output/comp-lines-barplot.h"
 #endif
 
 #include <iostream>
@@ -30,9 +33,8 @@ bool StepperReportStage::process(const std::string& metadata,
   outPath /= metadata;
 
 #ifdef ENABLE_MATHPLOT
-  auto logger =
-      std::make_shared<cider::gcov_coverage::StepperComparativeLogger>(
-          outPath.string(), "comparage.png", cider::PlotType::BrCov);
+  auto logger = std::make_shared<cider::mathplot::StepperComparativeLogger>(
+      outPath.string(), "comparage.png", cider::mathplot::StepperComparativeLogger::PlotType::BrCov);
 #endif
 
   auto generator = cider::recorder::makeLuaGenerator(libName);
@@ -63,36 +65,37 @@ bool StepperReportStage::process(const std::string& metadata,
   handleResult(origin);
 
   auto getBest = [&](const std::string& name, int max) {
-      Results bestResults;
+    Results bestResults;
 
-      const auto& results = getResults();
-      for (const auto& result : results) {
-          if (result.methodName != name) {
-              continue;
-          }
-
-          bestResults.emplace_back(result);
+    const auto& results = getResults();
+    for (const auto& result : results) {
+      if (result.methodName != name) {
+        continue;
       }
 
-      cider::gcov_coverage::CoverageMeasurment msr{cmd, libName.c_str()};
-      std::sort(bestResults.begin(), bestResults.end(), [&msr](const auto& l, const auto& r) {
-          const auto& lreport = msr.getReport(l.actions);
-          const auto& rreport = msr.getReport(r.actions);
-          if (lreport.has_value() && rreport.has_value()) {
-              return lreport->report.branchCov.covered > rreport->report.branchCov.covered;
-          }
-          return false;
-      });
+      bestResults.emplace_back(result);
+    }
 
-      int i = 0;
-      for(const auto& rs: bestResults) {
-          handleResult(rs);
-          ++i;
-          if(i > max) {
-              break;
-          }
+    cider::gcov_coverage::CoverageMeasurment msr{cmd, libName.c_str()};
+    std::sort(bestResults.begin(), bestResults.end(),
+              [&msr](const auto& l, const auto& r) {
+                const auto& lreport = msr.getReport(l.actions);
+                const auto& rreport = msr.getReport(r.actions);
+                if (lreport.has_value() && rreport.has_value()) {
+                  return lreport->report.branchCov.covered >
+                         rreport->report.branchCov.covered;
+                }
+                return false;
+              });
+
+    int i = 0;
+    for (const auto& rs : bestResults) {
+      handleResult(rs);
+      ++i;
+      if (i > max) {
+        break;
       }
-
+    }
   };
 
   getBest("QLG2", 2);
@@ -111,10 +114,12 @@ bool BoxPlotReportStage::process(const std::string& metadata,
   outPath /= metadata;
 
 #ifdef ENABLE_MATHPLOT
-  auto brCovLogger = std::make_shared<cider::gcov_coverage::CoverageBoxPlot>(
-      outPath.string(), "br_box_plot.png", PlotType::BrCov);
-  auto lnCovLogger = std::make_shared<cider::gcov_coverage::CoverageBoxPlot>(
-      outPath.string(), "ln_box_plot.png", PlotType::LineCov);
+  auto brCovLogger = std::make_shared<cider::mathplot::CoverageBoxPlot>(
+      outPath.string(), "br_box_plot.png",
+      cider::mathplot::CoverageBoxPlot::PlotType::BrCov);
+  auto lnCovLogger = std::make_shared<cider::mathplot::CoverageBoxPlot>(
+      outPath.string(), "ln_box_plot.png",
+      cider::mathplot::CoverageBoxPlot::PlotType::LineCov);
 
   auto compositeLogger =
       std::make_shared<cider::gcov_coverage::CompositeLogger>();
@@ -135,15 +140,12 @@ bool BoxPlotReportStage::process(const std::string& metadata,
     const auto& report = msr.getReport(result.actions);
 
     if (report.has_value() && report->report.branchCov.covered != 0) {
-
-
-    brCovLogger->log(0U, report.value());
-    lnCovLogger->log(0U, report.value());
-
-        }
+      brCovLogger->log(0U, report.value());
+      lnCovLogger->log(0U, report.value());
+    }
   };
 
- const auto& results = getResults();
+  const auto& results = getResults();
   for (const auto& result : results) {
     handleResult(result);
   }
@@ -164,7 +166,7 @@ bool CovBarPlotReportStage::process(const std::string&,
   outPath /= "bar_plot";
 
 #ifdef ENABLE_MATHPLOT
-  auto logger = std::make_shared<cider::gcov_coverage::CoverageBarPlot>(
+  auto logger = std::make_shared<cider::mathplot::CoverageBarPlot>(
       outPath.string(), "dataset_bar_plot.png");
 #endif
 
@@ -199,7 +201,7 @@ bool LinesBarPlotReportStage::process(const std::string& metadata,
   outPath /= metadata;
 
 #ifdef ENABLE_MATHPLOT
-  auto logger = std::make_shared<cider::LinesBarPlot>(outPath.string(),
+  auto logger = std::make_shared<cider::mathplot::LinesBarPlot>(outPath.string(),
                                                       "lines_bar_plot.png");
 #endif
 
