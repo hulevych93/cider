@@ -18,7 +18,7 @@ struct LearningSettings final {
   double discountFactor = 0.9;
   size_t episodes = 50U;
   size_t maxRollback = 10U;
-  size_t maxStateDepth = 3U;
+  size_t maxStateDepth = 10U;
   ObjectiveFunction objFunc;
 };
 

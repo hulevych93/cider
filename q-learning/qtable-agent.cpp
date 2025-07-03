@@ -93,11 +93,15 @@ std::optional<QAction> QTableAgent::findBestOrRandomAvailableAction(
     return std::nullopt;
   }
   if (qValuesIter != m_qtable.cend()) {
-    std::cout << "B3" << std::endl;
     const auto& qValues =
         getBestFromAvailable(availableActions, qValuesIter->second);
-    std::uniform_int_distribution<size_t> indexDist(0, qValues.size() - 1);
-    return qValues[indexDist(_gen)];
+    if (!qValues.empty()) {
+      std::cout << "B3" << std::endl;
+      std::uniform_int_distribution<size_t> indexDist(0, qValues.size() - 1);
+      return qValues[indexDist(_gen)];
+    }
+    std::cout << "NULL" << std::endl;
+    return std::nullopt;
   } else {
     std::cout << "BRand" << std::endl;
     std::uniform_int_distribution<size_t> indexDist(
@@ -190,7 +194,7 @@ std::optional<QAction> QTableAgent::chooseBolzmanAction(
 double QTableAgent::updateQValues(const QActionList& state,
                                   const QActionList& nextState,
                                   const QAction& action,
-                                  const double reward,
+                                  const QValue reward,
                                   const double learningRate,
                                   const double discount) {
   auto& qValues = m_qtable[state];

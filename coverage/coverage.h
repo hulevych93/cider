@@ -17,12 +17,8 @@ enum class PipelineType {
   QLearningAgentGenerationGreedyBoxStats = 6,
   QLearningAgentGenerationBolzmanBoxStats = 7,
   QLearningAgentGenerationBolzmanGreedyBoxStats = 8,
-
-  QLearningAgentGenerationGreedyLineBoxStats = 222,
-  QLearningAgentGenerationBolzmanLineBoxStats = 653,
-
-  QLearningScenariosAgent = 23,
-  DataSetPlot = 123
+  QLearningAgentGenerationLineBoxStats = 9,
+  DataSetPlot = 10
 };
 
 struct ObjectiveValue final {

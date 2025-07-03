@@ -1586,7 +1586,12 @@ key: val2
     }
   });
 
+  int idx = 1;
+
   for (const auto& test : tests) {
-    callback("test_value", test);
+    std::string name = "test_value";
+    name += "_" + std::to_string(idx);
+    callback(name.c_str(), test);
+    ++idx;
   }
 }

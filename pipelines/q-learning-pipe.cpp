@@ -79,6 +79,8 @@ bool qlearningPipeline(QAgent& agent,
 
   learningSession(rwCounter, learningSettings, input, agent, logger, dump);
 
+  logger.plot();
+
   debug << std::endl << std::endl;
 
   dump();
@@ -260,19 +262,6 @@ bool QRandGenerationStage::process(const std::string& metadata,
   }
 
   return result;
-}
-
-bool generate(const qleaning::GenerationSettings& settings,
-              const std::string& libName,
-              const cider::Cmd& cmd,
-              const recorder::Actions& input,
-              recorder::Actions& output) {
-  cider::cfg_coverage::CoverageMeasurment measurer{cmd, libName.c_str()};
-
-  auto settings_ = settings;
-  settings_.objFunc = measurer.getObjValueFunc();
-
-  return gererationSession(settings_, qleaning::getAgent(), input, output);
 }
 
 }  // namespace pipelines

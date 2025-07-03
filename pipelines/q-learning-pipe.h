@@ -75,11 +75,5 @@ class QRandGenerationStage final : public Pipe {
   const int _numberOfRuns;
 };
 
-bool generate(const qleaning::GenerationSettings& settings,
-              const std::string& libName,
-              const cider::Cmd& cmd,
-              const recorder::Actions& input,
-              recorder::Actions& output);
-
 }  // namespace pipelines
 }  // namespace cider

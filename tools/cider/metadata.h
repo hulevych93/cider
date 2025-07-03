@@ -55,6 +55,8 @@ struct FileMetadata final {
 
   std::unordered_set<std::string> exports;
   std::unordered_set<std::string> imports;
+
+  int funcCount = 0;
 };
 
 struct MetadataStorage final {

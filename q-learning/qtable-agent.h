@@ -51,7 +51,7 @@ class QTableAgent final : public QAgent {
   double updateQValues(const QActionList& state,
                        const QActionList& nextState,
                        const QAction& action,
-                       const double reward,
+                       const QValue reward,
                        const double learningRate,
                        const double discount) override;
 

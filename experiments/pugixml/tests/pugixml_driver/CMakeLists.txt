@@ -41,5 +41,6 @@ add_pugixml_run_target(pugixml_QLCS_run 4)
 add_pugixml_run_target(pugixml_QLGEN_run 5)
 add_pugixml_run_target(pugixml_QGEN_STATS_run 6)
 add_pugixml_run_target(pugixml_QGEN_BZ_STATS_run 7)
-
-add_pugixml_run_target(pugixml_DAT_run 123)
+add_pugixml_run_target(pugixml_QGEN_GBZ_STATS_run 8)
+add_pugixml_run_target(pugixml_QGEN_LINE_STATS_run 9)
+add_pugixml_run_target(pugixml_DAT_run 10)

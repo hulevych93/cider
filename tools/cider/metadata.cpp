@@ -152,6 +152,8 @@ void metadata_collector::handleConstructor(
 
   collectParamTypes(m_fileMetadata->imports, m_namespaces.nativeScope(),
                     e.parameters());
+
+  m_fileMetadata->funcCount++;
 }
 
 void metadata_collector::handleMemberFunction(
@@ -179,6 +181,8 @@ void metadata_collector::handleMemberFunction(
                     e.parameters());
   collectParamType(m_fileMetadata->imports, m_namespaces.nativeScope(),
                    e.return_type());
+
+  m_fileMetadata->funcCount++;
 }
 
 void metadata_collector::handleFreeFunction(const cppast::cpp_function& e) {
@@ -201,6 +205,8 @@ void metadata_collector::handleMemberVariable(
       kind == cppast::cpp_access_specifier_kind::cpp_public;
   m_classMetadata->hasProtectedFields |=
       kind == cppast::cpp_access_specifier_kind::cpp_protected;
+
+  m_fileMetadata->funcCount++;
 }
 
 void metadata_collector::finish() {
@@ -239,9 +245,14 @@ std::ostream& operator<<(std::ostream& os, const ClassMetadata& metadata) {
 }
 
 std::ostream& operator<<(std::ostream& os, const MetadataStorage& metadata) {
-  os << "[";
+  os << "Classes [";
   for (const auto& [entry, classData] : metadata.classes) {
     os << entry << ": " << classData << ", ";
+  }
+  os << "]" << std::endl;
+  os << "Files [";
+  for (const auto& [entry, fileData] : metadata.files) {
+    os << entry << ": " << fileData.funcCount << ", ";
   }
   os << "]" << std::endl;
 

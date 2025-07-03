@@ -105,10 +105,11 @@ void learningSession(RewardCounter& rwCounter,
                      QAgent& agent,
                      IResultsLogger& logger,
                      const std::function<void()>& dump) {
+  int lowLosCounter = 0;
   for (int i = 0; i < settings.episodes; ++i) {
     const auto rl1 =
         settings.learningRate + (double(i) / settings.episodes) * 0.9f;
-    const auto expRate = 0.99f - (double(i) / (settings.episodes)) * 0.99f;
+    const auto expRate = 0.8f - (double(i) / settings.episodes) * 0.8f;
 
     std::cout << "Episode: " << i << ", expRate: " << expRate << std::endl;
 
@@ -120,9 +121,10 @@ void learningSession(RewardCounter& rwCounter,
     QScenario scenario(rwCounter, agent.getSeed(), settings.maxStateDepth, list,
                        settings.objFunc);
     auto nextState = scenario.getCurrentState();
+    QAction lastAction;
 
     size_t rollbackCount = 0;
-    size_t failCounter = 0;
+    size_t noActionCount = 0;
 
     float total_reward = 0.0f;
     float total_loss = 0.0f;
@@ -130,44 +132,54 @@ void learningSession(RewardCounter& rwCounter,
 
     int steps = 0;
     int index = 0U;
-    while (!scenario.isOver()) {
+    while (true) {
       ++steps;
       const auto stateBeforeAction = nextState;
-      const auto actionOpt = agent.chooseEGreedyAction(scenario, expRate);
-      if (!actionOpt.has_value()) {
-        std::cout << "No action" << std::endl;
-        break;
+      const auto action = agent.chooseEGreedyAction(scenario, expRate);
+      if (!action.has_value()) {
+        noActionCount++;
+        if (rollbackCount > settings.maxRollback) {
+          std::cout << "No action" << std::endl;
+          if (const auto rewardOpt = scenario.getReward()) {
+            agent.updateQValues(stateBeforeAction, nextState, lastAction,
+                                rewardOpt.value(), rl1,
+                                settings.discountFactor);
+          }
+          break;
+        }
+        continue;
       }
-      const auto action = actionOpt.value();
-      scenario.add(action);
+      noActionCount = 0;
+
+      lastAction = action.value();
+
+      scenario.add(lastAction);
       nextState = scenario.getCurrentState();
       assert(!nextState.empty());
 
       if (const auto rewardOpt = scenario.getReward()) {
         const auto loss = agent.updateQValues(stateBeforeAction, nextState,
-                                              action, rewardOpt.value(), rl1,
-                                              settings.discountFactor);
+                                              lastAction, rewardOpt.value(),
+                                              rl1, settings.discountFactor);
         total_loss += loss;
         smoothLoss.add_value(loss);
         total_reward += rewardOpt.value();
         rollbackCount = 0U;
         ++index;
-        if ((index % 50) == 0) {
-          std::cout << "Index: " << index << ", Fails: " << failCounter
-                    << std::endl;
+      } else {
+        scenario.rollback();
+
+        nextState = stateBeforeAction;
+        ++rollbackCount;
+
+        std::cout << "rollback" << std::endl;
+        if (rollbackCount > settings.maxRollback) {
+          std::cout << "Max rollback" << std::endl;
+          break;
         }
-        continue;
-      } else if (scenario.isOver()) {
-        break;
       }
 
-      scenario.rollback();
-      nextState = stateBeforeAction;
-      ++rollbackCount;
-      failCounter++;
-      std::cout << "rollback" << std::endl;
-      if (rollbackCount > settings.maxRollback) {
-        std::cout << "Max rollback" << std::endl;
+      if (scenario.isOver()) {
         break;
       }
     }
@@ -177,6 +189,15 @@ void learningSession(RewardCounter& rwCounter,
 
     logger.logLoss(i, smoothLoss.get_average());
     logger.logReward(i, total_reward);
+
+    if (smoothLoss.get_average() < 0.0005) {
+      lowLosCounter++;
+      if (lowLosCounter > 10) {
+        break;
+      }
+    } else {
+      lowLosCounter = 0;
+    }
 
     total_loss = 0.0f;
     steps = 0;

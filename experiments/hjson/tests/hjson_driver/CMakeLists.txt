@@ -41,10 +41,6 @@ add_hjson_run_target(hjson_QLCS_run 4)
 add_hjson_run_target(hjson_QGEN_run 5)
 add_hjson_run_target(hjson_QGEN_STATS_run 6)
 add_hjson_run_target(hjson_QGEN_BZ_STATS_run 7)
-
 add_hjson_run_target(hjson_QGEN_GBZ_STATS_run 8)
-
-add_hjson_run_target(hjson_QGEN_G_LINE_STATS_run 222)
-add_hjson_run_target(hjson_QGEN_BZ_LINE_STATS_run 653)
-
-add_hjson_run_target(hjson_DAT_run 123)
+add_hjson_run_target(hjson_QGEN_LINE_STATS_run 9)
+add_hjson_run_target(hjson_DAT_run 10)

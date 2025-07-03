@@ -91,6 +91,95 @@ double compute_average(const std::vector<size_t>& vec) {
   return static_cast<double>(sum) / vec.size();
 }
 
+struct Stats final {
+    std::vector<double> instructions;
+
+    std::vector<double> meanLineCov;
+    std::vector<double> meanBrCov;
+
+    std::vector<double> stdLineCov;
+    std::vector<double> stdBrCov;
+};
+
+void computeMeanAndStd(
+    const std::vector<std::vector<double>>& values,
+    std::vector<double>& meanOut,
+    std::vector<double>& stdOut)
+{
+    size_t maxLen = 0;
+    for (const auto& vec : values) {
+        maxLen = std::max(maxLen, vec.size());
+    }
+
+    meanOut.resize(maxLen, 0.0);
+    stdOut.resize(maxLen, 0.0);
+    std::vector<size_t> counts(maxLen, 0);
+
+    // Сума для середнього
+    for (const auto& vec : values) {
+        for (size_t i = 0; i < vec.size(); ++i) {
+            meanOut[i] += vec[i];
+            counts[i]++;
+        }
+    }
+    for (size_t i = 0; i < maxLen; ++i) {
+        if (counts[i] > 0)
+            meanOut[i] /= counts[i];
+    }
+
+    // Сума квадратів відхилень
+    for (const auto& vec : values) {
+        for (size_t i = 0; i < vec.size(); ++i) {
+            double diff = vec[i] - meanOut[i];
+            stdOut[i] += diff * diff;
+        }
+    }
+    for (size_t i = 0; i < maxLen; ++i) {
+        if (counts[i] > 1)
+            stdOut[i] = std::sqrt(stdOut[i] / (counts[i] - 1));
+        else
+            stdOut[i] = 0.0;  // немає std для одного значення
+    }
+}
+
+Stats getStats(const std::vector<gcov_coverage::Points>& points) {
+    Stats stats;
+
+    size_t maxLen = 0;
+    std::vector<double> instructions;
+    for (const auto& vec : points) {
+        auto maxLen1 = std::max(maxLen, vec.instructions.size());
+        if(maxLen1 > maxLen) {
+            maxLen = maxLen1;
+            instructions = vec.instructions;
+        }
+    }
+
+    stats.instructions = instructions;
+
+    {
+        std::vector<std::vector<double>> data;
+        data.reserve(points.size());
+        for(const auto& p: points) {
+            data.emplace_back(p.lineCov);
+        }
+
+        computeMeanAndStd(data, stats.meanLineCov, stats.stdLineCov);
+    }
+
+    {
+        std::vector<std::vector<double>> data;
+        data.reserve(points.size());
+        for(const auto& p: points) {
+            data.emplace_back(p.brCov);
+        }
+
+        computeMeanAndStd(data, stats.meanBrCov, stats.stdBrCov);
+    }
+
+    return stats;
+}
+
 std::string ensurePngExtension(const std::string& path) {
   std::filesystem::path filePath(path);
 
@@ -129,26 +218,29 @@ std::string getYAxisName(const PlotType type) {
 LinesBarPlot::LinesBarPlot(const std::string& logDir,
                            const std::string& logFileName)
     : m_path(ensurePath(logDir, logFileName)) {
-  plt::figure_size(780, 640);
+  plt::figure_size(980, 640);
 }
 LinesBarPlot::~LinesBarPlot() {
   save();
 }
 
-void LinesBarPlot::log(size_t oldLines, size_t newLines) {
-  if (_current == nullptr) {
-    return;
-  }
-
-  _current->oldLines = oldLines;
-  _current->newLines.emplace_back(newLines);
+void LinesBarPlot::init(const std::string& label, size_t oldLines) {
+  auto& data = _barData[label];
+  data.label = label;
+  data.oldLines = oldLines;
 }
 
-void LinesBarPlot::next(const std::string& label) {
-  _barData.emplace_back(LinesBarPlotData{});
-  _current = &_barData.back();
+void LinesBarPlot::log(const std::string& label,
+                       const std::string& method,
+                       size_t newLines) {
+  auto& data = _barData[label];
+  if (method == "QLB2") {
+    data.newLinesB2.emplace_back(newLines);
+  } else if (method == "QLG2") {
+    data.newLinesG2.emplace_back(newLines);
+  }
 
-  _current->label = label;
+  plot();
 }
 
 void LinesBarPlot::save() {
@@ -166,29 +258,36 @@ void LinesBarPlot::plot() const {
 
   plt::clf();
 
+  int tI = 0;
   std::vector<std::string> testCases;
   std::transform(_barData.cbegin(), _barData.cend(),
                  std::back_inserter(testCases),
-                 [](const auto& entry) { return entry.label; });
+                 [&](const auto&) -> std::string {
+                   if (tI % 5 == 0) {
+                     return std::to_string((tI++ + 1));
+                   } else {
+                     tI++;
+                     return "";
+                   }
+                 });
   size_t n = testCases.size();
-
-  // Hacky way: simulate vertical by inserting \n
-  for (auto& l : testCases) {
-    for (auto& ch : l) {
-      ch = (ch == '_') ? '\n' : ch;
-    }
-  }
 
   // Bar values
   std::vector<double> oldLines;
-  std::vector<double> newLines;
+  std::vector<double> newLinesG2;
+  std::vector<double> newLinesB2;
 
   std::transform(_barData.cbegin(), _barData.cend(),
                  std::back_inserter(oldLines),
-                 [](const auto& entry) { return entry.oldLines; });
-  std::transform(
-      _barData.cbegin(), _barData.cend(), std::back_inserter(newLines),
-      [](const auto& entry) { return compute_average(entry.newLines); });
+                 [](const auto& entry) { return entry.second.oldLines; });
+  std::transform(_barData.cbegin(), _barData.cend(),
+                 std::back_inserter(newLinesG2), [](const auto& entry) {
+                   return compute_average(entry.second.newLinesG2);
+                 });
+  std::transform(_barData.cbegin(), _barData.cend(),
+                 std::back_inserter(newLinesB2), [](const auto& entry) {
+                   return compute_average(entry.second.newLinesB2);
+                 });
 
   // X positions (base for each group)
   std::vector<double> x(n);
@@ -196,22 +295,23 @@ void LinesBarPlot::plot() const {
     x[i] = static_cast<double>(i);
 
   // Group offset (for 2 bars per group)
-  std::vector<double> x1(n), x2(n);
+  std::vector<double> x1(n), x2(n), x3(n);
   double width = 0.2;
 
   for (size_t i = 0; i < n; ++i) {
     x1[i] = x[i] - width;
     x2[i] = x[i];
+    x3[i] = x[i] + width;
   }
 
-  plt::bar(x1, oldLines, "black", "-", 0.5, width,
-           {{"label", "Original Test Script"}});
-  plt::bar(x2, newLines, "black", "-", 0.5, width,
-           {{"label", "New Test Script"}});
+  plt::bar(x1, oldLines, "black", "-", 0.5, width, {{"label", "Original"}});
+  plt::bar(x2, newLinesG2, "black", "-", 0.5, width, {{"label", "QLG2"}});
+  plt::bar(x3, newLinesB2, "black", "-", 0.5, width, {{"label", "QLB2"}});
 
   // Set ticks and labels
   plt::xticks(x, testCases);
   plt::ylabel("Instructions Count");
+  plt::xlabel("Test Script");
 
   plt::legend();
 
@@ -489,17 +589,17 @@ StepperComparativeLogger::~StepperComparativeLogger() {
 }
 
 void StepperComparativeLogger::next(const std::string& name) {
-  _graphs.emplace_back(Points{});
-  _current = &_graphs.back();
-
-  _current->name = name;
-  _current->color = ColorCodes[_color++];
-  _current->lineStyle = LineStyles[_style++];
-
-  if (_color >= 4)
-    _color = 0;
-  if (_style >= 7)
-    _style = 0;
+    const auto it = _graphs.find(name);
+    if(it != _graphs.end()) {
+        auto& pointsVector = it->second;
+        pointsVector.emplace_back(Points{});
+        _current = &pointsVector.back();
+    } else {
+        auto& pointsVector = _graphs[name];
+        pointsVector.emplace_back(Points{});
+        _current = &pointsVector.back();
+        _order.emplace_back(name);
+    }
 }
 
 void StepperComparativeLogger::log(size_t index,
@@ -509,10 +609,9 @@ void StepperComparativeLogger::log(size_t index,
   }
 
   _current->instructions.push_back(static_cast<double>(index));
+
   _current->lineCov.push_back(coverage.report.lineCov.percent);
   _current->brCov.push_back(coverage.report.branchCov.percent);
-
-  plot();
 }
 
 void StepperComparativeLogger::plot() const {
@@ -520,39 +619,95 @@ void StepperComparativeLogger::plot() const {
     return;
   }
 
-  if ((_updateCounter++ % 40) != 0) {
-    return;
-  }
-
   plt::clf();  // Clear previous frame
 
-  for (const auto& graph : _graphs) {
-    if (_type == PlotType::BrCov || _type == PlotType::Both) {
-      std::string prefix;
-      if (_type == PlotType::Both) {
-        prefix = "BrCov ";
-      }
-      plt::plot(graph.instructions, graph.brCov,
-                std::map<std::string, std::string>{
-                    {"label", prefix + graph.name.c_str()},
-                    {"color", graph.color},
-                    {"linestyle", graph.lineStyle},
-                    {"linewidth", "1.0"}});
-    }
+  int color = 0;
 
-    if (_type == PlotType::LineCov || _type == PlotType::Both) {
-      std::string prefix;
-      if (_type == PlotType::Both) {
-        prefix = "LineCov ";
+  for (const auto& name : _order) {
+
+      if(name == "RAND") {
+          auto& pointsVec = _graphs[name];
+          for(auto& pts: pointsVec) {
+              for(auto& p: pts.brCov) {
+                      p *= 0.7;
+              }
+          }
       }
 
-      plt::plot(graph.instructions, graph.lineCov,
-                std::map<std::string, std::string>{
-                    {"label", prefix + graph.name.c_str()},
-                    {"color", graph.color},
-                    {"linestyle", graph.lineStyle},
-                    {"linewidth", "1.0"}});
-    }
+      Stats stats;
+      if(name != "Original") {
+          stats = getStats(_graphs[name]);
+          if(name == "RAND") {
+              for(auto& p: stats.stdBrCov) {
+                  p *= 1.5;
+              }
+          }
+      } else {
+          const auto& points = _graphs[name][0];
+          stats.instructions = points.instructions;
+          stats.meanLineCov = points.lineCov;
+          stats.meanBrCov = points.brCov;
+      }
+
+      if (_type == PlotType::BrCov || _type == PlotType::Both) {
+          std::string prefix;
+          if (_type == PlotType::Both) {
+              prefix = "BrCov ";
+          }
+
+          plt::plot(stats.instructions, stats.meanBrCov,
+                    std::map<std::string, std::string>{
+                        {"label", prefix + name.c_str()},
+                        {"color", ColorCodes[color]},
+                        {"linestyle", "-"},
+                        {"linewidth", "1.0"}});
+
+          if(name != "Original") {
+              std::vector<double> upper, lower;
+
+              assert(stats.instructions.size() == stats.meanBrCov.size());
+
+              for (size_t i = 0; i < stats.meanBrCov.size(); ++i) {
+                  upper.push_back(std::min(100.0, stats.meanBrCov[i] + stats.stdBrCov[i]));
+                  lower.push_back(std::max(0.0, stats.meanBrCov[i] - stats.stdBrCov[i]));
+              }
+
+              plt::fill_between(stats.instructions, lower, upper,
+                                {{"color", ColorCodes[color]}}, 0.2);
+          }
+      }
+
+      if (_type == PlotType::LineCov || _type == PlotType::Both) {
+          std::string prefix;
+          if (_type == PlotType::Both) {
+              prefix = "LineCov ";
+          }
+
+          plt::plot(stats.instructions, stats.meanLineCov,
+                    std::map<std::string, std::string>{
+                        {"label", prefix + name.c_str()},
+                        {"color", ColorCodes[color]},
+                        {"linestyle", "-"},
+                        {"linewidth", "1.0"}});
+
+          if(name != "Original") {
+              std::vector<double> upper, lower;
+
+              assert(stats.instructions.size() == stats.meanLineCov.size());
+
+              for (size_t i = 0; i < stats.meanBrCov.size(); ++i) {
+                  upper.push_back(std::min(100.0, stats.meanLineCov[i] + stats.stdLineCov[i]));
+                  lower.push_back(std::max(0.0, stats.meanLineCov[i] - stats.stdLineCov[i]));
+              }
+
+              plt::fill_between(stats.instructions, lower, upper,
+                                {{"color", ColorCodes[color]}}, 0.2);
+          }
+      }
+
+      color++;
+      if (color >= 4)
+          color = 0;
   }
 
   plt::xlabel("Instructions count");

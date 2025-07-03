@@ -27,13 +27,7 @@ bool isOverFunc(const ObjectiveValue& objValue,
   const auto coverageBigger = objValue.coverage > targetValue.coverage;
   const auto coverageSame = abs(objValue.coverage - targetValue.coverage) <
                             std::numeric_limits<double>::epsilon();
-
-  const auto over = coverageBigger || coverageSame || noActions;
-  if (over) {
-    std::cout << "[" << coverageBigger << "," << coverageSame << ","
-              << noActions << "]" << std::endl;
-  }
-  return over;
+  return coverageBigger || coverageSame || noActions;
 }
 
 inline double normalize_reward(double reward) {
@@ -171,7 +165,14 @@ std::optional<QValue> QScenario::getReward() const {
 
   if (isOverFunc(objValue, m_initialObjVal, m_availableActions.empty())) {
     result = rewardFunction(
-        m_rwCounter, objValue, m_initialObjVal, 5.0, 5.0, []() { return 1.0; },
+        m_rwCounter, objValue, m_initialObjVal, 5.0, 5.0,
+        [&]() {
+          if (m_initialSize > tempActions.size()) {
+            return 3.0;
+          } else {
+            return -1.0;
+          }
+        },
         5.0);
   } else {
     result = rewardFunction(

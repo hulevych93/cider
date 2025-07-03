@@ -35,7 +35,8 @@ constexpr const char* ColorCodes[] = {
 struct LinesBarPlotData final {
   std::string label;
   size_t oldLines = 0;
-  std::vector<size_t> newLines;
+  std::vector<size_t> newLinesG2;
+  std::vector<size_t> newLinesB2;
 };
 
 class LinesBarPlot final {
@@ -43,15 +44,16 @@ class LinesBarPlot final {
   LinesBarPlot(const std::string& logDir, const std::string& logFileName);
   ~LinesBarPlot();
 
-  void log(size_t oldLines, size_t newLines);
-  void next(const std::string& label);
+  void init(const std::string& label, size_t oldLines);
+  void log(const std::string& label,
+           const std::string& method,
+           size_t newLines);
 
   void plot() const;
   void save();
 
  private:
-  std::vector<LinesBarPlotData> _barData;
-  LinesBarPlotData* _current = nullptr;
+  std::unordered_map<std::string, LinesBarPlotData> _barData;
 
   std::string m_path;
   bool m_saved = false;
@@ -148,11 +150,8 @@ class MathplotLogger : public ICoverageLogger {
 };
 
 struct Points {
-  std::string name;
-  const char* lineStyle = nullptr;
-  const char* color = nullptr;
-
   std::vector<double> instructions;
+
   std::vector<double> lineCov;
   std::vector<double> brCov;
 };
@@ -172,7 +171,8 @@ class StepperComparativeLogger : public ICoverageLogger {
 
  private:
   PlotType _type;
-  mutable std::vector<Points> _graphs;
+  mutable std::unordered_map<std::string, std::vector<Points>> _graphs;
+  std::vector<std::string> _order;
   Points* _current = nullptr;
   int _style = 0;
   int _color = 0;

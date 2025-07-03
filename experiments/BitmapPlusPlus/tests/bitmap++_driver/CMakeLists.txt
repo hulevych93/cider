@@ -41,8 +41,5 @@ add_bitmap_run_target(bitmap++_QGEN_run 5)
 add_bitmap_run_target(bitmap++_QGEN_STATS_run 6)
 add_bitmap_run_target(bitmap++_QGEN_BZ_STATS_run 7)
 add_bitmap_run_target(bitmap++_QGEN_GBZ_STATS_run 8)
-
-add_bitmap_run_target(bitmap++_QGEN_G_LINE_STATS_run 222)
-add_bitmap_run_target(bitmap++_QGEN_BZ_LINE_STATS_run 653)
-
-add_bitmap_run_target(bitmap++_DAT_run 123)
+add_bitmap_run_target(bitmap++_QGEN_LINE_STATS_run 9)
+add_bitmap_run_target(bitmap++_DAT_run 10)

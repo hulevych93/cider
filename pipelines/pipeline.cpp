@@ -3,11 +3,9 @@
 
 #include "pipeline.h"
 
-#include "dataset-pipe.h"
-#include "meta-pipe.h"
+#include "coverage/cfg_measurer.h"
 #include "paths.h"
-#include "q-learning-pipe.h"
-#include "report-pipe.h"
+#include "q-learning/q-learning.h"
 
 #include <chrono>
 #include <ctime>
@@ -16,50 +14,11 @@
 #include <sstream>
 
 namespace cider {
+namespace pipelines {
 
 namespace {
 
-auto getHarmonySearchSettings() {
-  metasearch::harmony::Settings settings;
-  settings.mutationRate = 0.15;
-  settings.harmonyMemoryConsiderationRate = 0.4;
-  settings.harmonyMemorySize = 10;
-  settings.maxIterationsWithoutUpdates = 50;
-  settings.maxIter = 1000U;
-  settings.strategy = cider::metasearch::MutationStrategy::ShuffleBytes;
-  return settings;
-}
-
-auto getCackooSettings() {
-  metasearch::cuckoo::Settings settings;
-  settings.populationSize = 10;
-  settings.Pa = 0.1;
-  settings.maxIterationsWithoutUpdates = 50;
-  settings.maxIter = 1000U;
-  settings.strategy = cider::metasearch::MutationStrategy::LevyFlight;
-  return settings;
-}
-
-auto getLearningSettings() {
-  qleaning::LearningSettings settings;
-  settings.discountFactor = 0.85;
-  settings.learningRate = 0.1;
-  settings.episodes = 5000U;
-  settings.maxRollback = 20U;
-  return settings;
-}
-
-auto getGenG1Settings() {
-  qleaning::GenerationSettings settings;
-  settings.configName = "G1";
-  settings.epsilon = 0.1;
-  settings.maxRollback = 30U;
-  settings.strategy = qleaning::GenerationStrategyType::EGreedy;
-  settings.stopType = qleaning::GenerationStopType::GreaterCoverage;
-  return settings;
-}
-
-auto getGenG2Settings() {
+auto getGenSettings() {
   qleaning::GenerationSettings settings;
   settings.configName = "G2";
   settings.epsilon = 0.15;
@@ -69,106 +28,20 @@ auto getGenG2Settings() {
   return settings;
 }
 
-auto getGenG3Settings() {
-  qleaning::GenerationSettings settings;
-  settings.configName = "G3";
-  settings.epsilon = 0.25;
-  settings.maxRollback = 30U;
-  settings.strategy = qleaning::GenerationStrategyType::EGreedy;
-  settings.stopType = qleaning::GenerationStopType::GreaterCoverage;
-  return settings;
-}
+bool generate(const qleaning::GenerationSettings& settings,
+              const std::string& libName,
+              const cider::Cmd& cmd,
+              const recorder::Actions& input,
+              recorder::Actions& output) {
+  cider::cfg_coverage::CoverageMeasurment measurer{cmd, libName.c_str()};
 
-auto getGenB1Settings() {
-  qleaning::GenerationSettings settings;
-  settings.configName = "B1";
-  settings.temperature = 1.5;
-  settings.maxRollback = 30U;
-  settings.strategy = qleaning::GenerationStrategyType::Boltzmann;
-  settings.stopType = qleaning::GenerationStopType::GreaterCoverage;
-  return settings;
-}
+  auto settings_ = settings;
+  settings_.objFunc = measurer.getObjValueFunc();
 
-auto getGenB2Settings() {
-  qleaning::GenerationSettings settings;
-  settings.configName = "B2";
-  settings.temperature = 3.0;
-  settings.maxRollback = 30U;
-  settings.strategy = qleaning::GenerationStrategyType::Boltzmann;
-  settings.stopType = qleaning::GenerationStopType::GreaterCoverage;
-  return settings;
+  return gererationSession(settings_, qleaning::getAgent(), input, output);
 }
-
-auto getGenB3Settings() {
-  qleaning::GenerationSettings settings;
-  settings.configName = "B3";
-  settings.temperature = 5.0;
-  settings.maxRollback = 30U;
-  settings.strategy = qleaning::GenerationStrategyType::Boltzmann;
-  settings.stopType = qleaning::GenerationStopType::GreaterCoverage;
-  return settings;
-}
-
-auto getRandSettings(size_t lines = 250) {
-  qleaning::GenerationSettings settings;
-  settings.strategy = qleaning::GenerationStrategyType::Random;
-  settings.stopType = qleaning::GenerationStopType::LimitActions;
-  settings.limitActions = lines;
-  return settings;
-}
-
-constexpr const int StatsCount = 100U;
 
 }  // namespace
-
-namespace pipelines {
-
-bool serialize(const Result& obj, serialization::Serializer& serializer) {
-  serializer << obj.actions;
-  serializer << obj.methodName;
-  serializer << obj.testOrLibName;
-  return true;
-}
-
-bool deserialize(Result& obj, const serialization::Deserializer& deserializer) {
-  deserializer >> obj.actions;
-  deserializer >> obj.methodName;
-  deserializer >> obj.testOrLibName;
-  return true;
-}
-
-bool serialize(const BriefResult& obj, serialization::Serializer& serializer) {
-  serializer << obj.report;
-  serializer << obj.oldLines;
-  serializer << obj.newLines;
-  serializer << obj.methodName;
-  serializer << obj.testOrLibName;
-  return true;
-}
-
-bool deserialize(BriefResult& obj,
-                 const serialization::Deserializer& deserializer) {
-  deserializer >> obj.report;
-  deserializer >> obj.oldLines;
-  deserializer >> obj.newLines;
-  deserializer >> obj.methodName;
-  deserializer >> obj.testOrLibName;
-  return true;
-}
-
-bool serialize(const SessionsResult& obj,
-               serialization::Serializer& serializer) {
-  serializer << obj.libName;
-  serializer << obj.sessions;
-  return true;
-}
-
-bool deserialize(SessionsResult& obj,
-                 const serialization::Deserializer& deserializer) {
-  deserializer >> obj.libName;
-  deserializer >> obj.sessions;
-  return true;
-}
 
 bool Pipeline::load(const std::string& filePath) {
   try {
@@ -309,6 +182,12 @@ bool Pipeline::runOneByOne(
 
   auto scrNum = 0;
   for (const auto& session : sessions) {
+    std::cout << "num: " << scrNum++ << "\t name: " << session->getName()
+              << "\t count op: " << session->getInstructionsCount()
+              << std::endl;
+  }
+  scrNum = 0;
+  for (const auto& session : sessions) {
     std::cout << "num: " << scrNum << "\t name: " << session->getName()
               << "\t count op: " << session->getInstructionsCount()
               << std::endl;
@@ -322,7 +201,7 @@ bool Pipeline::runOneByOne(
     if (agent.isLoaded()) {
       _input.actionsCallback = [this]() {
         recorder::Actions output;
-        generate(getGenG2Settings(), _libName, _cmd, _input.actions, output);
+        generate(getGenSettings(), _libName, _cmd, _input.actions, output);
         return output;
       };
     }
@@ -338,8 +217,8 @@ bool Pipeline::runOneByOne(
   }
 
   std::cout << "Save results: " << paths::getResultsPath(_cmd.resultsDir)
-            << ", status: " << save(paths::getResultsPath(_cmd.resultsDir))
-            << std::endl;
+            << ", status: "
+            << save(paths::getResultsPath(_cmd.resultsDir)) << std::endl;
 
   std::cout << "Save brief results: "
             << paths::getBriefResultsPath(_cmd.resultsDir) << ", status: "
@@ -410,93 +289,6 @@ std::string Pipeline::getDatetimeForDirName() {
   std::ostringstream oss;
   oss << std::put_time(&tm, "%Y-%m-%d_%H-%M-%S");
   return oss.str();
-}
-
-Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
-  Pipeline pipeline(libName, cmd);
-  const auto pipelineType = cmd.pipelineType;
-  pipeline.setType(pipelineType);
-
-  switch (pipelineType) {
-    case PipelineType::HarmonySearch:
-      pipeline.addStage(
-          std::make_unique<HarmonySearchStage>(getHarmonySearchSettings()));
-      break;
-    case PipelineType::CackooSearch:
-      pipeline.addStage(
-          std::make_unique<CackooSearchStage>(getCackooSettings()));
-      break;
-    case PipelineType::QLearningAgent:
-      pipeline.addStage(
-          std::make_unique<QPreLearningStage>(getLearningSettings()));
-      pipeline.addStage(
-          std::make_unique<QLearningStage>(getLearningSettings()));
-      break;
-    case PipelineType::QLearningAgentGenerationStepper:
-      pipeline.addStage(std::make_unique<QGenerationStage>(getGenG1Settings()));
-      pipeline.addStage(
-          std::make_unique<QRandGenerationStage>(getRandSettings()));
-      pipeline.addStage(std::make_unique<StepperReportStage>());
-      break;
-    case PipelineType::QLearningAgentGenerationGreedyBoxStats:
-      if (!pipeline.hasBrieft()) {
-        pipeline.addStage(
-            std::make_unique<QGenerationStage>(getGenG1Settings(), StatsCount));
-        pipeline.addStage(
-            std::make_unique<QGenerationStage>(getGenG2Settings(), StatsCount));
-        pipeline.addStage(
-            std::make_unique<QGenerationStage>(getGenG3Settings(), StatsCount));
-        pipeline.addStage(std::make_unique<QRandGenerationStage>(
-            getRandSettings(), StatsCount));
-      }
-      pipeline.addStage(std::make_unique<BoxPlotReportStage>());
-      break;
-    case PipelineType::QLearningAgentGenerationBolzmanBoxStats:
-      if (!pipeline.hasBrieft()) {
-        pipeline.addStage(
-            std::make_unique<QGenerationStage>(getGenB1Settings(), StatsCount));
-        pipeline.addStage(
-            std::make_unique<QGenerationStage>(getGenB2Settings(), StatsCount));
-        pipeline.addStage(
-            std::make_unique<QGenerationStage>(getGenB3Settings(), StatsCount));
-        pipeline.addStage(std::make_unique<QRandGenerationStage>(
-            getRandSettings(), StatsCount));
-      }
-      pipeline.addStage(std::make_unique<BoxPlotReportStage>());
-      break;
-    case PipelineType::QLearningAgentGenerationBolzmanGreedyBoxStats:
-      if (!pipeline.hasBrieft()) {
-        pipeline.addStage(
-            std::make_unique<QGenerationStage>(getGenG2Settings(), StatsCount));
-        pipeline.addStage(
-            std::make_unique<QGenerationStage>(getGenB2Settings(), StatsCount));
-        pipeline.addStage(std::make_unique<QRandGenerationStage>(
-            getRandSettings(), StatsCount));
-      }
-      pipeline.addStage(std::make_unique<BoxPlotReportStage>());
-      break;
-    case PipelineType::QLearningAgentGenerationGreedyLineBoxStats:
-      if (!pipeline.hasBrieft()) {
-        pipeline.addStage(
-            std::make_unique<QGenerationStage>(getGenG2Settings(), StatsCount));
-      }
-      pipeline.addStage(std::make_unique<LinesBarPlotReportStage>());
-      break;
-    case PipelineType::QLearningAgentGenerationBolzmanLineBoxStats:
-      if (!pipeline.hasBrieft()) {
-        pipeline.addStage(
-            std::make_unique<QGenerationStage>(getGenB2Settings(), StatsCount));
-      }
-      pipeline.addStage(std::make_unique<LinesBarPlotReportStage>());
-      break;
-    case PipelineType::DataSetPlot:
-      pipeline.addStage(std::make_unique<DatasetStage>());
-      pipeline.addStage(std::make_unique<CovBarPlotReportStage>());
-      break;
-    default:
-      break;
-  }
-  return pipeline;
 }
 
 }  // namespace pipelines
