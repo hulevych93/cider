@@ -8,10 +8,11 @@
 namespace cider {
 namespace mathplot {
 
-class MathplotLogger : public metasearch::IResultsLogger {
+class BasicBlockCovLogger : public metasearch::IResultsLogger {
  public:
-  MathplotLogger(const std::string& logDir, const std::string& logFileName);
-  ~MathplotLogger() override;
+  BasicBlockCovLogger(const std::string& logDir,
+                      const std::string& logFileName);
+  ~BasicBlockCovLogger() override;
 
   void log(size_t index, const metasearch::Solution& best) const override;
 

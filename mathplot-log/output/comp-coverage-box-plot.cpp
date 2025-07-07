@@ -22,18 +22,18 @@ namespace mathplot {
 namespace {
 
 static std::string getYAxisName(const CoverageBoxPlot::PlotType type) {
-    std::string plotName;
-    if (type == CoverageBoxPlot::PlotType::Both) {
-        plotName = "Coverage (%)";
-    } else if (type == CoverageBoxPlot::PlotType::BrCov) {
-        plotName = "Branch Coverage (%)";
-    } else if (type == CoverageBoxPlot::PlotType::LineCov) {
-        plotName = "Line Coverage (%)";
-    }
-    return plotName;
+  std::string plotName;
+  if (type == CoverageBoxPlot::PlotType::Both) {
+    plotName = "Coverage (%)";
+  } else if (type == CoverageBoxPlot::PlotType::BrCov) {
+    plotName = "Branch Coverage (%)";
+  } else if (type == CoverageBoxPlot::PlotType::LineCov) {
+    plotName = "Line Coverage (%)";
+  }
+  return plotName;
 }
 
-} // namespace
+}  // namespace
 
 CoverageBoxPlot::CoverageBoxPlot(const std::string& logDir,
                                  const std::string& logFileName,

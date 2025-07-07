@@ -20,8 +20,8 @@ bool DatasetStage::process(const std::string&,
   const auto report = measurer.getReport(input.actions);
   assert(report.has_value());
 
-  pushResult("DATASET", libName.c_str(), input.actions.size(),
-             input.actions.size(), report->report);
+  // pushResult("DATASET", libName.c_str(), input.actions.size(),
+  //            input.actions.size(), report->report);
   return true;
 }
 

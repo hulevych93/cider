@@ -23,7 +23,7 @@ struct Points {
 
 class StepperComparativeLogger : public gcov_coverage::ICoverageLogger {
  public:
-     enum class PlotType { BrCov, LineCov, Both };
+  enum class PlotType { BrCov, LineCov, Both };
 
   StepperComparativeLogger(const std::string& logDir,
                            const std::string& logFileName,

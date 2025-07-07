@@ -16,8 +16,22 @@
 namespace cider {
 namespace qleaning {
 
+std::ostream& operator<<(std::ostream& os, const LearningSettings& settings) {
+  os << "QL_";
+  os << "lr[";
+  os << settings.learningRate;
+  os << "]_df[";
+  os << settings.discountFactor;
+  os << "]_epds[";
+  os << settings.episodes;
+  os << "],_mxStDp[";
+  os << settings.maxStateDepth;
+  os << "]";
+  return os;
+}
+
 void prelearningSession(const LearningSettings& settings,
-                        const QActionList& list,
+                        const recorder::Actions& list,
                         QAgent& agent) {
   RewardCounter rwCounter;
   QScenario scenario(rwCounter, agent.getSeed(), settings.maxStateDepth, list,
@@ -47,7 +61,7 @@ void prelearningSession(const LearningSettings& settings,
 
 void learningSession(RewardCounter& rwCounter,
                      const LearningSettings& settings,
-                     const QActionList& list,
+                     const recorder::Actions& list,
                      QAgent& agent,
                      IResultsLogger& logger,
                      const std::function<void()>& dump) {
@@ -67,7 +81,7 @@ void learningSession(RewardCounter& rwCounter,
     QScenario scenario(rwCounter, agent.getSeed(), settings.maxStateDepth, list,
                        settings.objFunc);
     auto nextState = scenario.getCurrentState();
-    QAction lastAction;
+    recorder::Action lastAction;
 
     size_t rollbackCount = 0;
     size_t noActionCount = 0;
@@ -148,80 +162,6 @@ void learningSession(RewardCounter& rwCounter,
     total_loss = 0.0f;
     steps = 0;
   }
-}
-
-bool gererationSession(const GenerationSettings& settings,
-                       const QAgent& agent,
-                       const QActionList& initial,
-                       QActionList& out) {
-  out.clear();
-
-  std::random_device rd;
-  std::mt19937 gen(rd());
-
-  RewardCounter rwCounter;
-  QScenario scenario(rwCounter, gen, settings.maxStateDepth, initial,
-                     settings.objFunc);
-
-  size_t rollbackCount = 0;
-
-  auto stopPredicate = [&]() -> bool {
-    if (settings.stopType == GenerationStopType::GreaterCoverage) {
-      return scenario.isOver();
-    }
-
-    if (settings.stopType == GenerationStopType::LimitActions) {
-      return scenario.getSize() >= settings.limitActions;
-    }
-
-    throw std::runtime_error{"Wrong stop"};
-  };
-
-  while (!stopPredicate()) {
-    std::optional<QAction> selectedOpt;
-
-    switch (settings.strategy) {
-      case GenerationStrategyType::Greedy:
-        selectedOpt = agent.chooseGreedyAction(scenario);
-        break;
-      case GenerationStrategyType::EGreedy:
-        selectedOpt = agent.chooseEGreedyAction(scenario, settings.epsilon);
-        break;
-      case GenerationStrategyType::Boltzmann:
-        selectedOpt = agent.chooseBolzmanAction(scenario, settings.temperature);
-        break;
-      case GenerationStrategyType::Random:
-        selectedOpt = agent.chooseRandAction(scenario);
-        std::cout << "rand" << std::endl;
-        break;
-    }
-
-    if (!selectedOpt.has_value()) {
-      std::cout << "No selected action" << std::endl;
-      break;
-    }
-    const auto selected = selectedOpt.value();
-
-    scenario.add(selected);
-    const auto rewardOpt = scenario.getReward();
-    if (rewardOpt.has_value()) {
-      rollbackCount = 0U;
-    } else if (scenario.isOver()) {
-      break;
-    } else {
-      scenario.rollback();
-      ++rollbackCount;
-      std::cout << "rollback" << std::endl;
-      if (rollbackCount > settings.maxRollback) {
-        std::cout << "Max rollback" << std::endl;
-        break;
-      }
-    }
-  }
-
-  out = scenario.getResult();
-
-  return true;
 }
 
 QAgent& getAgent(const std::string& path) {

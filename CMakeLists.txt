@@ -50,6 +50,7 @@ if(ENABLE_MATHPLOT_LOG)
     set(PLOT_LIBS mathplot-log ${Python3_LIBRARIES})
 endif()
 
+add_subdirectory(synthesis)
 add_subdirectory(coverage)
 add_subdirectory(serialization)
 add_subdirectory(metaheuristics)

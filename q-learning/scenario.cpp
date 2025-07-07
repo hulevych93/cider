@@ -5,7 +5,23 @@
 namespace cider {
 namespace qleaning {
 
-std::string actionToGenericRepro(const QAction& action) {
+Scenario::Scenario(std::mt19937& gen,
+                   int maxStateDepth,
+                   const recorder::Actions& initial,
+                   const synthesis::ObjectiveFunction& objFunc)
+    : synthesis::TestScenario(gen, initial, objFunc),
+      _maxStateDepth(maxStateDepth) {}
+
+recorder::Actions Scenario::getCurrentState() const {
+  auto count = _maxStateDepth;
+  if (count > _actions.size()) {
+    count = _actions.size();
+  }
+
+  return recorder::Actions{_actions.end() - count, _actions.end()};
+}
+
+std::string actionToGenericRepro(const recorder::Action& action) {
   std::stringstream os;
   std::visit(
       [&os](auto&& value) {
@@ -49,7 +65,8 @@ std::string actionToGenericRepro(const QAction& action) {
   return os.str();
 }
 
-std::string actionsToGenericRepro(const QActionList& actions) {
+std::string actionsToGenericRepro(
+    const std::vector<recorder::Action>& actions) {
   if (actions.empty()) {
     return "Empty";
   }

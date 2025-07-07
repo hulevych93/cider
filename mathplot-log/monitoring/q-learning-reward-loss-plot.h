@@ -8,10 +8,11 @@
 namespace cider {
 namespace mathplot {
 
-class MathplotLogger : public qleaning::IResultsLogger {
+class QLearningResultsMathplotLogger : public qleaning::IResultsLogger {
  public:
-  MathplotLogger(const std::string& logDir, const std::string& logFileName);
-  ~MathplotLogger() override;
+  QLearningResultsMathplotLogger(const std::string& logDir,
+                                 const std::string& logFileName);
+  ~QLearningResultsMathplotLogger() override;
 
   void logReward(size_t episode, const double totalReward) const override;
   void logLoss(size_t episode, const double averageLoss) const override;

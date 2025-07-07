@@ -1,7 +1,7 @@
 // Copyright (C) 2022-2025 Hulevych Mykhailo
 // SPDX-License-Identifier: MIT
 
-#include "pipeline.h"
+#include "pipelines/pipeline.h"
 
 #include "coverage/coverage.h"
 #include "recorder/recorder.h"
@@ -39,40 +39,6 @@ class QLearningStage final : public Pipe {
  private:
   qleaning::LearningSettings m_settings;
   qleaning::QAgent& m_agent;
-};
-
-class QGenerationStage final : public Pipe {
- public:
-  QGenerationStage(const qleaning::GenerationSettings& settings,
-                   int numberOfRuns = 1);
-
-  bool process(const std::string& metadata,
-               const std::string& libName,
-               const cider::Cmd& cmd) override;
-
-  std::string getLetter() const override { return "G"; }
-
- private:
-  qleaning::QAgent& m_agent;
-  qleaning::GenerationSettings m_settings;
-  const int _numberOfRuns;
-};
-
-class QRandGenerationStage final : public Pipe {
- public:
-  QRandGenerationStage(const qleaning::GenerationSettings& settings,
-                       int numberOfRuns = 1);
-
-  bool process(const std::string& metadata,
-               const std::string& libName,
-               const cider::Cmd& cmd) override;
-
-  std::string getLetter() const override { return "RNDG"; }
-
- private:
-  qleaning::QAgent& m_agent;
-  qleaning::GenerationSettings _settings;
-  const int _numberOfRuns;
 };
 
 }  // namespace pipelines

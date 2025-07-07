@@ -9,63 +9,42 @@
 #include <iostream>
 #include <sstream>
 
+#include <assert.h>
+
 namespace cider {
 namespace pipelines {
 
-std::ostream& operator<<(std::ostream& os, const BriefResult& br) {
-  os << "{";
-  os << "methodName: " << br.methodName << ", ";
-  os << "testOrLibName: " << br.testOrLibName << ", ";
-  os << "oldLines: " << br.oldLines << ", ";
-  os << "newLines: " << br.newLines;
-  os << "}";
-  return os;
+double getMinimizationEfficency(const Result& result) {
+  if (result.oldActions.size() == 0)
+    return 0.0;
+  const auto coeff =
+      static_cast<double>(result.newActions.size()) / result.oldActions.size();
+  assert(coeff <= 1.0f);
+  return 1.0f - static_cast<double>(result.newActions.size()) /
+                    result.oldActions.size();
 }
 
 bool serialize(const Result& obj, serialization::Serializer& serializer) {
-  serializer << obj.actions;
-  serializer << obj.methodName;
-  serializer << obj.testOrLibName;
+  serializer << obj.testCaseName;
+  serializer << obj.timeElapsedMs;
+  serializer << obj.oldActions;
+  serializer << obj.newActions;
+  serializer << obj.oldReport;
+  serializer << obj.newReport;
+  serializer << obj.oldCfgReport;
+  serializer << obj.newCgfReport;
   return true;
 }
 
 bool deserialize(Result& obj, const serialization::Deserializer& deserializer) {
-  deserializer >> obj.actions;
-  deserializer >> obj.methodName;
-  deserializer >> obj.testOrLibName;
-  return true;
-}
-
-bool serialize(const BriefResult& obj, serialization::Serializer& serializer) {
-  serializer << obj.report;
-  serializer << obj.oldLines;
-  serializer << obj.newLines;
-  serializer << obj.methodName;
-  serializer << obj.testOrLibName;
-  return true;
-}
-
-bool deserialize(BriefResult& obj,
-                 const serialization::Deserializer& deserializer) {
-  deserializer >> obj.report;
-  deserializer >> obj.oldLines;
-  deserializer >> obj.newLines;
-  deserializer >> obj.methodName;
-  deserializer >> obj.testOrLibName;
-  return true;
-}
-
-bool serialize(const SessionsResult& obj,
-               serialization::Serializer& serializer) {
-  serializer << obj.libName;
-  serializer << obj.sessions;
-  return true;
-}
-
-bool deserialize(SessionsResult& obj,
-                 const serialization::Deserializer& deserializer) {
-  deserializer >> obj.libName;
-  deserializer >> obj.sessions;
+  deserializer >> obj.testCaseName;
+  deserializer >> obj.timeElapsedMs;
+  deserializer >> obj.oldActions;
+  deserializer >> obj.newActions;
+  deserializer >> obj.oldReport;
+  deserializer >> obj.newReport;
+  deserializer >> obj.oldCfgReport;
+  deserializer >> obj.newCgfReport;
   return true;
 }
 

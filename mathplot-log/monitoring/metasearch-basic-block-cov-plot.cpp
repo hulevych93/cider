@@ -18,18 +18,19 @@ namespace plt = matplotlibcpp;
 namespace cider {
 namespace mathplot {
 
-MathplotLogger::MathplotLogger(const std::string& logDir,
-                               const std::string& logFileName)
+BasicBlockCovLogger::BasicBlockCovLogger(const std::string& logDir,
+                                         const std::string& logFileName)
     : m_path(ensurePath(logDir, logFileName)) {}
 
-void MathplotLogger::log(size_t index, const metasearch::Solution& solution) const {
+void BasicBlockCovLogger::log(size_t index,
+                              const metasearch::Solution& solution) const {
   x_.push_back(static_cast<double>(index));
   y_.push_back(solution.objVal);
 
   plot();
 }
 
-void MathplotLogger::plot() const {
+void BasicBlockCovLogger::plot() const {
   plt::clf();         // Clear previous frame
   plt::plot(x_, y_);  // Plot updated points
   plt::xlabel("Iteration");
@@ -39,7 +40,7 @@ void MathplotLogger::plot() const {
   plt::pause(0.01);  // Allow time for GUI to update
 }
 
-MathplotLogger::~MathplotLogger() {
+BasicBlockCovLogger::~BasicBlockCovLogger() {
   plt::save(ensurePngExtension(m_path), 1200);
   plt::close();
 }

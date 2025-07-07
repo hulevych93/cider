@@ -26,6 +26,32 @@ using namespace cider::qleaning;
 namespace cider {
 namespace pipelines {
 
+namespace {
+
+template <typename F>
+void processBest(const std::string& methodName,
+                 const std::vector<Result>& results,
+                 int max,
+                 F&& func) {
+  std::vector<Result> bestResults = results;
+
+  std::sort(
+      bestResults.begin(), bestResults.end(), [](const auto& l, const auto& r) {
+        return l.newReport.branchCov.covered > r.newReport.branchCov.covered;
+      });
+
+  int i = 0;
+  for (const auto& rs : bestResults) {
+    func(methodName, rs);
+    ++i;
+    if (i > max) {
+      break;
+    }
+  }
+}
+
+}  // namespace
+
 bool StepperReportStage::process(const std::string& metadata,
                                  const std::string& libName,
                                  const cider::Cmd& cmd) {
@@ -34,73 +60,44 @@ bool StepperReportStage::process(const std::string& metadata,
 
 #ifdef ENABLE_MATHPLOT
   auto logger = std::make_shared<cider::mathplot::StepperComparativeLogger>(
-      outPath.string(), "comparage.png", cider::mathplot::StepperComparativeLogger::PlotType::BrCov);
+      outPath.string(), "comparage.png",
+      cider::mathplot::StepperComparativeLogger::PlotType::BrCov);
 #endif
 
   auto generator = cider::recorder::makeLuaGenerator(libName);
 
-  const auto handleResult = [&](const Result& result) {
-    logger->next(result.methodName);
+  const auto handleResult = [&](const std::string& methodName,
+                                const Result& result) {
+    logger->next(methodName);
 
     cider::gcov_coverage::StepperCoverageMeasurment stepper{cmd,
                                                             libName.c_str()};
 
     stepper.setLogger(logger);
 
-    stepper.measure(result.actions);
+    stepper.measure(result.newActions);
 
     const auto script =
-        cider::recorder::generateScript(generator, result.actions, 99999U);
+        cider::recorder::generateScript(generator, result.newActions, 99999U);
 
     std::ofstream output_file(outPath /
-                              (libName + "_" + result.testOrLibName + ".lua"));
+                              (libName + "_" + result.testCaseName + ".lua"));
     output_file << script;
   };
 
   const auto& input = getInput();
 
   Result origin;
-  origin.actions = input.actions;
-  origin.methodName = "Original";
-  handleResult(origin);
+  origin.newActions = input.actions;
+  handleResult("Original", origin);
 
-  auto getBest = [&](const std::string& name, int max) {
-    Results bestResults;
+  const auto& results = getResults();
+  for (const auto& resIt : results) {
+    const auto& name = resIt.first;
+    const auto& res = resIt.second;
 
-    const auto& results = getResults();
-    for (const auto& result : results) {
-      if (result.methodName != name) {
-        continue;
-      }
-
-      bestResults.emplace_back(result);
-    }
-
-    cider::gcov_coverage::CoverageMeasurment msr{cmd, libName.c_str()};
-    std::sort(bestResults.begin(), bestResults.end(),
-              [&msr](const auto& l, const auto& r) {
-                const auto& lreport = msr.getReport(l.actions);
-                const auto& rreport = msr.getReport(r.actions);
-                if (lreport.has_value() && rreport.has_value()) {
-                  return lreport->report.branchCov.covered >
-                         rreport->report.branchCov.covered;
-                }
-                return false;
-              });
-
-    int i = 0;
-    for (const auto& rs : bestResults) {
-      handleResult(rs);
-      ++i;
-      if (i > max) {
-        break;
-      }
-    }
-  };
-
-  getBest("QLG2", 2);
-  getBest("QLB2", 10);
-  getBest("RAND", 10);
+    processBest(name, res, 10, handleResult);
+  }
 
   logger->plot();
 
@@ -117,44 +114,46 @@ bool BoxPlotReportStage::process(const std::string& metadata,
   auto brCovLogger = std::make_shared<cider::mathplot::CoverageBoxPlot>(
       outPath.string(), "br_box_plot.png",
       cider::mathplot::CoverageBoxPlot::PlotType::BrCov);
+
+  /*
   auto lnCovLogger = std::make_shared<cider::mathplot::CoverageBoxPlot>(
       outPath.string(), "ln_box_plot.png",
-      cider::mathplot::CoverageBoxPlot::PlotType::LineCov);
+      cider::mathplot::CoverageBoxPlot::PlotType::LineCov); */
 
   auto compositeLogger =
       std::make_shared<cider::gcov_coverage::CompositeLogger>();
   compositeLogger->addLogger(brCovLogger);
-  compositeLogger->addLogger(lnCovLogger);
+  // compositeLogger->addLogger(lnCovLogger);
 #endif
 
   std::string lastLabel;
 
-  const auto handleResult = [&](const Result& result) {
-    if (lastLabel.empty() || lastLabel != result.methodName) {
-      lastLabel = result.methodName;
-      brCovLogger->next(result.methodName);
-      lnCovLogger->next(result.methodName);
+  const auto handleResult = [&](const std::string& name, const Result& result) {
+    if (lastLabel.empty() || lastLabel != name) {
+      lastLabel = name;
+      brCovLogger->next(name);
+      // lnCovLogger->next(name);
     }
 
-    cider::gcov_coverage::CoverageMeasurment msr{cmd, libName.c_str()};
-    const auto& report = msr.getReport(result.actions);
-
-    if (report.has_value() && report->report.branchCov.covered != 0) {
-      brCovLogger->log(0U, report.value());
-      lnCovLogger->log(0U, report.value());
-    }
+    gcov_coverage::RootReport report;
+    report.report = result.newReport;
+    brCovLogger->log(0U, report);
+    // lnCovLogger->log(0U, report);
   };
 
   const auto& results = getResults();
-  for (const auto& result : results) {
-    handleResult(result);
+  for (const auto& resIt : results) {
+    const auto& name = resIt.first;
+    const auto& res = resIt.second;
+
+    processBest(name, res, 30, handleResult);
   }
 
   brCovLogger->plot();
   brCovLogger->save();
 
-  lnCovLogger->plot();
-  lnCovLogger->save();
+  // lnCovLogger->plot();
+  // lnCovLogger->save();
 
   return true;
 }
@@ -172,20 +171,23 @@ bool CovBarPlotReportStage::process(const std::string&,
 
   std::string lastLabel;
 
-  const auto handleResult = [&](const BriefResult& result) {
-    if (lastLabel.empty() || lastLabel != result.testOrLibName) {
-      lastLabel = result.testOrLibName;
-      logger->next(result.testOrLibName);
+  const auto handleResult = [&](const std::string& name, const Result& result) {
+    if (lastLabel.empty() || lastLabel != name) {
+      lastLabel = name;
+      logger->next(name);
     }
 
     gcov_coverage::RootReport report;
-    report.report = result.report;
+    report.report = result.newReport;
     logger->log(0U, report);
   };
 
-  const auto& results = getBriefResults();
-  for (const auto& result : results) {
-    handleResult(result);
+  const auto& results = getResults();
+  for (const auto& resIt : results) {
+    const auto& name = resIt.first;
+    const auto& res = resIt.second;
+
+    processBest(name, res, 10, handleResult);
   }
 
   logger->plot();
@@ -201,25 +203,27 @@ bool LinesBarPlotReportStage::process(const std::string& metadata,
   outPath /= metadata;
 
 #ifdef ENABLE_MATHPLOT
-  auto logger = std::make_shared<cider::mathplot::LinesBarPlot>(outPath.string(),
-                                                      "lines_bar_plot.png");
+  auto logger = std::make_shared<cider::mathplot::LinesBarPlot>(
+      outPath.string(), "lines_bar_plot.png");
 #endif
 
   std::string lastLabel;
 
-  const auto handleResult = [&](const BriefResult& result) {
-    if (lastLabel.empty() || lastLabel != result.testOrLibName) {
-      lastLabel = result.testOrLibName;
-      logger->init(result.testOrLibName, result.oldLines);
+  const auto handleResult = [&](const std::string& name, const Result& result) {
+    if (lastLabel.empty() || lastLabel != name) {
+      lastLabel = name;
+      logger->init(name, result.oldActions.size());
     }
 
-    logger->log(result.testOrLibName, result.methodName, result.newLines);
+    logger->log(result.testCaseName, name, result.newActions.size());
   };
 
-  const auto& results = getBriefResults();
-  for (const auto& result : results) {
-    std::cout << result << std::endl;
-    handleResult(result);
+  const auto& results = getResults();
+  for (const auto& resIt : results) {
+    const auto& name = resIt.first;
+    const auto& res = resIt.second;
+
+    processBest(name, res, 10, handleResult);
   }
 
   logger->plot();

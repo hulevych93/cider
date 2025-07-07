@@ -49,15 +49,15 @@ bool mutateString(std::mt19937& gen, std::string& input) {
 namespace cider {
 namespace metasearch {
 
-std::ostream& operator<<(std::ostream& os, MutationStrategy strategy) {
+std::ostream& operator<<(std::ostream& os, ArgsMutationStrategy strategy) {
   switch (strategy) {
-    case MutationStrategy::ChangeBits:
+    case ArgsMutationStrategy::ChangeBits:
       os << "ChangeBits";
       break;
-    case MutationStrategy::ShuffleBytes:
+    case ArgsMutationStrategy::ShuffleBytes:
       os << "ShuffleBytes";
       break;
-    case MutationStrategy::LevyFlight:
+    case ArgsMutationStrategy::LevyFlight:
       os << "LevyFlight";
       break;
     default:
@@ -76,14 +76,14 @@ size_t randomInRange(std::mt19937& gen, const size_t from, const size_t to) {
 struct ParamMutator final : cider::recorder::IParamMutator {
   ParamMutator(std::mt19937& gen,
                double rate,
-               MutationStrategy strategy,
+               ArgsMutationStrategy strategy,
                bool mutateStrings)
       : _gen(gen),
         _mutationRate(rate),
         _strategy(strategy),
         _mtStr(mutateStrings) {}
 
-  const MutationStrategy _strategy;
+  const ArgsMutationStrategy _strategy;
   double _mutationRate;
   std::mt19937& _gen;
   const bool _mtStr;
@@ -164,15 +164,18 @@ struct ParamMutator final : cider::recorder::IParamMutator {
   bool mutate(Type& value) const {
     if (shouldMutate()) {
       switch (_strategy) {
-        case MutationStrategy::ChangeBits:
+        case ArgsMutationStrategy::None:
+          return false;
+          break;
+        case ArgsMutationStrategy::ChangeBits:
           change_bit(value);
           return true;
           break;
-        case MutationStrategy::ShuffleBytes:
+        case ArgsMutationStrategy::ShuffleBytes:
           shaffle_bytes(value);
           return true;
           break;
-        case MutationStrategy::LevyFlight:
+        case ArgsMutationStrategy::LevyFlight:
           levy_flight(value);
           return true;
           break;
@@ -235,10 +238,11 @@ struct ParamMutator final : cider::recorder::IParamMutator {
 };
 }  // namespace
 
-std::unique_ptr<recorder::IParamMutator> makeMutator(std::mt19937& gen,
-                                                     double mutationRate,
-                                                     MutationStrategy strategy,
-                                                     bool mutateStrings) {
+std::unique_ptr<recorder::IParamMutator> makeMutator(
+    std::mt19937& gen,
+    double mutationRate,
+    ArgsMutationStrategy strategy,
+    bool mutateStrings) {
   return std::make_unique<ParamMutator>(gen, mutationRate, strategy,
                                         mutateStrings);
 }

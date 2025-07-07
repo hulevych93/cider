@@ -1,7 +1,7 @@
 // Copyright (C) 2022-2025 Hulevych Mykhailo
 // SPDX-License-Identifier: MIT
 
-#include "pipeline.h"
+#include "pipelines/pipeline.h"
 
 #include "coverage/coverage.h"
 #include "metaheuristics/metasearch.h"

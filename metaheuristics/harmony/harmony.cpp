@@ -3,6 +3,7 @@
 
 #include "harmony.h"
 
+#include "coverage/coverage.h"
 #include "metaheuristics/args_mutator.h"
 
 #include <assert.h>
@@ -29,7 +30,7 @@ std::ostream& operator<<(std::ostream& os, const Settings& settings) {
 }
 
 Search::Search(const Settings& settings)
-    : _gen(_rd()),
+    : _gen(Seed::instance().get()),
       _settings(settings),
       _mutator(cider::metasearch::makeMutator(_gen,
                                               settings.mutationRate,
@@ -38,7 +39,7 @@ Search::Search(const Settings& settings)
 void Search::initialize(const ActionsCallback& callback) {
   _actionsGenerator = callback;
 
-  _harmonyMemory.reserve(_settings.harmonyMemorySize);
+  _harmonyMemory.resize(_settings.harmonyMemorySize);
   for (auto i = 0U; i < _settings.harmonyMemorySize; ++i) {
     auto actions = _actionsGenerator();
     const auto objValue = _settings.objFunc(actions);
@@ -105,6 +106,14 @@ std::optional<Harmony> Search::mutateHarmony(const Harmony& harmony) const {
   Harmony mutatedHarmony = deepCopy(harmony);
 
   bool isMutated = false;
+
+  if (_settings.instructionsMutationStrategy ==
+      InstructionsMutationStrategy::Shuffle) {
+    std::shuffle(mutatedHarmony.actions.begin(), mutatedHarmony.actions.end(),
+                 _gen);
+    isMutated = true;
+  }
+
   for (auto& action : mutatedHarmony.actions) {
     recorder::ActionMutator mutator(*_mutator);
     isMutated |= std::visit(mutator, action);
@@ -149,6 +158,7 @@ const Harmony& Search::getBest() const {
 
 void Search::dump() {
   int idx = 0;
+  std::cout << _harmonyMemory.size() << std::endl;
   for (const auto& harmony : _harmonyMemory) {
     std::cout << "Harmony[" << idx << "]: " << harmony.objVal << std::endl;
     ++idx;

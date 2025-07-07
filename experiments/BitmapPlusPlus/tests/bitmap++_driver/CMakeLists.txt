@@ -11,12 +11,13 @@ target_link_libraries(bitmap++_driver PUBLIC
   pipelines
   bitmap++_tests
   q-learning
+  synthesis
   ${PLOT_LIBS}
 )
 
 # Helper macro to define run targets with mode parameter
 function(add_bitmap_run_target target_name mode)
-    add_custom_target(${target_name}
+    add_custom_target(bitmap++_${target_name}
         COMMAND bitmap++_driver
             "${mode}"
             "${CMAKE_SOURCE_DIR}/experiments/BitmapPlusPlus/tests/bitmap++_tests"
@@ -32,14 +33,24 @@ function(add_bitmap_run_target target_name mode)
     )
 endfunction()
 
-add_bitmap_run_target(bitmap++_HS_run 0)
-add_bitmap_run_target(bitmap++_CS_run 1)
-add_bitmap_run_target(bitmap++_QL_run 2)
-add_bitmap_run_target(bitmap++_QLHS_run 3)
-add_bitmap_run_target(bitmap++_QLCS_run 4)
-add_bitmap_run_target(bitmap++_QGEN_run 5)
-add_bitmap_run_target(bitmap++_QGEN_STATS_run 6)
-add_bitmap_run_target(bitmap++_QGEN_BZ_STATS_run 7)
-add_bitmap_run_target(bitmap++_QGEN_GBZ_STATS_run 8)
-add_bitmap_run_target(bitmap++_QGEN_LINE_STATS_run 9)
-add_bitmap_run_target(bitmap++_DAT_run 10)
+add_bitmap_run_target(HS 0)
+add_bitmap_run_target(HS1 1)
+add_bitmap_run_target(HS2 2)
+
+add_bitmap_run_target(CS 10)
+add_bitmap_run_target(RAND 20)
+
+add_bitmap_run_target(QL 50)
+
+add_bitmap_run_target(QLG1 60)
+add_bitmap_run_target(QLG2 61)
+add_bitmap_run_target(QLG3 62)
+
+add_bitmap_run_target(QLB1 70)
+add_bitmap_run_target(QLB2 71)
+add_bitmap_run_target(QLB3 72)
+
+add_bitmap_run_target(CBOX 90)
+add_bitmap_run_target(CSTEP 100)
+add_bitmap_run_target(LBAR 110)
+

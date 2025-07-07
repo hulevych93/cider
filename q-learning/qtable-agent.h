@@ -10,22 +10,23 @@
 namespace cider {
 namespace qleaning {
 
-using QValues = std::unordered_map<QAction,
-                                   QValue,
+using QValues = std::unordered_map<recorder::Action,
+                                   double,
                                    recorder::FuzzyActionHash,
                                    recorder::FuzzyEqualPred>;
 
-using QTable = std::unordered_map<QActionList,
+using QTable = std::unordered_map<recorder::Actions,
                                   QValues,
                                   recorder::SemanticActionHash,
                                   recorder::SemanticEqualPred>;
 
 class QTableAgent final : public QAgent {
-  static QActionList getBestFromAvailable(const QActionList& available,
-                                          const QValues& values);
+  static recorder::Actions getBestFromAvailable(
+      const recorder::Actions& available,
+      const QValues& values);
 
-  std::optional<QAction> findBestOrRandomAvailableAction(
-      const IScenario& scenario) const;
+  std::optional<recorder::Action> findBestOrRandomAvailableAction(
+      const Scenario& scenario) const;
 
   explicit QTableAgent(const std::string& path);
 
@@ -37,21 +38,19 @@ class QTableAgent final : public QAgent {
   bool load(const std::string& filePath) override;
   bool save(const std::string& filePath) const override;
 
-  std::optional<QAction> chooseBolzmanAction(
-      const IScenario& scenario,
+  std::optional<recorder::Action> chooseBolzmanAction(
+      const Scenario& scenario,
       const double temperature) const override;
-  std::optional<QAction> chooseEGreedyAction(
-      const IScenario& scenario,
+  std::optional<recorder::Action> chooseEGreedyAction(
+      const Scenario& scenario,
       const double exploration) const override;
-  std::optional<QAction> chooseGreedyAction(
-      const IScenario& scenario) const override;
-  std::optional<QAction> chooseRandAction(
-      const IScenario& scenario) const override;
+  std::optional<recorder::Action> chooseGreedyAction(
+      const Scenario& scenario) const override;
 
-  double updateQValues(const QActionList& state,
-                       const QActionList& nextState,
-                       const QAction& action,
-                       const QValue reward,
+  double updateQValues(const recorder::Actions& state,
+                       const recorder::Actions& nextState,
+                       const recorder::Action& action,
+                       const double reward,
                        const double learningRate,
                        const double discount) override;
 
@@ -62,8 +61,7 @@ class QTableAgent final : public QAgent {
  private:
   QTable m_qtable;
 
-  std::random_device rd;
-  mutable std::mt19937 _gen;
+  std::mt19937& _gen;
   bool m_loaded = false;
 };
 

@@ -15,7 +15,7 @@ namespace cider {
 namespace qleaning {
 
 QTableAgent::QTableAgent(const std::string& path)
-    : _gen(rd()), m_loaded(load(path)) {
+    : _gen(Seed::instance().get()), m_loaded(load(path)) {
   std::cout << "Load agent: " << path << ", status: " << m_loaded << std::endl;
 }
 
@@ -41,7 +41,7 @@ bool QTableAgent::save(const std::string& filePath) const {
   return true;
 }
 
-QValues getAvailableQValues(const QActionList& available,
+QValues getAvailableQValues(const recorder::Actions& available,
                             const QValues& values) {
   QValues availableValues;
   for (const auto& action : available) {
@@ -55,8 +55,9 @@ QValues getAvailableQValues(const QActionList& available,
   return availableValues;
 }
 
-QActionList QTableAgent::getBestFromAvailable(const QActionList& available,
-                                              const QValues& values) {
+recorder::Actions QTableAgent::getBestFromAvailable(
+    const recorder::Actions& available,
+    const QValues& values) {
   QValues availableValues;
   for (const auto& action : available) {
     const auto qValueIter = values.find(action);
@@ -65,7 +66,7 @@ QActionList QTableAgent::getBestFromAvailable(const QActionList& available,
     }
   }
 
-  QActionList bestValues;
+  recorder::Actions bestValues;
   const auto elemIter = std::max_element(
       availableValues.cbegin(), availableValues.cend(),
       [](const QValues::value_type& left, const QValues::value_type& right) {
@@ -84,8 +85,8 @@ QActionList QTableAgent::getBestFromAvailable(const QActionList& available,
   return bestValues;
 }
 
-std::optional<QAction> QTableAgent::findBestOrRandomAvailableAction(
-    const IScenario& scenario) const {
+std::optional<recorder::Action> QTableAgent::findBestOrRandomAvailableAction(
+    const Scenario& scenario) const {
   const auto state = scenario.getCurrentState();
   const auto qValuesIter = m_qtable.find(state);
   const auto& availableActions = scenario.getAvailableActions();
@@ -96,24 +97,24 @@ std::optional<QAction> QTableAgent::findBestOrRandomAvailableAction(
     const auto& qValues =
         getBestFromAvailable(availableActions, qValuesIter->second);
     if (!qValues.empty()) {
-      std::cout << "B3" << std::endl;
+      std::cout << "E-Greedy action" << std::endl;
       std::uniform_int_distribution<size_t> indexDist(0, qValues.size() - 1);
       return qValues[indexDist(_gen)];
     }
-    std::cout << "NULL" << std::endl;
+
     return std::nullopt;
   } else {
-    std::cout << "BRand" << std::endl;
+    std::cout << "fallback to random: 1" << std::endl;
     std::uniform_int_distribution<size_t> indexDist(
         0, availableActions.size() - 1);
     return availableActions[indexDist(_gen)];
   }
 }
 
-std::optional<QAction> QTableAgent::chooseEGreedyAction(
-    const IScenario& scenario,
+std::optional<recorder::Action> QTableAgent::chooseEGreedyAction(
+    const Scenario& scenario,
     const double exploration) const {
-  std::optional<QAction> action;
+  std::optional<recorder::Action> action;
   std::uniform_real_distribution<double> dist(0.0, 1.0);
   if (dist(_gen) < exploration) {
     action = scenario.getRandomAction();
@@ -124,23 +125,18 @@ std::optional<QAction> QTableAgent::chooseEGreedyAction(
   return action;
 }
 
-std::optional<QAction> QTableAgent::chooseGreedyAction(
-    const IScenario& scenario) const {
+std::optional<recorder::Action> QTableAgent::chooseGreedyAction(
+    const Scenario& scenario) const {
   return findBestOrRandomAvailableAction(scenario);
 }
 
-std::optional<QAction> QTableAgent::chooseRandAction(
-    const IScenario& scenario) const {
-  return scenario.getRandomAction();
-}
-
-std::optional<QAction> QTableAgent::chooseBolzmanAction(
-    const IScenario& scenario,
+std::optional<recorder::Action> QTableAgent::chooseBolzmanAction(
+    const Scenario& scenario,
     const double temperature) const {
-  std::optional<QAction> action;
+  std::optional<recorder::Action> action;
   const auto qValuesIt = m_qtable.find(scenario.getCurrentState());
   if (qValuesIt == m_qtable.cend()) {
-    std::cout << "BRand" << std::endl;
+    std::cout << "fallback to random: 1" << std::endl;
     action = scenario.getRandomAction();
   } else {
     const auto& availableActions = scenario.getAvailableActions();
@@ -152,7 +148,7 @@ std::optional<QAction> QTableAgent::chooseBolzmanAction(
         getAvailableQValues(availableActions, qValuesIt->second);
 
     if (qValues.empty()) {
-      std::cout << "BRand1" << std::endl;
+      std::cout << "fallback to random: 2" << std::endl;
       return scenario.getRandomAction();
     }
 
@@ -166,7 +162,7 @@ std::optional<QAction> QTableAgent::chooseBolzmanAction(
     }
 
     if (sum == 0.0f || std::isinf(sum)) {
-      std::cout << "BRand2" << std::endl;
+      std::cout << "fallback to random: 3" << std::endl;
       return scenario.getRandomAction();
     }
 
@@ -183,7 +179,7 @@ std::optional<QAction> QTableAgent::chooseBolzmanAction(
     for (; i < index; ++i, ++qValIt)
       ;
 
-    std::cout << "B3" << std::endl;
+    std::cout << "Bolzman action" << std::endl;
 
     action = qValIt->first;
   }
@@ -191,10 +187,10 @@ std::optional<QAction> QTableAgent::chooseBolzmanAction(
   return action;
 }
 
-double QTableAgent::updateQValues(const QActionList& state,
-                                  const QActionList& nextState,
-                                  const QAction& action,
-                                  const QValue reward,
+double QTableAgent::updateQValues(const recorder::Actions& state,
+                                  const recorder::Actions& nextState,
+                                  const recorder::Action& action,
+                                  const double reward,
                                   const double learningRate,
                                   const double discount) {
   auto& qValues = m_qtable[state];

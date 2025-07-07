@@ -41,8 +41,7 @@ class Search final : public IMetaSearch {
   void dump();
 
  private:
-  std::random_device _rd;
-  mutable std::mt19937 _gen;
+  std::mt19937& _gen;
 
   Settings _settings;
   std::vector<Harmony> _harmonyMemory;

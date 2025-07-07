@@ -4,9 +4,11 @@
 
 #include "coverage/coverage.h"
 
+#include "coverage/cfg_coverage.h"
 #include "coverage/gcov_coverage.h"
 
-#include "metaheuristics/metasearch.h"
+#include "recorder/details/action.h"
+#include "recorder/details/params.h"
 
 #include "serialization/deserializer.h"
 #include "serialization/serializer.h"
@@ -18,50 +20,26 @@ namespace pipelines {
 
 struct Input final {
   recorder::Actions actions;
-  std::function<recorder::Actions()> actionsCallback;
   std::string testOrLibName;
 };
 
 struct Result final : serialization::SerializableTag {
-  recorder::Actions actions;
-  std::string methodName;
-  std::string testOrLibName;
+  std::string testCaseName;
+  recorder::Actions oldActions;
+  recorder::Actions newActions;
+  gcov_coverage::CoverageReport oldReport;
+  gcov_coverage::CoverageReport newReport;
+  cfg_coverage::Coverage oldCfgReport;
+  cfg_coverage::Coverage newCgfReport;
+  unsigned long timeElapsedMs = 0;
 };
 
-struct BriefResult final : serialization::SerializableTag {
-  gcov_coverage::CoverageReport report;
-  int oldLines = 0;
-  int newLines = 0;
-  std::string methodName;
-  std::string testOrLibName;
-};
+double getMinimizationEfficency(const Result& result);
 
-std::ostream& operator<<(std::ostream& os, const BriefResult& br);
-
-struct SessionsResult final : serialization::SerializableTag {
-  std::vector<recorder::Actions> sessions;
-  std::string libName;
-};
+using Results = std::unordered_map<std::string, std::vector<Result>>;
 
 bool serialize(const Result& obj, serialization::Serializer& serializer);
 bool deserialize(Result& obj, const serialization::Deserializer& deserializer);
-
-bool serialize(const BriefResult& obj, serialization::Serializer& serializer);
-bool deserialize(BriefResult& obj,
-                 const serialization::Deserializer& deserializer);
-
-bool serialize(const SessionsResult& obj,
-               serialization::Serializer& serializer);
-bool deserialize(SessionsResult& obj,
-                 const serialization::Deserializer& deserializer);
-
-using Results = std::vector<Result>;
-using BriefResults = std::vector<BriefResult>;
-using SessionsResults = std::vector<SessionsResult>;
-
-using ResultsStorage = std::unordered_map<PipelineType, Results>;
-using BriefResultStorage = std::unordered_map<PipelineType, BriefResults>;
-using SessionsResultStorage = std::unordered_map<PipelineType, SessionsResults>;
 
 }  // namespace pipelines
 }  // namespace cider

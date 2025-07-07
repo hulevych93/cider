@@ -18,27 +18,30 @@ namespace plt = matplotlibcpp;
 namespace cider {
 namespace mathplot {
 
-MathplotLogger::MathplotLogger(const std::string& logDir,
-                               const std::string& logFileName)
+QLearningResultsMathplotLogger::QLearningResultsMathplotLogger(
+    const std::string& logDir,
+    const std::string& logFileName)
     : m_path(ensurePath(logDir, logFileName)) {
   plt::figure_size(640, 640);
 }
 
-void MathplotLogger::logReward(size_t episode, const double totalReward) const {
+void QLearningResultsMathplotLogger::logReward(size_t episode,
+                                               const double totalReward) const {
   ieps_.push_back(static_cast<double>(episode));
   rwrd_.push_back(totalReward);
 
   plot();
 }
 
-void MathplotLogger::logLoss(size_t episode, const double averageLoss) const {
+void QLearningResultsMathplotLogger::logLoss(size_t episode,
+                                             const double averageLoss) const {
   jeps_.push_back(static_cast<double>(episode));
   loss_.push_back(averageLoss);
 
   plot();
 }
 
-void MathplotLogger::plot() const {
+void QLearningResultsMathplotLogger::plot() const {
   plt::clf();
 
   plt::subplot2grid(2, 1, 0, 0);
@@ -63,7 +66,7 @@ void MathplotLogger::plot() const {
   plt::pause(0.01);
 }
 
-MathplotLogger::~MathplotLogger() {
+QLearningResultsMathplotLogger::~QLearningResultsMathplotLogger() {
   plt::save(ensurePngExtension(m_path), 1200);
   plt::close();
 }

@@ -5,34 +5,26 @@
 
 #include "recorder/details/action.h"
 
-#include "agent.h"
+#include "synthesis/test-case.h"
 
 namespace cider {
 namespace qleaning {
 
-std::string actionToGenericRepro(const QAction& action);
-std::string actionsToGenericRepro(const QActionList& actions);
-
-class IScenario {
+class Scenario : public synthesis::TestScenario {
  public:
-  virtual ~IScenario() = default;
+  Scenario(std::mt19937& gen,
+           int maxStateDepth,
+           const recorder::Actions& initial,
+           const synthesis::ObjectiveFunction& objFunc);
 
-  virtual void add(const QAction& action) = 0;
-  virtual void rollback() = 0;
+  recorder::Actions getCurrentState() const;
 
-  virtual size_t getSize() const = 0;
-
-  virtual QActionList getCurrentState() const = 0;
-  virtual QActionList getResult() const = 0;
-
-  virtual std::optional<QValue> getReward() const = 0;
-
-  virtual QActionList getAvailableActions() const = 0;
-
-  virtual std::optional<QAction> getRandomAction() const = 0;
-
-  virtual bool isOver() const = 0;
+ private:
+  int _maxStateDepth = 0;
 };
+
+std::string actionToGenericRepro(const recorder::Action& action);
+std::string actionsToGenericRepro(const std::vector<recorder::Action>& actions);
 
 }  // namespace qleaning
 }  // namespace cider

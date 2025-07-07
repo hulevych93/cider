@@ -9,6 +9,8 @@
 #include <numeric>
 #include <random>
 
+#include "coverage/coverage.h"
+
 namespace cider {
 namespace metasearch {
 namespace cuckoo {
@@ -90,7 +92,7 @@ struct ActionMutator final {
 }  // namespace
 
 Search::Search(const Settings& settings)
-    : _gen(_rd()),
+    : _gen(Seed::instance().get()),
       _settings(settings),
       _mutator(cider::metasearch::makeMutator(_gen, 1.0f, settings.strategy)) {}
 

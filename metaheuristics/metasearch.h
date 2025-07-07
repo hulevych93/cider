@@ -8,6 +8,8 @@
 
 #include "metaheuristics/args_mutator.h"
 
+#include <variant>
+
 namespace cider {
 namespace metasearch {
 
@@ -72,15 +74,18 @@ class IMetaSearch {
   virtual void setLogger(std::unique_ptr<IResultsLogger> logger) = 0;
 };
 
+enum class InstructionsMutationStrategy { None, Shuffle };
+
 namespace cuckoo {
 
 struct Settings final {
+  const char* configName = "CS_NAN";
   int populationSize = 10;
   double Pa = 0.25;
   size_t maxIterationsWithoutUpdates = 50U;
   size_t maxIter = 22;
   ObjectiveFunction objFunc;
-  MutationStrategy strategy = MutationStrategy::ShuffleBytes;
+  ArgsMutationStrategy strategy = ArgsMutationStrategy::ShuffleBytes;
 };
 
 }  // namespace cuckoo
@@ -88,16 +93,21 @@ struct Settings final {
 namespace harmony {
 
 struct Settings final {
+  const char* configName = "HS_NAN";
   int harmonyMemorySize = 10;
   double harmonyMemoryConsiderationRate = 0.95;
   double mutationRate = 0.1;
   size_t maxIterationsWithoutUpdates = 500U;
   size_t maxIter = 1000;
   ObjectiveFunction objFunc;
-  MutationStrategy strategy = MutationStrategy::ShuffleBytes;
+  ArgsMutationStrategy strategy = ArgsMutationStrategy::ShuffleBytes;
+  InstructionsMutationStrategy instructionsMutationStrategy =
+      InstructionsMutationStrategy::Shuffle;
 };
 
 }  // namespace harmony
+
+using MetaSettings = std::variant<harmony::Settings, cuckoo::Settings>;
 
 }  // namespace metasearch
 }  // namespace cider

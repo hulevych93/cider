@@ -11,12 +11,13 @@ target_link_libraries(pugixml_driver PUBLIC
   pipelines
   pugixml_tests
   q-learning
+  synthesis
   ${PLOT_LIBS}
 )
 
 # Helper macro for pugixml run targets with modes
 function(add_pugixml_run_target target_name mode)
-    add_custom_target(${target_name}
+    add_custom_target(pugixml_${target_name}
         COMMAND pugixml_driver
              "${mode}"
             "${CMAKE_SOURCE_DIR}/experiments/pugixml/tests/pugixml_tests"
@@ -32,15 +33,20 @@ function(add_pugixml_run_target target_name mode)
     )
 endfunction()
 
-# Define the three mode-specific pugixml targets
-add_pugixml_run_target(pugixml_HS_run 0)
-add_pugixml_run_target(pugixml_CS_run 1)
-add_pugixml_run_target(pugixml_QL_run 2)
-add_pugixml_run_target(pugixml_QLHS_run 3)
-add_pugixml_run_target(pugixml_QLCS_run 4)
-add_pugixml_run_target(pugixml_QLGEN_run 5)
-add_pugixml_run_target(pugixml_QGEN_STATS_run 6)
-add_pugixml_run_target(pugixml_QGEN_BZ_STATS_run 7)
-add_pugixml_run_target(pugixml_QGEN_GBZ_STATS_run 8)
-add_pugixml_run_target(pugixml_QGEN_LINE_STATS_run 9)
-add_pugixml_run_target(pugixml_DAT_run 10)
+add_pugixml_run_target(HS 0)
+add_pugixml_run_target(CS 10)
+add_pugixml_run_target(RAND 20)
+
+add_pugixml_run_target(QL 50)
+
+add_pugixml_run_target(QLG1 60)
+add_pugixml_run_target(QLG2 61)
+add_pugixml_run_target(QLG3 62)
+
+add_pugixml_run_target(QLB1 70)
+add_pugixml_run_target(QLB2 71)
+add_pugixml_run_target(QLB3 72)
+
+add_pugixml_run_target(CBOX 90)
+add_pugixml_run_target(CSTEP 100)
+add_pugixml_run_target(LBAR 110)

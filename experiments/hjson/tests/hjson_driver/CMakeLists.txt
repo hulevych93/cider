@@ -11,12 +11,13 @@ target_link_libraries(hjson_driver PUBLIC
   pipelines
   hjson_tests
   q-learning
+  synthesis
   ${PLOT_LIBS}
 )
 
 # Helper macro for HJSON run targets
 function(add_hjson_run_target target_name mode)
-    add_custom_target(${target_name}
+    add_custom_target(hjson_${target_name}
         COMMAND hjson_driver
             "${mode}"
             "${CMAKE_SOURCE_DIR}/experiments/hjson/tests/hjson_tests"
@@ -32,15 +33,20 @@ function(add_hjson_run_target target_name mode)
     )
 endfunction()
 
-# Define HJSON targets using the macro
-add_hjson_run_target(hjson_HS_run 0)
-add_hjson_run_target(hjson_CS_run 1)
-add_hjson_run_target(hjson_QL_run 2)
-add_hjson_run_target(hjson_QLHS_run 3)
-add_hjson_run_target(hjson_QLCS_run 4)
-add_hjson_run_target(hjson_QGEN_run 5)
-add_hjson_run_target(hjson_QGEN_STATS_run 6)
-add_hjson_run_target(hjson_QGEN_BZ_STATS_run 7)
-add_hjson_run_target(hjson_QGEN_GBZ_STATS_run 8)
-add_hjson_run_target(hjson_QGEN_LINE_STATS_run 9)
-add_hjson_run_target(hjson_DAT_run 10)
+add_hjson_run_target(HS 0)
+add_hjson_run_target(CS 10)
+add_hjson_run_target(RAND 20)
+
+add_hjson_run_target(QLEARNING 50)
+
+add_hjson_run_target(QLG1 60)
+add_hjson_run_target(QLG2 61)
+add_hjson_run_target(QLG3 62)
+
+add_hjson_run_target(QLB1 70)
+add_hjson_run_target(QLB2 71)
+add_hjson_run_target(QLB3 72)
+
+add_hjson_run_target(CBOX 90)
+add_hjson_run_target(CSTEP 100)
+add_hjson_run_target(LBAR 110)

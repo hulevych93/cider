@@ -11,14 +11,14 @@
 namespace cider {
 namespace metasearch {
 
-enum class MutationStrategy { ShuffleBytes, ChangeBits, LevyFlight };
+enum class ArgsMutationStrategy { None, ShuffleBytes, ChangeBits, LevyFlight };
 
-std::ostream& operator<<(std::ostream& os, MutationStrategy strategy);
+std::ostream& operator<<(std::ostream& os, ArgsMutationStrategy strategy);
 
 std::unique_ptr<recorder::IParamMutator> makeMutator(
     std::mt19937& gen,
     double mutationRate,
-    MutationStrategy strategy,
+    ArgsMutationStrategy strategy,
     bool mutateStrings = false);
 
 }  // namespace metasearch

@@ -1,0 +1,86 @@
+// Copyright (C) 2022-2025 Hulevych Mykhailo
+// SPDX-License-Identifier: MIT
+
+#include "synthesis.h"
+
+#include <iostream>
+#include <thread>
+
+#include <assert.h>
+#include <random>
+
+namespace cider {
+namespace synthesis {
+std::ostream& operator<<(std::ostream& os,
+                         const SynthesisSettingsBasic& settings) {
+  os << "QL_GEN_";
+  std::string stopType;
+
+  switch (settings.stopType) {
+    case synthesis::StopCondition::LimitActions:
+      stopType = "LimitActions";
+      break;
+    case synthesis::StopCondition::GreaterCoverage:
+      stopType = "GreaterCoverage";
+      break;
+  }
+
+  os << "maxSt[" << settings.maxRollback;
+  os << "]_stType[" << stopType;
+  os << "]_lim[" << settings.limitActions;
+  os << "]";
+  return os;
+}
+
+namespace details {
+
+bool synthesize(const SynthesisSettingsBasic& settings,
+                const ActionChoosing& actionChoosing,
+                TestScenario& testCase) {
+  size_t rollbackCount = 0;
+
+  auto stopPredicate = [&]() -> bool {
+    if (settings.stopType == StopCondition::GreaterCoverage) {
+      return testCase.isOver();
+    }
+
+    if (settings.stopType == StopCondition::LimitActions) {
+      return testCase.getSize() >= settings.limitActions;
+    }
+
+    throw std::runtime_error{"Wrong stop"};
+  };
+
+  while (!stopPredicate()) {
+    const auto selectedOpt = actionChoosing(testCase);
+
+    if (!selectedOpt.has_value()) {
+      std::cout << "No selected action" << std::endl;
+      break;
+    }
+
+    const auto selected = selectedOpt.value();
+
+    testCase.add(selected);
+    if (testCase.isValid()) {
+      rollbackCount = 0U;
+    } else if (testCase.isOver()) {
+      break;
+    } else {
+      testCase.rollback();
+      ++rollbackCount;
+      std::cout << "rollback" << std::endl;
+      if (rollbackCount > settings.maxRollback) {
+        std::cout << "Max rollback" << std::endl;
+        break;
+      }
+    }
+  }
+
+  return true;
+}
+
+}  // namespace details
+
+}  // namespace synthesis
+}  // namespace cider
