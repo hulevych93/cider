@@ -7,17 +7,17 @@
 
 #include "coverage/coverage.h"
 
-#include "scenario.h"
+#include "agent-model/scenario.h"
 
 #include <random>
 #include <sstream>
 
 namespace cider {
-namespace qleaning {
+namespace agent_model {
 
-class QAgent {
+class IAgent {
  public:
-  virtual ~QAgent() = default;
+  virtual ~IAgent() = default;
 
   virtual std::optional<recorder::Action> chooseBolzmanAction(
       const Scenario& scenario,
@@ -30,16 +30,7 @@ class QAgent {
   virtual std::optional<recorder::Action> chooseGreedyAction(
       const Scenario& scenario) const = 0;
 
-  virtual double updateQValues(const recorder::Actions& state,
-                               const recorder::Actions& nextState,
-                               const recorder::Action& action,
-                               const double reward,
-                               const double learningRate,
-                               const double discount) = 0;
-
   virtual void print(std::ostream& os) const = 0;
-
-  virtual std::mt19937& getSeed() = 0;
 
   virtual bool isLoaded() const = 0;
 
@@ -47,7 +38,5 @@ class QAgent {
   virtual bool save(const std::string& filePath) const = 0;
 };
 
-QAgent& getAgent(const std::string& path = "");
-
-}  // namespace qleaning
+}  // namespace agent_model
 }  // namespace cider

@@ -5,7 +5,7 @@
 #include <sstream>
 
 namespace cider {
-namespace qleaning {
+namespace agent_model {
 
 void print(std::ostream& os, const RewardCounter& rwCounter) {
   os << "==================== REWARD COUNTER ====================\n";
@@ -31,5 +31,5 @@ void print(std::ostream& os, const RewardCounter& rwCounter) {
   os << "========================================================\n";
 }
 
-}  // namespace qleaning
+}  // namespace agent_model
 }  // namespace cider

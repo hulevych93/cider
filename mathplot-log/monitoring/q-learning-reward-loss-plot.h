@@ -3,12 +3,12 @@
 
 #pragma once
 
-#include "q-learning/logger.h"
+#include "agent-model/logger.h"
 
 namespace cider {
 namespace mathplot {
 
-class QLearningResultsMathplotLogger : public qleaning::IResultsLogger {
+class QLearningResultsMathplotLogger : public agent_model::IResultsLogger {
  public:
   QLearningResultsMathplotLogger(const std::string& logDir,
                                  const std::string& logFileName);

@@ -10,7 +10,9 @@ target_link_libraries(bitmap++_driver PUBLIC
   metaheuristics
   pipelines
   bitmap++_tests
-  q-learning
+  agent-model
+  agent-q-learning
+  agent-sarsa-learning
   synthesis
   monte-carlo
   ${PLOT_LIBS}
@@ -45,14 +47,23 @@ add_bitmap_run_target(RAND 20)
 add_bitmap_run_target(MCTS0 30)
 
 add_bitmap_run_target(QL 50)
+add_bitmap_run_target(SARSA 51)
 
 add_bitmap_run_target(QLG1 60)
 add_bitmap_run_target(QLG2 61)
 add_bitmap_run_target(QLG3 62)
 
+add_bitmap_run_target(SLG1 65)
+add_bitmap_run_target(SLG2 66)
+add_bitmap_run_target(SLG3 67)
+
 add_bitmap_run_target(QLB1 70)
 add_bitmap_run_target(QLB2 71)
 add_bitmap_run_target(QLB3 72)
+
+add_bitmap_run_target(SLB1 75)
+add_bitmap_run_target(SLB2 76)
+add_bitmap_run_target(SLB3 77)
 
 add_bitmap_run_target(CBOX 90)
 add_bitmap_run_target(CSTEP 100)

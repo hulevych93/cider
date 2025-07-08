@@ -6,7 +6,7 @@
 #include <iostream>
 
 namespace cider {
-namespace qleaning {
+namespace agent_model {
 
 struct RewardCounter final {
   int covGrow = 0;
@@ -23,5 +23,5 @@ struct RewardCounter final {
 
 void print(std::ostream& os, const RewardCounter& rwCounter);
 
-}  // namespace qleaning
+}  // namespace agent_model
 }  // namespace cider

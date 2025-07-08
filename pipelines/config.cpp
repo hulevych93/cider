@@ -4,19 +4,16 @@
 #include "pipeline.h"
 
 #include "pipes/dataset-pipe.h"
+#include "pipes/learning-pipe.h"
 #include "pipes/mcts-pipe.h"
 #include "pipes/meta-pipe.h"
-#include "pipes/q-learning-pipe.h"
 #include "pipes/report-pipe.h"
 #include "pipes/synthesis-pipe.h"
 
-#include "paths.h"
+#include "agent-q-learning/q-learning-agent.h"
+#include "agent-sarsa-learning/sarsa-learning-agent.h"
 
-#include <chrono>
-#include <ctime>
-#include <iomanip>
-#include <iostream>
-#include <sstream>
+#include "paths.h"
 
 namespace cider {
 
@@ -92,15 +89,16 @@ auto getCackooSettings() {
 auto getMCTS0Settings() {
   mcts::MonteCarloSettings settings;
   settings.configName = "MCTS0";
-  settings.maxIter = 100;
+  settings.maxIter = 200;
   settings.maxDepth = 25;
   settings.ucb_C = 1.4;
   settings.maxRollback = 20;
   return settings;
 }
 
-auto getLearningSettings() {
-  qleaning::LearningSettings settings;
+auto getQLearningSettings() {
+  agent_model::qlearning::QLearningSettings settings;
+  settings.configName = "QL";
   settings.discountFactor = 0.85;
   settings.learningRate = 0.1;
   settings.episodes = 2000U;
@@ -109,9 +107,20 @@ auto getLearningSettings() {
   return settings;
 }
 
-auto getGenG1Settings() {
+auto getSarsaLearningSettings() {
+  agent_model::sarsa::SarsaLearningSettings settings;
+  settings.configName = "SARSA";
+  settings.discountFactor = 0.85;
+  settings.learningRate = 0.1;
+  settings.episodes = 500;
+  settings.maxRollback = 20U;
+  settings.maxStateDepth = 10U;
+  return settings;
+}
+
+auto getQGenG1Settings() {
   synthesis::QSynthesisSettings settings;
-  settings.configName = "G1";
+  settings.configName = "QEG1";
   settings.epsilon = 0.1;
   settings.maxRollback = 30U;
   settings.strategy = synthesis::GenerationStrategyType::EGreedy;
@@ -119,9 +128,9 @@ auto getGenG1Settings() {
   return settings;
 }
 
-auto getGenG2Settings() {
+auto getQGenG2Settings() {
   synthesis::QSynthesisSettings settings;
-  settings.configName = "G2";
+  settings.configName = "QEG2";
   settings.epsilon = 0.15;
   settings.maxRollback = 30U;
   settings.strategy = synthesis::GenerationStrategyType::EGreedy;
@@ -129,9 +138,9 @@ auto getGenG2Settings() {
   return settings;
 }
 
-auto getGenG3Settings() {
+auto getQGenG3Settings() {
   synthesis::QSynthesisSettings settings;
-  settings.configName = "G3";
+  settings.configName = "QEG3";
   settings.epsilon = 0.25;
   settings.maxRollback = 30U;
   settings.strategy = synthesis::GenerationStrategyType::EGreedy;
@@ -139,9 +148,39 @@ auto getGenG3Settings() {
   return settings;
 }
 
-auto getGenB1Settings() {
+auto getSarsaGenG1Settings() {
+  synthesis::SarsaSynthesisSettings settings;
+  settings.configName = "SEG1";
+  settings.epsilon = 0.1;
+  settings.maxRollback = 30U;
+  settings.strategy = synthesis::GenerationStrategyType::EGreedy;
+  settings.stopType = synthesis::StopCondition::GreaterCoverage;
+  return settings;
+}
+
+auto getSarsaGenG2Settings() {
+  synthesis::SarsaSynthesisSettings settings;
+  settings.configName = "SEG2";
+  settings.epsilon = 0.15;
+  settings.maxRollback = 30U;
+  settings.strategy = synthesis::GenerationStrategyType::EGreedy;
+  settings.stopType = synthesis::StopCondition::GreaterCoverage;
+  return settings;
+}
+
+auto getSarsaGenG3Settings() {
+  synthesis::SarsaSynthesisSettings settings;
+  settings.configName = "SEG3";
+  settings.epsilon = 0.25;
+  settings.maxRollback = 30U;
+  settings.strategy = synthesis::GenerationStrategyType::EGreedy;
+  settings.stopType = synthesis::StopCondition::GreaterCoverage;
+  return settings;
+}
+
+auto getQGenB1Settings() {
   synthesis::QSynthesisSettings settings;
-  settings.configName = "B1";
+  settings.configName = "QB1";
   settings.temperature = 1.5;
   settings.maxRollback = 30U;
   settings.strategy = synthesis::GenerationStrategyType::Boltzmann;
@@ -149,9 +188,9 @@ auto getGenB1Settings() {
   return settings;
 }
 
-auto getGenB2Settings() {
+auto getQGenB2Settings() {
   synthesis::QSynthesisSettings settings;
-  settings.configName = "B2";
+  settings.configName = "QB2";
   settings.temperature = 3.0;
   settings.maxRollback = 30U;
   settings.strategy = synthesis::GenerationStrategyType::Boltzmann;
@@ -159,9 +198,9 @@ auto getGenB2Settings() {
   return settings;
 }
 
-auto getGenB3Settings() {
+auto getQGenB3Settings() {
   synthesis::QSynthesisSettings settings;
-  settings.configName = "B3";
+  settings.configName = "QB3";
   settings.temperature = 5.0;
   settings.maxRollback = 30U;
   settings.strategy = synthesis::GenerationStrategyType::Boltzmann;
@@ -169,7 +208,37 @@ auto getGenB3Settings() {
   return settings;
 }
 
-auto getRandSettings(size_t lines = 250) {
+auto getSarsaGenB1Settings() {
+  synthesis::SarsaSynthesisSettings settings;
+  settings.configName = "SB1";
+  settings.temperature = 1.5;
+  settings.maxRollback = 30U;
+  settings.strategy = synthesis::GenerationStrategyType::Boltzmann;
+  settings.stopType = synthesis::StopCondition::GreaterCoverage;
+  return settings;
+}
+
+auto getSarsaGenB2Settings() {
+  synthesis::SarsaSynthesisSettings settings;
+  settings.configName = "SB2";
+  settings.temperature = 3.0;
+  settings.maxRollback = 30U;
+  settings.strategy = synthesis::GenerationStrategyType::Boltzmann;
+  settings.stopType = synthesis::StopCondition::GreaterCoverage;
+  return settings;
+}
+
+auto getSarsaGenB3Settings() {
+  synthesis::SarsaSynthesisSettings settings;
+  settings.configName = "SB3";
+  settings.temperature = 5.0;
+  settings.maxRollback = 30U;
+  settings.strategy = synthesis::GenerationStrategyType::Boltzmann;
+  settings.stopType = synthesis::StopCondition::GreaterCoverage;
+  return settings;
+}
+
+auto getRandGenSettings(size_t lines = 250) {
   synthesis::RandSynthesisSettings settings;
   settings.configName = "GRAND";
   settings.stopType = synthesis::StopCondition::LimitActions;
@@ -177,7 +246,7 @@ auto getRandSettings(size_t lines = 250) {
   return settings;
 }
 
-constexpr const int StatsCount = 1U;
+constexpr const int StatsCount = 20U;
 
 }  // namespace
 
@@ -210,41 +279,75 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
       break;
     case PipelineType::GRAND:
       pipeline.addStage(
-          std::make_unique<SynthesisStage>(getRandSettings(), StatsCount));
+          std::make_unique<SynthesisStage>(getRandGenSettings(), StatsCount));
       break;
     case PipelineType::MCTS0:
       pipeline.addStage(
           std::make_unique<MctsSearchStage>(getMCTS0Settings(), StatsCount));
       break;
     case PipelineType::QLearningAgentLearning:
+      if (!agent_model::qlearning::QLearningAgent::get().isLoaded()) {
+        pipeline.addStage(
+            std::make_unique<PreLearningStage>(getQLearningSettings()));
+      }
       pipeline.addStage(
-          std::make_unique<QPreLearningStage>(getLearningSettings()));
+          std::make_unique<LearningStage>(getQLearningSettings()));
+      break;
+    case PipelineType::SarsaAgentLearning:
+      if (!agent_model::sarsa::SarsaLearningAgent::get().isLoaded()) {
+        pipeline.addStage(
+            std::make_unique<PreLearningStage>(getSarsaLearningSettings()));
+      }
       pipeline.addStage(
-          std::make_unique<QLearningStage>(getLearningSettings()));
+          std::make_unique<LearningStage>(getSarsaLearningSettings()));
       break;
     case PipelineType::QLearningAgentG1:
       pipeline.addStage(
-          std::make_unique<SynthesisStage>(getGenG1Settings(), StatsCount));
+          std::make_unique<SynthesisStage>(getQGenG1Settings(), StatsCount));
       break;
     case PipelineType::QLearningAgentG2:
       pipeline.addStage(
-          std::make_unique<SynthesisStage>(getGenG2Settings(), StatsCount));
+          std::make_unique<SynthesisStage>(getQGenG2Settings(), StatsCount));
       break;
     case PipelineType::QLearningAgentG3:
       pipeline.addStage(
-          std::make_unique<SynthesisStage>(getGenG3Settings(), StatsCount));
+          std::make_unique<SynthesisStage>(getQGenG3Settings(), StatsCount));
+      break;
+    case PipelineType::SarsaAgentG1:
+      pipeline.addStage(std::make_unique<SynthesisStage>(
+          getSarsaGenG1Settings(), StatsCount));
+      break;
+    case PipelineType::SarsaAgentG2:
+      pipeline.addStage(std::make_unique<SynthesisStage>(
+          getSarsaGenG2Settings(), StatsCount));
+      break;
+    case PipelineType::SarsaAgentG3:
+      pipeline.addStage(std::make_unique<SynthesisStage>(
+          getSarsaGenG3Settings(), StatsCount));
       break;
     case PipelineType::QLearningAgentB1:
       pipeline.addStage(
-          std::make_unique<SynthesisStage>(getGenB1Settings(), StatsCount));
+          std::make_unique<SynthesisStage>(getQGenB1Settings(), StatsCount));
       break;
     case PipelineType::QLearningAgentB2:
       pipeline.addStage(
-          std::make_unique<SynthesisStage>(getGenB2Settings(), StatsCount));
+          std::make_unique<SynthesisStage>(getQGenB2Settings(), StatsCount));
       break;
     case PipelineType::QLearningAgentB3:
       pipeline.addStage(
-          std::make_unique<SynthesisStage>(getGenB3Settings(), StatsCount));
+          std::make_unique<SynthesisStage>(getQGenB3Settings(), StatsCount));
+      break;
+    case PipelineType::SarsaAgentB1:
+      pipeline.addStage(std::make_unique<SynthesisStage>(
+          getSarsaGenB1Settings(), StatsCount));
+      break;
+    case PipelineType::SarsaAgentB2:
+      pipeline.addStage(std::make_unique<SynthesisStage>(
+          getSarsaGenB2Settings(), StatsCount));
+      break;
+    case PipelineType::SarsaAgentB3:
+      pipeline.addStage(std::make_unique<SynthesisStage>(
+          getSarsaGenB3Settings(), StatsCount));
       break;
     case PipelineType::GenerationCoverageBoxStats:
       if (pipeline.hasResults()) {
@@ -260,8 +363,6 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
       if (pipeline.hasResults()) {
         pipeline.addStage(std::make_unique<LinesBarPlotReportStage>());
       }
-      break;
-    default:
       break;
   }
   return pipeline;

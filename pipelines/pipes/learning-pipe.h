@@ -6,39 +6,37 @@
 #include "coverage/coverage.h"
 #include "recorder/recorder.h"
 
-#include "q-learning/q-learning.h"
+#include "agent-model/settings.h"
 
 namespace cider {
 namespace pipelines {
 
-class QPreLearningStage final : public Pipe {
+class PreLearningStage final : public Pipe {
  public:
-  QPreLearningStage(const qleaning::LearningSettings& settings);
+  PreLearningStage(const agent_model::LearningSettings& settings);
 
   bool process(const std::string& metadata,
                const std::string& libName,
                const cider::Cmd& cmd) override;
 
-  std::string getLetter() const override { return "QPL"; }
+  std::string getLetter() const override { return "PL"; }
 
  private:
-  qleaning::LearningSettings m_settings;
-  qleaning::QAgent& m_agent;
+  agent_model::LearningSettings m_settings;
 };
 
-class QLearningStage final : public Pipe {
+class LearningStage final : public Pipe {
  public:
-  explicit QLearningStage(const qleaning::LearningSettings& settings);
+  explicit LearningStage(const agent_model::LearningSettings& settings);
 
   bool process(const std::string& metadata,
                const std::string& libName,
                const cider::Cmd& cmd) override;
 
-  std::string getLetter() const override { return "QL"; }
+  std::string getLetter() const override { return "L"; }
 
  private:
-  qleaning::LearningSettings m_settings;
-  qleaning::QAgent& m_agent;
+  agent_model::LearningSettings m_settings;
 };
 
 }  // namespace pipelines

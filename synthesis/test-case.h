@@ -37,7 +37,7 @@ class TestScenario {
 
   std::optional<recorder::Action> getRandomAction() const;
 
-  bool isValid() const;
+  bool isValid(bool storeCoverage = true) const;
   bool isOver() const;
 
  protected:

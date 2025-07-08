@@ -8,7 +8,7 @@
 #include <fstream>
 
 namespace cider {
-namespace qleaning {
+namespace agent_model {
 
 class IResultsLogger {
  public:
@@ -29,5 +29,5 @@ class FileLogger : public IResultsLogger {
   mutable std::ofstream _report;
 };
 
-}  // namespace qleaning
+}  // namespace agent_model
 }  // namespace cider

@@ -25,9 +25,10 @@ struct MonteCarloSettings final {
 
 std::ostream& operator<<(std::ostream& os, const MonteCarloSettings& settings);
 
-std::vector<recorder::Action> run_mcts(std::mt19937& gen,
-                                       const MonteCarloSettings& settings,
-                                       const std::vector<recorder::Action>& input);
+std::vector<recorder::Action> run_mcts(
+    std::mt19937& gen,
+    const MonteCarloSettings& settings,
+    const std::vector<recorder::Action>& input);
 
 }  // namespace mcts
 }  // namespace cider

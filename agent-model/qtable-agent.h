@@ -3,12 +3,12 @@
 
 #pragma once
 
-#include "q-learning/agent.h"
+#include "agent-model/agent.h"
 
 #include <unordered_map>
 
 namespace cider {
-namespace qleaning {
+namespace agent_model {
 
 using QValues = std::unordered_map<recorder::Action,
                                    double,
@@ -20,7 +20,7 @@ using QTable = std::unordered_map<recorder::Actions,
                                   recorder::SemanticActionHash,
                                   recorder::SemanticEqualPred>;
 
-class QTableAgent final : public QAgent {
+class QTableAgent : public IAgent {
   static recorder::Actions getBestFromAvailable(
       const recorder::Actions& available,
       const QValues& values);
@@ -28,9 +28,8 @@ class QTableAgent final : public QAgent {
   std::optional<recorder::Action> findBestOrRandomAvailableAction(
       const Scenario& scenario) const;
 
+ protected:
   explicit QTableAgent(const std::string& path);
-
-  friend QAgent& getAgent(const std::string& path);
 
  public:
   bool isLoaded() const override { return m_loaded; }
@@ -47,23 +46,14 @@ class QTableAgent final : public QAgent {
   std::optional<recorder::Action> chooseGreedyAction(
       const Scenario& scenario) const override;
 
-  double updateQValues(const recorder::Actions& state,
-                       const recorder::Actions& nextState,
-                       const recorder::Action& action,
-                       const double reward,
-                       const double learningRate,
-                       const double discount) override;
-
   void print(std::ostream& os) const override;
 
-  std::mt19937& getSeed() override { return _gen; }
-
- private:
+ protected:
   QTable m_qtable;
 
   std::mt19937& _gen;
   bool m_loaded = false;
 };
 
-}  // namespace qleaning
+}  // namespace agent_model
 }  // namespace cider

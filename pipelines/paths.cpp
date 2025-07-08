@@ -8,9 +8,15 @@
 namespace cider {
 namespace paths {
 
-std::string getQTableAgentPath(const std::string& resultsDir) {
+std::string getQLearningAgentPath(const std::string& resultsDir) {
   std::filesystem::path outPath(resultsDir);
   outPath /= "qtable_agent.img";
+  return outPath.string();
+}
+
+std::string getSarsaAgentPath(const std::string& resultsDir) {
+  std::filesystem::path outPath(resultsDir);
+  outPath /= "sarsa_qtable_agent.img";
   return outPath.string();
 }
 

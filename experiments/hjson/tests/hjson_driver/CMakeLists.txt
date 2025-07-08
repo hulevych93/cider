@@ -10,7 +10,9 @@ target_link_libraries(hjson_driver PUBLIC
   metaheuristics
   pipelines
   hjson_tests
-  q-learning
+  agent-model
+  agent-q-learning
+  agent-sarsa-learning
   synthesis
   monte-carlo
   ${PLOT_LIBS}

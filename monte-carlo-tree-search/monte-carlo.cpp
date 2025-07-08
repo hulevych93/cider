@@ -10,6 +10,8 @@
 namespace cider {
 namespace mcts {
 
+constexpr bool MctsDebugEnable = false;
+
 std::ostream& operator<<(std::ostream& os, const MonteCarloSettings& settings) {
   os << "MCTS_";
   os << "maxIter[";
@@ -26,7 +28,7 @@ std::ostream& operator<<(std::ostream& os, const MonteCarloSettings& settings) {
 
 using TestCase = std::vector<recorder::Action>;
 
-struct MCTSNode {
+struct MCTSNode final {
   std::vector<recorder::Action> path;
   MCTSNode* parent = nullptr;
   std::unordered_map<recorder::Action,
@@ -66,7 +68,6 @@ double rollout(std::mt19937& gen,
                size_t max_depth,
                size_t max_rollback,
                const std::vector<recorder::Action>& actionSpace) {
-
   synthesis::TestScenario scenario(gen, actionSpace, objFunc);
   for (const auto& a : candidate) {
     scenario.add(a);
@@ -120,10 +121,11 @@ MCTSNode* MCTSNode::best_child_ucb(double c) {
     double ucb =
         q + c * std::sqrt(std::log(visits + 1.0) / (child->visits + 1e-4));
 
-//    std::cout << "[UCB] depth=" << child->path.size()
-//              << ", visits=" << child->visits
-//              << ", Q=" << q
-//              << ", UCB=" << ucb << "\n";
+    if (MctsDebugEnable) {
+      std::cout << "[UCB] depth=" << child->path.size()
+                << ", visits=" << child->visits << ", Q=" << q
+                << ", UCB=" << ucb << "\n";
+    }
 
     if (ucb > best_score) {
       best_score = ucb;

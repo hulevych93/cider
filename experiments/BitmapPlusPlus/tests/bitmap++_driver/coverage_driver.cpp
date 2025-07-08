@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
 
   std::vector<cider::recorder::ScriptRecordSessionPtr> sessions;
 
-  if (0) {
+  if (1) {
     RECORD_TEST_SCRIPT(LibraryName, test_chess_board, sessions);
     RECORD_TEST_SCRIPT(LibraryName, test_variant_shapes, sessions);
     RECORD_TEST_SCRIPT(LibraryName, test_polymorphic_shapes, sessions);

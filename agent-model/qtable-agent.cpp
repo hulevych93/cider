@@ -3,7 +3,7 @@
 
 #include "qtable-agent.h"
 
-#include "scenario.h"
+#include "agent-model/scenario.h"
 
 #include "serialization/deserializer.h"
 #include "serialization/serializer.h"
@@ -12,7 +12,7 @@
 #include <random>
 
 namespace cider {
-namespace qleaning {
+namespace agent_model {
 
 QTableAgent::QTableAgent(const std::string& path)
     : _gen(Seed::instance().get()), m_loaded(load(path)) {
@@ -187,38 +187,6 @@ std::optional<recorder::Action> QTableAgent::chooseBolzmanAction(
   return action;
 }
 
-double QTableAgent::updateQValues(const recorder::Actions& state,
-                                  const recorder::Actions& nextState,
-                                  const recorder::Action& action,
-                                  const double reward,
-                                  const double learningRate,
-                                  const double discount) {
-  auto& qValues = m_qtable[state];
-  auto& qValue = qValues[action];
-
-  double maxQValue = 0;
-  const auto qNextValuesIter = m_qtable.find(nextState);
-  if (qNextValuesIter != m_qtable.cend()) {
-    const auto& qNextValues = qNextValuesIter->second;
-    for (const auto& qNextValue : qNextValues) {
-      maxQValue = std::max(maxQValue, qNextValue.second);
-    }
-  }
-
-  std::cout << "lr: " << learningRate << ", r: " << reward
-            << ", mV: " << maxQValue << ", qv: " << qValue << " -> ";
-
-  qValue += learningRate * (reward + discount * maxQValue - qValue);
-
-  float target = reward + discount * maxQValue;
-  float loss = 0.5f * (qValue - target) * (qValue - target);
-
-  std::cout << qValue << ", target:" << target << ", loss: " << loss
-            << std::endl;
-
-  return loss;
-}
-
 void QTableAgent::print(std::ostream& ss) const {
   ss << "Q-table: " << m_qtable.size() << std::endl;
   for (const auto& entry : m_qtable) {
@@ -231,5 +199,5 @@ void QTableAgent::print(std::ostream& ss) const {
   }
 }
 
-}  // namespace qleaning
+}  // namespace agent_model
 }  // namespace cider

@@ -23,14 +23,23 @@ enum class PipelineType {
   MCTS0 = 30,
 
   QLearningAgentLearning = 50,
+  SarsaAgentLearning = 51,
 
   QLearningAgentG1 = 60,
   QLearningAgentG2 = 61,
   QLearningAgentG3 = 62,
 
+  SarsaAgentG1 = 65,
+  SarsaAgentG2 = 66,
+  SarsaAgentG3 = 67,
+
   QLearningAgentB1 = 70,
   QLearningAgentB2 = 71,
   QLearningAgentB3 = 72,
+
+  SarsaAgentB1 = 75,
+  SarsaAgentB2 = 76,
+  SarsaAgentB3 = 77,
 
   GenerationCoverageBoxStats = 90,
   GenerationCoverageStepperStats = 100,

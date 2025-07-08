@@ -9,7 +9,7 @@
 #include "coverage/logger.h"
 #include "metaheuristics/metasearch.h"
 
-#include "q-learning/logger.h"
+#include "agent-model/logger.h"
 
 namespace cider {
 namespace mathplot {

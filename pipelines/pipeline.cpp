@@ -3,12 +3,13 @@
 
 #include "pipeline.h"
 
-#include "coverage/cfg_measurer.h"
-#include "paths.h"
-#include "q-learning/q-learning.h"
+#include "agent-q-learning/q-learning-agent.h"
+#include "agent-sarsa-learning/sarsa-learning-agent.h"
 
 #include "coverage/cfg_measurer.h"
 #include "coverage/gcov_measurer.h"
+
+#include "paths.h"
 
 #include <chrono>
 #include <ctime>
@@ -74,7 +75,11 @@ const Results& Pipe::getResults() const {
 
 Pipeline::Pipeline(const std::string& libName, const cider::Cmd& cmd)
     : _libName(libName), _cmd(cmd) {
-  qleaning::getAgent(paths::getQTableAgentPath(cmd.resultsDir));
+  agent_model::qlearning::QLearningAgent::get(
+      paths::getQLearningAgentPath(cmd.resultsDir));
+
+  agent_model::sarsa::SarsaLearningAgent::get(
+      paths::getSarsaAgentPath(cmd.resultsDir));
 
   std::cout << "Load results: " << paths::getResultsPath(cmd.resultsDir)
             << ", status: " << load(paths::getResultsPath(cmd.resultsDir))

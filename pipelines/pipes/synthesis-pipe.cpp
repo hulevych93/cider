@@ -3,7 +3,7 @@
 
 #include "synthesis-pipe.h"
 
-#include "synthesis/q-synthesis.h"
+#include "synthesis/agent-synthesis.h"
 #include "synthesis/rand-synthesis.h"
 
 #include "coverage/cfg_measurer.h"

@@ -4,7 +4,7 @@
 #include "utils.h"
 
 namespace cider {
-namespace qleaning {
+namespace agent_model {
 
 MovingAverage::MovingAverage(size_t window_size)
     : window_size(window_size), sum(0.0f) {}
@@ -73,5 +73,5 @@ void EpsilonGreedyAdaptor::adapt(float current_loss) {
   previous_loss = current_loss;
 }
 
-}  // namespace qleaning
+}  // namespace agent_model
 }  // namespace cider

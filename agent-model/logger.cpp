@@ -7,7 +7,7 @@
 #include <iostream>
 
 namespace cider {
-namespace qleaning {
+namespace agent_model {
 
 FileLogger::FileLogger(const std::string& logDir,
                        const std::string& logFileName) {
@@ -28,5 +28,5 @@ void FileLogger::logLoss(size_t episode, double averageLoss) const {
           << "LOSS: " << averageLoss << std::endl;
 }
 
-}  // namespace qleaning
+}  // namespace agent_model
 }  // namespace cider

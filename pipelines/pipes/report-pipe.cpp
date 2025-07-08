@@ -5,10 +5,6 @@
 
 #include "recorder/details/generator.h"
 
-#include "q-learning/agent.h"
-#include "q-learning/q-learning.h"
-#include "q-learning/scenario.h"
-
 #include "coverage/cfg_measurer.h"
 #include "coverage/gcov_measurer.h"
 
@@ -20,8 +16,6 @@
 #endif
 
 #include <iostream>
-
-using namespace cider::qleaning;
 
 namespace cider {
 namespace pipelines {

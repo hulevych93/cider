@@ -8,7 +8,7 @@
 #include <iostream>
 
 namespace cider {
-namespace qleaning {
+namespace agent_model {
 
 class MovingAverage {
  public:
@@ -139,5 +139,5 @@ class AdvancedAdaptiveLearningRate final {
   std::deque<float> reward_buffer;
 };
 
-}  // namespace qleaning
+}  // namespace agent_model
 }  // namespace cider

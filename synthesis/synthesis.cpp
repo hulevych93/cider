@@ -32,6 +32,47 @@ std::ostream& operator<<(std::ostream& os,
   return os;
 }
 
+std::ostream& operator<<(std::ostream& os,
+                         const AgentSynthesisSettings& settings) {
+  os << "GEN_";
+  std::string strategyName;
+  std::string stopType;
+
+  switch (settings.strategy) {
+    case GenerationStrategyType::Greedy:
+      strategyName = "Greedy";
+      break;
+    case GenerationStrategyType::EGreedy:
+      strategyName = "E-Greedy";
+      break;
+    case GenerationStrategyType::Boltzmann:
+      strategyName = "Boltzmann";
+      break;
+    default:
+      strategyName = "Unknown";
+  }
+
+  switch (settings.stopType) {
+    case synthesis::StopCondition::LimitActions:
+      stopType = "LimitActions";
+      break;
+    case synthesis::StopCondition::GreaterCoverage:
+      stopType = "GreaterCoverage";
+      break;
+    default:
+      strategyName = "Unknown";
+  }
+
+  os << "st[" << strategyName;
+  os << "]_eps[" << settings.epsilon;
+  os << "]_temp[" << settings.temperature;
+  os << "]_maxSt[" << settings.maxRollback;
+  os << "]_stType[" << stopType;
+  os << "]_lim[" << settings.limitActions;
+  os << "]";
+  return os;
+}
+
 namespace details {
 
 bool synthesize(const SynthesisSettingsBasic& settings,

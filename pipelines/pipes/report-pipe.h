@@ -4,9 +4,6 @@
 #include "pipelines/pipeline.h"
 
 #include "coverage/coverage.h"
-#include "recorder/recorder.h"
-
-#include "q-learning/q-learning.h"
 
 namespace cider {
 namespace pipelines {

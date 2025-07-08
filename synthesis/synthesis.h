@@ -33,17 +33,23 @@ std::ostream& operator<<(std::ostream& os,
 
 enum class GenerationStrategyType { Greedy, EGreedy, Boltzmann };
 
-struct QSynthesisSettings final : SynthesisSettingsBasic {
+struct AgentSynthesisSettings : SynthesisSettingsBasic {
   GenerationStrategyType strategy = GenerationStrategyType::Greedy;
-  float epsilon = 0.1f;      // for ε-Greedy
-  float temperature = 1.0f;  // for Boltzmann
+  float epsilon = 0.1f;
+  float temperature = 1.0f;
   size_t maxStateDepth = 5U;
 };
 
+std::ostream& operator<<(std::ostream& os,
+                         const AgentSynthesisSettings& settings);
+
+struct QSynthesisSettings final : AgentSynthesisSettings {};
+struct SarsaSynthesisSettings final : AgentSynthesisSettings {};
+
 struct RandSynthesisSettings final : SynthesisSettingsBasic {};
 
-using SynthesisSettings =
-    std::variant<RandSynthesisSettings, QSynthesisSettings>;
+using SynthesisSettings = std::
+    variant<RandSynthesisSettings, QSynthesisSettings, SarsaSynthesisSettings>;
 
 namespace details {
 
