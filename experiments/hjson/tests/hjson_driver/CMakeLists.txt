@@ -12,6 +12,7 @@ target_link_libraries(hjson_driver PUBLIC
   hjson_tests
   q-learning
   synthesis
+  monte-carlo
   ${PLOT_LIBS}
 )
 
@@ -36,6 +37,8 @@ endfunction()
 add_hjson_run_target(HS 0)
 add_hjson_run_target(CS 10)
 add_hjson_run_target(RAND 20)
+
+add_hjson_run_target(MCTS0 30)
 
 add_hjson_run_target(QLEARNING 50)
 

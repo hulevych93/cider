@@ -4,6 +4,7 @@
 #include "pipeline.h"
 
 #include "pipes/dataset-pipe.h"
+#include "pipes/mcts-pipe.h"
 #include "pipes/meta-pipe.h"
 #include "pipes/q-learning-pipe.h"
 #include "pipes/report-pipe.h"
@@ -63,6 +64,20 @@ auto getHS2Settings() {
   return settings;
 }
 
+auto getHS3Settings() {
+  metasearch::harmony_synthesis::Settings settings;
+  settings.configName = "HS3";
+  settings.mutationRate = 0.15;
+  settings.harmonyMemoryConsiderationRate = 0.4;
+  settings.harmonyMemorySize = 10;
+  settings.maxIterationsWithoutUpdates = 300;
+  settings.maxIter = 1000U;
+  settings.strategy = cider::metasearch::ArgsMutationStrategy::LevyFlight;
+  settings.instructionsMutationStrategy =
+      cider::metasearch::InstructionsMutationStrategy::Shuffle;
+  return settings;
+}
+
 auto getCackooSettings() {
   metasearch::cuckoo::Settings settings;
   settings.configName = "CS0";
@@ -71,6 +86,16 @@ auto getCackooSettings() {
   settings.maxIterationsWithoutUpdates = 50;
   settings.maxIter = 1000U;
   settings.strategy = cider::metasearch::ArgsMutationStrategy::LevyFlight;
+  return settings;
+}
+
+auto getMCTS0Settings() {
+  mcts::MonteCarloSettings settings;
+  settings.configName = "MCTS0";
+  settings.maxIter = 100;
+  settings.maxDepth = 25;
+  settings.ucb_C = 1.4;
+  settings.maxRollback = 20;
   return settings;
 }
 
@@ -152,7 +177,7 @@ auto getRandSettings(size_t lines = 250) {
   return settings;
 }
 
-constexpr const int StatsCount = 50U;
+constexpr const int StatsCount = 1U;
 
 }  // namespace
 
@@ -175,6 +200,10 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
       pipeline.addStage(
           std::make_unique<MetaSearchStage>(getHS2Settings(), StatsCount));
       break;
+    case PipelineType::HS3:
+      pipeline.addStage(
+          std::make_unique<MetaSearchStage>(getHS3Settings(), StatsCount));
+      break;
     case PipelineType::CackooSearch:
       pipeline.addStage(
           std::make_unique<MetaSearchStage>(getCackooSettings(), StatsCount));
@@ -182,6 +211,10 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
     case PipelineType::GRAND:
       pipeline.addStage(
           std::make_unique<SynthesisStage>(getRandSettings(), StatsCount));
+      break;
+    case PipelineType::MCTS0:
+      pipeline.addStage(
+          std::make_unique<MctsSearchStage>(getMCTS0Settings(), StatsCount));
       break;
     case PipelineType::QLearningAgentLearning:
       pipeline.addStage(

@@ -55,6 +55,7 @@ add_subdirectory(coverage)
 add_subdirectory(serialization)
 add_subdirectory(metaheuristics)
 add_subdirectory(q-learning)
+add_subdirectory(monte-carlo-tree-search)
 add_subdirectory(pipelines)
 
 add_subdirectory(tools/cider)

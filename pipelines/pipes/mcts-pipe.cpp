@@ -1,7 +1,7 @@
 // Copyright (C) 2022-2025 Hulevych Mykhailo
 // SPDX-License-Identifier: MIT
 
-#include "meta-pipe.h"
+#include "mcts-pipe.h"
 
 #include <filesystem>
 #include <fstream>
@@ -9,13 +9,6 @@
 
 #include "coverage/cfg_measurer.h"
 #include "coverage/gcov_measurer.h"
-
-#include "metaheuristics/cuckoo/cuckoo.h"
-#include "metaheuristics/harmony/harmony.h"
-#include "metaheuristics/harmony/harmony_synthesis.h"
-
-#include "recorder/details/generator.h"
-#include "recorder/recorder.h"
 
 #ifdef ENABLE_MATHPLOT
 #include "mathplot-log/monitoring/metasearch-basic-block-cov-plot.h"
@@ -29,34 +22,20 @@ namespace pipelines {
 namespace {
 
 template <typename CoverageMetricsType, typename SettingsType>
-bool makeMetaPipeline(SettingsType settings,
+bool makeMctsPipeline(SettingsType settings,
                       const std::string& metadata,
                       const std::string& libName,
                       const cider::Cmd& cmd,
-                      const std::function<recorder::Actions()>& callback,
+                      const recorder::Actions& input,
                       recorder::Actions& output) {
   try {
     CoverageMetricsType measurer{cmd, libName.c_str()};
-
-    std::unique_ptr<cider::metasearch::IMetaSearch> metaSearch;
 
     std::stringstream os;
     os << settings;
     auto prefix = os.str();
 
-    settings.objFunc = std::ref(measurer);
-
-    if constexpr (std::is_same_v<SettingsType, metasearch::harmony::Settings>) {
-      metaSearch = std::make_unique<metasearch::harmony::Search>(settings);
-    } else if constexpr (std::is_same_v<SettingsType,
-                                        metasearch::cuckoo::Settings>) {
-      metaSearch = std::make_unique<metasearch::cuckoo::Search>(settings);
-    } else if constexpr (std::is_same_v<
-                             SettingsType,
-                             metasearch::harmony_synthesis::Settings>) {
-      metaSearch =
-          std::make_unique<metasearch::harmony_synthesis::Search>(settings);
-    }
+    settings.objFunc = measurer.getObjValueFunc();
 
     std::filesystem::path outPath(cmd.resultsDir);
     outPath /= metadata;
@@ -64,18 +43,8 @@ bool makeMetaPipeline(SettingsType settings,
 
     measurer.setLogger(outPath.string(), "meta_log.txt");
 
-#ifdef ENABLE_MATHPLOT
-    metaSearch->setLogger(
-        std::make_unique<cider::mathplot::BasicBlockCovLogger>(
-            outPath, "meta_search.png"));
-#endif
+    output = mcts::run_mcts(Seed::instance().get(), settings, input);
 
-    metaSearch->initialize(callback);
-    metaSearch->run();
-
-    const auto& bestActions = metaSearch->getBest().actions;
-
-    output = bestActions;
   } catch (const std::exception& e) {
     std::cerr << e.what();
     return false;
@@ -86,11 +55,11 @@ bool makeMetaPipeline(SettingsType settings,
 
 }  // namespace
 
-MetaSearchStage::MetaSearchStage(const metasearch::MetaSettings& settings,
+MctsSearchStage::MctsSearchStage(const mcts::MonteCarloSettings& settings,
                                  int numberOfRuns)
     : m_settings(settings), _numberOfRuns(numberOfRuns) {}
 
-bool MetaSearchStage::process(const std::string& metadata,
+bool MctsSearchStage::process(const std::string& metadata,
                               const std::string& libName,
                               const cider::Cmd& cmd) {
   bool success = false;
@@ -100,13 +69,8 @@ bool MetaSearchStage::process(const std::string& metadata,
     auto start = std::chrono::steady_clock::now();
     recorder::Actions output;
 
-    std::visit(
-        [&](const auto& settings) {
-          success = makeMetaPipeline<cfg_coverage::CoverageMeasurment>(
-              settings, metadata, libName, cmd,
-              [input]() { return deepCopy(input.actions); }, output);
-        },
-        m_settings);
+    success = makeMctsPipeline<cfg_coverage::CoverageMeasurment>(
+        m_settings, metadata, libName, cmd, input.actions, output);
 
     auto end = std::chrono::steady_clock::now();
     unsigned long elapsed_ms =
@@ -125,9 +89,8 @@ bool MetaSearchStage::process(const std::string& metadata,
   return success;
 }
 
-std::string MetaSearchStage::getConfigName() const {
-  return std::visit([&](const auto& settings) { return settings.configName; },
-                    m_settings);
+std::string MctsSearchStage::getConfigName() const {
+  return m_settings.configName;
 }
 
 }  // namespace pipelines

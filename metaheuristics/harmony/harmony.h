@@ -17,7 +17,7 @@ std::ostream& operator<<(std::ostream& os, const Settings& settings);
 
 using Harmony = Solution;
 
-class Search final : public IMetaSearch {
+class Search : public IMetaSearch {
  public:
   explicit Search(const Settings& settings);
 
@@ -31,16 +31,16 @@ class Search final : public IMetaSearch {
     _logger = std::move(logger);
   }
 
- private:
-  Harmony generateHarmony(const Harmony& harmony) const;
-  std::optional<Harmony> mutateHarmony(const Harmony& harmony) const;
+ protected:
+  virtual Harmony generateHarmony(const Harmony& harmony) const;
+  virtual std::optional<Harmony> mutateHarmony(const Harmony& harmony) const;
   bool updateHarmonyMemory(const Harmony& harmony);
 
   Harmony& getWorst();
 
   void dump();
 
- private:
+ protected:
   std::mt19937& _gen;
 
   Settings _settings;

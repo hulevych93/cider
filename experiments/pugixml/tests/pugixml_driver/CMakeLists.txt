@@ -12,6 +12,7 @@ target_link_libraries(pugixml_driver PUBLIC
   pugixml_tests
   q-learning
   synthesis
+  monte-carlo
   ${PLOT_LIBS}
 )
 

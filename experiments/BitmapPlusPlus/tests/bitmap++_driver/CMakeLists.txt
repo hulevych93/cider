@@ -12,6 +12,7 @@ target_link_libraries(bitmap++_driver PUBLIC
   bitmap++_tests
   q-learning
   synthesis
+  monte-carlo
   ${PLOT_LIBS}
 )
 
@@ -36,9 +37,12 @@ endfunction()
 add_bitmap_run_target(HS 0)
 add_bitmap_run_target(HS1 1)
 add_bitmap_run_target(HS2 2)
+add_bitmap_run_target(HS3 3)
 
 add_bitmap_run_target(CS 10)
 add_bitmap_run_target(RAND 20)
+
+add_bitmap_run_target(MCTS0 30)
 
 add_bitmap_run_target(QL 50)
 

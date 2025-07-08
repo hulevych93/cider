@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
 
   std::vector<cider::recorder::ScriptRecordSessionPtr> sessions;
 
-  if (0) {
+  if (1) {
     const auto callback = [&](const char* testName,
                               const std::function<void()>& f) {
       cider::recorder::recordScript(LibraryName, testName, sessions, f);

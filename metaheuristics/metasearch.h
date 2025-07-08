@@ -92,7 +92,7 @@ struct Settings final {
 
 namespace harmony {
 
-struct Settings final {
+struct Settings {
   const char* configName = "HS_NAN";
   int harmonyMemorySize = 10;
   double harmonyMemoryConsiderationRate = 0.95;
@@ -107,7 +107,14 @@ struct Settings final {
 
 }  // namespace harmony
 
-using MetaSettings = std::variant<harmony::Settings, cuckoo::Settings>;
+namespace harmony_synthesis {
+
+struct Settings final : harmony::Settings {};
+
+}  // namespace harmony_synthesis
+
+using MetaSettings = std::
+    variant<harmony::Settings, cuckoo::Settings, harmony_synthesis::Settings>;
 
 }  // namespace metasearch
 }  // namespace cider

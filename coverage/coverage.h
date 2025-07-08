@@ -14,10 +14,13 @@ enum class PipelineType {
   HS0 = 0,
   HS1 = 1,
   HS2 = 2,
+  HS3 = 3,
 
   CackooSearch = 10,
 
   GRAND = 20,
+
+  MCTS0 = 30,
 
   QLearningAgentLearning = 50,
 
