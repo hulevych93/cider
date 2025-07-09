@@ -112,9 +112,9 @@ auto getSarsaLearningSettings() {
   settings.configName = "SARSA";
   settings.discountFactor = 0.85;
   settings.learningRate = 0.1;
-  settings.episodes = 500;
+  settings.episodes = 1000;
   settings.maxRollback = 20U;
-  settings.maxStateDepth = 10U;
+  settings.maxStateDepth = 5U;
   return settings;
 }
 

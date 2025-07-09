@@ -7,7 +7,12 @@
 #include <numeric>
 #include <vector>
 
+#include <pybind11/embed.h>
+namespace py = pybind11;
+using namespace py::literals;
+
 #include <filesystem>
+#include <iostream>
 
 namespace cider {
 
@@ -135,6 +140,64 @@ std::string ensurePath(const std::string& logDir,
   std::filesystem::create_directories(outPath);
   outPath /= logFileName;
   return outPath.string();
+}
+
+double mann_whitney_u(const std::vector<double>& group1,
+                      const std::vector<double>& group2,
+                      const std::string& alternative) {
+  try {
+    py::module_ stats = py::module_::import("scipy.stats");
+
+    py::list py_group1;
+    for (double val : group1)
+      py_group1.append(val);
+
+    py::list py_group2;
+    for (double val : group2)
+      py_group2.append(val);
+
+    py::object result = stats.attr("mannwhitneyu")(
+        py_group1, py_group2, py::arg("alternative") = alternative);
+
+    return result.attr("pvalue").cast<double>();
+  } catch (const py::error_already_set& e) {
+    return -1.0;
+  }
+}
+
+void applyPublicationStyle() {
+  try {
+    py::module_ plt = py::module_::import("matplotlib.pyplot");
+
+    py::object ax = plt.attr("gca")();
+
+    ax.attr("grid")(true, "which"_a = "both", "axis"_a = "both");
+
+    ax.attr("set_axisbelow")(true);  // grid below boxes
+    py::object gridlines = ax.attr("get_xgridlines")();
+    for (auto g : gridlines) {
+      g.attr("set_linestyle")("--");
+      g.attr("set_linewidth")(0.6);
+      g.attr("set_alpha")(0.6);
+      g.attr("set_color")("gray");
+    }
+
+    gridlines = ax.attr("get_ygridlines")();
+    for (auto g : gridlines) {
+      g.attr("set_linestyle")("--");
+      g.attr("set_linewidth")(0.6);
+      g.attr("set_alpha")(0.6);
+      g.attr("set_color")("gray");
+    }
+
+    ax.attr("tick_params")("direction"_a = "in", "axis"_a = "both");
+
+    ax.attr("spines")["top"].attr("set_visible")(false);
+    ax.attr("spines")["right"].attr("set_visible")(false);
+
+  } catch (const std::exception& e) {
+    std::cerr << "Style error: " << e.what() << std::endl;
+  }
 }
 
 }  // namespace cider

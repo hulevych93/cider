@@ -3,6 +3,9 @@
 
 #include "pipelines/pipeline.h"
 
+#include <pybind11/embed.h>
+namespace py = pybind11;
+
 #include <iostream>
 
 extern int test_chess_board();
@@ -24,13 +27,15 @@ static void bitmap_cplusplus() {
 }
 
 int main(int argc, char* argv[]) {
+  py::scoped_interpreter guard{};
+
   constexpr const char* LibraryName = "bitmap_cplusplus";
 
   cider::Cmd cmd(argc, argv);
 
   std::vector<cider::recorder::ScriptRecordSessionPtr> sessions;
 
-  if (1) {
+  if (0) {
     RECORD_TEST_SCRIPT(LibraryName, test_chess_board, sessions);
     RECORD_TEST_SCRIPT(LibraryName, test_variant_shapes, sessions);
     RECORD_TEST_SCRIPT(LibraryName, test_polymorphic_shapes, sessions);

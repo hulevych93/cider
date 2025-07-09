@@ -140,7 +140,7 @@ bool BoxPlotReportStage::process(const std::string& metadata,
     const auto& name = resIt.first;
     const auto& res = resIt.second;
 
-    processBest(name, res, 30, handleResult);
+    processBest(name, res, 15, handleResult);
   }
 
   brCovLogger->plot();

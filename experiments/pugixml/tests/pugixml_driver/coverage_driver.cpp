@@ -3,6 +3,9 @@
 
 #include "pipelines/pipeline.h"
 
+#include <pybind11/embed.h>
+namespace py = pybind11;
+
 #include <iostream>
 
 extern int run_tests(const char* temp_);
@@ -12,6 +15,8 @@ extern int run_tests(
     const std::function<int(const char* name, std::function<int()>)>& callback);
 
 int main(int argc, char* argv[]) {
+  py::scoped_interpreter guard{};
+
   constexpr const char* LibraryName = "pugixml";
 
   cider::Cmd cmd(argc, argv);

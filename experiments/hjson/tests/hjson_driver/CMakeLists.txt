@@ -5,6 +5,8 @@ cider_project(hjson_driver)
 
 add_executable(hjson_driver coverage_driver.cpp)
 
+target_include_directories(hjson_driver PRIVATE ${Python3_INCLUDE_DIRS} ${PyBind_INCLUDE_DIRS})
+
 target_link_libraries(hjson_driver PUBLIC
   coverage
   metaheuristics
@@ -37,20 +39,33 @@ function(add_hjson_run_target target_name mode)
 endfunction()
 
 add_hjson_run_target(HS 0)
+add_hjson_run_target(HS1 1)
+add_hjson_run_target(HS2 2)
+add_hjson_run_target(HS3 3)
+
 add_hjson_run_target(CS 10)
 add_hjson_run_target(RAND 20)
 
 add_hjson_run_target(MCTS0 30)
 
-add_hjson_run_target(QLEARNING 50)
+add_hjson_run_target(QL 50)
+add_hjson_run_target(SARSA 51)
 
 add_hjson_run_target(QLG1 60)
 add_hjson_run_target(QLG2 61)
 add_hjson_run_target(QLG3 62)
 
+add_hjson_run_target(SLG1 65)
+add_hjson_run_target(SLG2 66)
+add_hjson_run_target(SLG3 67)
+
 add_hjson_run_target(QLB1 70)
 add_hjson_run_target(QLB2 71)
 add_hjson_run_target(QLB3 72)
+
+add_hjson_run_target(SLB1 75)
+add_hjson_run_target(SLB2 76)
+add_hjson_run_target(SLB3 77)
 
 add_hjson_run_target(CBOX 90)
 add_hjson_run_target(CSTEP 100)

@@ -61,9 +61,9 @@ recorder::Actions TestScenario::getResult() const {
 bool TestScenario::isValid(bool storeCoverage) const {
   const auto objValue = _objFunc(_actions);
   if (objValue.coverage > std::numeric_limits<double>::epsilon()) {
-      if(storeCoverage) {
-        _lastObjVal = objValue;
-      }
+    if (storeCoverage) {
+      _lastObjVal = objValue;
+    }
     return true;
   }
   return false;

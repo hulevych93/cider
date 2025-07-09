@@ -5,6 +5,8 @@ cider_project(bitmap++_driver)
 
 add_executable(bitmap++_driver coverage_driver.cpp)
 
+target_include_directories(bitmap++_driver PRIVATE ${Python3_INCLUDE_DIRS} ${PyBind_INCLUDE_DIRS})
+
 target_link_libraries(bitmap++_driver PUBLIC
   coverage
   metaheuristics

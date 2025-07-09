@@ -74,58 +74,56 @@ void learningSession(const SarsaLearningSettings& settings,
     float total_reward = 0.0f;
 
     const auto chooseValidAction = [&]() -> std::optional<recorder::Action> {
-        size_t rollback = 0;
-        while (true) {
-            auto actionOpt = agent.chooseEGreedyAction(scenario, expRate);
-            if (!actionOpt.has_value())
-            {
-                rollback++;
-                if (rollback > settings.maxRollback) {
-                    return std::nullopt;
-                }
-                continue;
-            }
-
-            scenario.add(actionOpt.value());
-            if (!scenario.isValid(false)) {
-                scenario.rollback();
-                rollback++;
-                if (rollback > settings.maxRollback) {
-                    return std::nullopt;
-                }
-                continue;
-            }
-
-            scenario.rollback();
-            return actionOpt;
+      size_t rollback = 0;
+      while (true) {
+        auto actionOpt = agent.chooseEGreedyAction(scenario, expRate);
+        if (!actionOpt.has_value()) {
+          rollback++;
+          if (rollback > settings.maxRollback) {
+            return std::nullopt;
+          }
+          continue;
         }
+
+        scenario.add(actionOpt.value());
+        if (!scenario.isValid(false)) {
+          scenario.rollback();
+          rollback++;
+          if (rollback > settings.maxRollback) {
+            return std::nullopt;
+          }
+          continue;
+        }
+
+        scenario.rollback();
+        return actionOpt;
+      }
     };
 
     auto actionOpt = chooseValidAction();
-    if(!actionOpt.has_value()) {
-        break;
+    if (!actionOpt.has_value()) {
+      break;
     }
 
     auto action = actionOpt.value();
     auto state = scenario.getCurrentState();
 
     while (!scenario.isOver()) {
-
       scenario.add(action);
       const auto nextState = scenario.getCurrentState();
 
       auto actionOpt = chooseValidAction();
-      if(!actionOpt.has_value()) {
-          break;
+      if (!actionOpt.has_value()) {
+        break;
       }
       const auto nextAction = actionOpt.value_or(recorder::Action{});
 
       const auto rewardOpt = scenario.getReward();
       assert(rewardOpt.has_value());
 
-      const auto loss = agent.updateQValues(state, nextState,
-                                            action, nextAction, rewardOpt.value(),
-                                            learningRate, settings.discountFactor);
+      const auto loss = agent.updateQValues(
+          state, nextState, action, nextAction, rewardOpt.value(), learningRate,
+          settings.discountFactor);
       smoothLoss.add_value(loss);
       total_reward += rewardOpt.value();
 

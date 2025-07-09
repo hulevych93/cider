@@ -2,50 +2,17 @@
 // SPDX-License-Identifier: MIT
 #pragma once
 
+#include "recorder/recorder.h"
+
 #include "coverage/coverage.h"
 
 #include "coverage/gcov_coverage.h"
 
-#include "metaheuristics/metasearch.h"
-
-#include "serialization/deserializer.h"
-#include "serialization/serializer.h"
-
-#include "recorder/recorder.h"
-
+#include "pipe.h"
 #include "results.h"
 
 namespace cider {
 namespace pipelines {
-
-class Pipeline;
-
-class Pipe {
- public:
-  virtual ~Pipe() = default;
-
-  virtual bool process(const std::string& metadata,
-                       const std::string& libName,
-                       const cider::Cmd& cmd) = 0;
-
-  virtual std::string getLetter() const = 0;
-
- protected:
-  friend class Pipeline;
-
-  void setOwner(Pipeline* owner) { _owner = owner; }
-
-  void pushResult(const std::string& libName,
-                  const cider::Cmd& cmdl,
-                  const std::string& methodName,
-                  Result result);
-
-  const Input& getInput() const;
-  const Results& getResults() const;
-
- private:
-  Pipeline* _owner = nullptr;
-};
 
 class Pipeline final {
   friend class Pipe;

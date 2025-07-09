@@ -27,6 +27,7 @@ add_subdirectory(thirdparty/lua)
 add_subdirectory(thirdparty/cppast)
 add_subdirectory(thirdparty/cxxopts)
 add_subdirectory(thirdparty/nlohmann)
+add_subdirectory(thirdparty/pybind)
 add_subdirectory(thirdparty/tpl)
 
 if(ENABLE_MATHPLOT_LOG)

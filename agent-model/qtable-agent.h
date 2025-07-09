@@ -48,7 +48,10 @@ class QTableAgent : public IAgent {
 
   void print(std::ostream& os) const override;
 
+  size_t getMaxStateDepth() const override { return m_maxStateDepth; }
+
  protected:
+  size_t m_maxStateDepth = 0U;
   QTable m_qtable;
 
   std::mt19937& _gen;

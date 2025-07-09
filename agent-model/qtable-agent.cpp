@@ -23,6 +23,12 @@ bool QTableAgent::load(const std::string& filePath) {
   try {
     serialization::Deserializer deserializer(filePath);
     deserializer >> m_qtable;
+
+    for (const auto& entry : m_qtable) {
+      m_maxStateDepth = std::max(m_maxStateDepth, entry.first.size());
+    }
+    std::cout << "Max recorder::Actions size: " << m_maxStateDepth << std::endl;
+
   } catch (const std::exception& e) {
     std::cout << e.what() << std::endl;
     return false;

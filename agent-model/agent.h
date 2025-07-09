@@ -36,6 +36,8 @@ class IAgent {
 
   virtual bool load(const std::string& filePath) = 0;
   virtual bool save(const std::string& filePath) const = 0;
+
+  virtual size_t getMaxStateDepth() const = 0;
 };
 
 }  // namespace agent_model

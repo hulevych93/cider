@@ -41,7 +41,10 @@ bool synthesize(std::mt19937& gen,
                 recorder::Actions& out) {
   out.clear();
 
-  agent_model::Scenario scenario(gen, settings.maxStateDepth, initial, objFunc);
+  const auto maxStateDepth = agent.getMaxStateDepth();
+  assert(maxStateDepth > 0);
+
+  agent_model::Scenario scenario(gen, maxStateDepth, initial, objFunc);
 
   const auto actionChoosing = [&](const synthesis::TestScenario& testCase) {
     const auto& scenario = dynamic_cast<const agent_model::Scenario&>(testCase);

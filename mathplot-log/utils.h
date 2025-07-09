@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <string>
 #include <vector>
 
 namespace cider {
@@ -42,5 +43,11 @@ std::string ensurePngExtension(const std::string& path);
 
 std::string ensurePath(const std::string& logDir,
                        const std::string& logFileName);
+
+double mann_whitney_u(const std::vector<double>& group1,
+                      const std::vector<double>& group2,
+                      const std::string& alternative = "two-sided");
+
+void applyPublicationStyle();
 
 }  // namespace cider

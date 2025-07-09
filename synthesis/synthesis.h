@@ -37,7 +37,6 @@ struct AgentSynthesisSettings : SynthesisSettingsBasic {
   GenerationStrategyType strategy = GenerationStrategyType::Greedy;
   float epsilon = 0.1f;
   float temperature = 1.0f;
-  size_t maxStateDepth = 5U;
 };
 
 std::ostream& operator<<(std::ostream& os,

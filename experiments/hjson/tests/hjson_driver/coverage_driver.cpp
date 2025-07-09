@@ -3,6 +3,9 @@
 
 #include "pipelines/pipeline.h"
 
+#include <pybind11/embed.h>
+namespace py = pybind11;
+
 #include <iostream>
 
 extern void run_tests(
@@ -10,6 +13,8 @@ extern void run_tests(
         callback);
 
 int main(int argc, char* argv[]) {
+  py::scoped_interpreter guard{};
+
   constexpr const char* LibraryName = "hjson";
 
   cider::Cmd cmd(argc, argv);

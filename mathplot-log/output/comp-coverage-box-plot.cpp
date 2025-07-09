@@ -39,7 +39,7 @@ CoverageBoxPlot::CoverageBoxPlot(const std::string& logDir,
                                  const std::string& logFileName,
                                  PlotType type)
     : _type(type), m_path(ensurePath(logDir, logFileName)) {
-  plt::figure_size(1120, 640);
+  plt::figure_size(2140, 640);
 }
 CoverageBoxPlot::~CoverageBoxPlot() {
   save();
@@ -100,8 +100,13 @@ void CoverageBoxPlot::plot() const {
   for (size_t i = 0; i < _boxData.size(); ++i)
     xticks[i] = i + 1;
 
-  const auto printStats = [](std::vector<double>& data, double x) {
+  double maxTop = 0.0;
+
+  const auto printStats = [&maxTop](std::vector<double>& data, double x) {
     BoxStats stats = compute_box(data);
+
+    if (stats.upper_whisker > maxTop)
+      maxTop = stats.upper_whisker;
 
     auto add_label = [](double x, double y, double value,
                         const std::string& text) {
@@ -118,26 +123,73 @@ void CoverageBoxPlot::plot() const {
     add_label(x, y + deltaY * 2, stats.q3, "Q3");
     add_label(x, y + deltaY * 3, stats.lower_whisker, "Lower");
     add_label(x, y + deltaY * 4, stats.upper_whisker, "Upper");
+
+    return y + deltaY * 5;
   };
 
   int idx = 1;
   const double offsetBase = 0.25;
-  for (auto& plotData : plotDatas) {
-    printStats(plotData, idx + offsetBase);
-    std::cout << labels[idx - 1] << " ";
-    std::for_each(plotData.cbegin(), plotData.cend(),
-                  [](auto val) { std::cout << val << " "; });
-    std::cout << std::endl;
-    idx++;
+  std::vector<double> yOffsets;
+
+  for (size_t i = 0; i < plotDatas.size(); ++i) {
+    auto& plotData = plotDatas[i];
+    double y = printStats(plotData, idx + offsetBase);
+
+    yOffsets.push_back(y);
+    ++idx;
   }
 
-  plt::boxplot(plotDatas, labels, false, {{"patch_artist", "True"}});
+  // === Mann–Whitney U + Bonferroni correction ===
+  const size_t numGroups = plotDatas.size();
+  const size_t numTests = numGroups * (numGroups - 1) / 2;
+  const double alpha = 0.05;
+  const double adjusted_alpha = alpha / numTests;
+
+  // === Pairwise significance lines ===
+  const double baseHeight = maxTop + 20.0;
+  const double stepHeight = 5.0;
+
+  int pairIdx = 0;
+  for (size_t i = 0; i < numGroups; ++i) {
+    for (size_t j = i + 1; j < numGroups; ++j) {
+      try {
+        double p = mann_whitney_u(plotDatas[i], plotDatas[j], "two-sided");
+
+        std::ostringstream label;
+        label << "p = " << std::fixed << std::setprecision(4) << p;
+        if (p < adjusted_alpha)
+          label << " *";
+        else
+          label << " ns";
+
+        double x1 = i + 1;
+        double x2 = j + 1;
+        double y = baseHeight + pairIdx * stepHeight;
+
+        plt::plot({x1, x1}, {y - 0.8, y}, "k-");
+        plt::plot({x2, x2}, {y - 0.8, y}, "k-");
+
+        plt::plot({x1, x2}, {y, y}, "k-");
+
+        plt::text((x1 + x2) / 2.0, y + 0.8, label.str());
+
+        ++pairIdx;
+      } catch (const std::exception& e) {
+        std::cerr << "Mann–Whitney error: " << e.what() << std::endl;
+      }
+    }
+  }
+
+  plt::boxplot(plotDatas, labels, true, {{"patch_artist", "True"}});
   plt::xticks(xticks, labels);
 
   plt::ylabel(getYAxisName(_type));
   plt::ylim(0.0, 100.0);
 
-  plt::pause(0.01);  // Allow time for GUI to update
+  plt::grid(true);
+
+  applyPublicationStyle();
+  plt::pause(0.01);
 }
 
 }  // namespace mathplot

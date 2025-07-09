@@ -56,8 +56,7 @@ void learningSession(const QLearningSettings& settings,
   QLearningAgent& agent = QLearningAgent::get();
 
   for (int i = 0; i < settings.episodes; ++i) {
-
-      const auto learningRate =
+    const auto learningRate =
         settings.learningRate + (double(i) / settings.episodes) * 0.9f;
     const auto expRate = 0.8f - (double(i) / settings.episodes) * 0.8f;
 
@@ -77,38 +76,37 @@ void learningSession(const QLearningSettings& settings,
     ExponentialMovingAverage smoothLoss(0.5);
 
     const auto chooseValidAction = [&]() -> std::optional<recorder::Action> {
-        size_t rollback = 0;
-        while (true) {
-            auto actionOpt = agent.chooseEGreedyAction(scenario, expRate);
-            if (!actionOpt.has_value())
-            {
-                rollback++;
-                if (rollback > settings.maxRollback) {
-                    return std::nullopt;
-                }
-                continue;
-            }
-
-            scenario.add(actionOpt.value());
-            if (!scenario.isValid(false)) {
-                scenario.rollback();
-                rollback++;
-                if (rollback > settings.maxRollback) {
-                    return std::nullopt;
-                }
-                continue;
-            }
-
-            scenario.rollback();
-            return actionOpt;
+      size_t rollback = 0;
+      while (true) {
+        auto actionOpt = agent.chooseEGreedyAction(scenario, expRate);
+        if (!actionOpt.has_value()) {
+          rollback++;
+          if (rollback > settings.maxRollback) {
+            return std::nullopt;
+          }
+          continue;
         }
+
+        scenario.add(actionOpt.value());
+        if (!scenario.isValid(false)) {
+          scenario.rollback();
+          rollback++;
+          if (rollback > settings.maxRollback) {
+            return std::nullopt;
+          }
+          continue;
+        }
+
+        scenario.rollback();
+        return actionOpt;
+      }
     };
 
     while (!scenario.isOver()) {
       const auto stateBeforeAction = nextState;
       const auto actionOpt = chooseValidAction();
-      if(!actionOpt.has_value()) {
-          break;
+      if (!actionOpt.has_value()) {
+        break;
       }
       const auto action = actionOpt.value();
 
@@ -119,9 +117,9 @@ void learningSession(const QLearningSettings& settings,
       const auto rewardOpt = scenario.getReward();
       assert(rewardOpt.has_value());
 
-      const auto loss = agent.updateQValues(stateBeforeAction, nextState,
-                                            action, rewardOpt.value(),
-                                            learningRate, settings.discountFactor);
+      const auto loss = agent.updateQValues(
+          stateBeforeAction, nextState, action, rewardOpt.value(), learningRate,
+          settings.discountFactor);
       smoothLoss.add_value(loss);
       total_reward += rewardOpt.value();
     }
