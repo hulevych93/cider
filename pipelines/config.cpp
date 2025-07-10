@@ -90,9 +90,29 @@ auto getMCTS0Settings() {
   mcts::MonteCarloSettings settings;
   settings.configName = "MCTS0";
   settings.maxIter = 200;
-  settings.maxDepth = 25;
+  settings.maxDepth = 10;
+  settings.ucb_C = 0.7;
+  settings.maxRollback = 30;
+  return settings;
+}
+
+auto getMCTS1Settings() {
+  mcts::MonteCarloSettings settings;
+  settings.configName = "MCTS1";
+  settings.maxIter = 200;
+  settings.maxDepth = 10;
   settings.ucb_C = 1.4;
-  settings.maxRollback = 20;
+  settings.maxRollback = 30;
+  return settings;
+}
+
+auto getMCTS2Settings() {
+  mcts::MonteCarloSettings settings;
+  settings.configName = "MCTS2";
+  settings.maxIter = 200;
+  settings.maxDepth = 10;
+  settings.ucb_C = 2.0;
+  settings.maxRollback = 30;
   return settings;
 }
 
@@ -101,7 +121,7 @@ auto getQLearningSettings() {
   settings.configName = "QL";
   settings.discountFactor = 0.85;
   settings.learningRate = 0.1;
-  settings.episodes = 2000U;
+  settings.episodes = 1000U;
   settings.maxRollback = 20U;
   settings.maxStateDepth = 10U;
   return settings;
@@ -246,7 +266,7 @@ auto getRandGenSettings(size_t lines = 250) {
   return settings;
 }
 
-constexpr const int StatsCount = 20U;
+constexpr const int StatsCount = 50U;
 
 }  // namespace
 
@@ -284,6 +304,14 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
     case PipelineType::MCTS0:
       pipeline.addStage(
           std::make_unique<MctsSearchStage>(getMCTS0Settings(), StatsCount));
+      break;
+    case PipelineType::MCTS1:
+      pipeline.addStage(
+          std::make_unique<MctsSearchStage>(getMCTS1Settings(), StatsCount));
+      break;
+    case PipelineType::MCTS2:
+      pipeline.addStage(
+          std::make_unique<MctsSearchStage>(getMCTS2Settings(), StatsCount));
       break;
     case PipelineType::QLearningAgentLearning:
       if (!agent_model::qlearning::QLearningAgent::get().isLoaded()) {
@@ -362,6 +390,11 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
     case PipelineType::GenerationLinesBarStats:
       if (pipeline.hasResults()) {
         pipeline.addStage(std::make_unique<LinesBarPlotReportStage>());
+      }
+      break;
+    case PipelineType::GenerationEfficencyTable:
+      if (pipeline.hasResults()) {
+        pipeline.addStage(std::make_unique<EfficencyReportStage>());
       }
       break;
   }

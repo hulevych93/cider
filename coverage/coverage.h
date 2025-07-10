@@ -21,6 +21,8 @@ enum class PipelineType {
   GRAND = 20,
 
   MCTS0 = 30,
+  MCTS1 = 31,
+  MCTS2 = 32,
 
   QLearningAgentLearning = 50,
   SarsaAgentLearning = 51,
@@ -44,6 +46,7 @@ enum class PipelineType {
   GenerationCoverageBoxStats = 90,
   GenerationCoverageStepperStats = 100,
   GenerationLinesBarStats = 110,
+  GenerationEfficencyTable = 120
 };
 
 struct ObjectiveValue final {

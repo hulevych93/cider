@@ -8,6 +8,8 @@
 #include "coverage/cfg_measurer.h"
 #include "coverage/gcov_measurer.h"
 
+#include "pipelines/metrics.h"
+
 #ifdef ENABLE_MATHPLOT
 #include "mathplot-log/output/comp-coverage-box-plot.h"
 #include "mathplot-log/output/comp-coverage-grow-plot.h"
@@ -42,6 +44,25 @@ void processBest(const std::string& methodName,
       break;
     }
   }
+}
+
+template <typename F>
+void processBestBatch(const std::string& methodName,
+                      const std::vector<Result>& results,
+                      int max,
+                      F&& func) {
+  std::vector<Result> bestResults = results;
+
+  std::sort(
+      bestResults.begin(), bestResults.end(), [](const auto& l, const auto& r) {
+        return l.newReport.branchCov.covered > r.newReport.branchCov.covered;
+      });
+
+  if (max > 0 && static_cast<size_t>(max) < bestResults.size()) {
+    bestResults.resize(max);
+  }
+
+  func(methodName, bestResults);
 }
 
 }  // namespace
@@ -140,7 +161,7 @@ bool BoxPlotReportStage::process(const std::string& metadata,
     const auto& name = resIt.first;
     const auto& res = resIt.second;
 
-    processBest(name, res, 15, handleResult);
+    processBest(name, res, 25, handleResult);
   }
 
   brCovLogger->plot();
@@ -222,6 +243,50 @@ bool LinesBarPlotReportStage::process(const std::string& metadata,
 
   logger->plot();
   logger->save();
+
+  return true;
+}
+
+bool EfficencyReportStage::process(const std::string& metadata,
+                                   const std::string&,
+                                   const cider::Cmd& cmd) {
+  std::filesystem::path outPath(cmd.resultsDir);
+  outPath /= metadata;
+  std::filesystem::create_directories(outPath);
+  outPath /= "efficency_table.csv";
+
+  std::ofstream out(outPath);
+  if (!out) {
+    std::cerr << "Cannot write to: " << outPath << std::endl;
+    return false;
+  }
+
+  out << "Method;"
+      << "OldCov(%);NewCov(%);DeltaCov;"
+      << "OldCFG(%);NewCFG(%);DeltaCFG;"
+      << "OldLen;NewLen;Compression;"
+      << "Time(ms);EffScore\n";
+
+  std::locale::global(std::locale("C"));
+
+  const auto handleResult = [&](const std::string& method,
+                                const std::vector<Result>& results) {
+    Metrics m = computeMetrics(results);
+
+    out << method << ";" << std::fixed << std::setprecision(2) << m.avgOldCov
+        << ";" << m.avgNewCov << ";'" << m.covDelta << ";" << m.avgOldCfg << ";"
+        << m.avgNewCfg << ";" << m.cfgDelta << ";" << m.avgOldLen << ";"
+        << m.avgNewLen << ";'" << m.compression << ";" << m.avgTime << ";'"
+        << m.effScore << "\n";
+  };
+
+  const auto& results = getResults();
+  for (const auto& resIt : results) {
+    const auto& name = resIt.first;
+    const auto& res = resIt.second;
+
+    processBestBatch(name, res, 10, handleResult);
+  }
 
   return true;
 }

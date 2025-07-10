@@ -44,5 +44,14 @@ class LinesBarPlotReportStage final : public Pipe {
   std::string getLetter() const override { return "LN_BAR_PL"; }
 };
 
+class EfficencyReportStage final : public Pipe {
+ public:
+  bool process(const std::string& metadata,
+               const std::string& libName,
+               const cider::Cmd& cmd) override;
+
+  std::string getLetter() const override { return "EFF_TABLE"; }
+};
+
 }  // namespace pipelines
 }  // namespace cider

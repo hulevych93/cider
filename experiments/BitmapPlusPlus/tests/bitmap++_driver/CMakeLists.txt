@@ -47,6 +47,8 @@ add_bitmap_run_target(CS 10)
 add_bitmap_run_target(RAND 20)
 
 add_bitmap_run_target(MCTS0 30)
+add_bitmap_run_target(MCTS1 31)
+add_bitmap_run_target(MCTS2 32)
 
 add_bitmap_run_target(QL 50)
 add_bitmap_run_target(SARSA 51)
@@ -70,4 +72,5 @@ add_bitmap_run_target(SLB3 77)
 add_bitmap_run_target(CBOX 90)
 add_bitmap_run_target(CSTEP 100)
 add_bitmap_run_target(LBAR 110)
+add_bitmap_run_target(EFT 120)
 
