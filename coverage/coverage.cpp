@@ -11,7 +11,7 @@
 namespace cider {
 
 Cmd::Cmd(int argc, char* argv[]) {
-  assert(argc == 9);
+  assert(argc >= 9);
 
   pipelineType = static_cast<PipelineType>(std::atoi(argv[1]));
   workingDir = argv[2];
@@ -22,11 +22,15 @@ Cmd::Cmd(int argc, char* argv[]) {
   resultsDir = argv[7];
   commonResultsDir = argv[8];
 
+  if (argc > 9) {
+    group = static_cast<MethodsGroup>(std::atoi(argv[9]));
+  }
+
   std::cout << "pipelineType: " << (int)pipelineType
             << ", workingDir: " << workingDir << ", baseDir: " << baseDir
             << ", objectDir: " << objectDir << ", binPath: " << binPath
             << ", covDir: " << covDir << ", resultsDir: " << resultsDir
-            << std::endl;
+            << ", group: " << (int)group << std::endl;
 }
 
 std::string loadFile(const std::string& path) {

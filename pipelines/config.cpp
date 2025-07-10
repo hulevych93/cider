@@ -89,7 +89,7 @@ auto getCackooSettings() {
 auto getMCTS0Settings() {
   mcts::MonteCarloSettings settings;
   settings.configName = "MCTS0";
-  settings.maxIter = 200;
+  settings.maxIter = 50;
   settings.maxDepth = 10;
   settings.ucb_C = 0.7;
   settings.maxRollback = 30;
@@ -99,7 +99,7 @@ auto getMCTS0Settings() {
 auto getMCTS1Settings() {
   mcts::MonteCarloSettings settings;
   settings.configName = "MCTS1";
-  settings.maxIter = 200;
+  settings.maxIter = 50;
   settings.maxDepth = 10;
   settings.ucb_C = 1.4;
   settings.maxRollback = 30;
@@ -109,7 +109,7 @@ auto getMCTS1Settings() {
 auto getMCTS2Settings() {
   mcts::MonteCarloSettings settings;
   settings.configName = "MCTS2";
-  settings.maxIter = 200;
+  settings.maxIter = 50;
   settings.maxDepth = 10;
   settings.ucb_C = 2.0;
   settings.maxRollback = 30;
@@ -129,7 +129,7 @@ auto getQLearningSettings() {
 
 auto getSarsaLearningSettings() {
   agent_model::sarsa::SarsaLearningSettings settings;
-  settings.configName = "SARSA";
+  settings.configName = "SL";
   settings.discountFactor = 0.85;
   settings.learningRate = 0.1;
   settings.episodes = 1000;
@@ -140,7 +140,7 @@ auto getSarsaLearningSettings() {
 
 auto getQGenG1Settings() {
   synthesis::QSynthesisSettings settings;
-  settings.configName = "QEG1";
+  settings.configName = "QLEG1";
   settings.epsilon = 0.1;
   settings.maxRollback = 30U;
   settings.strategy = synthesis::GenerationStrategyType::EGreedy;
@@ -150,7 +150,7 @@ auto getQGenG1Settings() {
 
 auto getQGenG2Settings() {
   synthesis::QSynthesisSettings settings;
-  settings.configName = "QEG2";
+  settings.configName = "QLEG2";
   settings.epsilon = 0.15;
   settings.maxRollback = 30U;
   settings.strategy = synthesis::GenerationStrategyType::EGreedy;
@@ -160,7 +160,7 @@ auto getQGenG2Settings() {
 
 auto getQGenG3Settings() {
   synthesis::QSynthesisSettings settings;
-  settings.configName = "QEG3";
+  settings.configName = "QLEG3";
   settings.epsilon = 0.25;
   settings.maxRollback = 30U;
   settings.strategy = synthesis::GenerationStrategyType::EGreedy;
@@ -170,7 +170,7 @@ auto getQGenG3Settings() {
 
 auto getSarsaGenG1Settings() {
   synthesis::SarsaSynthesisSettings settings;
-  settings.configName = "SEG1";
+  settings.configName = "SLEG1";
   settings.epsilon = 0.1;
   settings.maxRollback = 30U;
   settings.strategy = synthesis::GenerationStrategyType::EGreedy;
@@ -180,7 +180,7 @@ auto getSarsaGenG1Settings() {
 
 auto getSarsaGenG2Settings() {
   synthesis::SarsaSynthesisSettings settings;
-  settings.configName = "SEG2";
+  settings.configName = "SLEG2";
   settings.epsilon = 0.15;
   settings.maxRollback = 30U;
   settings.strategy = synthesis::GenerationStrategyType::EGreedy;
@@ -190,7 +190,7 @@ auto getSarsaGenG2Settings() {
 
 auto getSarsaGenG3Settings() {
   synthesis::SarsaSynthesisSettings settings;
-  settings.configName = "SEG3";
+  settings.configName = "SLEG3";
   settings.epsilon = 0.25;
   settings.maxRollback = 30U;
   settings.strategy = synthesis::GenerationStrategyType::EGreedy;
@@ -200,7 +200,7 @@ auto getSarsaGenG3Settings() {
 
 auto getQGenB1Settings() {
   synthesis::QSynthesisSettings settings;
-  settings.configName = "QB1";
+  settings.configName = "QLB1";
   settings.temperature = 1.5;
   settings.maxRollback = 30U;
   settings.strategy = synthesis::GenerationStrategyType::Boltzmann;
@@ -210,7 +210,7 @@ auto getQGenB1Settings() {
 
 auto getQGenB2Settings() {
   synthesis::QSynthesisSettings settings;
-  settings.configName = "QB2";
+  settings.configName = "QLB2";
   settings.temperature = 3.0;
   settings.maxRollback = 30U;
   settings.strategy = synthesis::GenerationStrategyType::Boltzmann;
@@ -220,7 +220,7 @@ auto getQGenB2Settings() {
 
 auto getQGenB3Settings() {
   synthesis::QSynthesisSettings settings;
-  settings.configName = "QB3";
+  settings.configName = "QLB3";
   settings.temperature = 5.0;
   settings.maxRollback = 30U;
   settings.strategy = synthesis::GenerationStrategyType::Boltzmann;
@@ -230,7 +230,7 @@ auto getQGenB3Settings() {
 
 auto getSarsaGenB1Settings() {
   synthesis::SarsaSynthesisSettings settings;
-  settings.configName = "SB1";
+  settings.configName = "SLB1";
   settings.temperature = 1.5;
   settings.maxRollback = 30U;
   settings.strategy = synthesis::GenerationStrategyType::Boltzmann;
@@ -240,7 +240,7 @@ auto getSarsaGenB1Settings() {
 
 auto getSarsaGenB2Settings() {
   synthesis::SarsaSynthesisSettings settings;
-  settings.configName = "SB2";
+  settings.configName = "SLB2";
   settings.temperature = 3.0;
   settings.maxRollback = 30U;
   settings.strategy = synthesis::GenerationStrategyType::Boltzmann;
@@ -250,7 +250,7 @@ auto getSarsaGenB2Settings() {
 
 auto getSarsaGenB3Settings() {
   synthesis::SarsaSynthesisSettings settings;
-  settings.configName = "SB3";
+  settings.configName = "SLB3";
   settings.temperature = 5.0;
   settings.maxRollback = 30U;
   settings.strategy = synthesis::GenerationStrategyType::Boltzmann;
@@ -260,10 +260,55 @@ auto getSarsaGenB3Settings() {
 
 auto getRandGenSettings(size_t lines = 250) {
   synthesis::RandSynthesisSettings settings;
-  settings.configName = "GRAND";
+  settings.configName = "RAND";
   settings.stopType = synthesis::StopCondition::LimitActions;
   settings.limitActions = lines;
   return settings;
+}
+
+const pipelines::ReportConfiguration& getReportConfigQLEG() {
+  static const std::vector<std::string> orderedMethods = {"QLEG1", "QLEG2",
+                                                          "QLEG3"};
+  return orderedMethods;
+}
+
+const pipelines::ReportConfiguration& getReportConfigQLB() {
+  static const std::vector<std::string> orderedMethods = {"QLB1", "QLB2",
+                                                          "QLB3"};
+  return orderedMethods;
+}
+
+const pipelines::ReportConfiguration& getReportConfigSLEG() {
+  static const std::vector<std::string> orderedMethods = {"SLEG1", "SLEG2",
+                                                          "SLEG3"};
+  return orderedMethods;
+}
+
+const pipelines::ReportConfiguration& getReportConfigSLB() {
+  static const std::vector<std::string> orderedMethods = {"SLB1", "SLB2",
+                                                          "SLB3"};
+  return orderedMethods;
+}
+
+const pipelines::ReportConfiguration& getReportConfigMCTS() {
+  static const std::vector<std::string> orderedMethods = {"MCTS0", "MCTS1",
+                                                          "MCTS2"};
+  return orderedMethods;
+}
+
+const pipelines::ReportConfiguration& getReportConfig(MethodsGroup group) {
+  switch (group) {
+    case MethodsGroup::QLEG:
+      return getReportConfigQLEG();
+    case MethodsGroup::QLB:
+      return getReportConfigQLB();
+    case MethodsGroup::SLEG:
+      return getReportConfigSLEG();
+    case MethodsGroup::SLB:
+      return getReportConfigSLB();
+    case MethodsGroup::MCTS:
+      return getReportConfigMCTS();
+  }
 }
 
 constexpr const int StatsCount = 50U;
@@ -379,7 +424,8 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
       break;
     case PipelineType::GenerationCoverageBoxStats:
       if (pipeline.hasResults()) {
-        pipeline.addStage(std::make_unique<BoxPlotReportStage>());
+        pipeline.addStage(
+            std::make_unique<BoxPlotReportStage>(getReportConfig(cmd.group)));
       }
       break;
     case PipelineType::GenerationCoverageStepperStats:

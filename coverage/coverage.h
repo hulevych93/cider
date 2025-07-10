@@ -49,6 +49,8 @@ enum class PipelineType {
   GenerationEfficencyTable = 120
 };
 
+enum class MethodsGroup { QLEG, QLB, SLEG, SLB, MCTS };
+
 struct ObjectiveValue final {
   double coverage = 0.0;
   std::vector<std::uint8_t> coveredTracks;
@@ -65,6 +67,7 @@ struct Cmd final {
   std::string covDir;
   std::string resultsDir;
   std::string commonResultsDir;
+  MethodsGroup group = MethodsGroup::MCTS;
 };
 
 class Seed final {

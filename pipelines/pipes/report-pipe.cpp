@@ -119,8 +119,11 @@ bool StepperReportStage::process(const std::string& metadata,
   return true;
 }
 
+BoxPlotReportStage::BoxPlotReportStage(const ReportConfiguration& config)
+    : _config(config) {}
+
 bool BoxPlotReportStage::process(const std::string& metadata,
-                                 const std::string& libName,
+                                 const std::string&,
                                  const cider::Cmd& cmd) {
   std::filesystem::path outPath(cmd.resultsDir);
   outPath /= metadata;
@@ -157,9 +160,20 @@ bool BoxPlotReportStage::process(const std::string& metadata,
   };
 
   const auto& results = getResults();
-  for (const auto& resIt : results) {
-    const auto& name = resIt.first;
-    const auto& res = resIt.second;
+
+  if (_config.empty()) {
+    std::cout << "Empty config error." << std::endl;
+    return false;
+  }
+
+  for (const auto& methodConfig : _config) {
+    const auto it = results.find(methodConfig);
+    if (it == results.end()) {
+      std::cout << "Warning method not simlated: " << methodConfig << std::endl;
+      continue;
+    }
+    const auto& name = it->first;
+    const auto& res = it->second;
 
     processBest(name, res, 25, handleResult);
   }

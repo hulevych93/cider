@@ -8,6 +8,8 @@
 namespace cider {
 namespace pipelines {
 
+using ReportConfiguration = std::vector<std::string>;
+
 class StepperReportStage final : public Pipe {
  public:
   bool process(const std::string& metadata,
@@ -19,11 +21,16 @@ class StepperReportStage final : public Pipe {
 
 class BoxPlotReportStage final : public Pipe {
  public:
+  explicit BoxPlotReportStage(const ReportConfiguration& config);
+
   bool process(const std::string& metadata,
                const std::string& libName,
                const cider::Cmd& cmd) override;
 
   std::string getLetter() const override { return "BOX_PLOT"; }
+
+ private:
+  ReportConfiguration _config;
 };
 
 class CovBarPlotReportStage final : public Pipe {

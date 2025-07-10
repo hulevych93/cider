@@ -79,8 +79,7 @@ double rollout(std::mt19937& gen,
 
   synthesis::SynthesisSettingsBasic settings;
   settings.maxRollback = max_rollback;
-  settings.limitActions = candidate.size() + max_depth;
-  settings.stopType = synthesis::StopCondition::LimitActions;
+  settings.stopType = synthesis::StopCondition::GreaterCoverage;
   synthesis::details::synthesize(settings, actionChoosing, scenario);
 
   candidate = scenario.getResult();
