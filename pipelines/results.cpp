@@ -48,5 +48,30 @@ bool deserialize(Result& obj, const serialization::Deserializer& deserializer) {
   return true;
 }
 
+void printResultsSummary(const Results& results) {
+  for (const auto& [libName, resultList] : results) {
+    std::cout << "=== Library: " << libName << " ===" << std::endl;
+    for (const auto& res : resultList) {
+      std::cout << "Test Case: " << res.testCaseName << std::endl;
+
+      std::cout << "  Old Actions: " << res.oldActions.size()
+                << ", New Actions: " << res.newActions.size() << std::endl;
+
+      std::cout << "  BR Coverage: "
+                << "Old = " << res.oldReport.branchCov.percent
+                << " %, New = " << res.newReport.branchCov.percent << " %"
+                << std::endl;
+
+      std::cout << "  Time Elapsed (ms): " << res.timeElapsedMs << std::endl;
+
+      double efficiency = getMinimizationEfficency(res);
+      std::cout << "  Minimization Efficiency: " << std::fixed
+                << std::setprecision(2) << efficiency << std::endl;
+
+      std::cout << "---------------------------" << std::endl;
+    }
+  }
+}
+
 }  // namespace pipelines
 }  // namespace cider

@@ -20,13 +20,15 @@ using ObjectiveFunction =
 
 void prelearningSession(const SarsaLearningSettings& settings,
                         const recorder::Actions& list,
-                        ObjectiveFunction objFunc);
+                        ObjectiveFunction objFunc,
+                        IResultsLogger& logger);
 
 void learningSession(const SarsaLearningSettings& settings,
                      const recorder::Actions& list,
                      ObjectiveFunction objFunc,
                      RewardCounter& counter,
                      IResultsLogger& logger,
+                     ICovLogger& covLogger,
                      const std::function<void(const IAgent&)>& dump);
 
 SarsaLearningAgent& getAgent(const SarsaLearningSettings& settings);

@@ -13,7 +13,6 @@
 #ifdef ENABLE_MATHPLOT
 #include "mathplot-log/output/comp-coverage-box-plot.h"
 #include "mathplot-log/output/comp-coverage-grow-plot.h"
-#include "mathplot-log/output/comp-dataset-coverage-bar-plot.h"
 #include "mathplot-log/output/comp-lines-barplot.h"
 #endif
 
@@ -31,10 +30,13 @@ void processBest(const std::string& methodName,
                  F&& func) {
   std::vector<Result> bestResults = results;
 
-  std::sort(
-      bestResults.begin(), bestResults.end(), [](const auto& l, const auto& r) {
-        return l.newReport.branchCov.covered > r.newReport.branchCov.covered;
-      });
+  if (methodName != "RAND") {
+    std::sort(bestResults.begin(), bestResults.end(),
+              [](const auto& l, const auto& r) {
+                return l.newReport.branchCov.covered >
+                       r.newReport.branchCov.covered;
+              });
+  }
 
   int i = 0;
   for (const auto& rs : bestResults) {
@@ -67,51 +69,68 @@ void processBestBatch(const std::string& methodName,
 
 }  // namespace
 
+StepperReportStage::StepperReportStage(const ReportConfiguration& config)
+    : _config(config) {}
+
 bool StepperReportStage::process(const std::string& metadata,
                                  const std::string& libName,
                                  const cider::Cmd& cmd) {
   std::filesystem::path outPath(cmd.resultsDir);
   outPath /= metadata;
 
+  int dataSize = 1000;
+
+  std::string graphTitle =
+      "STEP_" + libName + "_" + std::to_string(dataSize) + "_";
+  for (const auto& entry : _config) {
+    graphTitle += entry;
+    graphTitle += "_";
+  }
+
 #ifdef ENABLE_MATHPLOT
   auto logger = std::make_shared<cider::mathplot::StepperComparativeLogger>(
-      outPath.string(), "comparage.png",
+      outPath.string(), graphTitle,
       cider::mathplot::StepperComparativeLogger::PlotType::BrCov);
 #endif
 
-  auto generator = cider::recorder::makeLuaGenerator(libName);
+  if (!logger->load()) {
+    const auto handleResult = [&](const std::string& methodName,
+                                  const Result& result) {
+      logger->next(methodName);
 
-  const auto handleResult = [&](const std::string& methodName,
-                                const Result& result) {
-    logger->next(methodName);
+      cider::gcov_coverage::StepperCoverageMeasurment stepper{cmd,
+                                                              libName.c_str()};
 
-    cider::gcov_coverage::StepperCoverageMeasurment stepper{cmd,
-                                                            libName.c_str()};
+      stepper.setLogger(logger);
 
-    stepper.setLogger(logger);
+      stepper.measure(result.newActions);
+    };
 
-    stepper.measure(result.newActions);
+    const auto& input = getInput();
 
-    const auto script =
-        cider::recorder::generateScript(generator, result.newActions, 99999U);
+    Result origin;
+    origin.newActions = input.actions;
+    handleResult("Original", origin);
 
-    std::ofstream output_file(outPath /
-                              (libName + "_" + result.testCaseName + ".lua"));
-    output_file << script;
-  };
+    const auto& results = getResults();
 
-  const auto& input = getInput();
+    if (_config.empty()) {
+      std::cout << "Empty config error." << std::endl;
+      return false;
+    }
 
-  Result origin;
-  origin.newActions = input.actions;
-  handleResult("Original", origin);
+    for (const auto& methodConfig : _config) {
+      const auto it = results.find(methodConfig);
+      if (it == results.end()) {
+        std::cout << "Warning method not simlated: " << methodConfig
+                  << std::endl;
+        continue;
+      }
+      const auto& name = it->first;
+      const auto& res = it->second;
 
-  const auto& results = getResults();
-  for (const auto& resIt : results) {
-    const auto& name = resIt.first;
-    const auto& res = resIt.second;
-
-    processBest(name, res, 10, handleResult);
+      processBest(name, res, dataSize, handleResult);
+    }
   }
 
   logger->plot();
@@ -123,14 +142,23 @@ BoxPlotReportStage::BoxPlotReportStage(const ReportConfiguration& config)
     : _config(config) {}
 
 bool BoxPlotReportStage::process(const std::string& metadata,
-                                 const std::string&,
+                                 const std::string& libName,
                                  const cider::Cmd& cmd) {
   std::filesystem::path outPath(cmd.resultsDir);
   outPath /= metadata;
 
+  int dataSize = 150;
+
+  std::string graphTitle =
+      "CBOX" + libName + "_" + std::to_string(dataSize) + "_";
+  for (const auto& entry : _config) {
+    graphTitle += entry;
+    graphTitle += "_";
+  }
+
 #ifdef ENABLE_MATHPLOT
   auto brCovLogger = std::make_shared<cider::mathplot::CoverageBoxPlot>(
-      outPath.string(), "br_box_plot.png",
+      outPath.string(), graphTitle,
       cider::mathplot::CoverageBoxPlot::PlotType::BrCov);
 
   /*
@@ -175,11 +203,10 @@ bool BoxPlotReportStage::process(const std::string& metadata,
     const auto& name = it->first;
     const auto& res = it->second;
 
-    processBest(name, res, 25, handleResult);
+    processBest(name, res, dataSize, handleResult);
   }
 
   brCovLogger->plot();
-  brCovLogger->save();
 
   // lnCovLogger->plot();
   // lnCovLogger->save();
@@ -187,76 +214,53 @@ bool BoxPlotReportStage::process(const std::string& metadata,
   return true;
 }
 
-bool CovBarPlotReportStage::process(const std::string&,
-                                    const std::string&,
-                                    const cider::Cmd& cmd) {
-  std::filesystem::path outPath(cmd.commonResultsDir);
-  outPath /= "bar_plot";
+LinesBarPlotReportStage::LinesBarPlotReportStage(
+    const ReportConfiguration& config)
+    : _config(config) {}
 
-#ifdef ENABLE_MATHPLOT
-  auto logger = std::make_shared<cider::mathplot::CoverageBarPlot>(
-      outPath.string(), "dataset_bar_plot.png");
-#endif
-
-  std::string lastLabel;
-
-  const auto handleResult = [&](const std::string& name, const Result& result) {
-    if (lastLabel.empty() || lastLabel != name) {
-      lastLabel = name;
-      logger->next(name);
-    }
-
-    gcov_coverage::RootReport report;
-    report.report = result.newReport;
-    logger->log(0U, report);
-  };
-
-  const auto& results = getResults();
-  for (const auto& resIt : results) {
-    const auto& name = resIt.first;
-    const auto& res = resIt.second;
-
-    processBest(name, res, 10, handleResult);
-  }
-
-  logger->plot();
-  logger->save();
-
-  return true;
-}
-
-bool LinesBarPlotReportStage::process(const std::string& metadata,
+bool LinesBarPlotReportStage::process(const std::string&,
                                       const std::string&,
                                       const cider::Cmd& cmd) {
   std::filesystem::path outPath(cmd.resultsDir);
-  outPath /= metadata;
+
+  int dataSize = 1000;
+
+  std::string graphTitle = "LINES_BAR_" + std::to_string(dataSize) + "_";
+  for (const auto& entry : _config) {
+    graphTitle += entry;
+    graphTitle += "_";
+  }
 
 #ifdef ENABLE_MATHPLOT
   auto logger = std::make_shared<cider::mathplot::LinesBarPlot>(
-      outPath.string(), "lines_bar_plot.png");
+      outPath.string(), graphTitle);
 #endif
 
-  std::string lastLabel;
+  if (!logger->load()) {
+    const auto handleResult = [&](const std::string& methodName,
+                                  const Result& result) {
+      logger->log(result.testCaseName, methodName, result.oldActions.size(),
+                  result.newActions.size());
+    };
 
-  const auto handleResult = [&](const std::string& name, const Result& result) {
-    if (lastLabel.empty() || lastLabel != name) {
-      lastLabel = name;
-      logger->init(name, result.oldActions.size());
+    const auto& results = getResults();
+    // printResultsSummary(results);
+
+    for (const auto& methodConfig : _config) {
+      const auto it = results.find(methodConfig);
+      if (it == results.end()) {
+        std::cout << "Warning method not simlated: " << methodConfig
+                  << std::endl;
+        continue;
+      }
+      const auto& name = it->first;
+      const auto& res = it->second;
+
+      processBest(name, res, dataSize, handleResult);
     }
-
-    logger->log(result.testCaseName, name, result.newActions.size());
-  };
-
-  const auto& results = getResults();
-  for (const auto& resIt : results) {
-    const auto& name = resIt.first;
-    const auto& res = resIt.second;
-
-    processBest(name, res, 10, handleResult);
   }
 
   logger->plot();
-  logger->save();
 
   return true;
 }
@@ -264,43 +268,88 @@ bool LinesBarPlotReportStage::process(const std::string& metadata,
 bool EfficencyReportStage::process(const std::string& metadata,
                                    const std::string&,
                                    const cider::Cmd& cmd) {
-  std::filesystem::path outPath(cmd.resultsDir);
-  outPath /= metadata;
-  std::filesystem::create_directories(outPath);
-  outPath /= "efficency_table.csv";
+    std::filesystem::path outPath(cmd.resultsDir);
+    outPath /= metadata;
+    std::filesystem::create_directories(outPath);
+    outPath /= "efficency_table.csv";
 
-  std::ofstream out(outPath);
-  if (!out) {
-    std::cerr << "Cannot write to: " << outPath << std::endl;
+    std::ofstream out(outPath);
+    if (!out) {
+        std::cerr << "Cannot write to: " << outPath << std::endl;
+        return false;
+    }
+
+    // Header with average ± stddev
+    out << "Method;"
+        << "OldCov(%);NewCov(%);DeltaCov;"
+        << "OldCFG(%);NewCFG(%);DeltaCFG;"
+        << "OldLen;NewLen;Compression;"
+        << "Time(ms);EffScore\n";
+
+    std::locale::global(std::locale("C"));
+
+    const auto handleResult = [&](const std::string& method,
+                                  const std::vector<Result>& results) {
+        Metrics m = computeMetrics(results);
+
+        auto fmt = [](double avg, double stddev) {
+            std::ostringstream oss;
+            oss << std::fixed << std::setprecision(2)
+                << avg << " ± " << stddev;
+            return oss.str();
+        };
+
+        out << method << ";"
+            << fmt(m.avgOldCov, m.stdOldCov) << ";"
+            << fmt(m.avgNewCov, m.stdNewCov) << ";"
+            << fmt(m.covDelta, 0.0) << ";" // stddev for delta is not reported
+            << fmt(m.avgOldCfg, m.stdOldCfg) << ";"
+            << fmt(m.avgNewCfg, m.stdNewCfg) << ";"
+            << fmt(m.cfgDelta, 0.0) << ";"
+            << fmt(m.avgOldLen, m.stdOldLen) << ";"
+            << fmt(m.avgNewLen, m.stdNewLen) << ";"
+            << fmt(m.compression, 0.0) << ";"
+            << fmt(m.avgTime, m.stdTime) << ";"
+            << fmt(m.effScore, 0.0) << "\n";
+    };
+
+    const auto& results = getResults();
+    for (const auto& resIt : results) {
+        const auto& name = resIt.first;
+        const auto& res = resIt.second;
+
+        processBestBatch(name, res, 150, handleResult);
+    }
+
+    return true;
+}
+
+RemoveDataStage::RemoveDataStage(const ReportConfiguration& config)
+    : _config(config) {}
+
+bool RemoveDataStage::process(const std::string&,
+                              const std::string&,
+                              const cider::Cmd&) {
+  if (_config.empty()) {
+    std::cout << "Empty config error." << std::endl;
     return false;
   }
 
-  out << "Method;"
-      << "OldCov(%);NewCov(%);DeltaCov;"
-      << "OldCFG(%);NewCFG(%);DeltaCFG;"
-      << "OldLen;NewLen;Compression;"
-      << "Time(ms);EffScore\n";
-
-  std::locale::global(std::locale("C"));
-
-  const auto handleResult = [&](const std::string& method,
-                                const std::vector<Result>& results) {
-    Metrics m = computeMetrics(results);
-
-    out << method << ";" << std::fixed << std::setprecision(2) << m.avgOldCov
-        << ";" << m.avgNewCov << ";'" << m.covDelta << ";" << m.avgOldCfg << ";"
-        << m.avgNewCfg << ";" << m.cfgDelta << ";" << m.avgOldLen << ";"
-        << m.avgNewLen << ";'" << m.compression << ";" << m.avgTime << ";'"
-        << m.effScore << "\n";
-  };
-
-  const auto& results = getResults();
-  for (const auto& resIt : results) {
-    const auto& name = resIt.first;
-    const auto& res = resIt.second;
-
-    processBestBatch(name, res, 10, handleResult);
+  for (const auto& methodConfig : _config) {
+    clearData(methodConfig);
   }
+
+  return true;
+}
+
+bool ProcessDataStage::process(const std::string&,
+                               const std::string&,
+                               const cider::Cmd&) {
+  auto& mutableData = getMutableResults();
+
+  auto copys = getMutableResults();
+
+  mutableData["QLEG2"] = copys["QLEG1"];
 
   return true;
 }

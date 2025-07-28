@@ -15,6 +15,13 @@ constexpr const char* LineStyles[] = {
     ":",   // dotted line
 };
 
+constexpr const char* MarkerStyles[] = {
+    "o",
+    "s",
+    "D",
+    "*",
+};
+
 constexpr const char* ColorCodes[] = {
     "k",  // black
     "b",  // blue
@@ -40,6 +47,7 @@ void computeMeanAndStd(const std::vector<std::vector<double>>& values,
                        std::vector<double>& stdOut);
 
 std::string ensurePngExtension(const std::string& path);
+std::string ensureBinExtension(const std::string& path);
 
 std::string ensurePath(const std::string& logDir,
                        const std::string& logFileName);

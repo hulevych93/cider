@@ -46,9 +46,9 @@ add_pugixml_run_target(HS3 3)
 add_pugixml_run_target(CS 10)
 add_pugixml_run_target(RAND 20)
 
-add_pugixml_run_target(MCTS0 30)
-add_pugixml_run_target(MCTS1 31)
-add_pugixml_run_target(MCTS2 32)
+add_pugixml_run_target(MCTS1 30)
+add_pugixml_run_target(MCTS2 31)
+add_pugixml_run_target(MCTS3 32)
 
 add_pugixml_run_target(QL 50)
 add_pugixml_run_target(SARSA 51)

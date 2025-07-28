@@ -41,5 +41,7 @@ using Results = std::unordered_map<std::string, std::vector<Result>>;
 bool serialize(const Result& obj, serialization::Serializer& serializer);
 bool deserialize(Result& obj, const serialization::Deserializer& deserializer);
 
+void printResultsSummary(const Results& results);
+
 }  // namespace pipelines
 }  // namespace cider

@@ -9,31 +9,29 @@
 namespace cider {
 namespace mathplot {
 
-struct LinesBarPlotData final {
-  std::string label;
-  size_t oldLines = 0;
-  std::vector<size_t> newLinesG2;
-  std::vector<size_t> newLinesB2;
-};
-
 class LinesBarPlot final {
  public:
   LinesBarPlot(const std::string& logDir, const std::string& logFileName);
   ~LinesBarPlot();
 
-  void init(const std::string& label, size_t oldLines);
   void log(const std::string& label,
            const std::string& method,
+           size_t oldLines,
            size_t newLines);
 
-  void plot() const;
-  void save();
+  void serialize(const std::string& filePath);
+
+  bool load();
+
+  void plot();
 
  private:
-  std::unordered_map<std::string, LinesBarPlotData> _barData;
+  std::unordered_map<std::string,
+                     std::unordered_map<std::string, std::vector<size_t>>>
+      _barData;
+  mutable std::unordered_map<std::string, size_t> _oldLines;
 
   std::string m_path;
-  bool m_saved = false;
 };
 
 }  // namespace mathplot

@@ -18,12 +18,12 @@ FileLogger::FileLogger(const std::string& logDir,
   _report.open(outPath, std::ios::out | std::ios::app);
 }
 
-void FileLogger::logReward(size_t episode, double totalReward) const {
+void FileLogger::logReward(size_t episode, double totalReward) {
   _report << "EPS: " << episode << "\t"
           << "RWRD: " << totalReward << std::endl;
 }
 
-void FileLogger::logLoss(size_t episode, double averageLoss) const {
+void FileLogger::logLoss(size_t episode, double averageLoss) {
   _report << "EPS: " << episode << "\t"
           << "LOSS: " << averageLoss << std::endl;
 }

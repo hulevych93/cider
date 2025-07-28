@@ -15,110 +15,158 @@
 namespace plt = matplotlibcpp;
 #endif
 
+#include "serialization/deserializer.h"
+#include "serialization/serializer.h"
+
 namespace cider {
 namespace mathplot {
 
 LinesBarPlot::LinesBarPlot(const std::string& logDir,
                            const std::string& logFileName)
-    : m_path(ensurePath(logDir, logFileName)) {
-  plt::figure_size(980, 640);
-}
-LinesBarPlot::~LinesBarPlot() {
-  save();
+    : m_path(ensurePath(logDir, logFileName)) {}
+
+LinesBarPlot::~LinesBarPlot() {}
+
+void LinesBarPlot::serialize(const std::string& filePath) {
+  try {
+    serialization::Serializer serializer;
+    serializer << _barData;
+    serializer << _oldLines;
+    serializer.save(filePath);
+  } catch (...) {
+    std::cout << "Graph serialization failed : " << filePath << std::endl;
+  }
 }
 
-void LinesBarPlot::init(const std::string& label, size_t oldLines) {
-  auto& data = _barData[label];
-  data.label = label;
-  data.oldLines = oldLines;
+bool LinesBarPlot::load() {
+  try {
+    serialization::Deserializer deserializer(ensureBinExtension(m_path));
+    deserializer >> _barData;
+    deserializer >> _oldLines;
+  } catch (const std::exception& e) {
+    std::cout << e.what() << std::endl;
+    return false;
+  }
+  return true;
 }
 
 void LinesBarPlot::log(const std::string& label,
                        const std::string& method,
+                       size_t oldLines,
                        size_t newLines) {
-  auto& data = _barData[label];
-  if (method == "QLB2") {
-    data.newLinesB2.emplace_back(newLines);
-  } else if (method == "QLG2") {
-    data.newLinesG2.emplace_back(newLines);
+  const auto it = _barData.find(label);
+  if (it != _barData.end()) {
+    auto& labelMap = it->second;
+    auto& data = labelMap[method];
+    data.emplace_back(newLines);
+  } else {
+    std::cout << label << std::endl;
+    auto& labelMap = _barData[label];
+    auto& data = labelMap[method];
+    _oldLines[label] = oldLines;
+    data.emplace_back(newLines);
   }
-
-  plot();
 }
 
-void LinesBarPlot::save() {
-  if (m_saved) {
-    return;
+std::vector<std::vector<double>> convertToMethodMajor(
+    const std::vector<std::vector<double>>& lines) {
+  if (lines.empty())
+    return {};
+
+  size_t numTestCases = lines.size();
+  size_t numMethods = lines[0].size();
+
+  std::vector<std::vector<double>> linesByMethod(
+      numMethods, std::vector<double>(numTestCases, 0.0));
+
+  for (size_t i = 0; i < numTestCases; ++i) {
+    for (size_t j = 0; j < numMethods; ++j) {
+      linesByMethod[j][i] = lines[i][j];
+    }
   }
-  m_saved = true;
-  plt::save(ensurePngExtension(m_path), 1200);
+
+  return linesByMethod;
 }
 
-void LinesBarPlot::plot() const {
-  if (_barData.empty()) {
+void LinesBarPlot::plot() {
+  static bool done = false;
+  if (!done) {
+    done = true;
+  } else {
     return;
   }
-
   plt::clf();
 
-  int tI = 0;
   std::vector<std::string> testCases;
-  std::transform(_barData.cbegin(), _barData.cend(),
-                 std::back_inserter(testCases),
-                 [&](const auto&) -> std::string {
-                   if (tI % 5 == 0) {
-                     return std::to_string((tI++ + 1));
-                   } else {
-                     tI++;
-                     return "";
-                   }
-                 });
-  size_t n = testCases.size();
 
   // Bar values
-  std::vector<double> oldLines;
-  std::vector<double> newLinesG2;
-  std::vector<double> newLinesB2;
+  std::vector<std::vector<double>> lines;
+  std::vector<std::string> names;
+  std::unordered_set<std::string> namesDouble;
 
-  std::transform(_barData.cbegin(), _barData.cend(),
-                 std::back_inserter(oldLines),
-                 [](const auto& entry) { return entry.second.oldLines; });
-  std::transform(_barData.cbegin(), _barData.cend(),
-                 std::back_inserter(newLinesG2), [](const auto& entry) {
-                   return compute_average(entry.second.newLinesG2);
-                 });
-  std::transform(_barData.cbegin(), _barData.cend(),
-                 std::back_inserter(newLinesB2), [](const auto& entry) {
-                   return compute_average(entry.second.newLinesB2);
-                 });
+  names.emplace_back("Original");
+
+  int i = 1;
+  for (const auto& labelIter : _barData) {
+    testCases.emplace_back(std::to_string(i));
+
+    lines.emplace_back(std::vector<double>{});
+    lines[i - 1].emplace_back(_oldLines[labelIter.first]);
+
+    int j = 1;
+    auto& methodData = labelIter.second;
+    for (const auto& methodIt : methodData) {
+      if (namesDouble.find(methodIt.first) == namesDouble.cend()) {
+        namesDouble.emplace(methodIt.first);
+        names.emplace_back(methodIt.first);
+      }
+
+      lines[i - 1].emplace_back(compute_average(methodIt.second));
+      j++;
+    }
+    i++;
+  }
+
+  auto methodsAndLines = convertToMethodMajor(lines);
+
+  assert(names.size() <= 3);
+
+  size_t n = testCases.size();
 
   // X positions (base for each group)
   std::vector<double> x(n);
-  for (size_t i = 0; i < n; ++i)
+  for (size_t i = 1; i < n; ++i)
     x[i] = static_cast<double>(i);
 
   // Group offset (for 2 bars per group)
-  std::vector<double> x1(n), x2(n), x3(n);
-  double width = 0.2;
+  std::vector<double> xg[names.size()];
+  double width = 0.3;
 
-  for (size_t i = 0; i < n; ++i) {
-    x1[i] = x[i] - width;
-    x2[i] = x[i];
-    x3[i] = x[i] + width;
+  for (int method = 0; method < names.size(); ++method) {
+    xg[method] = std::vector<double>(n, 0.0f);
+    for (int TC = 0; TC < n; ++TC) {
+      xg[method][TC] = x[TC] + width * method;
+    }
   }
 
-  plt::bar(x1, oldLines, "black", "-", 0.5, width, {{"label", "Original"}});
-  plt::bar(x2, newLinesG2, "black", "-", 0.5, width, {{"label", "QLG2"}});
-  plt::bar(x3, newLinesB2, "black", "-", 0.5, width, {{"label", "QLB2"}});
+  for (int method = 0; method < names.size(); ++method) {
+    plt::bar(xg[method], methodsAndLines[method], "black", "-", 0.5, width,
+             {{"label", names[method]}});
+  }
 
   // Set ticks and labels
-  plt::xticks(x, testCases);
+  plt::xticks(x, testCases, {{"fontsize", "5"}});
   plt::ylabel("Instructions Count");
-  plt::xlabel("Test Script");
+  plt::xlabel("Test Case");
 
   plt::legend();
 
-  plt::pause(0.01);
+  applyPublicationStyle();
+  plt::pause(5.5);
+
+  serialize(ensureBinExtension(m_path));
+  plt::save(ensurePngExtension(m_path), 1200);
+  plt::close();
 }
 
 }  // namespace mathplot

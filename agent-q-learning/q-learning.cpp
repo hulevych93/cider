@@ -7,6 +7,8 @@
 #include "agent-model/utils.h"
 #include "agent-q-learning/q-learning-agent.h"
 
+#include "mathplot-log/monitoring/q-learning-cov-ep-plot.h"
+
 #include <iostream>
 #include <thread>
 
@@ -18,32 +20,42 @@ namespace qlearning {
 
 void prelearningSession(const QLearningSettings& settings,
                         const recorder::Actions& list,
-                        ObjectiveFunction objFunc) {
+                        ObjectiveFunction objFunc,
+                        IResultsLogger& logger) {
   QLearningAgent& agent = QLearningAgent::get();
 
-  RewardCounter rwCounter;
-  LearningScenario scenario(rwCounter, Seed::instance().get(),
-                            settings.maxStateDepth, list, objFunc);
-  auto nextState = scenario.getCurrentState();
+  for (int i = 0; i < settings.prelearningEpisodes; ++i) {
+    RewardCounter rwCounter;
+    LearningScenario scenario(rwCounter, Seed::instance().get(),
+                              settings.maxStateDepth, list, objFunc);
+    auto nextState = scenario.getCurrentState();
 
-  int index = 0U;
-  while (!scenario.isOver()) {
-    const auto stateBeforeAction = nextState;
-    const auto& action = list[index++];
-    if ((index % 50) == 0) {
-      std::cout << "Index: " << index << std::endl;
+    float total_reward = 0.0f;
+    ExponentialMovingAverage smoothLoss(0.5);
+
+    int index = 0U;
+    while (!scenario.isOver()) {
+      const auto stateBeforeAction = nextState;
+      const auto& action = list[index++];
+
+      scenario.add(action);
+      nextState = scenario.getCurrentState();
+      assert(!nextState.empty());
+
+      if (const auto rewardOpt = scenario.getReward()) {
+        const auto loss = agent.updateQValues(
+            stateBeforeAction, nextState, action, rewardOpt.value(),
+            settings.learningRate, settings.discountFactor);
+
+        smoothLoss.add_value(loss);
+        total_reward += rewardOpt.value();
+      } else {
+        throw std::logic_error{"failed to run on initial sequence."};
+      }
     }
 
-    scenario.add(action);
-    nextState = scenario.getCurrentState();
-    assert(!nextState.empty());
-    if (const auto rewardOpt = scenario.getReward()) {
-      agent.updateQValues(stateBeforeAction, nextState, action,
-                          rewardOpt.value(), settings.learningRate,
-                          settings.discountFactor);
-    } else {
-      throw std::logic_error{"failed to run on initial sequence."};
-    }
+    logger.logLoss(i, smoothLoss.get_average());
+    logger.logReward(i, total_reward);
   }
 }
 
@@ -52,13 +64,21 @@ void learningSession(const QLearningSettings& settings,
                      ObjectiveFunction objFunc,
                      RewardCounter& counter,
                      IResultsLogger& logger,
+                     ICovLogger& covLogger,
                      const std::function<void(const IAgent&)>& dump) {
   QLearningAgent& agent = QLearningAgent::get();
 
+  const auto objValue = objFunc(list);
+  if (objValue.coverage > std::numeric_limits<double>::epsilon()) {
+      covLogger.set(objValue.coverage);
+  } else {
+      throw std::logic_error{"Bad initial script."};
+  }
+
   for (int i = 0; i < settings.episodes; ++i) {
     const auto learningRate =
-        settings.learningRate + (double(i) / settings.episodes) * 0.9f;
-    const auto expRate = 0.8f - (double(i) / settings.episodes) * 0.8f;
+        settings.learningRate + (double(i) / settings.episodes) * 0.5f;
+    const auto expRate = 0.9f - ((double(i) / settings.episodes) * 0.8f);
 
     std::cout << "Episode: " << i << ", expRate: " << expRate << std::endl;
 
@@ -73,7 +93,7 @@ void learningSession(const QLearningSettings& settings,
     auto nextState = scenario.getCurrentState();
 
     float total_reward = 0.0f;
-    ExponentialMovingAverage smoothLoss(0.5);
+    ExponentialMovingAverage smoothLoss(0.01);
 
     const auto chooseValidAction = [&]() -> std::optional<recorder::Action> {
       size_t rollback = 0;
@@ -126,6 +146,12 @@ void learningSession(const QLearningSettings& settings,
 
     logger.logLoss(i, smoothLoss.get_average());
     logger.logReward(i, total_reward);
+
+    covLogger.log(i, scenario.getCoverage());
+
+    if ((i % 100) == 0) {
+      logger.save();
+    }
   }
 
   dump(agent);

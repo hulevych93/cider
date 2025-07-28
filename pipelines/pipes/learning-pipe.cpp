@@ -13,6 +13,7 @@
 
 #ifdef ENABLE_MATHPLOT
 #include "mathplot-log/monitoring/q-learning-reward-loss-plot.h"
+#include "mathplot-log/monitoring/q-learning-cov-ep-plot.h"
 #endif
 
 #include <assert.h>
@@ -47,19 +48,23 @@ bool PreLearningStage::process(const std::string& metadata,
   outPath /= prefix;
   std::filesystem::create_directories(outPath);
 
-  cider::cfg_coverage::CoverageMeasurment measurer{cmd, libName.c_str()};
-  measurer.setLogger(outPath.string(), "cfg_pre_learning_log.txt");
+  agent_model::FileLogger logger(outPath, "pre_reward_loss");
 
-  const auto& input = getInput();
 
-  for (int i = 0; i < 50; ++i) {
+    cider::cfg_coverage::CoverageMeasurment measurer{cmd, libName.c_str()};
+    measurer.setLogger(outPath.string(), "cfg_pre_learning_log.txt");
+
+    const auto& input = getInput();
+
     std::visit(
         [&](const auto& settings) {
           prelearningSession(settings, input.actions,
-                             measurer.getObjValueFunc());
+                             measurer.getObjValueFunc(), logger);
         },
         m_settings);
-  }
+
+  //logger.plot();
+
   return true;
 }
 
@@ -84,41 +89,40 @@ bool LearningStage::process(const std::string& metadata,
 
   std::ofstream debug(outPath / "qtable_debug.txt", std::ios::trunc);
 
-  mathplot::QLearningResultsMathplotLogger logger(outPath, "reward_loss.png");
+  agent_model::FileLogger logger(outPath, "reward_loss.png");
 
-  std::ostringstream oss;
+  mathplot::CovQLearningResultsMathplotLogger covLogger(outPath, "cov.png");
 
-  for (size_t i = 0; i < input.actions.size(); ++i) {
-    oss << agent_model::actionToGenericRepro(input.actions[i]) << "\t";
-    print(oss, input.actions[i]);
-    oss << std::endl;
-  }
+    std::ostringstream oss;
 
-  debug << oss.str();
-  debug << "Input Coverage: "
-        << measurer.getObjValueFunc()(input.actions).coverage;
-  debug << std::endl << std::endl;
+    for (size_t i = 0; i < input.actions.size(); ++i) {
+      oss << agent_model::actionToGenericRepro(input.actions[i]) << "\t";
+      print(oss, input.actions[i]);
+      oss << std::endl;
+    }
 
-  agent_model::RewardCounter rwCounter;
-  auto dump = [&rwCounter, outPath](const auto& agent) {
-    std::ofstream debug(outPath / "qtable.txt", std::ios::trunc);
-    agent.print(debug);
+    debug << oss.str();
+    debug << "Input Coverage: "
+          << measurer.getObjValueFunc()(input.actions).coverage;
+    debug << std::endl << std::endl;
 
-    agent_model::print(debug, rwCounter);
+    agent_model::RewardCounter rwCounter;
+    auto dump = [&rwCounter, outPath](const auto& agent) {
+      std::ofstream debug(outPath / "qtable.txt", std::ios::trunc);
+      agent.print(debug);
 
-    agent.save(outPath / "qtable_agent.img");
-  };
+      agent_model::print(debug, rwCounter);
 
-  std::visit(
-      [&](const auto& settings) {
-        learningSession(settings, input.actions, measurer.getObjValueFunc(),
-                        rwCounter, logger, dump);
-      },
-      m_settings);
+      agent.save(outPath / "qtable_agent.img");
+    };
 
-  logger.plot();
-
-  debug << std::endl << std::endl;
+    std::visit(
+        [&](const auto& settings) {
+          learningSession(settings, input.actions, measurer.getObjValueFunc(),
+                          rwCounter, logger, covLogger, dump);
+        },
+        m_settings);
+    debug << std::endl << std::endl;
 
   return true;
 }

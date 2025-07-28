@@ -27,10 +27,10 @@ class CoverageBoxPlot final : public gcov_coverage::ICoverageLogger {
            const gcov_coverage::RootReport& coverage) const override;
 
   void next(const std::string& label);
+
   void linesCount(size_t lines);
 
   void plot() const;
-  void save();
 
  private:
   PlotType _type;
@@ -38,7 +38,6 @@ class CoverageBoxPlot final : public gcov_coverage::ICoverageLogger {
   BoxPlotData* _current = nullptr;
 
   std::string m_path;
-  bool m_saved = false;
 };
 
 }  // namespace mathplot

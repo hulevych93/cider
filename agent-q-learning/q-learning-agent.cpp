@@ -42,6 +42,8 @@ double QLearningAgent::updateQValues(const recorder::Actions& state,
   return loss;
 }
 
+std::string QLearningAgent::Path;
+
 }  // namespace qlearning
 }  // namespace agent_model
 }  // namespace cider

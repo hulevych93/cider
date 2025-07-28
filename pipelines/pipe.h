@@ -35,6 +35,10 @@ class Pipe {
   const Input& getInput() const;
   const Results& getResults() const;
 
+  Results& getMutableResults();
+
+  void clearData(const std::string& methodName);
+
  private:
   Pipeline* _owner = nullptr;
 };

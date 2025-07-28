@@ -42,10 +42,10 @@ bool Pipeline::save(const std::string& filePath) const {
 
 Pipeline::Pipeline(const std::string& libName, const cider::Cmd& cmd)
     : _libName(libName), _cmd(cmd) {
-  agent_model::qlearning::QLearningAgent::get(
+  agent_model::qlearning::QLearningAgent::setPath(
       paths::getQLearningAgentPath(cmd.resultsDir));
 
-  agent_model::sarsa::SarsaLearningAgent::get(
+  agent_model::sarsa::SarsaLearningAgent::setPath(
       paths::getSarsaAgentPath(cmd.resultsDir));
 
   std::cout << "Load results: " << paths::getResultsPath(cmd.resultsDir)
@@ -101,6 +101,19 @@ bool Pipeline::run(const std::string& metadata) {
   return true;
 }
 
+void Pipeline::clearTrash() {
+  for (auto& storageIt : _resultsStorage) {
+    auto& results = storageIt.second;
+    results.erase(std::remove_if(results.begin(), results.end(),
+                                 [](const Result& r) {
+                                   return r.oldReport.branchCov.percent ==
+                                              0.0 ||
+                                          r.oldCfgReport.getPercentage() == 0.0;
+                                 }),
+                  results.end());
+  }
+}
+
 const std::string Pipeline::pipelineConfig() const {
   std::string config;
   for (const auto& pipe : _pipes) {
@@ -116,7 +129,7 @@ std::string Pipeline::getDatetimeForDirName() {
   std::tm tm = *std::localtime(&t);
 
   std::ostringstream oss;
-  oss << std::put_time(&tm, "%Y-%m-%d_%H-%M-%S");
+  oss << std::put_time(&tm, "%Y-%m-%d");
   return oss.str();
 }
 

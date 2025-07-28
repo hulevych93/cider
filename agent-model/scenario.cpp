@@ -119,7 +119,7 @@ std::optional<double> LearningScenario::getReward() const {
         5.0);
   } else {
     result = rewardFunction(
-        _rwCounter, objValue, _lastObjVal, 0.2, 0.1,
+        _rwCounter, objValue, _lastObjVal, 0.5, 0.5,
         [&]() {
           if (_actions.size() >= 2U) {
             if (cider::recorder::semanticallyEqual(
@@ -130,7 +130,7 @@ std::optional<double> LearningScenario::getReward() const {
                         _actions[_actions.size() - 2],
                         _actions[_actions.size() - 3])) {
                   _rwCounter.threeSameAct++;
-                  return -0.2;
+                  return -0.3;
                 }
               }
               _rwCounter.twoSameAct++;
@@ -157,6 +157,10 @@ std::optional<double> LearningScenario::getReward() const {
   }
 
   return result;
+}
+
+double LearningScenario::getCoverage() const {
+    return _objFunc(_actions).coverage;
 }
 
 std::string actionToGenericRepro(const recorder::Action& action) {

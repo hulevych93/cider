@@ -15,10 +15,15 @@ class QLearningAgent : public agent_model::QTableAgent {
  public:
   ~QLearningAgent() override = default;
 
-  static QLearningAgent& get(const std::string& path = "") {
-    static QLearningAgent agent(path);
+  static QLearningAgent& get() {
+    if (Path.empty()) {
+      throw std::logic_error{"agent path error"};
+    }
+    static QLearningAgent agent(Path);
     return agent;
   }
+
+  static void setPath(const std::string& path) { Path = path; }
 
   double updateQValues(const recorder::Actions& state,
                        const recorder::Actions& nextState,
@@ -26,6 +31,8 @@ class QLearningAgent : public agent_model::QTableAgent {
                        const double reward,
                        const double learningRate,
                        const double discount);
+
+  static std::string Path;
 };
 
 }  // namespace qlearning

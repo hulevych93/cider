@@ -45,12 +45,15 @@ class Pipeline final {
   Results& getResults() { return _resultsStorage; }
 
  private:
+  void clearTrash();
+
   std::string _libName;
   cider::Cmd _cmd;
   std::vector<std::unique_ptr<Pipe>> _pipes;
 
   Input _input;
   Results _resultsStorage;
+  bool _isLoaded = false;
 };
 
 Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd);

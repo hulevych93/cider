@@ -17,33 +17,46 @@ namespace sarsa {
 
 void prelearningSession(const SarsaLearningSettings& settings,
                         const recorder::Actions& list,
-                        ObjectiveFunction objFunc) {
+                        ObjectiveFunction objFunc,
+                        IResultsLogger& logger) {
   SarsaLearningAgent& agent = SarsaLearningAgent::get();
 
-  RewardCounter rwCounter;
-  agent_model::LearningScenario scenario(rwCounter, Seed::instance().get(),
-                                         settings.maxStateDepth, list, objFunc);
+  for (int i = 0; i < settings.prelearningEpisodes; ++i) {
+    RewardCounter rwCounter;
+    agent_model::LearningScenario scenario(rwCounter, Seed::instance().get(),
+                                           settings.maxStateDepth, list,
+                                           objFunc);
 
-  auto nextState = scenario.getCurrentState();
+    auto nextState = scenario.getCurrentState();
 
-  int index = 0U;
-  while (!scenario.isOver()) {
-    const auto stateBeforeAction = nextState;
-    const auto& action = list[index];
-    const auto& nextAction =
-        (index + 1 < list.size()) ? list[index + 1] : recorder::Action{};
+    ExponentialMovingAverage smoothLoss(0.5);
+    float total_reward = 0.0f;
 
-    ++index;
+    int index = 0U;
+    while (!scenario.isOver()) {
+      const auto stateBeforeAction = nextState;
+      const auto& action = list[index];
+      const auto& nextAction =
+          (index + 1 < list.size()) ? list[index + 1] : recorder::Action{};
 
-    scenario.add(action);
-    nextState = scenario.getCurrentState();
+      ++index;
 
-    if (const auto rewardOpt = scenario.getReward()) {
-      agent.updateQValues(stateBeforeAction, nextState, action, nextAction,
-                          rewardOpt.value(), settings.learningRate,
-                          settings.discountFactor);
-    } else {
-      throw std::logic_error{"failed to run on initial sequence."};
+      scenario.add(action);
+      nextState = scenario.getCurrentState();
+
+      if (const auto rewardOpt = scenario.getReward()) {
+        const auto loss = agent.updateQValues(
+            stateBeforeAction, nextState, action, nextAction, rewardOpt.value(),
+            settings.learningRate, settings.discountFactor);
+
+        smoothLoss.add_value(loss);
+        total_reward += rewardOpt.value();
+      } else {
+        throw std::logic_error{"failed to run on initial sequence."};
+      }
+
+      logger.logLoss(index, smoothLoss.get_average());
+      logger.logReward(index, total_reward);
     }
   }
 }
@@ -53,6 +66,7 @@ void learningSession(const SarsaLearningSettings& settings,
                      ObjectiveFunction objFunc,
                      RewardCounter& counter,
                      IResultsLogger& logger,
+                     ICovLogger& covLogger,
                      const std::function<void(const IAgent&)>& dump) {
   SarsaLearningAgent& agent = SarsaLearningAgent::get();
 

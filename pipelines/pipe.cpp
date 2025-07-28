@@ -40,5 +40,13 @@ const Results& Pipe::getResults() const {
   return _owner->getResults();
 }
 
+Results& Pipe::getMutableResults() {
+  return _owner->getResults();
+}
+
+void Pipe::clearData(const std::string& methodName) {
+  _owner->getResults()[methodName] = {};
+}
+
 }  // namespace pipelines
 }  // namespace cider

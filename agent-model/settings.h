@@ -15,10 +15,11 @@ namespace agent_model {
 struct LearningSettingsBase {
   const char* configName = "L_NAN";
   double learningRate = 0.1;
-  double discountFactor = 0.9;
+  double discountFactor = 0.85;
+  size_t prelearningEpisodes = 0U;
   size_t episodes = 50U;
-  size_t maxRollback = 10U;
-  size_t maxStateDepth = 10U;
+  size_t maxRollback = 20U;
+  size_t maxStateDepth = 5U;
 };
 
 namespace qlearning {

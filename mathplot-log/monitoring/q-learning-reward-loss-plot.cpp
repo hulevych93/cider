@@ -21,12 +21,37 @@ namespace mathplot {
 QLearningResultsMathplotLogger::QLearningResultsMathplotLogger(
     const std::string& logDir,
     const std::string& logFileName)
-    : m_path(ensurePath(logDir, logFileName)) {
-  plt::figure_size(640, 640);
+    : m_path(ensurePath(logDir, logFileName)), _plot(PlotType::Reward) {}
+
+void QLearningResultsMathplotLogger::serialize(const std::string& filePath) {
+  try {
+    serialization::Serializer serializer;
+    serializer << ieps_;
+    serializer << rwrd_;
+    serializer << jeps_;
+    serializer << loss_;
+    serializer.save(filePath);
+  } catch (...) {
+    std::cout << "Graph serialization failed : " << filePath << std::endl;
+  }
+}
+
+bool QLearningResultsMathplotLogger::load() {
+  try {
+    serialization::Deserializer deserializer(ensureBinExtension(m_path));
+    deserializer >> ieps_;
+    deserializer >> rwrd_;
+    deserializer >> jeps_;
+    deserializer >> loss_;
+  } catch (const std::exception& e) {
+    std::cout << e.what() << std::endl;
+    return false;
+  }
+  return true;
 }
 
 void QLearningResultsMathplotLogger::logReward(size_t episode,
-                                               const double totalReward) const {
+                                               const double totalReward) {
   ieps_.push_back(static_cast<double>(episode));
   rwrd_.push_back(totalReward);
 
@@ -34,41 +59,55 @@ void QLearningResultsMathplotLogger::logReward(size_t episode,
 }
 
 void QLearningResultsMathplotLogger::logLoss(size_t episode,
-                                             const double averageLoss) const {
+                                             const double averageLoss) {
   jeps_.push_back(static_cast<double>(episode));
   loss_.push_back(averageLoss);
 
   plot();
 }
 
-void QLearningResultsMathplotLogger::plot() const {
+void QLearningResultsMathplotLogger::plot() {
   plt::clf();
 
-  plt::subplot2grid(2, 1, 0, 0);
-  plt::plot(ieps_, rwrd_,
-            std::map<std::string, std::string>{{"label", "Total Reward"},
-                                               {"color", "red"},
-                                               {"linestyle", "-"},
-                                               {"linewidth", "0.5"}});
-  plt::grid(true);
-  plt::legend();
+  applyPublicationStyle();
 
-  plt::subplot2grid(2, 1, 1, 0);
-  plt::plot(jeps_, loss_,
-            std::map<std::string, std::string>{{"label", "Average Loss"},
-                                               {"color", "blue"},
-                                               {"linestyle", "-"},
-                                               {"linewidth", "0.5"}});
-  plt::xlabel("Epochs");
-  plt::legend();
+  if (_plot == PlotType::Reward) {
+    plt::plot(ieps_, rwrd_,
+              std::map<std::string, std::string>{
+                  {"color", "red"}, {"linestyle", "-"}, {"linewidth", "0.5"}});
+
+  } else {
+    plt::plot(jeps_, loss_,
+              std::map<std::string, std::string>{
+                  {"color", "blue"}, {"linestyle", "-"}, {"linewidth", "0.5"}});
+  }
+
+  plt::ylabel(_plot == PlotType::Reward ? "Total Reward (Unit)"
+                                        : "Average Loss (Unit)");
+  plt::xlabel("Episode");
+
+  plt::xlim(0.0, 1000.0);
   plt::grid(true);
 
+  applyPublicationStyle();
   plt::pause(0.01);
 }
 
 QLearningResultsMathplotLogger::~QLearningResultsMathplotLogger() {
-  plt::save(ensurePngExtension(m_path), 1200);
+  save();
   plt::close();
+}
+
+void QLearningResultsMathplotLogger::save() {
+  serialize(ensureBinExtension(m_path));
+
+  if (_plot == PlotType::Reward) {
+    m_path += "_r";
+  } else {
+    m_path += "_l";
+  }
+
+  plt::save(ensurePngExtension(m_path), 1200);
 }
 
 }  // namespace mathplot

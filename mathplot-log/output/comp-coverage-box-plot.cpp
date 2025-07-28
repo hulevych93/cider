@@ -38,11 +38,11 @@ static std::string getYAxisName(const CoverageBoxPlot::PlotType type) {
 CoverageBoxPlot::CoverageBoxPlot(const std::string& logDir,
                                  const std::string& logFileName,
                                  PlotType type)
-    : _type(type), m_path(ensurePath(logDir, logFileName)) {
-  plt::figure_size(2140, 640);
-}
+    : _type(type), m_path(ensurePath(logDir, logFileName)) {}
+
 CoverageBoxPlot::~CoverageBoxPlot() {
-  save();
+  plt::save(ensurePngExtension(m_path), 1200);
+  plt::close();
 }
 
 void CoverageBoxPlot::next(const std::string& label) {
@@ -75,14 +75,6 @@ void CoverageBoxPlot::linesCount(size_t lines) {
   _current->lines.push_back(lines);
 }
 
-void CoverageBoxPlot::save() {
-  if (m_saved) {
-    return;
-  }
-  m_saved = true;
-  plt::save(ensurePngExtension(m_path), 1200);
-}
-
 void CoverageBoxPlot::plot() const {
   plt::clf();
 
@@ -112,7 +104,9 @@ void CoverageBoxPlot::plot() const {
                         const std::string& text) {
       std::ostringstream oss;
       oss << text << " = " << std::fixed << std::setprecision(2) << value;
-      plt::text(x, y, oss.str());
+      plt::text(
+          x, y, oss.str(),
+          {{"fontname", "Helvetica"}, {"fontsize", "6"}, {"color", "black"}});
     };
 
     double y = stats.q1;
@@ -139,52 +133,76 @@ void CoverageBoxPlot::plot() const {
     ++idx;
   }
 
-  // === Mann–Whitney U + Bonferroni correction ===
-  const size_t numGroups = plotDatas.size();
-  const size_t numTests = numGroups * (numGroups - 1) / 2;
-  const double alpha = 0.05;
-  const double adjusted_alpha = alpha / numTests;
+  std::string linestyle = "-";
+  std::string linestyleWidth = "0.8";
 
   // === Pairwise significance lines ===
   const double baseHeight = maxTop + 20.0;
   const double stepHeight = 5.0;
 
+  // === Mann–Whitney U + Bonferroni correction ===
+  const size_t numGroups = plotDatas.size();
+  const double alpha = 0.05;
+  const double adjusted_alpha = alpha;
+
   int pairIdx = 0;
-  for (size_t i = 0; i < numGroups; ++i) {
-    for (size_t j = i + 1; j < numGroups; ++j) {
-      try {
-        double p = mann_whitney_u(plotDatas[i], plotDatas[j], "two-sided");
+  int i = 0;
+  for (size_t j = i + 1; j < numGroups; ++j) {
+    try {
+      double p = mann_whitney_u(plotDatas[i], plotDatas[j], "two-sided");
+      std::cout << labels[i] << " vs " << labels[j] << "p = " << std::fixed
+                << std::setprecision(4) << p << std::endl;
 
-        std::ostringstream label;
-        label << "p = " << std::fixed << std::setprecision(4) << p;
-        if (p < adjusted_alpha)
-          label << " *";
-        else
-          label << " ns";
+      std::ostringstream label;
+      label << "p = " << std::fixed << std::setprecision(4) << p;
+      if (p < adjusted_alpha)
+        label << " *";
+      else
+        label << " ns";
 
-        double x1 = i + 1;
-        double x2 = j + 1;
-        double y = baseHeight + pairIdx * stepHeight;
+      double x1 = i + 1;
+      double x2 = j + 1;
+      double y = baseHeight + pairIdx * stepHeight;
 
-        plt::plot({x1, x1}, {y - 0.8, y}, "k-");
-        plt::plot({x2, x2}, {y - 0.8, y}, "k-");
+      plt::plot({x1, x1}, {y - 0.8, y},
+                {{"linestyle", linestyle.c_str()},
+                 {"linewidth", linestyleWidth},
+                 {"color", ColorCodes[0]}});
+      plt::plot({x2, x2}, {y - 0.8, y},
+                {{"linestyle", linestyle.c_str()},
+                 {"linewidth", linestyleWidth},
+                 {"color", ColorCodes[0]}});
 
-        plt::plot({x1, x2}, {y, y}, "k-");
+      plt::plot({x1, x2}, {y, y},
+                {{"linestyle", linestyle.c_str()},
+                 {"linewidth", linestyleWidth},
+                 {"color", ColorCodes[0]}});
 
-        plt::text((x1 + x2) / 2.0, y + 0.8, label.str());
+      plt::text(
+          (x1 + x2) / 2.0, y + 0.8, label.str(),
+          {{"fontname", "Helvetica"}, {"fontsize", "6"}, {"color", "black"}});
 
-        ++pairIdx;
-      } catch (const std::exception& e) {
-        std::cerr << "Mann–Whitney error: " << e.what() << std::endl;
-      }
+      ++pairIdx;
+    } catch (const std::exception& e) {
+      std::cerr << "Mann–Whitney error: " << e.what() << std::endl;
     }
   }
 
-  plt::boxplot(plotDatas, labels, true, {{"patch_artist", "True"}});
+  plt::boxplot(plotDatas, labels, true,
+               {{"patch_artist", "True"},
+                {"boxprops.linewidth", "0.6"},
+                {"capprops.linewidth", "0.6"},
+                {"whiskerprops.linewidth", "0.6"},
+                {"medianprops.linewidth", "0.6"},
+                {"flierprops.markeredgewidth", "0.8"},
+                {"flierprops.marker", "o"},
+                {"flierprops.markersize", "3.0"},
+                {"showfliers", "True"}});
+
   plt::xticks(xticks, labels);
 
   plt::ylabel(getYAxisName(_type));
-  plt::ylim(0.0, 100.0);
+  plt::ylim(0.0, 70.0);
 
   plt::grid(true);
 

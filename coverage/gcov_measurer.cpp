@@ -62,11 +62,7 @@ void StepperCoverageMeasurment::measure(
     m_logger->log(0U, {});
   }
 
-  if (actions.size() < 300) {
-    m_stepSize = 1;
-  } else {
-    m_stepSize = 5;
-  }
+  m_stepSize = 20;
 
   for (; _index < actions.size();) {
     (*this)(actions);

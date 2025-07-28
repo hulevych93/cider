@@ -26,11 +26,9 @@ Cmd::Cmd(int argc, char* argv[]) {
     group = static_cast<MethodsGroup>(std::atoi(argv[9]));
   }
 
-  std::cout << "pipelineType: " << (int)pipelineType
-            << ", workingDir: " << workingDir << ", baseDir: " << baseDir
-            << ", objectDir: " << objectDir << ", binPath: " << binPath
-            << ", covDir: " << covDir << ", resultsDir: " << resultsDir
-            << ", group: " << (int)group << std::endl;
+  std::cout << (int)pipelineType << " " << workingDir << " " << baseDir << " "
+            << objectDir << " " << binPath << " " << covDir << " " << resultsDir
+            << " " << (int)group << std::endl;
 }
 
 std::string loadFile(const std::string& path) {

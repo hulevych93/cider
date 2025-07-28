@@ -125,12 +125,25 @@ std::string ensurePngExtension(const std::string& path) {
   std::filesystem::path filePath(path);
 
   // Check if the extension is already .png (case insensitive)
-  if (filePath.extension() == ".png") {
+  if (filePath.extension() == ".eps") {
     return filePath.string();
   }
 
   // Add .png extension
-  filePath.replace_extension(".png");
+  filePath.replace_extension(".eps");
+  return filePath.string();
+}
+
+std::string ensureBinExtension(const std::string& path) {
+  std::filesystem::path filePath(path);
+
+  // Check if the extension is already .png (case insensitive)
+  if (filePath.extension() == ".bin") {
+    return filePath.string();
+  }
+
+  // Add .png extension
+  filePath.replace_extension(".bin");
   return filePath.string();
 }
 
@@ -165,6 +178,17 @@ double mann_whitney_u(const std::vector<double>& group1,
   }
 }
 
+void applyFonts() {
+  py::module_ plt = py::module_::import("matplotlib.pyplot");
+
+  py::object rcParams = plt.attr("rcParams");
+
+  rcParams["font.family"] = py::list(py::make_tuple("Helvetica"));
+  rcParams["font.size"] = 6.0;
+  rcParams["lines.linewidth"] = 0.6;
+  rcParams["patch.linewidth"] = 0.6;
+}
+
 void applyPublicationStyle() {
   try {
     py::module_ plt = py::module_::import("matplotlib.pyplot");
@@ -177,7 +201,7 @@ void applyPublicationStyle() {
     py::object gridlines = ax.attr("get_xgridlines")();
     for (auto g : gridlines) {
       g.attr("set_linestyle")("--");
-      g.attr("set_linewidth")(0.6);
+      g.attr("set_linewidth")(0.25);
       g.attr("set_alpha")(0.6);
       g.attr("set_color")("gray");
     }
@@ -185,12 +209,12 @@ void applyPublicationStyle() {
     gridlines = ax.attr("get_ygridlines")();
     for (auto g : gridlines) {
       g.attr("set_linestyle")("--");
-      g.attr("set_linewidth")(0.6);
+      g.attr("set_linewidth")(0.25);
       g.attr("set_alpha")(0.6);
       g.attr("set_color")("gray");
     }
 
-    ax.attr("tick_params")("direction"_a = "in", "axis"_a = "both");
+    ax.attr("tick_params")("direction"_a = "out", "axis"_a = "both");
 
     ax.attr("spines")["top"].attr("set_visible")(false);
     ax.attr("spines")["right"].attr("set_visible")(false);

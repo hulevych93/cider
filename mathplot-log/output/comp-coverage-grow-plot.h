@@ -11,15 +11,21 @@
 
 #include "agent-model/logger.h"
 
+#include "serialization/deserializer.h"
+#include "serialization/serializer.h"
+
 namespace cider {
 namespace mathplot {
 
-struct Points {
+struct Points : serialization::SerializableTag {
   std::vector<double> instructions;
 
   std::vector<double> lineCov;
   std::vector<double> brCov;
 };
+
+bool serialize(const Points& obj, serialization::Serializer& serializer);
+bool deserialize(Points& obj, const serialization::Deserializer& deserializer);
 
 class StepperComparativeLogger : public gcov_coverage::ICoverageLogger {
  public:
@@ -33,6 +39,10 @@ class StepperComparativeLogger : public gcov_coverage::ICoverageLogger {
   void log(size_t index,
            const gcov_coverage::RootReport& coverage) const override;
 
+  void serialize(const std::string& filePath);
+
+  bool load();
+
   void next(const std::string& name);
 
   void plot() const;
@@ -41,9 +51,11 @@ class StepperComparativeLogger : public gcov_coverage::ICoverageLogger {
   PlotType _type;
   mutable std::unordered_map<std::string, std::vector<Points>> _graphs;
   std::vector<std::string> _order;
+
   Points* _current = nullptr;
   int _style = 0;
   int _color = 0;
+  int _marker = 0;
 
   std::string m_path;
   mutable size_t _updateCounter = 0;

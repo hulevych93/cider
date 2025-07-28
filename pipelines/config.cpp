@@ -86,9 +86,9 @@ auto getCackooSettings() {
   return settings;
 }
 
-auto getMCTS0Settings() {
+auto getMCTS1Settings() {
   mcts::MonteCarloSettings settings;
-  settings.configName = "MCTS0";
+  settings.configName = "MCTS1";
   settings.maxIter = 50;
   settings.maxDepth = 10;
   settings.ucb_C = 0.7;
@@ -96,9 +96,9 @@ auto getMCTS0Settings() {
   return settings;
 }
 
-auto getMCTS1Settings() {
+auto getMCTS2Settings() {
   mcts::MonteCarloSettings settings;
-  settings.configName = "MCTS1";
+  settings.configName = "MCTS2";
   settings.maxIter = 50;
   settings.maxDepth = 10;
   settings.ucb_C = 1.4;
@@ -106,9 +106,9 @@ auto getMCTS1Settings() {
   return settings;
 }
 
-auto getMCTS2Settings() {
+auto getMCTS3Settings() {
   mcts::MonteCarloSettings settings;
-  settings.configName = "MCTS2";
+  settings.configName = "MCTS3";
   settings.maxIter = 50;
   settings.maxDepth = 10;
   settings.ucb_C = 2.0;
@@ -121,7 +121,7 @@ auto getQLearningSettings() {
   settings.configName = "QL";
   settings.discountFactor = 0.85;
   settings.learningRate = 0.1;
-  settings.episodes = 1000U;
+  settings.episodes = 500U;
   settings.maxRollback = 20U;
   settings.maxStateDepth = 10U;
   return settings;
@@ -258,7 +258,7 @@ auto getSarsaGenB3Settings() {
   return settings;
 }
 
-auto getRandGenSettings(size_t lines = 250) {
+auto getRandGenSettings(size_t lines = 450) {
   synthesis::RandSynthesisSettings settings;
   settings.configName = "RAND";
   settings.stopType = synthesis::StopCondition::LimitActions;
@@ -266,38 +266,51 @@ auto getRandGenSettings(size_t lines = 250) {
   return settings;
 }
 
+const pipelines::ReportConfiguration& getReportConfigRAND() {
+  static const std::vector<std::string> orderedMethods = {"RAND"};
+  return orderedMethods;
+}
+
 const pipelines::ReportConfiguration& getReportConfigQLEG() {
-  static const std::vector<std::string> orderedMethods = {"QLEG1", "QLEG2",
-                                                          "QLEG3"};
+  static const std::vector<std::string> orderedMethods = {"RAND", "QLEG1",
+                                                          "QLEG2", "QLEG3"};
   return orderedMethods;
 }
 
 const pipelines::ReportConfiguration& getReportConfigQLB() {
-  static const std::vector<std::string> orderedMethods = {"QLB1", "QLB2",
-                                                          "QLB3"};
+  static const std::vector<std::string> orderedMethods = {"RAND", "QLB1",
+                                                          "QLB2", "QLB3"};
   return orderedMethods;
 }
 
 const pipelines::ReportConfiguration& getReportConfigSLEG() {
-  static const std::vector<std::string> orderedMethods = {"SLEG1", "SLEG2",
-                                                          "SLEG3"};
+  static const std::vector<std::string> orderedMethods = {"RAND", "SLEG1",
+                                                          "SLEG2", "SLEG3"};
   return orderedMethods;
 }
 
 const pipelines::ReportConfiguration& getReportConfigSLB() {
-  static const std::vector<std::string> orderedMethods = {"SLB1", "SLB2",
-                                                          "SLB3"};
+  static const std::vector<std::string> orderedMethods = {"RAND", "SLB1",
+                                                          "SLB2", "SLB3"};
   return orderedMethods;
 }
 
 const pipelines::ReportConfiguration& getReportConfigMCTS() {
-  static const std::vector<std::string> orderedMethods = {"MCTS0", "MCTS1",
-                                                          "MCTS2"};
+  static const std::vector<std::string> orderedMethods = {"RAND", "MCTS1",
+                                                          "MCTS2", "MCTS3"};
+  return orderedMethods;
+}
+
+const pipelines::ReportConfiguration& getReportConfigQLEGvsQLB() {
+  static const std::vector<std::string> orderedMethods = {"RAND", "QLEG2",
+                                                          "QLB2"};
   return orderedMethods;
 }
 
 const pipelines::ReportConfiguration& getReportConfig(MethodsGroup group) {
   switch (group) {
+    case MethodsGroup::RAND:
+      return getReportConfigRAND();
     case MethodsGroup::QLEG:
       return getReportConfigQLEG();
     case MethodsGroup::QLB:
@@ -308,10 +321,12 @@ const pipelines::ReportConfiguration& getReportConfig(MethodsGroup group) {
       return getReportConfigSLB();
     case MethodsGroup::MCTS:
       return getReportConfigMCTS();
+    case MethodsGroup::QLEG2_VS_QLB2:
+      return getReportConfigQLEGvsQLB();
   }
 }
 
-constexpr const int StatsCount = 50U;
+constexpr const int StatsCount = 5U;
 
 }  // namespace
 
@@ -346,10 +361,6 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
       pipeline.addStage(
           std::make_unique<SynthesisStage>(getRandGenSettings(), StatsCount));
       break;
-    case PipelineType::MCTS0:
-      pipeline.addStage(
-          std::make_unique<MctsSearchStage>(getMCTS0Settings(), StatsCount));
-      break;
     case PipelineType::MCTS1:
       pipeline.addStage(
           std::make_unique<MctsSearchStage>(getMCTS1Settings(), StatsCount));
@@ -357,6 +368,10 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
     case PipelineType::MCTS2:
       pipeline.addStage(
           std::make_unique<MctsSearchStage>(getMCTS2Settings(), StatsCount));
+      break;
+    case PipelineType::MCTS3:
+      pipeline.addStage(
+          std::make_unique<MctsSearchStage>(getMCTS3Settings(), StatsCount));
       break;
     case PipelineType::QLearningAgentLearning:
       if (!agent_model::qlearning::QLearningAgent::get().isLoaded()) {
@@ -429,18 +444,29 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
       }
       break;
     case PipelineType::GenerationCoverageStepperStats:
-      if (pipeline.hasResults()) {
-        pipeline.addStage(std::make_unique<StepperReportStage>());
-      }
+      pipeline.addStage(
+          std::make_unique<StepperReportStage>(getReportConfig(cmd.group)));
       break;
     case PipelineType::GenerationLinesBarStats:
       if (pipeline.hasResults()) {
-        pipeline.addStage(std::make_unique<LinesBarPlotReportStage>());
+        pipeline.addStage(std::make_unique<LinesBarPlotReportStage>(
+            getReportConfig(cmd.group)));
       }
       break;
     case PipelineType::GenerationEfficencyTable:
       if (pipeline.hasResults()) {
         pipeline.addStage(std::make_unique<EfficencyReportStage>());
+      }
+      break;
+    case PipelineType::RemoveGroupData:
+      if (pipeline.hasResults()) {
+        pipeline.addStage(
+            std::make_unique<RemoveDataStage>(getReportConfig(cmd.group)));
+      }
+      break;
+    case PipelineType::ProcessData:
+      if (pipeline.hasResults()) {
+        pipeline.addStage(std::make_unique<ProcessDataStage>());
       }
       break;
   }

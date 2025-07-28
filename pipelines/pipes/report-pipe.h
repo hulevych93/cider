@@ -12,11 +12,17 @@ using ReportConfiguration = std::vector<std::string>;
 
 class StepperReportStage final : public Pipe {
  public:
+  explicit StepperReportStage(const ReportConfiguration& config);
+
+ public:
   bool process(const std::string& metadata,
                const std::string& libName,
                const cider::Cmd& cmd) override;
 
-  std::string getLetter() const override { return "RP"; }
+  std::string getLetter() const override { return "REPORT"; }
+
+ private:
+  ReportConfiguration _config;
 };
 
 class BoxPlotReportStage final : public Pipe {
@@ -27,28 +33,24 @@ class BoxPlotReportStage final : public Pipe {
                const std::string& libName,
                const cider::Cmd& cmd) override;
 
-  std::string getLetter() const override { return "BOX_PLOT"; }
+  std::string getLetter() const override { return "REPORT"; }
 
  private:
   ReportConfiguration _config;
 };
 
-class CovBarPlotReportStage final : public Pipe {
- public:
-  bool process(const std::string& metadata,
-               const std::string& libName,
-               const cider::Cmd& cmd) override;
-
-  std::string getLetter() const override { return "COV_BAR_PL"; }
-};
-
 class LinesBarPlotReportStage final : public Pipe {
  public:
+  explicit LinesBarPlotReportStage(const ReportConfiguration& config);
+
   bool process(const std::string& metadata,
                const std::string& libName,
                const cider::Cmd& cmd) override;
 
-  std::string getLetter() const override { return "LN_BAR_PL"; }
+  std::string getLetter() const override { return "REPORT"; }
+
+ private:
+  ReportConfiguration _config;
 };
 
 class EfficencyReportStage final : public Pipe {
@@ -57,7 +59,30 @@ class EfficencyReportStage final : public Pipe {
                const std::string& libName,
                const cider::Cmd& cmd) override;
 
-  std::string getLetter() const override { return "EFF_TABLE"; }
+  std::string getLetter() const override { return "REPORT"; }
+};
+
+class RemoveDataStage final : public Pipe {
+ public:
+  explicit RemoveDataStage(const ReportConfiguration& config);
+
+  bool process(const std::string& metadata,
+               const std::string& libName,
+               const cider::Cmd& cmd) override;
+
+  std::string getLetter() const override { return "REPORT"; }
+
+ private:
+  ReportConfiguration _config;
+};
+
+class ProcessDataStage final : public Pipe {
+ public:
+  bool process(const std::string& metadata,
+               const std::string& libName,
+               const cider::Cmd& cmd) override;
+
+  std::string getLetter() const override { return "REPORT"; }
 };
 
 }  // namespace pipelines

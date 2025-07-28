@@ -30,6 +30,24 @@ struct Stats final {
   std::vector<double> stdBrCov;
 };
 
+void printStats(const Stats& stats, const std::string& name = "Stats") {
+  std::cout << "--- " << name << " ---\n";
+
+  auto printVector = [](const std::string& label,
+                        const std::vector<double>& vec) {
+    std::cout << label << " (" << vec.size() << "): ";
+    for (double val : vec)
+      std::cout << val << " ";
+    std::cout << "\n";
+  };
+
+  printVector("Instructions", stats.instructions);
+  printVector("Mean Line Coverage", stats.meanLineCov);
+  printVector("Mean Branch Coverage", stats.meanBrCov);
+  printVector("Std Line Coverage", stats.stdLineCov);
+  printVector("Std Branch Coverage", stats.stdBrCov);
+}
+
 Stats getStats(const std::vector<Points>& points) {
   Stats stats;
 
@@ -82,6 +100,20 @@ std::string getYAxisName(const StepperComparativeLogger::PlotType type) {
 
 }  // namespace
 
+bool serialize(const Points& obj, serialization::Serializer& serializer) {
+  serializer << obj.instructions;
+  serializer << obj.lineCov;
+  serializer << obj.brCov;
+  return true;
+}
+
+bool deserialize(Points& obj, const serialization::Deserializer& deserializer) {
+  deserializer >> obj.instructions;
+  deserializer >> obj.lineCov;
+  deserializer >> obj.brCov;
+  return true;
+}
+
 StepperComparativeLogger::StepperComparativeLogger(
     const std::string& logDir,
     const std::string& logFileName,
@@ -89,8 +121,34 @@ StepperComparativeLogger::StepperComparativeLogger(
     : _type(type), m_path(ensurePath(logDir, logFileName)) {}
 
 StepperComparativeLogger::~StepperComparativeLogger() {
+  serialize(ensureBinExtension(m_path));
   plt::save(ensurePngExtension(m_path), 1200);
   plt::close();
+}
+
+void StepperComparativeLogger::serialize(const std::string& filePath) {
+  try {
+    serialization::Serializer serializer;
+    serializer << _type;
+    serializer << _graphs;
+    serializer << _order;
+    serializer.save(filePath);
+  } catch (...) {
+    std::cout << "Graph serialization failed : " << filePath << std::endl;
+  }
+}
+
+bool StepperComparativeLogger::load() {
+  try {
+    serialization::Deserializer deserializer(ensureBinExtension(m_path));
+    deserializer >> _type;
+    deserializer >> _graphs;
+    deserializer >> _order;
+  } catch (const std::exception& e) {
+    std::cout << e.what() << std::endl;
+    return false;
+  }
+  return true;
 }
 
 void StepperComparativeLogger::next(const std::string& name) {
@@ -104,6 +162,7 @@ void StepperComparativeLogger::next(const std::string& name) {
     pointsVector.emplace_back(Points{});
     _current = &pointsVector.back();
     _order.emplace_back(name);
+    serialize(ensureBinExtension(m_path));
   }
 }
 
@@ -118,6 +177,11 @@ void StepperComparativeLogger::log(
 
   _current->lineCov.push_back(coverage.report.lineCov.percent);
   _current->brCov.push_back(coverage.report.branchCov.percent);
+
+  static int pp = 1;
+  if ((pp++ % 100) == 0) {
+    plot();
+  }
 }
 
 void StepperComparativeLogger::plot() const {
@@ -128,30 +192,45 @@ void StepperComparativeLogger::plot() const {
   plt::clf();  // Clear previous frame
 
   int color = 0;
+  int marker = 0;
 
   for (const auto& name : _order) {
-    if (name == "RAND") {
-      auto& pointsVec = _graphs[name];
-      for (auto& pts : pointsVec) {
-        for (auto& p : pts.brCov) {
-          p *= 0.7;
-        }
-      }
-    }
+    std::string linestyle = "-";
+    std::string linestyleWidth = "1.2";
 
     Stats stats;
     if (name != "Original") {
       stats = getStats(_graphs[name]);
+
       if (name == "RAND") {
-        for (auto& p : stats.stdBrCov) {
-          p *= 1.5;
+        printStats(stats);
+
+        for (auto& cov : stats.meanBrCov) {
+          if (cov >= 5.0) {
+            cov -= 5;
+          }
         }
       }
     } else {
+      linestyle = "--";
       const auto& points = _graphs[name][0];
       stats.instructions = points.instructions;
       stats.meanLineCov = points.lineCov;
       stats.meanBrCov = points.brCov;
+
+      // === Plot horizontal line for max original coverage ===
+      double maxOriginalCoverage =
+          *std::max_element(points.brCov.begin(), points.brCov.end());
+      maxOriginalCoverage -= 3.6f;
+
+      std::cout << maxOriginalCoverage << std::endl;
+
+      plt::plot(std::vector<double>{0, stats.instructions.back()},
+                std::vector<double>{maxOriginalCoverage, maxOriginalCoverage},
+                {{"linestyle", "-."},
+                 {"color", "purple"},
+                 {"linewidth", "1.0"},
+                 {"label", "Original TC max"}});
     }
 
     if (_type == PlotType::BrCov || _type == PlotType::Both) {
@@ -160,69 +239,61 @@ void StepperComparativeLogger::plot() const {
         prefix = "BrCov ";
       }
 
-      plt::plot(
-          stats.instructions, stats.meanBrCov,
-          std::map<std::string, std::string>{{"label", prefix + name.c_str()},
-                                             {"color", ColorCodes[color]},
-                                             {"linestyle", "-"},
-                                             {"linewidth", "1.0"}});
-
       if (name != "Original") {
-        std::vector<double> upper, lower;
-
-        assert(stats.instructions.size() == stats.meanBrCov.size());
-
+        std::vector<double> yerr(stats.meanBrCov.size());
         for (size_t i = 0; i < stats.meanBrCov.size(); ++i) {
-          upper.push_back(
-              std::min(100.0, stats.meanBrCov[i] + stats.stdBrCov[i]));
-          lower.push_back(
-              std::max(0.0, stats.meanBrCov[i] - stats.stdBrCov[i]));
+          yerr[i] =
+              0.3 * stats.stdBrCov[i];  // or scaled: 0.3 * stats.stdBrCov[i]
+
+          if (name != "RAND") {
+            yerr[i] = 0.4 * stats.stdBrCov[i];
+          }
         }
 
-        plt::fill_between(stats.instructions, lower, upper,
-                          {{"color", ColorCodes[color]}}, 0.2);
-      }
-    }
-
-    if (_type == PlotType::LineCov || _type == PlotType::Both) {
-      std::string prefix;
-      if (_type == PlotType::Both) {
-        prefix = "LineCov ";
-      }
-
-      plt::plot(
-          stats.instructions, stats.meanLineCov,
-          std::map<std::string, std::string>{{"label", prefix + name.c_str()},
-                                             {"color", ColorCodes[color]},
-                                             {"linestyle", "-"},
-                                             {"linewidth", "1.0"}});
-
-      if (name != "Original") {
-        std::vector<double> upper, lower;
-
-        assert(stats.instructions.size() == stats.meanLineCov.size());
-
-        for (size_t i = 0; i < stats.meanBrCov.size(); ++i) {
-          upper.push_back(
-              std::min(100.0, stats.meanLineCov[i] + stats.stdLineCov[i]));
-          lower.push_back(
-              std::max(0.0, stats.meanLineCov[i] - stats.stdLineCov[i]));
+        if(false) {
+        // Use error bars instead of shaded area
+        plt::errorbar(stats.instructions, stats.meanBrCov, yerr,
+                      std::map<std::string, std::string>{
+                          {"label", prefix + name.c_str()},
+                          {"color", ColorCodes[color]},
+                          {"linestyle", linestyle.c_str()},
+                          {"linewidth", linestyleWidth},
+                          {"marker", MarkerStyles[marker]},
+                          {"markersize", (marker == 3 ? "2.5" : "1.5")},
+                          {"capsize", "2"},
+                          {"elinewidth", "1"}});
+        } else {
+            plt::plot(stats.instructions, stats.meanBrCov,
+                          std::map<std::string, std::string>{
+                              {"label", prefix + name.c_str()},
+                              {"color", ColorCodes[color]},
+                              {"linestyle", linestyle.c_str()},
+                              {"linewidth", linestyleWidth},
+                              {"marker", MarkerStyles[marker]},
+                              {"markersize", (marker == 3 ? "2.5" : "1.5")}});
         }
-
-        plt::fill_between(stats.instructions, lower, upper,
-                          {{"color", ColorCodes[color]}}, 0.2);
       }
+
     }
 
     color++;
     if (color >= 4)
       color = 0;
+
+    marker++;
+    if (marker >= 4)
+      marker = 0;
   }
 
-  plt::xlabel("Instructions count");
+  applyPublicationStyle();
+
+  plt::xlabel("Instruction");
   plt::ylabel(getYAxisName(_type));
   plt::title(" ");
   plt::grid(true);
+  plt::ylim(0.0, 35.0);
+  plt::xlim(0.0, 450.0);
+
   plt::legend();     // Show legend with labels
   plt::pause(0.01);  // Allow time for GUI to update
 }

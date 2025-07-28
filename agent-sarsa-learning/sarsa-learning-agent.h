@@ -15,10 +15,15 @@ class SarsaLearningAgent : public agent_model::QTableAgent {
  public:
   ~SarsaLearningAgent() override = default;
 
-  static SarsaLearningAgent& get(const std::string& path = "") {
-    static SarsaLearningAgent agent(path);
+  static SarsaLearningAgent& get() {
+    if (Path.empty()) {
+      throw std::logic_error{"agent path error"};
+    }
+    static SarsaLearningAgent agent(Path);
     return agent;
   }
+
+  static void setPath(const std::string& path) { Path = path; }
 
   double updateQValues(const recorder::Actions& state,
                        const recorder::Actions& nextState,
@@ -27,6 +32,8 @@ class SarsaLearningAgent : public agent_model::QTableAgent {
                        const double reward,
                        const double learningRate,
                        const double discount);
+
+  static std::string Path;
 };
 
 }  // namespace sarsa

@@ -36,6 +36,8 @@ double SarsaLearningAgent::updateQValues(const recorder::Actions& state,
   return loss;
 }
 
+std::string SarsaLearningAgent::Path;
+
 }  // namespace sarsa
 }  // namespace agent_model
 }  // namespace cider
