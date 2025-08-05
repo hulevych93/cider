@@ -59,6 +59,8 @@ add_subdirectory(agent-model)
 add_subdirectory(agent-q-learning)
 add_subdirectory(agent-sarsa-learning)
 add_subdirectory(monte-carlo-tree-search)
+add_subdirectory(dynamic-slicer)
+add_subdirectory(greedy-r)
 add_subdirectory(pipelines)
 
 add_subdirectory(tools/cider)
@@ -80,6 +82,7 @@ if(ENABLE_TESTS)
   add_subdirectory(tests)
   add_subdirectory(recorder/tests)
   add_subdirectory(serialization/tests)
+  add_subdirectory(agent-model/tests)
 endif()
 
 if(CIDER_ENABLE_COVERAGE)
@@ -90,13 +93,7 @@ if(CIDER_ENABLE_COVERAGE)
         EXCLUDE "tools/*" "tests/models/*" "${BUILD_FILES_DIR}/*" "${CIDER_GEN_DIR}/*" "${BASE_DIRECTORY}/*/v1/*" "/Applications/*")
 endif()
 
-add_subdirectory(experiments/hjson)
-add_subdirectory(experiments/pugixml)
-add_subdirectory(experiments/BitmapPlusPlus)
-
-if(STAGING)
-  add_subdirectory(experiments/Argh)
-endif()
+add_subdirectory(experiments)
 
 add_custom_target(run_all_HS
     DEPENDS

@@ -10,16 +10,13 @@
 namespace cider {
 namespace mathplot {
 
-class QLearningResultsMathplotLogger : public agent_model::IResultsLogger {
+class QLearningRewardLogger : public agent_model::IRewardLogger {
  public:
-  enum PlotType { Loss, Reward };
+  QLearningRewardLogger(const std::string& logDir,
+                        const std::string& logFileName);
+  ~QLearningRewardLogger() override;
 
-  QLearningResultsMathplotLogger(const std::string& logDir,
-                                 const std::string& logFileName);
-  ~QLearningResultsMathplotLogger() override;
-
-  void logReward(size_t episode, const double totalReward) override;
-  void logLoss(size_t episode, const double averageLoss) override;
+  void log(size_t episode, const double totalReward) override;
 
   void serialize(const std::string& filePath);
 
@@ -30,12 +27,30 @@ class QLearningResultsMathplotLogger : public agent_model::IResultsLogger {
   void save() override;
 
  private:
-  PlotType _plot;
   mutable std::vector<double> ieps_, rwrd_;
+  std::string m_path;
+};
+
+class QLearningLossLogger : public agent_model::ILossLogger {
+ public:
+  QLearningLossLogger(const std::string& logDir,
+                      const std::string& logFileName);
+  ~QLearningLossLogger() override;
+
+  void log(size_t episode, const double averageLoss) override;
+
+  void serialize(const std::string& filePath);
+
+  bool load();
+
+  void plot();
+
+  void save() override;
+
+ private:
   mutable std::vector<double> jeps_, loss_;
 
   std::string m_path;
-  mutable size_t _updateCounter = 0;
 };
 
 }  // namespace mathplot

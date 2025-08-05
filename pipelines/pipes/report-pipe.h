@@ -53,6 +53,20 @@ class LinesBarPlotReportStage final : public Pipe {
   ReportConfiguration _config;
 };
 
+class HeatmapPlotReportStage final : public Pipe {
+ public:
+  explicit HeatmapPlotReportStage(const ReportConfiguration& config);
+
+  bool process(const std::string& metadata,
+               const std::string& libName,
+               const cider::Cmd& cmd) override;
+
+  std::string getLetter() const override { return "REPORT"; }
+
+ private:
+  ReportConfiguration _config;
+};
+
 class EfficencyReportStage final : public Pipe {
  public:
   bool process(const std::string& metadata,

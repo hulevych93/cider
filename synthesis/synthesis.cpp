@@ -110,9 +110,9 @@ bool synthesize(const SynthesisSettingsBasic& settings,
     } else {
       testCase.rollback();
       ++rollbackCount;
-      std::cout << "rollback" << std::endl;
       if (rollbackCount > settings.maxRollback) {
-        std::cout << "Max rollback" << std::endl;
+        std::cout << "Max rollback reached [" << settings.maxRollback << "]"
+                  << std::endl;
         break;
       }
     }

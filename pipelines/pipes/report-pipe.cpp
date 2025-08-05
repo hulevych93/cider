@@ -13,6 +13,7 @@
 #ifdef ENABLE_MATHPLOT
 #include "mathplot-log/output/comp-coverage-box-plot.h"
 #include "mathplot-log/output/comp-coverage-grow-plot.h"
+#include "mathplot-log/output/comp-coverage-heatmap.h"
 #include "mathplot-log/output/comp-lines-barplot.h"
 #endif
 
@@ -244,7 +245,6 @@ bool LinesBarPlotReportStage::process(const std::string&,
     };
 
     const auto& results = getResults();
-    // printResultsSummary(results);
 
     for (const auto& methodConfig : _config) {
       const auto it = results.find(methodConfig);
@@ -265,63 +265,107 @@ bool LinesBarPlotReportStage::process(const std::string&,
   return true;
 }
 
+HeatmapPlotReportStage::HeatmapPlotReportStage(
+    const ReportConfiguration& config)
+    : _config(config) {}
+
+bool HeatmapPlotReportStage::process(const std::string& metadata,
+                                     const std::string& libName,
+                                     const cider::Cmd& cmd) {
+  std::filesystem::path outPath(cmd.resultsDir);
+  outPath /= metadata;
+
+  int dataSize = 100;
+
+  std::string graphTitle = "HEATMAP_COVERAGE_" + std::to_string(dataSize) + "_";
+  for (const auto& entry : _config) {
+    graphTitle += entry;
+    graphTitle += "_";
+  }
+
+#ifdef ENABLE_MATHPLOT
+  auto logger = std::make_shared<cider::mathplot::CoverageHeatmapPlot>(
+      outPath.string(), graphTitle);
+#endif
+
+  const auto handleResult = [&](const std::string& methodName,
+                                const Result& result) {
+    logger->setRef(result.oldCfgReport.coveredTracks);
+
+    logger->add(methodName, result.newCgfReport.coveredTracks);
+  };
+
+  const auto& results = getResults();
+
+  for (const auto& methodConfig : _config) {
+    const auto it = results.find(methodConfig);
+    if (it == results.end()) {
+      std::cout << "Warning: method not simulated: " << methodConfig << "\n";
+      continue;
+    }
+
+    const auto& name = it->first;
+    const auto& res = it->second;
+
+    processBest(name, res, dataSize, handleResult);
+  }
+
+  logger->plot();
+  return true;
+}
+
 bool EfficencyReportStage::process(const std::string& metadata,
                                    const std::string&,
                                    const cider::Cmd& cmd) {
-    std::filesystem::path outPath(cmd.resultsDir);
-    outPath /= metadata;
-    std::filesystem::create_directories(outPath);
-    outPath /= "efficency_table.csv";
+  std::filesystem::path outPath(cmd.resultsDir);
+  outPath /= metadata;
+  std::filesystem::create_directories(outPath);
+  outPath /= "efficency_table.csv";
 
-    std::ofstream out(outPath);
-    if (!out) {
-        std::cerr << "Cannot write to: " << outPath << std::endl;
-        return false;
-    }
+  std::ofstream out(outPath);
+  if (!out) {
+    std::cerr << "Cannot write to: " << outPath << std::endl;
+    return false;
+  }
 
-    // Header with average ± stddev
-    out << "Method;"
-        << "OldCov(%);NewCov(%);DeltaCov;"
-        << "OldCFG(%);NewCFG(%);DeltaCFG;"
-        << "OldLen;NewLen;Compression;"
-        << "Time(ms);EffScore\n";
+  // Header with average ± stddev
+  out << "Method;"
+      << "OldCov(%);NewCov(%);DeltaCov;"
+      << "OldCFG(%);NewCFG(%);DeltaCFG;"
+      << "OldLen;NewLen;Compression;"
+      << "Time(ms);EffScore\n";
 
-    std::locale::global(std::locale("C"));
+  std::locale::global(std::locale("C"));
 
-    const auto handleResult = [&](const std::string& method,
-                                  const std::vector<Result>& results) {
-        Metrics m = computeMetrics(results);
+  const auto handleResult = [&](const std::string& method,
+                                const std::vector<Result>& results) {
+    Metrics m = computeMetrics(results);
 
-        auto fmt = [](double avg, double stddev) {
-            std::ostringstream oss;
-            oss << std::fixed << std::setprecision(2)
-                << avg << " ± " << stddev;
-            return oss.str();
-        };
-
-        out << method << ";"
-            << fmt(m.avgOldCov, m.stdOldCov) << ";"
-            << fmt(m.avgNewCov, m.stdNewCov) << ";"
-            << fmt(m.covDelta, 0.0) << ";" // stddev for delta is not reported
-            << fmt(m.avgOldCfg, m.stdOldCfg) << ";"
-            << fmt(m.avgNewCfg, m.stdNewCfg) << ";"
-            << fmt(m.cfgDelta, 0.0) << ";"
-            << fmt(m.avgOldLen, m.stdOldLen) << ";"
-            << fmt(m.avgNewLen, m.stdNewLen) << ";"
-            << fmt(m.compression, 0.0) << ";"
-            << fmt(m.avgTime, m.stdTime) << ";"
-            << fmt(m.effScore, 0.0) << "\n";
+    auto fmt = [](double avg, double stddev) {
+      std::ostringstream oss;
+      oss << std::fixed << std::setprecision(2) << avg << " ± " << stddev;
+      return oss.str();
     };
 
-    const auto& results = getResults();
-    for (const auto& resIt : results) {
-        const auto& name = resIt.first;
-        const auto& res = resIt.second;
+    out << method << ";" << fmt(m.avgOldCov, m.stdOldCov) << ";"
+        << fmt(m.avgNewCov, m.stdNewCov) << ";" << fmt(m.covDelta, 0.0)
+        << ";"  // stddev for delta is not reported
+        << fmt(m.avgOldCfg, m.stdOldCfg) << ";" << fmt(m.avgNewCfg, m.stdNewCfg)
+        << ";" << fmt(m.cfgDelta, 0.0) << ";" << fmt(m.avgOldLen, m.stdOldLen)
+        << ";" << fmt(m.avgNewLen, m.stdNewLen) << ";"
+        << fmt(m.compression, 0.0) << ";" << fmt(m.avgTime, m.stdTime) << ";"
+        << fmt(m.effScore, 0.0) << "\n";
+  };
 
-        processBestBatch(name, res, 150, handleResult);
-    }
+  const auto& results = getResults();
+  for (const auto& resIt : results) {
+    const auto& name = resIt.first;
+    const auto& res = resIt.second;
 
-    return true;
+    processBestBatch(name, res, 150, handleResult);
+  }
+
+  return true;
 }
 
 RemoveDataStage::RemoveDataStage(const ReportConfiguration& config)

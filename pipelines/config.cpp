@@ -4,6 +4,8 @@
 #include "pipeline.h"
 
 #include "pipes/dataset-pipe.h"
+#include "pipes/dslicer-pipe.h"
+#include "pipes/greedy-r-pipe.h"
 #include "pipes/learning-pipe.h"
 #include "pipes/mcts-pipe.h"
 #include "pipes/meta-pipe.h"
@@ -86,6 +88,33 @@ auto getCackooSettings() {
   return settings;
 }
 
+auto getGreedyR1Settings() {
+  greedy_r::GreedyRSettings settings;
+  settings.configName = "GRR1";
+
+  settings.top_k = 3;
+  settings.maxZeroGain = 3;
+  return settings;
+}
+
+auto getGreedyR2Settings() {
+  greedy_r::GreedyRSettings settings;
+  settings.configName = "GRR2";
+
+  settings.top_k = 5;
+  settings.maxZeroGain = 5;
+  return settings;
+}
+
+auto getGreedyR3Settings() {
+  greedy_r::GreedyRSettings settings;
+  settings.configName = "GRR3";
+
+  settings.top_k = 7;
+  settings.maxZeroGain = 7;
+  return settings;
+}
+
 auto getMCTS1Settings() {
   mcts::MonteCarloSettings settings;
   settings.configName = "MCTS1";
@@ -119,11 +148,12 @@ auto getMCTS3Settings() {
 auto getQLearningSettings() {
   agent_model::qlearning::QLearningSettings settings;
   settings.configName = "QL";
+  settings.prelearningEpisodes = 50U;
   settings.discountFactor = 0.85;
-  settings.learningRate = 0.1;
-  settings.episodes = 500U;
+  settings.learningRate = 0.3;
+  settings.episodes = 5000U;
   settings.maxRollback = 20U;
-  settings.maxStateDepth = 10U;
+  settings.maxStateDepth = 3U;
   return settings;
 }
 
@@ -307,6 +337,23 @@ const pipelines::ReportConfiguration& getReportConfigQLEGvsQLB() {
   return orderedMethods;
 }
 
+const pipelines::ReportConfiguration& getReportConfigGreedyR() {
+  static const std::vector<std::string> orderedMethods = {"GRR1", "GRR2",
+                                                          "GRR3"};
+  return orderedMethods;
+}
+
+const pipelines::ReportConfiguration& getReportConfigDSlicing() {
+  static const std::vector<std::string> orderedMethods = {"RAND", "DSL1"};
+  return orderedMethods;
+}
+
+const pipelines::ReportConfiguration& getReportConfigSelected() {
+  static const std::vector<std::string> orderedMethods = {
+      "GRR1", "GRR2", "GRR3", "RAND", "QLB2", "DSL"};
+  return orderedMethods;
+}
+
 const pipelines::ReportConfiguration& getReportConfig(MethodsGroup group) {
   switch (group) {
     case MethodsGroup::RAND:
@@ -323,6 +370,12 @@ const pipelines::ReportConfiguration& getReportConfig(MethodsGroup group) {
       return getReportConfigMCTS();
     case MethodsGroup::QLEG2_VS_QLB2:
       return getReportConfigQLEGvsQLB();
+    case MethodsGroup::GREEDY_R:
+      return getReportConfigGreedyR();
+    case MethodsGroup::DSL:
+      return getReportConfigDSlicing();
+    case MethodsGroup::SELECTED:
+      return getReportConfigSelected();
   }
 }
 
@@ -372,6 +425,21 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
     case PipelineType::MCTS3:
       pipeline.addStage(
           std::make_unique<MctsSearchStage>(getMCTS3Settings(), StatsCount));
+      break;
+    case PipelineType::GreedyR1:
+      pipeline.addStage(
+          std::make_unique<GreedyRStage>(getGreedyR1Settings(), StatsCount));
+      break;
+    case PipelineType::GreedyR2:
+      pipeline.addStage(
+          std::make_unique<GreedyRStage>(getGreedyR2Settings(), StatsCount));
+      break;
+    case PipelineType::GreedyR3:
+      pipeline.addStage(
+          std::make_unique<GreedyRStage>(getGreedyR3Settings(), StatsCount));
+      break;
+    case PipelineType::DSL:
+      pipeline.addStage(std::make_unique<DSlicerStage>());
       break;
     case PipelineType::QLearningAgentLearning:
       if (!agent_model::qlearning::QLearningAgent::get().isLoaded()) {
@@ -450,6 +518,12 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
     case PipelineType::GenerationLinesBarStats:
       if (pipeline.hasResults()) {
         pipeline.addStage(std::make_unique<LinesBarPlotReportStage>(
+            getReportConfig(cmd.group)));
+      }
+      break;
+    case PipelineType::GenerationCoverageHeatMap:
+      if (pipeline.hasResults()) {
+        pipeline.addStage(std::make_unique<HeatmapPlotReportStage>(
             getReportConfig(cmd.group)));
       }
       break;

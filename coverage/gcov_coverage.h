@@ -90,10 +90,6 @@ std::string loadFile(const std::string& path);
 
 bool cleanCoverage(const std::string& workingDir);
 
-bool runScript(const std::string& binary,
-               const std::string& workingDir,
-               const std::string& script);
-
 bool runCoverage(const std::string& base,
                  const std::string& objectDir,
                  std::function<void(const char*, std::size_t)> callback);

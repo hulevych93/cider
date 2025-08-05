@@ -3,22 +3,7 @@
 
 cider_project(bitmap++_driver)
 
-add_executable(bitmap++_driver coverage_driver.cpp)
-
-target_include_directories(bitmap++_driver PRIVATE ${Python3_INCLUDE_DIRS} ${PyBind_INCLUDE_DIRS})
-
-target_link_libraries(bitmap++_driver PUBLIC
-  coverage
-  metaheuristics
-  pipelines
-  bitmap++_tests
-  agent-model
-  agent-q-learning
-  agent-sarsa-learning
-  synthesis
-  monte-carlo
-  ${PLOT_LIBS}
-)
+add_experiment_driver(bitmap++)
 
 # Helper macro to define run targets with mode parameter
 function(add_bitmap_run_target target_name mode)
@@ -69,6 +54,12 @@ add_bitmap_run_target(MCTS1 30)
 add_bitmap_run_target(MCTS2 31)
 add_bitmap_run_target(MCTS3 32)
 
+add_bitmap_run_target(GRR1 40)
+add_bitmap_run_target(GRR2 41)
+add_bitmap_run_target(GRR3 42)
+
+add_bitmap_run_target(DSL 45)
+
 add_bitmap_run_target(QL 50)
 add_bitmap_run_target(SARSA 51)
 
@@ -88,11 +79,15 @@ add_bitmap_run_target(SLB1 75)
 add_bitmap_run_target(SLB2 76)
 add_bitmap_run_target(SLB3 77)
 
+add_bitmap_run_target_group(CBOX_RAND 90 6)
 add_bitmap_run_target_group(CBOX_QLEG 90 0)
 add_bitmap_run_target_group(CBOX_QLB 90 1)
 add_bitmap_run_target_group(CBOX_SLEG 90 2)
 add_bitmap_run_target_group(CBOX_SLB 90 3)
 add_bitmap_run_target_group(CBOX_MCTS 90 4)
+add_bitmap_run_target_group(CBOX_GRR 90 7)
+add_bitmap_run_target_group(CBOX_DSL 90 8)
+add_bitmap_run_target_group(CBOX_SELECT 90 9)
 
 add_bitmap_run_target_group(CSTEP_QLEG 100 0)
 add_bitmap_run_target_group(CSTEP_QLB 100 1)
@@ -108,5 +103,17 @@ add_bitmap_run_target_group(LBAR_SLB 110 3)
 add_bitmap_run_target_group(LBAR_MCTS 110 4)
 add_bitmap_run_target_group(LBAR_QLEG_VS_QLB 110 5)
 
+add_bitmap_run_target_group(HM_QLEG 130 0)
+add_bitmap_run_target_group(HM_QLB 130 1)
+add_bitmap_run_target_group(HM_SLEG 130 2)
+add_bitmap_run_target_group(HM_SLB 130 3)
+add_bitmap_run_target_group(HM_MCTS 130 4)
+add_bitmap_run_target_group(HM_GRR 130 7)
+add_bitmap_run_target_group(HM_DSL 130 8)
+add_bitmap_run_target_group(HM_SELECT 130 9)
+
 add_bitmap_run_target(EFT 120)
+
+add_bitmap_run_target_group(REM_GRR 150 7)
+add_bitmap_run_target_group(REM_DSL 150 8)
 

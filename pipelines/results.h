@@ -32,6 +32,8 @@ struct Result final : serialization::SerializableTag {
   cfg_coverage::Coverage oldCfgReport;
   cfg_coverage::Coverage newCgfReport;
   unsigned long timeElapsedMs = 0;
+  unsigned long oldExecutionTimeMs = 0;
+  unsigned long newExecutionTimeMs = 0;
 };
 
 double getMinimizationEfficency(const Result& result);
@@ -42,6 +44,7 @@ bool serialize(const Result& obj, serialization::Serializer& serializer);
 bool deserialize(Result& obj, const serialization::Deserializer& deserializer);
 
 void printResultsSummary(const Results& results);
+void printResult(const Result& result);
 
 }  // namespace pipelines
 }  // namespace cider

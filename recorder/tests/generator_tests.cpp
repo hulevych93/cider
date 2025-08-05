@@ -52,6 +52,15 @@ bool deserializeAggregate(GeneratorTestSuite::SomeParam&,
   return true;
 }
 
+size_t hashAggregate(const GeneratorTestSuite::SomeParam&) {
+  return 0;
+}
+
+bool compareAggregates(const GeneratorTestSuite::SomeParam&,
+                       const GeneratorTestSuite::SomeParam&) {
+  return true;
+}
+
 TEST_F(GeneratorTestSuite, scriptErrorMsg) {
   LanguageContext context;
 

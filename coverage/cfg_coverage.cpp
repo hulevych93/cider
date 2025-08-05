@@ -3,8 +3,6 @@
 
 #include "cfg_coverage.h"
 
-#include <process.hpp>
-
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -42,25 +40,11 @@ void __sanitizer_cov_trace_pc_guard(std::uint32_t* guard) {
 
 }  // extern "C"
 
-namespace tpl = TinyProcessLib;
-
 constexpr const char* MarkerStart = "CFG_COV_START";
 constexpr const char* MarkerEnd = "CFG_COV_END";
 
 namespace cider {
 namespace cfg_coverage {
-
-namespace {
-
-std::vector<std::uint8_t> bitpack(const std::uint8_t* map, size_t size) {
-  std::vector<std::uint8_t> packed((size + 7) / 8, 0);
-  for (size_t i = 0; i < size; ++i) {
-    packed[i / 8] |= (map[i] ? 1 : 0) << (i % 8);
-  }
-  return packed;
-}
-
-}  // namespace
 
 Coverage& Coverage::operator=(const Coverage& rhs) {
   if (this != &rhs) {
@@ -112,7 +96,7 @@ void Coverage::dump() const {
 void dumpCoverageToCout(bool status, const Coverage& startPoint) {
   auto coverage = getCoverage();
   coverage.alignTo(startPoint).status = status;
-  const auto covJson = setializeCovReport(coverage);
+  const auto covJson = serializeCovReport(coverage);
   std::cout << MarkerStart << covJson << MarkerEnd << coverage.getPercentage();
 }
 
@@ -126,7 +110,8 @@ Coverage getCoverage() {
     }
   }
 
-  coverage.coveredTracks = bitpack(coverage_map, max_guard_id);
+  coverage.coveredTracks =
+      std::vector<std::uint8_t>(coverage_map, coverage_map + max_guard_id);
 
   return coverage;
 }
@@ -161,7 +146,7 @@ std::optional<Coverage> deserializeCovReport(const std::string& buffer) {
   return report;
 }
 
-std::string setializeCovReport(const Coverage& report) {
+std::string serializeCovReport(const Coverage& report) {
   try {
     serialization::Serializer serializer;
     serializer << report;
@@ -171,17 +156,6 @@ std::string setializeCovReport(const Coverage& report) {
   }
 
   return {};
-}
-
-bool runScript(const std::string& binary,
-               const std::string& workingDir,
-               const std::string& script,
-               std::function<void(const char*, std::size_t)> callback) {
-  tpl::Process process(
-      binary, workingDir, callback, [](const char*, std::size_t) {}, true);
-  process.write(script.data(), script.size());
-  process.close_stdin();
-  return process.get_exit_status() == 0;
 }
 
 void printTableEntry(std::ostream& ss,

@@ -47,7 +47,7 @@ bool SynthesisStage::process(const std::string& metadata,
   const auto& input = getInput();
 
   bool success = true;
-  for (int idx = 0; idx < _numberOfRuns; ++idx) {
+  for (int idx = 0; idx < _numberOfRuns;) {
     recorder::Actions output;
     const auto start = std::chrono::steady_clock::now();
 
@@ -75,7 +75,9 @@ bool SynthesisStage::process(const std::string& metadata,
     result.oldActions = deepCopy(input.actions);
     result.newActions = deepCopy(output);
 
-    pushResult(libName.c_str(), cmd, getConfigName(), result);
+    if (pushResult(libName.c_str(), cmd, getConfigName(), result)) {
+      idx++;
+    }
   }
 
   return success;

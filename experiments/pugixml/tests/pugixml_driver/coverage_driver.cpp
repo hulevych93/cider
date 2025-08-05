@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
 
   std::vector<cider::recorder::ScriptRecordSessionPtr> sessions;
 
-  if (1) {
+  if (0) {
     const auto callback = [&](const char* testName,
                               const std::function<int()>& f) -> int {
       return cider::recorder::recordScriptWithResult(LibraryName, testName,
@@ -39,8 +39,15 @@ int main(int argc, char* argv[]) {
   auto pipeline = cider::pipelines::makePipeline(LibraryName, cmd);
   pipeline.runOneByOne(sessions);
 
-  std::cout << "Program finished. Press Enter to exit...";
-  std::cin.get();
+  if (pipeline.newResuls()) {
+    std::cout << "Save results? (y/n): ";
+    char decision;
+    std::cin >> decision;
+    if (decision == 'y' || decision == 'Y') {
+      pipeline.save();
+      std::cout << "Saved.\n";
+    }
+  }
 
   return 0;
 }

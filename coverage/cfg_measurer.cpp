@@ -9,6 +9,7 @@
 #include <iostream>
 
 #include "recorder/details/generator.h"
+#include "scripting/runner.h"
 
 namespace cider {
 namespace cfg_coverage {
@@ -26,10 +27,11 @@ CfgCoverageOpt CoverageMeasurment::getReport(
   const auto binaryPath = std::string{_cmd.binPath} + "_cfg";
 
   std::string jsonReport;
-  const auto result = runScript(binaryPath, _cmd.workingDir, script,
-                                [&](const char* data, std::size_t size) {
-                                  jsonReport += std::string{data, size};
-                                });
+  const auto result =
+      scripting::runScript(binaryPath, _cmd.workingDir, script,
+                           [&](const char* data, std::size_t size) {
+                             jsonReport += std::string{data, size};
+                           });
   if (result) {
     std::string jsonStr = readCoverageFromStream(jsonReport);
     assert(!jsonStr.empty());

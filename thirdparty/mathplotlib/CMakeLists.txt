@@ -27,8 +27,8 @@ ExternalProject_Add(
     TMP_DIR                 ${TMP_DIR}
     STAMP_DIR               ${CIDER_MATHPLOT_PREFIX}/stamp
     # Download
-    GIT_REPOSITORY          https://github.com/lava/matplotlib-cpp.git
-    GIT_TAG                 ef0383f
+    GIT_REPOSITORY          https://github.com/hulevych93/matplotlib-cpp.git
+    GIT_TAG                 01269f1
     UPDATE_DISCONNECTED     1
     # Configure
     SOURCE_DIR              ${SRC_DIR}

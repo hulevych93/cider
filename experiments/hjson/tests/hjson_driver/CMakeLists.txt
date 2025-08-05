@@ -3,22 +3,7 @@
 
 cider_project(hjson_driver)
 
-add_executable(hjson_driver coverage_driver.cpp)
-
-target_include_directories(hjson_driver PRIVATE ${Python3_INCLUDE_DIRS} ${PyBind_INCLUDE_DIRS})
-
-target_link_libraries(hjson_driver PUBLIC
-  coverage
-  metaheuristics
-  pipelines
-  hjson_tests
-  agent-model
-  agent-q-learning
-  agent-sarsa-learning
-  synthesis
-  monte-carlo
-  ${PLOT_LIBS}
-)
+add_experiment_driver(hjson)
 
 # Helper macro for HJSON run targets
 function(add_hjson_run_target target_name mode)
@@ -83,6 +68,12 @@ add_hjson_run_target(QLB1 70)
 add_hjson_run_target(QLB2 71)
 add_hjson_run_target(QLB3 72)
 
+add_hjson_run_target(GRR1 40)
+add_hjson_run_target(GRR2 41)
+add_hjson_run_target(GRR3 42)
+
+add_hjson_run_target(DSL 45)
+
 add_hjson_run_target(SLB1 75)
 add_hjson_run_target(SLB2 76)
 add_hjson_run_target(SLB3 77)
@@ -92,6 +83,8 @@ add_hjson_run_target_group(CBOX_QLB 90 1)
 add_hjson_run_target_group(CBOX_SLEG 90 2)
 add_hjson_run_target_group(CBOX_SLB 90 3)
 add_hjson_run_target_group(CBOX_MCTS 90 4)
+add_hjson_run_target_group(CBOX_GRR 90 7)
+add_hjson_run_target_group(CBOX_DSL 90 8)
 
 add_hjson_run_target_group(CSTEP_QLEG 100 0)
 add_hjson_run_target_group(CSTEP_QLB 100 1)

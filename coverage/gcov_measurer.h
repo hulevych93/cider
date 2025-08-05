@@ -23,15 +23,31 @@ struct CoverageMeasurment {
     m_logger = logger;
   }
 
-  ReportOpt getReport(const std::vector<cider::recorder::Action>& actions);
-
   double operator()(const std::vector<cider::recorder::Action>& actions) {
-    const auto rootReport = getReport(actions);
+    unsigned long dummyTime = 0;
+    const auto rootReport = getReport(actions, dummyTime);
     if (rootReport.has_value()) {
-      return rootReport->report.lineCov.percent;
+      return rootReport->report.branchCov.percent;
     }
     return 0.0f;
   }
+
+  auto getObjValueFunc() {
+    return [this](const std::vector<cider::recorder::Action>& actions)
+               -> ObjectiveValue {
+      unsigned long dummyTime = 0;
+      const auto rootReport = getReport(actions, dummyTime);
+
+      ObjectiveValue value;
+      if (rootReport.has_value()) {
+        value.coverage = rootReport->report.branchCov.percent;
+      }
+      return value;
+    };
+  }
+
+  ReportOpt getReport(const std::vector<cider::recorder::Action>& actions,
+                      unsigned long& executionTimeMs);
 
   virtual std::string getScript(
       const std::vector<cider::recorder::Action>& actions) const;

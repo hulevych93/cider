@@ -106,17 +106,6 @@ bool cleanCoverage(const std::string& workingDir) {
   return process.get_exit_status() == 0;
 }
 
-bool runScript(const std::string& binary,
-               const std::string& workingDir,
-               const std::string& script) {
-  tpl::Process process(
-      binary, workingDir, [&](const char* data, std::size_t) {},
-      [](const char* data, std::size_t) {}, true);
-  process.write(script.data(), script.size());
-  process.close_stdin();
-  return process.get_exit_status() == 0;
-}
-
 bool runCoverage(const std::string& base,
                  const std::string& objectDir,
                  std::function<void(const char*, std::size_t)> callback) {

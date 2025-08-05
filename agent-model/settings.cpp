@@ -22,5 +22,12 @@ std::ostream& operator<<(std::ostream& os,
   return os;
 }
 
+double linearDecay(const double initial,
+                   const double final,
+                   const int eps,
+                   const int ep) {
+  return initial - (initial - final) * (double(ep) / eps);
+}
+
 }  // namespace agent_model
 }  // namespace cider

@@ -1591,6 +1591,7 @@ key: val2
   for (const auto& test : tests) {
     std::string name = "test_value";
     name += "_" + std::to_string(idx);
+
     callback(name.c_str(), test);
     ++idx;
   }

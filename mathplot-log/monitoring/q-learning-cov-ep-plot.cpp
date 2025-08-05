@@ -46,8 +46,7 @@ bool CovQLearningResultsMathplotLogger::load() {
   return true;
 }
 
-void CovQLearningResultsMathplotLogger::log(size_t episode,
-                                                const double cov) {
+void CovQLearningResultsMathplotLogger::log(size_t episode, const double cov) {
   ieps_.push_back(episode);
   cov_.push_back(cov);
 
@@ -59,17 +58,16 @@ void CovQLearningResultsMathplotLogger::plot() {
 
   applyPublicationStyle();
 
-    plt::plot(std::vector<double>{0, ieps_.back()},
-              std::vector<double>{_maxCov, _maxCov},
-              {{"linestyle", "-."},
-               {"color", "purple"},
-               {"linewidth", "1.0"},
-               {"label", "Pretraining Reward Value"}});
+  plt::plot(std::vector<double>{0, ieps_.back()},
+            std::vector<double>{_maxCov, _maxCov},
+            {{"linestyle", "-."},
+             {"color", "green"},
+             {"linewidth", "1.0"},
+             {"label", "Pretraining Reward Value"}});
 
-    plt::plot(ieps_, cov_,
-              std::map<std::string, std::string>{
-                  {"color", "red"}, {"linestyle", "-"}, {"linewidth", "0.5"}});
-
+  plt::plot(ieps_, cov_,
+            std::map<std::string, std::string>{
+                {"color", "red"}, {"linestyle", "-"}, {"linewidth", "0.5"}});
 
   plt::ylabel("Branch Coverage (%)");
   plt::xlabel("Episode");
@@ -83,8 +81,8 @@ void CovQLearningResultsMathplotLogger::plot() {
 CovQLearningResultsMathplotLogger::~CovQLearningResultsMathplotLogger() {
   serialize(ensureBinExtension(m_path));
 
+  plot();
   plt::save(ensurePngExtension(m_path), 1200);
-  plt::close();
 }
 
 }  // namespace mathplot

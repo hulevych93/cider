@@ -27,7 +27,7 @@ class Pipe {
 
   void setOwner(Pipeline* owner) { _owner = owner; }
 
-  void pushResult(const std::string& libName,
+  bool pushResult(const std::string& libName,
                   const cider::Cmd& cmdl,
                   const std::string& methodName,
                   Result result);

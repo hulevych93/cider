@@ -21,9 +21,11 @@ class Pipeline final {
   Pipeline(const std::string& libName, const cider::Cmd& cmd);
 
   bool hasResults(const std::string& name) const {
-    return _resultsStorage.find(name) != _resultsStorage.end();
+    return _results.find(name) != _results.end();
   }
-  bool hasResults() const { return !_resultsStorage.empty(); }
+  bool hasResults() const { return !_results.empty(); }
+
+  bool newResuls() const { return _resultsChanged; }
 
   void addStage(std::unique_ptr<Pipe> pipe) {
     pipe->setOwner(this);
@@ -32,6 +34,8 @@ class Pipeline final {
 
   bool runOneByOne(
       const std::vector<cider::recorder::ScriptRecordSessionPtr>& sessions);
+
+  bool save();
 
  private:
   bool run(const std::string& metadata);
@@ -42,7 +46,18 @@ class Pipeline final {
   const std::string pipelineConfig() const;
   static std::string getDatetimeForDirName();
 
-  Results& getResults() { return _resultsStorage; }
+  const Results& getResults() const { return _results; }
+  Results& getMutableResults() { return _results; }
+
+  void pushResult(const std::string& name, const Result& result) {
+    _results[name].emplace_back(std::move(result));
+    _resultsChanged = true;
+  }
+
+  void clearResults(const std::string& name) {
+    _results[name] = {};
+    _resultsChanged = true;
+  }
 
  private:
   void clearTrash();
@@ -52,8 +67,9 @@ class Pipeline final {
   std::vector<std::unique_ptr<Pipe>> _pipes;
 
   Input _input;
-  Results _resultsStorage;
+  Results _results;
   bool _isLoaded = false;
+  bool _resultsChanged = false;
 };
 
 Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd);

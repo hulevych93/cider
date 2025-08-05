@@ -9,16 +9,25 @@
 namespace cider {
 namespace pipelines {
 
-void Pipe::pushResult(const std::string& libName,
+bool Pipe::pushResult(const std::string& libName,
                       const cider::Cmd& cmd,
                       const std::string& methodName,
                       Result result) {
+  int success = 0;
+
   cider::gcov_coverage::CoverageMeasurment gcov_measurer{cmd, libName.c_str()};
-  const auto oldGcovReport = gcov_measurer.getReport(result.oldActions);
-  const auto newGcovReport = gcov_measurer.getReport(result.newActions);
+  unsigned long oldExecutionTimeMs = 0;
+  const auto oldGcovReport =
+      gcov_measurer.getReport(result.oldActions, oldExecutionTimeMs);
+  unsigned long newExecutionTimeMs = 0;
+  const auto newGcovReport =
+      gcov_measurer.getReport(result.newActions, newExecutionTimeMs);
   if (oldGcovReport.has_value() && newGcovReport.has_value()) {
     result.oldReport = oldGcovReport->report;
     result.newReport = newGcovReport->report;
+    result.oldExecutionTimeMs = oldExecutionTimeMs;
+    result.newExecutionTimeMs = newExecutionTimeMs;
+    success++;
   }
 
   cider::cfg_coverage::CoverageMeasurment cgf_measurer{cmd, libName.c_str()};
@@ -27,9 +36,16 @@ void Pipe::pushResult(const std::string& libName,
   if (oldCfgReport.has_value() && newCfgReport.has_value()) {
     result.oldCfgReport = oldCfgReport.value();
     result.newCgfReport = newCfgReport.value();
+    success++;
   }
 
-  _owner->getResults()[methodName].emplace_back(std::move(result));
+  if (success == 2U) {
+    printResult(result);
+    _owner->pushResult(methodName, std::move(result));
+    return true;
+  }
+
+  return false;
 }
 
 const Input& Pipe::getInput() const {
@@ -41,11 +57,11 @@ const Results& Pipe::getResults() const {
 }
 
 Results& Pipe::getMutableResults() {
-  return _owner->getResults();
+  return _owner->getMutableResults();
 }
 
 void Pipe::clearData(const std::string& methodName) {
-  _owner->getResults()[methodName] = {};
+  _owner->clearResults(methodName);
 }
 
 }  // namespace pipelines

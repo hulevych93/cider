@@ -33,6 +33,8 @@ bool serialize(const Result& obj, serialization::Serializer& serializer) {
   serializer << obj.newReport;
   serializer << obj.oldCfgReport;
   serializer << obj.newCgfReport;
+  serializer << obj.oldExecutionTimeMs;
+  serializer << obj.newExecutionTimeMs;
   return true;
 }
 
@@ -45,30 +47,41 @@ bool deserialize(Result& obj, const serialization::Deserializer& deserializer) {
   deserializer >> obj.newReport;
   deserializer >> obj.oldCfgReport;
   deserializer >> obj.newCgfReport;
+  deserializer >> obj.oldExecutionTimeMs;
+  deserializer >> obj.newExecutionTimeMs;
   return true;
 }
 
+void printResult(const Result& res) {
+  std::cout << "Test Case: " << res.testCaseName << std::endl;
+
+  std::cout << "  Old Actions: " << res.oldActions.size()
+            << ", New Actions: " << res.newActions.size() << std::endl;
+
+  std::cout << "  Old Test Exectution Time (ms): " << res.oldExecutionTimeMs
+            << ", New Test Exectution Time (ms): " << res.newExecutionTimeMs
+            << std::endl;
+
+  std::cout << "  BR Coverage: "
+            << "Old = " << res.oldReport.branchCov.percent
+            << " %, New = " << res.newReport.branchCov.percent << " %"
+            << std::endl;
+
+  std::cout << " Processing Time (ms): " << res.timeElapsedMs << std::endl;
+
+  double efficiency = getMinimizationEfficency(res);
+  std::cout << "  Minimization Efficiency: " << std::fixed
+            << std::setprecision(2) << efficiency << std::endl;
+
+  std::cout << "---------------------------" << std::endl;
+}
+
 void printResultsSummary(const Results& results) {
-  for (const auto& [libName, resultList] : results) {
+  for (const auto& resIt : results) {
+    const auto& libName = resIt.first;
     std::cout << "=== Library: " << libName << " ===" << std::endl;
-    for (const auto& res : resultList) {
-      std::cout << "Test Case: " << res.testCaseName << std::endl;
-
-      std::cout << "  Old Actions: " << res.oldActions.size()
-                << ", New Actions: " << res.newActions.size() << std::endl;
-
-      std::cout << "  BR Coverage: "
-                << "Old = " << res.oldReport.branchCov.percent
-                << " %, New = " << res.newReport.branchCov.percent << " %"
-                << std::endl;
-
-      std::cout << "  Time Elapsed (ms): " << res.timeElapsedMs << std::endl;
-
-      double efficiency = getMinimizationEfficency(res);
-      std::cout << "  Minimization Efficiency: " << std::fixed
-                << std::setprecision(2) << efficiency << std::endl;
-
-      std::cout << "---------------------------" << std::endl;
+    for (const auto& res : resIt.second) {
+      printResult(res);
     }
   }
 }

@@ -59,6 +59,22 @@ bool deserializeAggregate(TestEnum&, const serialization::Deserializer&) {
   return true;
 }
 
+size_t hashAggregate(const TestStruct&) {
+  return 0;
+}
+
+size_t hashAggregate(const TestEnum&) {
+  return 0;
+}
+
+bool compareAggregates(const TestStruct&, const TestStruct&) {
+  return true;
+}
+
+bool compareAggregates(const TestEnum&, const TestEnum&) {
+  return true;
+}
+
 TEST_F(ParamsTestSuite, makeParamBool) {
   EXPECT_NO_THROW(std::get<bool>(makeParam(static_cast<bool>(10))));
 }

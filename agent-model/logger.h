@@ -10,38 +10,33 @@
 namespace cider {
 namespace agent_model {
 
-class IResultsLogger {
+class IRewardLogger {
  public:
-  virtual ~IResultsLogger() = default;
+  virtual ~IRewardLogger() = default;
 
-  virtual void logReward(size_t episode, double totalReward) = 0;
-  virtual void logLoss(size_t episode, double averageLoss) = 0;
+  virtual void log(size_t episode, double totalReward) = 0;
 
   virtual void save() = 0;
 };
 
-class ICovLogger {
-public:
-    virtual ~ICovLogger() = default;
+class ILossLogger {
+ public:
+  virtual ~ILossLogger() = default;
 
-    virtual void set(double maxCov) = 0;
+  virtual void log(size_t episode, double averageLoss) = 0;
 
-    virtual void log(size_t episode, double cov) = 0;
-
-    virtual void save() = 0;
+  virtual void save() = 0;
 };
 
-class FileLogger : public IResultsLogger {
+class ICoverageLogger {
  public:
-  FileLogger(const std::string& logDir, const std::string& logFileName);
+  virtual ~ICoverageLogger() = default;
 
-  void logReward(size_t episode, double totalReward) override;
-  void logLoss(size_t episode, double averageLoss) override;
+  virtual void set(double maxCov) = 0;
 
-  void save() override {}
+  virtual void log(size_t episode, double cov) = 0;
 
- private:
-  mutable std::ofstream _report;
+  virtual void save() = 0;
 };
 
 }  // namespace agent_model

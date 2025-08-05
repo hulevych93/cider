@@ -160,7 +160,7 @@ std::optional<double> LearningScenario::getReward() const {
 }
 
 double LearningScenario::getCoverage() const {
-    return _objFunc(_actions).coverage;
+  return _objFunc(_actions).coverage;
 }
 
 std::string actionToGenericRepro(const recorder::Action& action) {

@@ -12,7 +12,6 @@ target_include_directories(coverage PRIVATE ${NLohMann_INCLUDE_DIRS})
 
 target_link_libraries(coverage PUBLIC
   ${Tpl_LIBRARIES}
-  recorder
   ${PLATFORM_LIBRARIES}
 )
 

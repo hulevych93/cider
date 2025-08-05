@@ -204,12 +204,6 @@ void StepperComparativeLogger::plot() const {
 
       if (name == "RAND") {
         printStats(stats);
-
-        for (auto& cov : stats.meanBrCov) {
-          if (cov >= 5.0) {
-            cov -= 5;
-          }
-        }
       }
     } else {
       linestyle = "--";
@@ -221,8 +215,6 @@ void StepperComparativeLogger::plot() const {
       // === Plot horizontal line for max original coverage ===
       double maxOriginalCoverage =
           *std::max_element(points.brCov.begin(), points.brCov.end());
-      maxOriginalCoverage -= 3.6f;
-
       std::cout << maxOriginalCoverage << std::endl;
 
       plt::plot(std::vector<double>{0, stats.instructions.back()},
@@ -242,38 +234,36 @@ void StepperComparativeLogger::plot() const {
       if (name != "Original") {
         std::vector<double> yerr(stats.meanBrCov.size());
         for (size_t i = 0; i < stats.meanBrCov.size(); ++i) {
-          yerr[i] =
-              0.3 * stats.stdBrCov[i];  // or scaled: 0.3 * stats.stdBrCov[i]
+          yerr[i] = stats.stdBrCov[i];  // or scaled: 0.3 * stats.stdBrCov[i]
 
           if (name != "RAND") {
-            yerr[i] = 0.4 * stats.stdBrCov[i];
+            yerr[i] = stats.stdBrCov[i];
           }
         }
 
-        if(false) {
-        // Use error bars instead of shaded area
-        plt::errorbar(stats.instructions, stats.meanBrCov, yerr,
-                      std::map<std::string, std::string>{
-                          {"label", prefix + name.c_str()},
-                          {"color", ColorCodes[color]},
-                          {"linestyle", linestyle.c_str()},
-                          {"linewidth", linestyleWidth},
-                          {"marker", MarkerStyles[marker]},
-                          {"markersize", (marker == 3 ? "2.5" : "1.5")},
-                          {"capsize", "2"},
-                          {"elinewidth", "1"}});
+        if (false) {
+          // Use error bars instead of shaded area
+          plt::errorbar(stats.instructions, stats.meanBrCov, yerr,
+                        std::map<std::string, std::string>{
+                            {"label", prefix + name.c_str()},
+                            {"color", ColorCodes[color]},
+                            {"linestyle", linestyle.c_str()},
+                            {"linewidth", linestyleWidth},
+                            {"marker", MarkerStyles[marker]},
+                            {"markersize", (marker == 3 ? "2.5" : "1.5")},
+                            {"capsize", "2"},
+                            {"elinewidth", "1"}});
         } else {
-            plt::plot(stats.instructions, stats.meanBrCov,
-                          std::map<std::string, std::string>{
-                              {"label", prefix + name.c_str()},
-                              {"color", ColorCodes[color]},
-                              {"linestyle", linestyle.c_str()},
-                              {"linewidth", linestyleWidth},
-                              {"marker", MarkerStyles[marker]},
-                              {"markersize", (marker == 3 ? "2.5" : "1.5")}});
+          plt::plot(stats.instructions, stats.meanBrCov,
+                    std::map<std::string, std::string>{
+                        {"label", prefix + name.c_str()},
+                        {"color", ColorCodes[color]},
+                        {"linestyle", linestyle.c_str()},
+                        {"linewidth", linestyleWidth},
+                        {"marker", MarkerStyles[marker]},
+                        {"markersize", (marker == 3 ? "2.5" : "1.5")}});
         }
       }
-
     }
 
     color++;

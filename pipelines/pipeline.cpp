@@ -21,7 +21,7 @@ namespace pipelines {
 bool Pipeline::load(const std::string& filePath) {
   try {
     serialization::Deserializer deserializer(filePath);
-    deserializer >> _resultsStorage;
+    deserializer >> _results;
   } catch (const std::exception& e) {
     std::cout << e.what() << std::endl;
     return false;
@@ -32,7 +32,7 @@ bool Pipeline::load(const std::string& filePath) {
 bool Pipeline::save(const std::string& filePath) const {
   try {
     serialization::Serializer serializer;
-    serializer << _resultsStorage;
+    serializer << _results;
     serializer.save(filePath);
   } catch (...) {
     return false;
@@ -82,10 +82,16 @@ bool Pipeline::runOneByOne(
     ++scrNum;
   }
 
-  std::cout << "Save results: " << paths::getResultsPath(_cmd.resultsDir)
-            << ", status: " << save(paths::getResultsPath(_cmd.resultsDir))
-            << std::endl;
+  clearTrash();
+  printResultsSummary(_results);
 
+  return true;
+}
+
+bool Pipeline::save() {
+  const auto& resultsDir = paths::getResultsPath(_cmd.resultsDir);
+  std::cout << "Save results: " << resultsDir
+            << ", status: " << save(resultsDir) << std::endl;
   return true;
 }
 
@@ -102,13 +108,13 @@ bool Pipeline::run(const std::string& metadata) {
 }
 
 void Pipeline::clearTrash() {
-  for (auto& storageIt : _resultsStorage) {
+  for (auto& storageIt : _results) {
     auto& results = storageIt.second;
     results.erase(std::remove_if(results.begin(), results.end(),
                                  [](const Result& r) {
-                                   return r.oldReport.branchCov.percent ==
-                                              0.0 ||
-                                          r.oldCfgReport.getPercentage() == 0.0;
+                                   return r.oldReport.branchCov.percent <=
+                                              3.0 ||
+                                          r.oldCfgReport.getPercentage() <= 3.0;
                                  }),
                   results.end());
   }

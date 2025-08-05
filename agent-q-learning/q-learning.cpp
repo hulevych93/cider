@@ -21,7 +21,8 @@ namespace qlearning {
 void prelearningSession(const QLearningSettings& settings,
                         const recorder::Actions& list,
                         ObjectiveFunction objFunc,
-                        IResultsLogger& logger) {
+                        IRewardLogger& rwLogger,
+                        ILossLogger& lossLogger) {
   QLearningAgent& agent = QLearningAgent::get();
 
   for (int i = 0; i < settings.prelearningEpisodes; ++i) {
@@ -54,8 +55,8 @@ void prelearningSession(const QLearningSettings& settings,
       }
     }
 
-    logger.logLoss(i, smoothLoss.get_average());
-    logger.logReward(i, total_reward);
+    lossLogger.log(i, smoothLoss.get_average());
+    rwLogger.log(i, total_reward);
   }
 }
 
@@ -63,24 +64,28 @@ void learningSession(const QLearningSettings& settings,
                      const recorder::Actions& list,
                      ObjectiveFunction objFunc,
                      RewardCounter& counter,
-                     IResultsLogger& logger,
-                     ICovLogger& covLogger,
+                     IRewardLogger& rwLogger,
+                     ILossLogger& lossLogger,
+                     ICoverageLogger& covLogger,
                      const std::function<void(const IAgent&)>& dump) {
   QLearningAgent& agent = QLearningAgent::get();
 
   const auto objValue = objFunc(list);
   if (objValue.coverage > std::numeric_limits<double>::epsilon()) {
-      covLogger.set(objValue.coverage);
+    covLogger.set(objValue.coverage);
   } else {
-      throw std::logic_error{"Bad initial script."};
+    throw std::logic_error{"Bad initial script."};
   }
 
+  int coverageCounter = 0;
   for (int i = 0; i < settings.episodes; ++i) {
     const auto learningRate =
-        settings.learningRate + (double(i) / settings.episodes) * 0.5f;
-    const auto expRate = 0.9f - ((double(i) / settings.episodes) * 0.8f);
+        linearDecay(settings.learningRate, settings.finalLearningRate,
+                    settings.episodes, i);
+    const auto expRate = linearDecay(0.9, 0.1, settings.episodes, i);
 
-    std::cout << "Episode: " << i << ", expRate: " << expRate << std::endl;
+    std::cout << "Episode: " << i << ", expRate: " << expRate
+              << ", LR: " << learningRate << std::endl;
 
     if ((i % 100) == 0) {
       std::cout << "dump" << std::endl;
@@ -144,13 +149,17 @@ void learningSession(const QLearningSettings& settings,
       total_reward += rewardOpt.value();
     }
 
-    logger.logLoss(i, smoothLoss.get_average());
-    logger.logReward(i, total_reward);
-
+    lossLogger.log(i, smoothLoss.get_average());
+    rwLogger.log(i, total_reward);
     covLogger.log(i, scenario.getCoverage());
 
-    if ((i % 100) == 0) {
-      logger.save();
+    if (scenario.getCoverage() >= objValue.coverage) {
+      coverageCounter++;
+      if (coverageCounter > settings.coverageConvergenceCounter) {
+        break;
+      }
+    } else {
+      coverageCounter = 0;
     }
   }
 

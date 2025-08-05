@@ -3,22 +3,7 @@
 
 cider_project(pugixml_driver)
 
-add_executable(pugixml_driver coverage_driver.cpp)
-
-target_include_directories(pugixml_driver PRIVATE ${Python3_INCLUDE_DIRS} ${PyBind_INCLUDE_DIRS})
-
-target_link_libraries(pugixml_driver PUBLIC
-  coverage
-  metaheuristics
-  pipelines
-  pugixml_tests
-  agent-model
-  agent-q-learning
-  agent-sarsa-learning
-  synthesis
-  monte-carlo
-  ${PLOT_LIBS}
-)
+add_experiment_driver(pugixml)
 
 # Helper macro for pugixml run targets with modes
 function(add_pugixml_run_target target_name mode)
@@ -49,6 +34,12 @@ add_pugixml_run_target(RAND 20)
 add_pugixml_run_target(MCTS1 30)
 add_pugixml_run_target(MCTS2 31)
 add_pugixml_run_target(MCTS3 32)
+
+add_pugixml_run_target(GRR1 40)
+add_pugixml_run_target(GRR2 41)
+add_pugixml_run_target(GRR3 42)
+
+add_pugixml_run_target(DSL 45)
 
 add_pugixml_run_target(QL 50)
 add_pugixml_run_target(SARSA 51)

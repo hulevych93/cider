@@ -10,9 +10,8 @@
 namespace cider {
 namespace mathplot {
 
-class CovQLearningResultsMathplotLogger : public agent_model::ICovLogger {
+class CovQLearningResultsMathplotLogger : public agent_model::ICoverageLogger {
  public:
-
   CovQLearningResultsMathplotLogger(const std::string& logDir,
                                     const std::string& logFileName);
   ~CovQLearningResultsMathplotLogger();
@@ -20,7 +19,7 @@ class CovQLearningResultsMathplotLogger : public agent_model::ICovLogger {
   void log(size_t episode, const double coverage) override;
 
   void serialize(const std::string& filePath);
-  void set(double maxCov) { _maxCov = maxCov; }
+  void set(double maxCov) override { _maxCov = maxCov; }
 
   bool load();
   void save() override {}
@@ -28,7 +27,7 @@ class CovQLearningResultsMathplotLogger : public agent_model::ICovLogger {
   void plot();
 
  private:
-     double _maxCov = 0;
+  double _maxCov = 0;
   mutable std::vector<double> ieps_, cov_;
 
   std::string m_path;

@@ -106,6 +106,11 @@ void computeMeanAndStd(const std::vector<std::vector<double>>& values,
       meanOut[i] /= counts[i];
   }
 
+  for (size_t i = 1; i < meanOut.size(); ++i) {
+    if (meanOut[i] < meanOut[i - 1])
+      meanOut[i] = meanOut[i - 1];
+  }
+
   // Сума квадратів відхилень
   for (const auto& vec : values) {
     for (size_t i = 0; i < vec.size(); ++i) {
@@ -125,12 +130,12 @@ std::string ensurePngExtension(const std::string& path) {
   std::filesystem::path filePath(path);
 
   // Check if the extension is already .png (case insensitive)
-  if (filePath.extension() == ".eps") {
+  if (filePath.extension() == ".png") {
     return filePath.string();
   }
 
   // Add .png extension
-  filePath.replace_extension(".eps");
+  filePath.replace_extension(".png");
   return filePath.string();
 }
 

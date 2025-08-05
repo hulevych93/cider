@@ -18,7 +18,8 @@ namespace sarsa {
 void prelearningSession(const SarsaLearningSettings& settings,
                         const recorder::Actions& list,
                         ObjectiveFunction objFunc,
-                        IResultsLogger& logger) {
+                        IRewardLogger& rwLogger,
+                        ILossLogger& lossLogger) {
   SarsaLearningAgent& agent = SarsaLearningAgent::get();
 
   for (int i = 0; i < settings.prelearningEpisodes; ++i) {
@@ -55,8 +56,8 @@ void prelearningSession(const SarsaLearningSettings& settings,
         throw std::logic_error{"failed to run on initial sequence."};
       }
 
-      logger.logLoss(index, smoothLoss.get_average());
-      logger.logReward(index, total_reward);
+      lossLogger.log(index, smoothLoss.get_average());
+      rwLogger.log(index, total_reward);
     }
   }
 }
@@ -65,15 +66,25 @@ void learningSession(const SarsaLearningSettings& settings,
                      const recorder::Actions& list,
                      ObjectiveFunction objFunc,
                      RewardCounter& counter,
-                     IResultsLogger& logger,
-                     ICovLogger& covLogger,
+                     IRewardLogger& rwLogger,
+                     ILossLogger& lossLogger,
+                     ICoverageLogger& covLogger,
                      const std::function<void(const IAgent&)>& dump) {
   SarsaLearningAgent& agent = SarsaLearningAgent::get();
 
+  const auto objValue = objFunc(list);
+  if (objValue.coverage > std::numeric_limits<double>::epsilon()) {
+    covLogger.set(objValue.coverage);
+  } else {
+    throw std::logic_error{"Bad initial script."};
+  }
+
+  int coverageCounter = 0;
   for (int i = 0; i < settings.episodes; ++i) {
-    const double learningRate =
-        settings.learningRate + (double(i) / settings.episodes) * 0.9;
-    const double expRate = 0.8 - (double(i) / settings.episodes) * 0.8;
+    const auto learningRate =
+        linearDecay(settings.learningRate, settings.finalLearningRate,
+                    settings.episodes, i);
+    const auto expRate = linearDecay(0.9, 0.1, settings.episodes, i);
 
     std::cout << "Episode: " << i << ", expRate: " << expRate << std::endl;
 
@@ -145,8 +156,18 @@ void learningSession(const SarsaLearningSettings& settings,
       action = nextAction;
     }
 
-    logger.logLoss(i, smoothLoss.get_average());
-    logger.logReward(i, total_reward);
+    lossLogger.log(i, smoothLoss.get_average());
+    rwLogger.log(i, total_reward);
+    covLogger.log(i, scenario.getCoverage());
+
+    if (scenario.getCoverage() >= objValue.coverage) {
+      coverageCounter++;
+      if (coverageCounter > settings.coverageConvergenceCounter) {
+        break;
+      }
+    } else {
+      coverageCounter = 0;
+    }
   }
 
   dump(agent);

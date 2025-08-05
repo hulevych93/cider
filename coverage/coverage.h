@@ -24,6 +24,12 @@ enum class PipelineType {
   MCTS2 = 31,
   MCTS3 = 32,
 
+  GreedyR1 = 40,
+  GreedyR2 = 41,
+  GreedyR3 = 42,
+
+  DSL = 45,
+
   QLearningAgentLearning = 50,
   SarsaAgentLearning = 51,
 
@@ -47,12 +53,24 @@ enum class PipelineType {
   GenerationCoverageStepperStats = 100,
   GenerationLinesBarStats = 110,
   GenerationEfficencyTable = 120,
+  GenerationCoverageHeatMap = 130,
 
   RemoveGroupData = 150,
   ProcessData = 160
 };
 
-enum class MethodsGroup { QLEG, QLB, SLEG, SLB, MCTS, QLEG2_VS_QLB2, RAND };
+enum class MethodsGroup {
+  QLEG,
+  QLB,
+  SLEG,
+  SLB,
+  MCTS,
+  QLEG2_VS_QLB2,
+  RAND,
+  GREEDY_R,
+  DSL,
+  SELECTED
+};
 
 struct ObjectiveValue final {
   double coverage = 0.0;

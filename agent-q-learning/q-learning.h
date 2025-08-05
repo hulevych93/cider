@@ -21,14 +21,16 @@ using ObjectiveFunction =
 void prelearningSession(const QLearningSettings& settings,
                         const recorder::Actions& list,
                         ObjectiveFunction objFunc,
-                        IResultsLogger& logger);
+                        IRewardLogger& rwLogger,
+                        ILossLogger& lossLogger);
 
 void learningSession(const QLearningSettings& settings,
                      const recorder::Actions& list,
                      ObjectiveFunction objFunc,
                      RewardCounter& counter,
-                     IResultsLogger& logger,
-                     ICovLogger& covLogger,
+                     IRewardLogger& rwLogger,
+                     ILossLogger& lossLogger,
+                     ICoverageLogger& covLogger,
                      const std::function<void(const IAgent&)>& dump);
 
 }  // namespace qlearning

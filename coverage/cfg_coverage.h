@@ -46,12 +46,7 @@ std::string readCoverageFromStream(const std::string& input);
 
 std::optional<Coverage> deserializeCovReport(const std::string& buffer);
 
-std::string setializeCovReport(const Coverage& report);
-
-bool runScript(const std::string& binary,
-               const std::string& workingDir,
-               const std::string& script,
-               std::function<void(const char*, std::size_t)> callback);
+std::string serializeCovReport(const Coverage& report);
 
 void printTableEntry(std::ostream& ss,
                      const size_t index,

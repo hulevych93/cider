@@ -1,0 +1,47 @@
+// Copyright (C) 2022-2025 Hulevych Mykhailo
+// SPDX-License-Identifier: MIT
+
+#include "dslicer-pipe.h"
+
+#include <iostream>
+
+#include "coverage/cfg_measurer.h"
+#include "coverage/gcov_measurer.h"
+
+namespace cider {
+namespace pipelines {
+
+bool DSlicerStage::process(const std::string&,
+                           const std::string& libName,
+                           const cider::Cmd& cmd) {
+  const auto& input = getInput();
+
+  auto start = std::chrono::steady_clock::now();
+  recorder::Actions output;
+
+  try {
+    gcov_coverage::CoverageMeasurment measurer{cmd, libName.c_str()};
+    output = dslicer::run_d_slicing(measurer.getObjValueFunc(), input.actions);
+  } catch (const std::exception& e) {
+    std::cerr << e.what();
+    return false;
+  }
+
+  auto end = std::chrono::steady_clock::now();
+  unsigned long elapsed_ms =
+      std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
+          .count();
+
+  Result result;
+  result.testCaseName = input.testOrLibName;
+  result.timeElapsedMs = elapsed_ms;
+  result.oldActions = deepCopy(input.actions);
+  result.newActions = deepCopy(output);
+
+  pushResult(libName.c_str(), cmd, "DSL", result);
+
+  return true;
+}
+
+}  // namespace pipelines
+}  // namespace cider
