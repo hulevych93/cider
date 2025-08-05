@@ -53,10 +53,27 @@ Pipeline::Pipeline(const std::string& libName, const cider::Cmd& cmd)
             << std::endl;
 }
 
-bool Pipeline::runOneByOne(
-    const std::vector<cider::recorder::ScriptRecordSessionPtr>& sessions) {
+bool Pipeline::run(SessionsGetter getTS, SessionsGetter getTCs) {
   const auto dateTime = getDatetimeForDirName();
   const auto config = pipelineConfig();
+
+  auto needTS = false;
+  for (const auto& pipe : _pipes) {
+    needTS |= pipe->needTS();
+  }
+
+  std::vector<cider::recorder::ScriptRecordSessionPtr> sessions;
+  if (needTS) {
+    sessions = getTS();
+  } else {
+    sessions = getTCs();
+  }
+
+  std::sort(sessions.begin(), sessions.end(),
+            [](const cider::recorder::ScriptRecordSessionPtr& a,
+               const cider::recorder::ScriptRecordSessionPtr& b) {
+              return a->getInstructions().size() > b->getInstructions().size();
+            });
 
   auto scrNum = 0;
   for (const auto& session : sessions) {
@@ -64,6 +81,9 @@ bool Pipeline::runOneByOne(
               << "\t count op: " << session->getInstructionsCount()
               << std::endl;
   }
+
+  std::cin.get();
+
   scrNum = 0;
   for (const auto& session : sessions) {
     std::cout << "num: " << scrNum << "\t name: " << session->getName()

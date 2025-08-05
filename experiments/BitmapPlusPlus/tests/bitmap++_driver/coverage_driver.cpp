@@ -33,9 +33,8 @@ int main(int argc, char* argv[]) {
 
   cider::Cmd cmd(argc, argv);
 
-  std::vector<cider::recorder::ScriptRecordSessionPtr> sessions;
-
-  if (0) {
+  const auto getTCs = []() {
+    std::vector<cider::recorder::ScriptRecordSessionPtr> sessions;
     RECORD_TEST_SCRIPT(LibraryName, test_chess_board, sessions);
     RECORD_TEST_SCRIPT(LibraryName, test_variant_shapes, sessions);
     RECORD_TEST_SCRIPT(LibraryName, test_polymorphic_shapes, sessions);
@@ -43,18 +42,17 @@ int main(int argc, char* argv[]) {
     RECORD_TEST_SCRIPT(LibraryName, test_rotation, sessions);
     RECORD_TEST_SCRIPT(LibraryName, test_primitives, sessions);
     RECORD_TEST_SCRIPT(LibraryName, test_write_bitmap, sessions);
-  } else {
-    RECORD_TEST_SCRIPT(LibraryName, bitmap_cplusplus, sessions);
-  }
+    return sessions;
+  };
 
-  std::sort(sessions.begin(), sessions.end(),
-            [](const cider::recorder::ScriptRecordSessionPtr& a,
-               const cider::recorder::ScriptRecordSessionPtr& b) {
-              return a->getInstructions().size() > b->getInstructions().size();
-            });
+  const auto getTS = []() {
+    std::vector<cider::recorder::ScriptRecordSessionPtr> sessions;
+    RECORD_TEST_SCRIPT(LibraryName, bitmap_cplusplus, sessions);
+    return sessions;
+  };
 
   auto pipeline = cider::pipelines::makePipeline(LibraryName, cmd);
-  pipeline.runOneByOne(sessions);
+  pipeline.run(getTS, getTCs);
 
   if (pipeline.newResuls()) {
     std::cout << "Save results? (y/n): ";

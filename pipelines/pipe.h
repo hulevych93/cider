@@ -22,6 +22,8 @@ class Pipe {
 
   virtual std::string getLetter() const = 0;
 
+  virtual bool needTS() const { return false; }
+
  protected:
   friend class Pipeline;
 

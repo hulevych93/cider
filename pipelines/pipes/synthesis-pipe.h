@@ -22,6 +22,8 @@ class SynthesisStage final : public Pipe {
 
   std::string getLetter() const override { return "G"; }
 
+  bool needTS() const override { return false; }
+
  private:
   std::string getConfigName() const;
 

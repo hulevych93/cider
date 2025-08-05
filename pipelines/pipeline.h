@@ -11,6 +11,9 @@
 #include "pipe.h"
 #include "results.h"
 
+using SessionsGetter =
+    std::function<std::vector<cider::recorder::ScriptRecordSessionPtr>()>;
+
 namespace cider {
 namespace pipelines {
 
@@ -32,8 +35,9 @@ class Pipeline final {
     _pipes.emplace_back(std::move(pipe));
   }
 
-  bool runOneByOne(
-      const std::vector<cider::recorder::ScriptRecordSessionPtr>& sessions);
+  bool run(SessionsGetter getTS, SessionsGetter getTCs);
+
+  bool save();
 
   bool save();
 
