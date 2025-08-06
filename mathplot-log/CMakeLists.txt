@@ -10,7 +10,6 @@ add_library(mathplot-log ${LIST_OUT})
 target_include_directories(mathplot-log PRIVATE ${MathPlot_INCLUDE_DIRS})
 
 add_definitions(-DWITHOUT_NUMPY)
-add_definitions(-DENABLE_MATHPLOT)
 
 target_include_directories(mathplot-log PRIVATE ${Python3_INCLUDE_DIRS} ${Fmt_INCLUDE_DIRS} ${PyBind_INCLUDE_DIRS})
 

@@ -9,11 +9,9 @@
 
 #include "mathplot-log/utils.h"
 
-#ifdef ENABLE_MATHPLOT
 #include <matplotlibcpp.h>
 
 namespace plt = matplotlibcpp;
-#endif
 
 #include "serialization/deserializer.h"
 #include "serialization/serializer.h"

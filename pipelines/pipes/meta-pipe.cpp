@@ -14,12 +14,7 @@
 #include "metaheuristics/harmony/harmony.h"
 #include "metaheuristics/harmony/harmony_synthesis.h"
 
-#include "recorder/details/generator.h"
-#include "recorder/recorder.h"
-
-#ifdef ENABLE_MATHPLOT
 #include "mathplot-log/monitoring/metasearch-basic-block-cov-plot.h"
-#endif
 
 #include <assert.h>
 
@@ -64,11 +59,9 @@ bool makeMetaPipeline(SettingsType settings,
 
     measurer.setLogger(outPath.string(), "meta_log.txt");
 
-#ifdef ENABLE_MATHPLOT
     metaSearch->setLogger(
         std::make_unique<cider::mathplot::BasicBlockCovLogger>(
             outPath, "meta_search.png"));
-#endif
 
     metaSearch->initialize(callback);
     metaSearch->run();

@@ -9,10 +9,8 @@
 #include <sstream>
 #include <stdexcept>
 
-#ifdef ENABLE_MATHPLOT
 #include <matplotlibcpp.h>
 namespace plt = matplotlibcpp;
-#endif
 
 #include "mathplot-log/utils.h"
 
@@ -24,10 +22,8 @@ CoverageHeatmapPlot::CoverageHeatmapPlot(const std::string& logDir,
     : m_path(ensurePath(logDir, logFileName)) {}
 
 CoverageHeatmapPlot::~CoverageHeatmapPlot() {
-#ifdef ENABLE_MATHPLOT
   plt::save(ensurePngExtension(m_path), 1200);
   plt::close();
-#endif
 }
 
 void CoverageHeatmapPlot::add(const std::string& methodLabel,

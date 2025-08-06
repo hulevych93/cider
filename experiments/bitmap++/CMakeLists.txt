@@ -1,7 +1,7 @@
 # Copyright (C) 2022-2025 Hulevych Mykhailo
 # SPDX-License-Identifier: MIT
 
-cider_project(BitmapPlusPlus)
+cider_project(bitmap++)
 
 set(EXPERIMENT_BITMAPPLUSPLUS_VERSION                1.1.1)
 set(EXPERIMENT_BITMAPPLUSPLUS_UNIQUE_DIR_NAME        bitmap++-${EXPERIMENT_BITMAPPLUSPLUS_VERSION}-${CIDER_3RD_PARTY_LIB_DIR_SUFFIX})
@@ -61,3 +61,17 @@ ExternalProject_Add(
 add_dependencies(${CIDER_THIRDPARTY_TARGET_NAME} bitmap++)
 
 add_subdirectory(tests)
+
+set(CMD_BITMAP
+    "${CMAKE_SOURCE_DIR}/experiments/bitmap++/tests/bitmap++_tests"
+    "${EXPERIMENT_BITMAPPLUSPLUS_BUILD_DIR}/src"
+    "${CMAKE_BINARY_DIR}/experiments/bitmap++/tests/bitmap++_player"
+    "${CMAKE_BINARY_DIR}/bin/bitmap++_player"
+    "${CMAKE_BINARY_DIR}"
+    "${CMAKE_BINARY_DIR}/results/bitmap++/"
+    "${CMAKE_BINARY_DIR}/results/"
+)
+set(CMD_BITMAP ${CMD_BITMAP} PARENT_SCOPE)
+
+list(APPEND LIBS "bitmap++\;CMD_BITMAP")
+set(LIBS "${LIBS}" PARENT_SCOPE)

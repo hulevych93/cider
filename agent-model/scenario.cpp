@@ -159,8 +159,12 @@ std::optional<double> LearningScenario::getReward() const {
   return result;
 }
 
-double LearningScenario::getCoverage() const {
-  return _objFunc(_actions).coverage;
+double LearningScenario::getCoverage(bool retry) const {
+  auto cov = _objFunc(_actions).coverage;
+  if(cov < 0.0000001 && retry) {
+      return _objFunc(_actions).coverage;
+  }
+  return cov;
 }
 
 std::string actionToGenericRepro(const recorder::Action& action) {

@@ -11,7 +11,8 @@ target_link_libraries(argh_driver PUBLIC
   pipelines
   argh_tests
   q-learning
-  ${PLOT_LIBS}
+  mathplot-log
+  ${Python3_LIBRARIES}
 )
 
 # Helper macro to define run targets with mode parameter

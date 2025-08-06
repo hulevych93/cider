@@ -56,7 +56,8 @@ enum class PipelineType {
   GenerationCoverageHeatMap = 130,
 
   RemoveGroupData = 150,
-  ProcessData = 160
+  ProcessData = 160,
+  ShowResults = 170
 };
 
 enum class MethodsGroup {

@@ -10,12 +10,10 @@
 
 #include "pipelines/metrics.h"
 
-#ifdef ENABLE_MATHPLOT
 #include "mathplot-log/output/comp-coverage-box-plot.h"
 #include "mathplot-log/output/comp-coverage-grow-plot.h"
 #include "mathplot-log/output/comp-coverage-heatmap.h"
 #include "mathplot-log/output/comp-lines-barplot.h"
-#endif
 
 #include <iostream>
 
@@ -88,11 +86,9 @@ bool StepperReportStage::process(const std::string& metadata,
     graphTitle += "_";
   }
 
-#ifdef ENABLE_MATHPLOT
   auto logger = std::make_shared<cider::mathplot::StepperComparativeLogger>(
       outPath.string(), graphTitle,
       cider::mathplot::StepperComparativeLogger::PlotType::BrCov);
-#endif
 
   if (!logger->load()) {
     const auto handleResult = [&](const std::string& methodName,
@@ -157,7 +153,6 @@ bool BoxPlotReportStage::process(const std::string& metadata,
     graphTitle += "_";
   }
 
-#ifdef ENABLE_MATHPLOT
   auto brCovLogger = std::make_shared<cider::mathplot::CoverageBoxPlot>(
       outPath.string(), graphTitle,
       cider::mathplot::CoverageBoxPlot::PlotType::BrCov);
@@ -171,7 +166,6 @@ bool BoxPlotReportStage::process(const std::string& metadata,
       std::make_shared<cider::gcov_coverage::CompositeLogger>();
   compositeLogger->addLogger(brCovLogger);
   // compositeLogger->addLogger(lnCovLogger);
-#endif
 
   std::string lastLabel;
 
@@ -232,10 +226,8 @@ bool LinesBarPlotReportStage::process(const std::string&,
     graphTitle += "_";
   }
 
-#ifdef ENABLE_MATHPLOT
   auto logger = std::make_shared<cider::mathplot::LinesBarPlot>(
       outPath.string(), graphTitle);
-#endif
 
   if (!logger->load()) {
     const auto handleResult = [&](const std::string& methodName,
@@ -283,10 +275,8 @@ bool HeatmapPlotReportStage::process(const std::string& metadata,
     graphTitle += "_";
   }
 
-#ifdef ENABLE_MATHPLOT
   auto logger = std::make_shared<cider::mathplot::CoverageHeatmapPlot>(
       outPath.string(), graphTitle);
-#endif
 
   const auto handleResult = [&](const std::string& methodName,
                                 const Result& result) {

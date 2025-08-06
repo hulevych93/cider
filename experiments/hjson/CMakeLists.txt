@@ -61,3 +61,17 @@ ExternalProject_Add(
 add_dependencies(${CIDER_THIRDPARTY_TARGET_NAME} hjson)
 
 add_subdirectory(tests)
+
+set(CMD_HJSON
+    "${CMAKE_SOURCE_DIR}/experiments/hjson/tests/hjson_tests"
+    "${EXPERIMENT_HJSON_BUILD_DIR}/src"
+    "${CMAKE_BINARY_DIR}/experiments/hjson/tests/hjson_player"
+    "${CMAKE_BINARY_DIR}/bin/hjson_player"
+    "${CMAKE_BINARY_DIR}"
+    "${CMAKE_BINARY_DIR}/results/hjson"
+    "${CMAKE_BINARY_DIR}/results/"
+)
+set(CMD_HJSON ${CMD_HJSON} PARENT_SCOPE)
+
+list(APPEND LIBS "hjson\;CMD_HJSON")
+set(LIBS "${LIBS}" PARENT_SCOPE)

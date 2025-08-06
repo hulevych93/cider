@@ -19,14 +19,185 @@ function(add_experiment_driver target_name)
       monte-carlo
       greedy-r
       dynamic-slicer
-      ${PLOT_LIBS}
+      mathplot-log
+      ${Python3_LIBRARIES}
     )
 endfunction()
 
+function(add_experiment_target lib_name target_name mode cmd_list_var)
+    set(options)
+    set(oneValueArgs GROUP)
+    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "" ${ARGN})
+
+    set(cmd_list "${${cmd_list_var}}")
+
+    set(cmd
+        ${lib_name}_driver
+        "${mode}"
+        ${cmd_list}
+    )
+
+    if (ARG_GROUP)
+        list(APPEND cmd "${ARG_GROUP}")
+    endif()
+
+    add_custom_target(${lib_name}_${target_name}
+        COMMAND ${cmd}
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/experiments/${lib_name}/tests/${lib_name}_tests"
+        DEPENDS ${lib_name}_player
+        VERBATIM
+    )
+endfunction()
+
+# Helper to add a target definition safely
+function(add_target_def name mode)
+    set(options)
+    set(oneValueArgs GROUP)
+    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "" ${ARGN})
+
+    if (ARG_GROUP)
+        list(APPEND TARGET_DEFS "${name}\;${mode}\;GROUP\;${ARG_GROUP}")
+    else()
+        list(APPEND TARGET_DEFS "${name}\;${mode}")
+    endif()
+
+    set(TARGET_DEFS "${TARGET_DEFS}" PARENT_SCOPE)
+endfunction()
+
+set(GROUP_QLEG        0)
+set(GROUP_QLB         1)
+set(GROUP_SLEG        2)
+set(GROUP_SLB         3)
+set(GROUP_MCTS        4)
+set(GROUP_QLEG_VS_QLB 5)
+set(GROUP_RAND        6)
+set(GROUP_GREEDY_R    7)
+set(GROUP_DSL         8)
+set(GROUP_SELECTED    9)
+
+# Reset the list
+set(TARGET_DEFS)
+
+# === HS Modes ===
+add_target_def(HS 0)
+add_target_def(HS1 1)
+add_target_def(HS2 2)
+add_target_def(HS3 3)
+
+# === CS / RAND ===
+add_target_def(CS 10)
+add_target_def(RAND 20)
+
+# === MCTS Modes ===
+add_target_def(MCTS1 30)
+add_target_def(MCTS2 31)
+add_target_def(MCTS3 32)
+
+# === GRR (Greedy Random) ===
+add_target_def(GRR1 40)
+add_target_def(GRR2 41)
+add_target_def(GRR3 42)
+
+# === DSL ===
+add_target_def(DSL 45)
+
+# === QL / SARSA ===
+add_target_def(QL 50)
+add_target_def(SARSA 51)
+
+# === QLEG ===
+add_target_def(QLEG1 60)
+add_target_def(QLEG2 61)
+add_target_def(QLEG3 62)
+
+# === SLEG ===
+add_target_def(SLEG1 65)
+add_target_def(SLEG2 66)
+add_target_def(SLEG3 67)
+
+# === QLB ===
+add_target_def(QLB1 70)
+add_target_def(QLB2 71)
+add_target_def(QLB3 72)
+
+# === SLB ===
+add_target_def(SLB1 75)
+add_target_def(SLB2 76)
+add_target_def(SLB3 77)
+
+# === CBOX Grouped ===
+add_target_def(CBOX_RAND     90 GROUP ${GROUP_RAND})
+add_target_def(CBOX_QLEG     90 GROUP ${GROUP_QLEG})
+add_target_def(CBOX_QLB      90 GROUP ${GROUP_QLB})
+add_target_def(CBOX_SLEG     90 GROUP ${GROUP_SLEG})
+add_target_def(CBOX_SLB      90 GROUP ${GROUP_SLB})
+add_target_def(CBOX_MCTS     90 GROUP ${GROUP_MCTS})
+add_target_def(CBOX_GRR      90 GROUP ${GROUP_GREEDY_R})
+add_target_def(CBOX_DSL      90 GROUP ${GROUP_DSL})
+add_target_def(CBOX_SELECT   90 GROUP ${GROUP_SELECTED})
+
+# === CSTEP Grouped ===
+add_target_def(CSTEP_QLEG       100 GROUP ${GROUP_QLEG})
+add_target_def(CSTEP_QLB        100 GROUP ${GROUP_QLB})
+add_target_def(CSTEP_SLEG       100 GROUP ${GROUP_SLEG})
+add_target_def(CSTEP_SLB        100 GROUP ${GROUP_SLB})
+add_target_def(CSTEP_MCTS       100 GROUP ${GROUP_MCTS})
+add_target_def(CSTEP_QLEG_VS_QLB 100 GROUP ${GROUP_QLEG_VS_QLB})
+
+# === LBAR Grouped ===
+add_target_def(LBAR_QLEG       110 GROUP ${GROUP_QLEG})
+add_target_def(LBAR_QLB        110 GROUP ${GROUP_QLB})
+add_target_def(LBAR_SLEG       110 GROUP ${GROUP_SLEG})
+add_target_def(LBAR_SLB        110 GROUP ${GROUP_SLB})
+add_target_def(LBAR_MCTS       110 GROUP ${GROUP_MCTS})
+add_target_def(LBAR_QLEG_VS_QLB 110 GROUP ${GROUP_QLEG_VS_QLB})
+
+# === HM Grouped ===
+add_target_def(HM_QLEG     130 GROUP ${GROUP_QLEG})
+add_target_def(HM_QLB      130 GROUP ${GROUP_QLB})
+add_target_def(HM_SLEG     130 GROUP ${GROUP_SLEG})
+add_target_def(HM_SLB      130 GROUP ${GROUP_SLB})
+add_target_def(HM_MCTS     130 GROUP ${GROUP_MCTS})
+add_target_def(HM_GRR      130 GROUP ${GROUP_GREEDY_R})
+add_target_def(HM_DSL      130 GROUP ${GROUP_DSL})
+add_target_def(HM_SELECT   130 GROUP ${GROUP_SELECTED})
+
+# === EFT ===
+add_target_def(EFT 120)
+
+# === REM Grouped ===
+add_target_def(REM_GRR  150 GROUP ${GROUP_GREEDY_R})
+add_target_def(REM_DSL  150 GROUP ${GROUP_DSL})
+add_target_def(RM_RAND  150 GROUP ${GROUP_RAND})
+
+# === Misc ===
+add_target_def(DONT 160)
+add_target_def(SHOW 170)
+
+set(LIBS "" CACHE INTERNAL "List of libraries for experiment targets")
+
 add_subdirectory(hjson)
 add_subdirectory(pugixml)
-add_subdirectory(BitmapPlusPlus)
+add_subdirectory(bitmap++)
 
 if(STAGING)
   add_subdirectory(Argh)
 endif()
+
+foreach(lib_def IN LISTS LIBS)
+    list(GET lib_def 0 lib_name)
+    list(GET lib_def 1 cmd_var)
+
+    foreach(def IN LISTS TARGET_DEFS)
+        string(REPLACE ";" ";" parts "${def}")
+        list(GET parts 0 tgt)
+        list(GET parts 1 mode)
+        list(LENGTH parts len)
+        if (len GREATER 2)
+            list(GET parts 3 group)
+            add_experiment_target(${lib_name} ${tgt} ${mode} ${cmd_var} GROUP ${group})
+        else()
+            add_experiment_target(${lib_name} ${tgt} ${mode} ${cmd_var})
+        endif()
+    endforeach()
+endforeach()

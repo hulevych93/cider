@@ -63,3 +63,17 @@ ExternalProject_Add(
 add_dependencies(${CIDER_THIRDPARTY_TARGET_NAME} pugixml)
 
 add_subdirectory(tests)
+
+set(CMD_PUGIXML
+    "${CMAKE_SOURCE_DIR}/experiments/pugixml/tests/pugixml_tests"
+    "${EXPERIMENT_PUGIXML_BUILD_DIR}/src"
+    "${CMAKE_BINARY_DIR}/experiments/pugixml/tests/pugixml_player"
+    "${CMAKE_BINARY_DIR}/bin/pugixml_player"
+    "${CMAKE_BINARY_DIR}/experiments/pugixml/tests/pugixml_player"
+    "${CMAKE_BINARY_DIR}/results/pugixml"
+    "${CMAKE_BINARY_DIR}/results/"
+)
+set(CMD_PUGIXML ${CMD_PUGIXML} PARENT_SCOPE)
+
+list(APPEND LIBS "pugixml\;CMD_PUGIXML")
+set(LIBS "${LIBS}" PARENT_SCOPE)

@@ -7,11 +7,9 @@
 
 #include <iostream>
 
-#ifdef ENABLE_MATHPLOT
 #include <matplotlibcpp.h>
 
 namespace plt = matplotlibcpp;
-#endif
 
 #include "mathplot-log/utils.h"
 

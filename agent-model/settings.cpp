@@ -10,8 +10,10 @@ std::ostream& operator<<(std::ostream& os,
                          const LearningSettingsBase& settings) {
   os << "conf[";
   os << settings.configName;
-  os << "]_lr[";
-  os << settings.learningRate;
+  os << "]_lr0[";
+  os << settings.initialLearningRate;
+  os << "]_lr_f[";
+  os << settings.finalLearningRate;
   os << "]_df[";
   os << settings.discountFactor;
   os << "]_epds[";

@@ -10,9 +10,7 @@
 #include "coverage/cfg_measurer.h"
 #include "coverage/gcov_measurer.h"
 
-#ifdef ENABLE_MATHPLOT
 #include "mathplot-log/monitoring/metasearch-basic-block-cov-plot.h"
-#endif
 
 #include <assert.h>
 

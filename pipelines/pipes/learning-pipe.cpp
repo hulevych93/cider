@@ -11,10 +11,8 @@
 #include "coverage/cfg_measurer.h"
 #include "coverage/gcov_measurer.h"
 
-#ifdef ENABLE_MATHPLOT
 #include "mathplot-log/monitoring/q-learning-cov-ep-plot.h"
 #include "mathplot-log/monitoring/q-learning-reward-loss-plot.h"
-#endif
 
 #include <assert.h>
 #include <iostream>
@@ -62,8 +60,6 @@ bool PreLearningStage::process(const std::string& metadata,
                            rwLogger, lossLogger);
       },
       m_settings);
-
-  // logger.plot();
 
   return true;
 }

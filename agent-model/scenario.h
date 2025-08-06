@@ -34,7 +34,7 @@ class LearningScenario final : public Scenario {
 
   std::optional<double> getReward() const;
 
-  double getCoverage() const;
+  double getCoverage(bool retry) const;
 
  private:
   RewardCounter& _rwCounter;

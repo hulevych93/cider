@@ -150,7 +150,7 @@ auto getQLearningSettings() {
   settings.configName = "QL";
   settings.prelearningEpisodes = 50U;
   settings.discountFactor = 0.85;
-  settings.learningRate = 0.3;
+  settings.initialLearningRate = 0.3;
   settings.episodes = 5000U;
   settings.maxRollback = 20U;
   settings.maxStateDepth = 3U;
@@ -161,7 +161,7 @@ auto getSarsaLearningSettings() {
   agent_model::sarsa::SarsaLearningSettings settings;
   settings.configName = "SL";
   settings.discountFactor = 0.85;
-  settings.learningRate = 0.1;
+  settings.initialLearningRate = 0.1;
   settings.episodes = 1000;
   settings.maxRollback = 20U;
   settings.maxStateDepth = 5U;
@@ -379,7 +379,8 @@ const pipelines::ReportConfiguration& getReportConfig(MethodsGroup group) {
   }
 }
 
-constexpr const int StatsCount = 5U;
+constexpr const int StatsCount = 100U;
+constexpr const int GreedyCount = 5U;
 
 }  // namespace
 
@@ -416,27 +417,27 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
       break;
     case PipelineType::MCTS1:
       pipeline.addStage(
-          std::make_unique<MctsSearchStage>(getMCTS1Settings(), StatsCount));
+          std::make_unique<MctsSearchStage>(getMCTS1Settings(), GreedyCount));
       break;
     case PipelineType::MCTS2:
       pipeline.addStage(
-          std::make_unique<MctsSearchStage>(getMCTS2Settings(), StatsCount));
+          std::make_unique<MctsSearchStage>(getMCTS2Settings(), GreedyCount));
       break;
     case PipelineType::MCTS3:
       pipeline.addStage(
-          std::make_unique<MctsSearchStage>(getMCTS3Settings(), StatsCount));
+          std::make_unique<MctsSearchStage>(getMCTS3Settings(), GreedyCount));
       break;
     case PipelineType::GreedyR1:
       pipeline.addStage(
-          std::make_unique<GreedyRStage>(getGreedyR1Settings(), StatsCount));
+          std::make_unique<GreedyRStage>(getGreedyR1Settings(), GreedyCount));
       break;
     case PipelineType::GreedyR2:
       pipeline.addStage(
-          std::make_unique<GreedyRStage>(getGreedyR2Settings(), StatsCount));
+          std::make_unique<GreedyRStage>(getGreedyR2Settings(), GreedyCount));
       break;
     case PipelineType::GreedyR3:
       pipeline.addStage(
-          std::make_unique<GreedyRStage>(getGreedyR3Settings(), StatsCount));
+          std::make_unique<GreedyRStage>(getGreedyR3Settings(), GreedyCount));
       break;
     case PipelineType::DSL:
       pipeline.addStage(std::make_unique<DSlicerStage>());
@@ -542,6 +543,8 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
       if (pipeline.hasResults()) {
         pipeline.addStage(std::make_unique<ProcessDataStage>());
       }
+      break;
+    case PipelineType::ShowResults:
       break;
   }
   return pipeline;

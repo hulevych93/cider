@@ -48,7 +48,7 @@ void prelearningSession(const SarsaLearningSettings& settings,
       if (const auto rewardOpt = scenario.getReward()) {
         const auto loss = agent.updateQValues(
             stateBeforeAction, nextState, action, nextAction, rewardOpt.value(),
-            settings.learningRate, settings.discountFactor);
+            settings.initialLearningRate, settings.discountFactor);
 
         smoothLoss.add_value(loss);
         total_reward += rewardOpt.value();
@@ -82,7 +82,7 @@ void learningSession(const SarsaLearningSettings& settings,
   int coverageCounter = 0;
   for (int i = 0; i < settings.episodes; ++i) {
     const auto learningRate =
-        linearDecay(settings.learningRate, settings.finalLearningRate,
+        linearDecay(settings.initialLearningRate, settings.finalLearningRate,
                     settings.episodes, i);
     const auto expRate = linearDecay(0.9, 0.1, settings.episodes, i);
 
@@ -158,9 +158,10 @@ void learningSession(const SarsaLearningSettings& settings,
 
     lossLogger.log(i, smoothLoss.get_average());
     rwLogger.log(i, total_reward);
-    covLogger.log(i, scenario.getCoverage());
+    const auto coverage = scenario.getCoverage(true);
+    covLogger.log(i, coverage);
 
-    if (scenario.getCoverage() >= objValue.coverage) {
+    if (coverage >= objValue.coverage) {
       coverageCounter++;
       if (coverageCounter > settings.coverageConvergenceCounter) {
         break;
