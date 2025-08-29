@@ -71,13 +71,13 @@ bool GreedyRStage::process(const std::string& metadata,
         m_settings, metadata, libName, cmd, input.actions, output);
 
     auto end = std::chrono::steady_clock::now();
-    unsigned long elapsed_ms =
-        std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
+    unsigned long elapsed_mcs =
+        std::chrono::duration_cast<std::chrono::microseconds>(end - start)
             .count();
 
     Result result;
     result.testCaseName = input.testOrLibName;
-    result.timeElapsedMs = elapsed_ms;
+    result.timeElapsedMcs = elapsed_mcs;
     result.oldActions = deepCopy(input.actions);
     result.newActions = deepCopy(output);
 

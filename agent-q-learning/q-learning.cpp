@@ -87,11 +87,6 @@ void learningSession(const QLearningSettings& settings,
     std::cout << "Episode: " << i << ", expRate: " << expRate
               << ", LR: " << learningRate << std::endl;
 
-    if ((i % 100) == 0) {
-      std::cout << "dump" << std::endl;
-      dump(agent);
-    }
-
     LearningScenario scenario(counter, Seed::instance().get(),
                               settings.maxStateDepth, list, objFunc);
 

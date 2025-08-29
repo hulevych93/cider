@@ -11,6 +11,23 @@
 namespace cider {
 namespace agent_model {
 
+static struct StepRewardSettings final {
+  double coverageIncreased = 0.5;
+  double newTracksFound = 0.5;
+  double twoSemanticallyEqualAction = -0.15;
+  double threeSemanticallyEqualAction = -0.3;
+  double sameCoverage = 0.05;
+  double lowerCoverage = -0.5;
+} stepReward;
+
+static struct FinalRewardSettings final {
+  double coverageIncreased = 5.0;
+  double newTracksFound = 5.0;
+  double sameButShorter = 3.0;
+  double sameCoverage = 0.5;
+  double lowerCoverage = -5.0;
+} finalReward;
+
 class Scenario : public synthesis::TestScenario {
  public:
   Scenario(std::mt19937& gen,

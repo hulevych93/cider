@@ -88,10 +88,6 @@ void learningSession(const SarsaLearningSettings& settings,
 
     std::cout << "Episode: " << i << ", expRate: " << expRate << std::endl;
 
-    if ((i % 100) == 0) {
-      dump(agent);
-    }
-
     agent_model::LearningScenario scenario(
         counter, Seed::instance().get(), settings.maxStateDepth, list, objFunc);
 

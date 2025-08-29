@@ -48,7 +48,7 @@ std::optional<double> rewardFunction(
       return sameCoverageReward();
     } else {
       rwCounter.penalty++;
-      return -penalty;
+      return penalty;
     }
 
   } else {
@@ -108,18 +108,20 @@ std::optional<double> LearningScenario::getReward() const {
   if (synthesis::isOverFunc(objValue, _initialObjVal,
                             _availableActions.empty())) {
     result = rewardFunction(
-        _rwCounter, objValue, _initialObjVal, 5.0, 5.0,
+        _rwCounter, objValue, _initialObjVal, finalReward.coverageIncreased,
+        finalReward.newTracksFound,
         [&]() {
           if (_initialSize > _actions.size()) {
-            return 3.0;
+            return finalReward.sameButShorter;
           } else {
-            return -1.0;
+            return finalReward.sameCoverage;
           }
         },
-        5.0);
+        finalReward.lowerCoverage);
   } else {
     result = rewardFunction(
-        _rwCounter, objValue, _lastObjVal, 0.5, 0.5,
+        _rwCounter, objValue, _lastObjVal, stepReward.coverageIncreased,
+        stepReward.newTracksFound,
         [&]() {
           if (_actions.size() >= 2U) {
             if (cider::recorder::semanticallyEqual(
@@ -130,18 +132,18 @@ std::optional<double> LearningScenario::getReward() const {
                         _actions[_actions.size() - 2],
                         _actions[_actions.size() - 3])) {
                   _rwCounter.threeSameAct++;
-                  return -0.3;
+                  return stepReward.threeSemanticallyEqualAction;
                 }
               }
               _rwCounter.twoSameAct++;
-              return -0.15;
+              return stepReward.twoSemanticallyEqualAction;
             }
           }
 
           _rwCounter.sameCov++;
-          return -0.1;
+          return stepReward.sameCoverage;
         },
-        0.1);
+        stepReward.lowerCoverage);
   }
 
   if (result.has_value()) {
@@ -161,8 +163,8 @@ std::optional<double> LearningScenario::getReward() const {
 
 double LearningScenario::getCoverage(bool retry) const {
   auto cov = _objFunc(_actions).coverage;
-  if(cov < 0.0000001 && retry) {
-      return _objFunc(_actions).coverage;
+  if (cov < 0.0000001 && retry) {
+    return _objFunc(_actions).coverage;
   }
   return cov;
 }

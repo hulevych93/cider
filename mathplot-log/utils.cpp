@@ -72,6 +72,16 @@ BoxStats compute_box(std::vector<double> data) {
   return s;
 }
 
+double compute_average(const std::vector<double>& vec) {
+  if (vec.empty())
+    return 0.0;
+
+  // Use unsigned long long to safely hold the sum
+  unsigned long long sum = std::accumulate(vec.begin(), vec.end(), 0ULL);
+
+  return static_cast<double>(sum) / vec.size();
+}
+
 double compute_average(const std::vector<size_t>& vec) {
   if (vec.empty())
     return 0.0;
@@ -130,12 +140,12 @@ std::string ensurePngExtension(const std::string& path) {
   std::filesystem::path filePath(path);
 
   // Check if the extension is already .png (case insensitive)
-  if (filePath.extension() == ".png") {
+  if (filePath.extension() == ".eps") {
     return filePath.string();
   }
 
   // Add .png extension
-  filePath.replace_extension(".png");
+  filePath.replace_extension(".eps");
   return filePath.string();
 }
 
@@ -149,6 +159,19 @@ std::string ensureBinExtension(const std::string& path) {
 
   // Add .png extension
   filePath.replace_extension(".bin");
+  return filePath.string();
+}
+
+std::string ensureCsvExtension(const std::string& path) {
+  std::filesystem::path filePath(path);
+
+  // Check if the extension is already .png (case insensitive)
+  if (filePath.extension() == ".csv") {
+    return filePath.string();
+  }
+
+  // Add .png extension
+  filePath.replace_extension(".csv");
   return filePath.string();
 }
 
@@ -169,6 +192,9 @@ double mann_whitney_u(const std::vector<double>& group1,
     py::list py_group1;
     for (double val : group1)
       py_group1.append(val);
+
+    std::cout << "py_group1: " << group1.size() << std::endl;
+    std::cout << "py_group2: " << group2.size() << std::endl;
 
     py::list py_group2;
     for (double val : group2)
@@ -192,6 +218,26 @@ void applyFonts() {
   rcParams["font.size"] = 6.0;
   rcParams["lines.linewidth"] = 0.6;
   rcParams["patch.linewidth"] = 0.6;
+}
+
+void setAxisPolicy() {
+  try {
+    py::module_ plt = py::module_::import("matplotlib.pyplot");
+    py::module_ ticker = py::module_::import("matplotlib.ticker");
+    // === New: set major tick frequency ===
+    py::object MultipleLocator = ticker.attr("MultipleLocator");
+
+    py::object ax = plt.attr("gca")();
+
+    // Y axis: major ticks every 5
+    ax.attr("yaxis").attr("set_major_locator")(MultipleLocator(10));
+
+    // Optional: add minor ticks
+    ax.attr("xaxis").attr("set_major_locator")(MultipleLocator(4));
+
+  } catch (const std::exception& e) {
+    std::cerr << "Style error: " << e.what() << std::endl;
+  }
 }
 
 void applyPublicationStyle() {

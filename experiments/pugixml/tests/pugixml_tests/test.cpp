@@ -268,9 +268,6 @@ int run_tests(const char* temp_,
     for (test = test_runner::_tests; test; test = test->_next) {
       total++;
 
-      if (total < 83)
-        continue;
-
       auto handler = [&]() -> int {
         return run_test(test, test->_name, custom_allocate);
       };

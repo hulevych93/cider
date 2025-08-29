@@ -21,6 +21,8 @@ class PreLearningStage final : public Pipe {
 
   std::string getLetter() const override { return "PL"; }
 
+  bool needTS() const override { return false; }
+
  private:
   agent_model::LearningSettings m_settings;
 };
@@ -34,6 +36,8 @@ class LearningStage final : public Pipe {
                const cider::Cmd& cmd) override;
 
   std::string getLetter() const override { return "L"; }
+
+  bool needTS() const override { return false; }
 
  private:
   agent_model::LearningSettings m_settings;

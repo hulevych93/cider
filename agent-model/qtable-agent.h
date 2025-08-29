@@ -20,6 +20,15 @@ using QTable = std::unordered_map<recorder::Actions,
                                   recorder::SemanticActionHash,
                                   recorder::SemanticEqualPred>;
 
+struct QTableStats final {
+  std::size_t numStates = 0;
+  std::size_t totalActions = 0;
+  double avgActionsPerState = 0.0;
+  std::size_t maxActionsInState = 0;
+  std::size_t minActionsInState = 0;
+  std::size_t zeroActionStates = 0;
+};
+
 class QTableAgent : public IAgent {
   static recorder::Actions getBestFromAvailable(
       const recorder::Actions& available,
@@ -35,7 +44,7 @@ class QTableAgent : public IAgent {
   bool isLoaded() const override { return m_loaded; }
 
   bool load(const std::string& filePath) override;
-  bool save(const std::string& filePath) const override;
+  bool save() const override;
 
   std::optional<recorder::Action> chooseBolzmanAction(
       const Scenario& scenario,
@@ -47,6 +56,7 @@ class QTableAgent : public IAgent {
       const Scenario& scenario) const override;
 
   void print(std::ostream& os) const override;
+  void printMetrics(std::ostream& os, const Episode& episode) const override;
 
   size_t getMaxStateDepth() const override { return m_maxStateDepth; }
 
@@ -56,6 +66,7 @@ class QTableAgent : public IAgent {
 
   std::mt19937& _gen;
   bool m_loaded = false;
+  std::string m_path;
 };
 
 }  // namespace agent_model

@@ -48,7 +48,9 @@ void CovQLearningResultsMathplotLogger::log(size_t episode, const double cov) {
   ieps_.push_back(episode);
   cov_.push_back(cov);
 
-  plot();
+  if ((_updateCounter++ % 100) == 0) {
+    plot();
+  }
 }
 
 void CovQLearningResultsMathplotLogger::plot() {

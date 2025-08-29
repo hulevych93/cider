@@ -8,14 +8,56 @@
 #include "serialization/deserializer.h"
 #include "serialization/serializer.h"
 
+#include <iomanip>
 #include <iostream>
 #include <random>
 
 namespace cider {
 namespace agent_model {
 
+namespace {
+
+QTableStats collectStats(const QTable& table) {
+  QTableStats s{};
+  s.numStates = table.size();
+  if (s.numStates == 0)
+    return s;
+
+  s.minActionsInState = std::numeric_limits<std::size_t>::max();
+
+  for (const auto& tIt : table) {
+    const auto& qvals = tIt.second;
+
+    const std::size_t n = qvals.size();
+    s.totalActions += n;
+    s.maxActionsInState = std::max(s.maxActionsInState, n);
+    s.minActionsInState = std::min(s.minActionsInState, n);
+    if (n == 0)
+      ++s.zeroActionStates;
+  }
+
+  s.avgActionsPerState =
+      static_cast<double>(s.totalActions) / static_cast<double>(s.numStates);
+  if (s.minActionsInState == std::numeric_limits<std::size_t>::max())
+    s.minActionsInState = 0;
+
+  return s;
+}
+
+static std::string tsISO(const std::chrono::system_clock::time_point& tp) {
+  const std::time_t tt = std::chrono::system_clock::to_time_t(tp);
+  std::tm tm{};
+  localtime_r(&tt, &tm);
+
+  char buf[32];
+  std::strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", &tm);
+  return buf;
+}
+
+}  // namespace
+
 QTableAgent::QTableAgent(const std::string& path)
-    : _gen(Seed::instance().get()), m_loaded(load(path)) {
+    : _gen(Seed::instance().get()), m_loaded(load(path)), m_path(path) {
   std::cout << "Load agent: " << path << ", status: " << m_loaded << std::endl;
 }
 
@@ -36,11 +78,11 @@ bool QTableAgent::load(const std::string& filePath) {
   return true;
 }
 
-bool QTableAgent::save(const std::string& filePath) const {
+bool QTableAgent::save() const {
   try {
     serialization::Serializer serializer;
     serializer << m_qtable;
-    serializer.save(filePath);
+    serializer.save(m_path);
   } catch (...) {
     return false;
   }
@@ -203,6 +245,22 @@ void QTableAgent::print(std::ostream& ss) const {
     }
     ss << std::endl;
   }
+}
+
+void QTableAgent::printMetrics(std::ostream& os, const Episode& episode) const {
+  const QTableStats s = collectStats(m_qtable);
+
+  const std::string tStart = tsISO(episode.start);
+  const std::string tEnd = tsISO(episode.end);
+  const auto learningSec = std::chrono::duration_cast<std::chrono::seconds>(
+                               episode.end - episode.start)
+                               .count();
+
+  os << episode.episode << ";" << tStart << ";" << tEnd << ";" << learningSec
+     << ";" << s.numStates << ";" << s.totalActions << ";" << std::fixed
+     << std::setprecision(6) << s.avgActionsPerState << ";"
+     << s.maxActionsInState << ";" << s.minActionsInState << ";"
+     << s.zeroActionStates << '\n';
 }
 
 }  // namespace agent_model

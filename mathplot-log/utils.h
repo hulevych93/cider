@@ -40,6 +40,7 @@ struct BoxStats {
 
 BoxStats compute_box(std::vector<double> data);
 
+double compute_average(const std::vector<double>& vec);
 double compute_average(const std::vector<size_t>& vec);
 
 void computeMeanAndStd(const std::vector<std::vector<double>>& values,
@@ -48,6 +49,7 @@ void computeMeanAndStd(const std::vector<std::vector<double>>& values,
 
 std::string ensurePngExtension(const std::string& path);
 std::string ensureBinExtension(const std::string& path);
+std::string ensureCsvExtension(const std::string& path);
 
 std::string ensurePath(const std::string& logDir,
                        const std::string& logFileName);
@@ -57,5 +59,7 @@ double mann_whitney_u(const std::vector<double>& group1,
                       const std::string& alternative = "two-sided");
 
 void applyPublicationStyle();
+
+void setAxisPolicy();
 
 }  // namespace cider

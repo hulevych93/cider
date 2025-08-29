@@ -57,7 +57,11 @@ int main(int argc, char* argv[]) {
   if (pipeline.newResuls()) {
     std::cout << "Save results? (y/n): ";
     char decision;
-    std::cin >> decision;
+    if (!cider::pipelines::isDebuggerAttached()) {
+      std::cin >> decision;
+    } else {
+      decision = 'Y';
+    }
     if (decision == 'y' || decision == 'Y') {
       pipeline.save();
       std::cout << "Saved.\n";

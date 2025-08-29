@@ -11,31 +11,125 @@
 #include <chrono>
 #include <ctime>
 
+#include <filesystem>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
 
+#include <sys/sysctl.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 namespace cider {
 namespace pipelines {
 
-bool Pipeline::load(const std::string& filePath) {
+bool isDebuggerAttached() {
+  int mib[4];
+  struct kinfo_proc info;
+  size_t size;
+
+  // Initialize the flags so that, if sysctl fails, we get a predictable result.
+  info.kp_proc.p_flag = 0;
+
+  mib[0] = CTL_KERN;
+  mib[1] = KERN_PROC;
+  mib[2] = KERN_PROC_PID;
+  mib[3] = getpid();
+
+  size = sizeof(info);
+
+  if (sysctl(mib, 4, &info, &size, nullptr, 0) == -1) {
+    return true;  // false
+  }
+
+  // P_TRACED is set if the process is being debugged
+  return true;  // (info.kp_proc.p_flag & P_TRACED) != 0;
+}
+
+void stopPoint() {
+  if (!isDebuggerAttached()) {
+    std::cout << "Press Enter to continue...\n";
+    std::cin.get();
+  }
+}
+
+bool Pipeline::load(const std::string& resultsPath) {
+  namespace fs = std::filesystem;
+
+  const auto& config = getReportConfig(_cmd.group);
+
   try {
-    serialization::Deserializer deserializer(filePath);
-    deserializer >> _results;
+    _results.clear();
+    for (const auto& entry : fs::directory_iterator(resultsPath)) {
+      if (entry.is_regular_file()) {
+        auto path = entry.path();
+        auto fileName = path.filename().string();
+
+        if (fileName == "results.img") {
+          _results.clear();
+          std::cout << "Loading: " << path.string() << std::endl;
+          serialization::Deserializer deserializer(path.string());
+          deserializer >> _results;
+          _oldResults = false;
+          break;
+        } else if (path.extension() == ".bin" &&
+                   fileName.rfind("results_", 0) == 0) {
+          std::string fileName = path.filename().string();
+          std::string methodName = fileName.substr(8, fileName.size() - 8 - 4);
+
+          if (std::find(config.cbegin(), config.cend(), methodName) !=
+              config.cend()) {
+            std::cout << "Loading: " << path.string() << std::endl;
+
+            MethodResults methodResults;
+            serialization::Deserializer deserializer(path.string());
+            deserializer >> methodResults;
+
+            _results[methodName] = std::move(methodResults);
+          } else {
+            std::cout << "SKIP Loading: " << methodName << std::endl;
+          }
+          _oldResults = false;
+        }
+      }
+    }
   } catch (const std::exception& e) {
-    std::cout << e.what() << std::endl;
+    std::cerr << "Load error: " << e.what() << std::endl;
     return false;
   }
   return true;
 }
 
-bool Pipeline::save(const std::string& filePath) const {
-  try {
-    serialization::Serializer serializer;
-    serializer << _results;
-    serializer.save(filePath);
-  } catch (...) {
-    return false;
+bool Pipeline::save(const std::string& path) const {
+  if (_oldResults) {
+    try {
+      serialization::Serializer serializer;
+      serializer << _results;
+      serializer.save(path + "/results.img");
+    } catch (const std::exception& e) {
+      std::cerr << "Load error: " << e.what() << std::endl;
+      return false;
+    }
+  } else {
+    namespace fs = std::filesystem;
+    try {
+      if (!fs::exists(path)) {
+        fs::create_directories(path);
+      }
+
+      for (const auto& it : _results) {
+        const auto& methodName = it.first;
+        const auto& methodResults = it.second;
+
+        std::string fileName = path + "/results_" + methodName + ".bin";
+        serialization::Serializer serializer;
+        serializer << methodResults;
+        serializer.save(fileName);
+      }
+    } catch (const std::exception& e) {
+      std::cerr << "Save error: " << e.what() << std::endl;
+      return false;
+    }
   }
   return true;
 }
@@ -48,9 +142,8 @@ Pipeline::Pipeline(const std::string& libName, const cider::Cmd& cmd)
   agent_model::sarsa::SarsaLearningAgent::setPath(
       paths::getSarsaAgentPath(cmd.resultsDir));
 
-  std::cout << "Load results: " << paths::getResultsPath(cmd.resultsDir)
-            << ", status: " << load(paths::getResultsPath(cmd.resultsDir))
-            << std::endl;
+  std::cout << "Load results: " << cmd.resultsDir
+            << ", status: " << load(cmd.resultsDir) << std::endl;
 }
 
 bool Pipeline::run(SessionsGetter getTS, SessionsGetter getTCs) {
@@ -69,12 +162,6 @@ bool Pipeline::run(SessionsGetter getTS, SessionsGetter getTCs) {
     sessions = getTCs();
   }
 
-  std::sort(sessions.begin(), sessions.end(),
-            [](const cider::recorder::ScriptRecordSessionPtr& a,
-               const cider::recorder::ScriptRecordSessionPtr& b) {
-              return a->getInstructions().size() > b->getInstructions().size();
-            });
-
   auto scrNum = 0;
   for (const auto& session : sessions) {
     std::cout << "num: " << scrNum++ << "\t name: " << session->getName()
@@ -82,15 +169,14 @@ bool Pipeline::run(SessionsGetter getTS, SessionsGetter getTCs) {
               << std::endl;
   }
 
-  std::cin.get();
+  stopPoint();
 
   scrNum = 0;
   for (const auto& session : sessions) {
     std::cout << "num: " << scrNum << "\t name: " << session->getName()
               << "\t count op: " << session->getInstructionsCount()
               << std::endl;
-    const auto metadata = dateTime + '_' + config + '/' + session->getName() +
-                          '_' + std::to_string(scrNum);
+    const auto metadata = dateTime + '_' + config + '/' + session->getName();
 
     _input.actions = session->getInstructions();
     _input.testOrLibName = session->getName();
@@ -102,16 +188,20 @@ bool Pipeline::run(SessionsGetter getTS, SessionsGetter getTCs) {
     ++scrNum;
   }
 
+  stopPoint();
+
   clearTrash();
-  printResultsSummary(_results);
 
   return true;
 }
 
 bool Pipeline::save() {
-  const auto& resultsDir = paths::getResultsPath(_cmd.resultsDir);
+  const auto& resultsDir = _cmd.resultsDir;
   std::cout << "Save results: " << resultsDir
             << ", status: " << save(resultsDir) << std::endl;
+
+  printResultsSummary(_results);
+
   return true;
 }
 
@@ -130,13 +220,13 @@ bool Pipeline::run(const std::string& metadata) {
 void Pipeline::clearTrash() {
   for (auto& storageIt : _results) {
     auto& results = storageIt.second;
-    results.erase(std::remove_if(results.begin(), results.end(),
-                                 [](const Result& r) {
-                                   return r.oldReport.branchCov.percent <=
-                                              3.0 ||
-                                          r.oldCfgReport.getPercentage() <= 3.0;
-                                 }),
-                  results.end());
+    results.entries.erase(
+        std::remove_if(results.entries.begin(), results.entries.end(),
+                       [](const Result& r) {
+                         return r.oldReport.branchCov.percent <= 0.0 ||
+                                r.oldCfgReport.getPercentage() <= 0.0;
+                       }),
+        results.entries.end());
   }
 }
 

@@ -17,6 +17,10 @@ using SessionsGetter =
 namespace cider {
 namespace pipelines {
 
+using ReportConfiguration = std::vector<std::string>;
+
+const pipelines::ReportConfiguration& getReportConfig(MethodsGroup group);
+
 class Pipeline final {
   friend class Pipe;
 
@@ -39,8 +43,6 @@ class Pipeline final {
 
   bool save();
 
-  bool save();
-
  private:
   bool run(const std::string& metadata);
 
@@ -53,8 +55,24 @@ class Pipeline final {
   const Results& getResults() const { return _results; }
   Results& getMutableResults() { return _results; }
 
-  void pushResult(const std::string& name, const Result& result) {
-    _results[name].emplace_back(std::move(result));
+  void pushResult(const std::string& name,
+                  const Result& result,
+                  bool success = true) {
+    auto& results = _results[name];
+    results.entries.emplace_back(std::move(result));
+    results.totalTimeElapsedMcs += result.timeElapsedMcs;
+
+    if (result.oldReport.branchCov.percent <=
+        result.newReport.branchCov.percent) {
+      results.coverageReachedCount++;
+    }
+
+    results.sessionsCount++;
+
+    if (!success) {
+      results.failedCount++;
+    }
+
     _resultsChanged = true;
   }
 
@@ -72,11 +90,16 @@ class Pipeline final {
 
   Input _input;
   Results _results;
+
+  std::string _resultsPath;
+  bool _oldResults = false;
   bool _isLoaded = false;
   bool _resultsChanged = false;
 };
 
 Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd);
+
+bool isDebuggerAttached();
 
 }  // namespace pipelines
 }  // namespace cider

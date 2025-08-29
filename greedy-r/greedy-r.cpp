@@ -75,6 +75,11 @@ TestCase run_greedy_r(std::mt19937& gen,
       break;
     }
 
+    if (candidates.empty() && others.empty()) {
+      std::cout << "[Greedy-R] No further actions, stopping.\n";
+      break;
+    }
+
     auto getWinner = [&]() {
       if (!candidates.empty()) {
         std::sort(candidates.begin(), candidates.end(),

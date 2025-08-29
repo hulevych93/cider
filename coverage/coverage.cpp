@@ -28,7 +28,7 @@ Cmd::Cmd(int argc, char* argv[]) {
 
   std::cout << (int)pipelineType << " " << workingDir << " " << baseDir << " "
             << objectDir << " " << binPath << " " << covDir << " " << resultsDir
-            << " " << (int)group << std::endl;
+            << " " << commonResultsDir << " " << (int)group << std::endl;
 }
 
 std::string loadFile(const std::string& path) {

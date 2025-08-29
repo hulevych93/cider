@@ -21,9 +21,8 @@ int main(int argc, char* argv[]) {
 
   cider::Cmd cmd(argc, argv);
 
-  std::vector<cider::recorder::ScriptRecordSessionPtr> sessions;
-
-  if (0) {
+  const auto getTCs = [argv]() {
+    std::vector<cider::recorder::ScriptRecordSessionPtr> sessions;
     const auto callback = [&](const char* testName,
                               const std::function<int()>& f) -> int {
       return cider::recorder::recordScriptWithResult(LibraryName, testName,
@@ -31,18 +30,27 @@ int main(int argc, char* argv[]) {
     };
 
     run_tests(argv[0], callback);
-  } else {
+    return sessions;
+  };
+
+  const auto getTS = [argv]() {
+    std::vector<cider::recorder::ScriptRecordSessionPtr> sessions;
     cider::recorder::recordScript(LibraryName, "pugixml", sessions,
                                   [&]() { run_tests(argv[0]); });
-  }
+    return sessions;
+  };
 
   auto pipeline = cider::pipelines::makePipeline(LibraryName, cmd);
-  pipeline.runOneByOne(sessions);
+  pipeline.run(getTS, getTCs);
 
   if (pipeline.newResuls()) {
     std::cout << "Save results? (y/n): ";
     char decision;
-    std::cin >> decision;
+    if (!cider::pipelines::isDebuggerAttached()) {
+      std::cin >> decision;
+    } else {
+      decision = 'Y';
+    }
     if (decision == 'y' || decision == 'Y') {
       pipeline.save();
       std::cout << "Saved.\n";

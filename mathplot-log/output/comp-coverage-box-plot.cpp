@@ -21,6 +21,7 @@ namespace {
 
 static std::string getYAxisName(const CoverageBoxPlot::PlotType type) {
   std::string plotName;
+#ifdef ENG_NAMES
   if (type == CoverageBoxPlot::PlotType::Both) {
     plotName = "Coverage (%)";
   } else if (type == CoverageBoxPlot::PlotType::BrCov) {
@@ -28,13 +29,31 @@ static std::string getYAxisName(const CoverageBoxPlot::PlotType type) {
   } else if (type == CoverageBoxPlot::PlotType::LineCov) {
     plotName = "Line Coverage (%)";
   }
+#else
+  if (type == CoverageBoxPlot::PlotType::Both) {
+    plotName = "Покриття коду, %";
+  } else if (type == CoverageBoxPlot::PlotType::BrCov) {
+    plotName = "Гілкове покриття коду, %";
+  } else if (type == CoverageBoxPlot::PlotType::LineCov) {
+    plotName = "Лінійне покриття коду, %";
+  }
+#endif
+
   return plotName;
+}
+
+std::string getXAxisName() {
+#ifdef ENG_NAMES
+  return "Policy Configuration";
+#else
+  return "Конфігурація політики";
+#endif
 }
 
 void plotMannWhitney(double maxTop,
                      const std::vector<std::string>& labels,
                      const std::vector<std::vector<double>>& plotDatas) {
-  auto justLogOut = plotDatas.size() >= 4;
+  auto justLogOut = plotDatas.size() > 4;
 
   std::string linestyle = "-";
   std::string linestyleWidth = "0.8";
@@ -45,8 +64,6 @@ void plotMannWhitney(double maxTop,
 
   // === Mann–Whitney U + Bonferroni correction ===
   const size_t numGroups = plotDatas.size();
-  const double alpha = 0.05;
-  const double adjusted_alpha = alpha;
 
   int pairIdx = 0;
   int i = 0;
@@ -54,11 +71,11 @@ void plotMannWhitney(double maxTop,
     try {
       double p = mann_whitney_u(plotDatas[i], plotDatas[j], "two-sided");
       std::cout << labels[i] << " vs " << labels[j] << "p = " << std::fixed
-                << std::setprecision(4) << p << std::endl;
+                << std::setprecision(10) << p << std::endl;
 
       std::ostringstream label;
-      label << "p = " << std::fixed << std::setprecision(4) << p;
-      if (p < adjusted_alpha)
+      label << "p = " << std::fixed << std::setprecision(10) << p;
+      if (p < 0.05)
         label << " *";
       else
         label << " ns";
@@ -83,7 +100,7 @@ void plotMannWhitney(double maxTop,
                    {"color", ColorCodes[0]}});
 
         plt::text(
-            (x1 + x2) / 2.0, y + 0.8, label.str(),
+            (x1 + x2) / 2.0 - 0.2, y + 0.8, label.str(),
             {{"fontname", "Helvetica"}, {"fontsize", "6"}, {"color", "black"}});
       }
 
@@ -94,16 +111,27 @@ void plotMannWhitney(double maxTop,
   }
 }
 
-double plotBoxStats(const std::vector<std::vector<double>>& plotDatas) {
-  auto justLogOut = plotDatas.size() >= 40;
+double plotBoxStats(const std::string& path,
+                    const std::vector<std::string>& labels,
+                    const std::vector<std::vector<double>>& plotDatas) {
+  auto justLogOut = plotDatas.size() > 4;
 
   int idx = 1;
   const double offsetBase = 0.3;
   double maxTop = 0;
 
+  std::ofstream csv;
+  if (justLogOut) {
+    csv.open(path, std::ios::out | std::ios::trunc);
+    if (csv) {
+      csv << "Label;Q1;Median;Q3;Lower;Upper\n";
+    }
+    std::cout << "\n[BoxStats Table]\n";
+    std::cout << "Label\tQ1\tMedian\tQ3\tLower\tUpper\n";
+  }
+
   for (size_t i = 0; i < plotDatas.size(); ++i) {
     auto& plotData = plotDatas[i];
-
     BoxStats stats = compute_box(plotData);
 
     if (stats.upper_whisker > maxTop)
@@ -127,9 +155,27 @@ double plotBoxStats(const std::vector<std::vector<double>>& plotDatas) {
       add_label(idx + offsetBase, y + deltaY * 2, stats.q3, "Q3");
       add_label(idx + offsetBase, y + deltaY * 3, stats.lower_whisker, "Lower");
       add_label(idx + offsetBase, y + deltaY * 4, stats.upper_whisker, "Upper");
+    } else {
+      // Виводимо в консоль
+      std::cout << labels[i] << "\t" << std::fixed << std::setprecision(2)
+                << stats.q1 << "\t" << stats.median << "\t" << stats.q3 << "\t"
+                << stats.lower_whisker << "\t" << stats.upper_whisker << "\n";
+
+      // Пишемо у CSV
+      if (csv) {
+        csv << labels[i] << ";" << std::fixed << std::setprecision(2)
+            << stats.q1 << ";" << stats.median << ";" << stats.q3 << ";"
+            << stats.lower_whisker << ";" << stats.upper_whisker << "\n";
+      }
     }
 
     ++idx;
+  }
+
+  if (csv.is_open()) {
+    csv.flush();
+    csv.close();
+    std::cout << "[INFO] Box stats saved to boxstats.csv\n";
   }
 
   return maxTop;
@@ -194,7 +240,7 @@ void CoverageBoxPlot::plot() const {
   for (size_t i = 0; i < _boxData.size(); ++i)
     xticks[i] = i + 1;
 
-  double maxTop = plotBoxStats(plotDatas);
+  double maxTop = plotBoxStats(ensureCsvExtension(m_path), labels, plotDatas);
   plotMannWhitney(maxTop, labels, plotDatas);
 
   plt::boxplot(plotDatas, labels, true,
@@ -208,10 +254,12 @@ void CoverageBoxPlot::plot() const {
                 {"flierprops.markersize", "3.0"},
                 {"showfliers", "True"}});
 
-  plt::xticks(xticks, labels);
+  plt::xticks(xticks, labels, {{"fontsize", "5"}});
 
   plt::ylabel(getYAxisName(_type));
-  plt::ylim(0.0, 40.0);
+  plt::xlabel(getXAxisName());
+
+  plt::ylim(0.0, 70.0);
 
   plt::grid(true);
 

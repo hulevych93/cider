@@ -24,11 +24,13 @@ enum class PipelineType {
   MCTS2 = 31,
   MCTS3 = 32,
 
+  Greedy = 39,
   GreedyR1 = 40,
   GreedyR2 = 41,
   GreedyR3 = 42,
 
   DSL = 45,
+  DSL_PostProcessing = 46,
 
   QLearningAgentLearning = 50,
   SarsaAgentLearning = 51,
@@ -49,19 +51,25 @@ enum class PipelineType {
   SarsaAgentB2 = 76,
   SarsaAgentB3 = 77,
 
+  QLearningStats = 80,
   GenerationCoverageBoxStats = 90,
   GenerationCoverageStepperStats = 100,
   GenerationLinesBarStats = 110,
   GenerationEfficencyTable = 120,
   GenerationCoverageHeatMap = 130,
+  GenerationTimesBarStats = 135,
+  GenerationCompressionBarStats = 136,
 
+  AggregateData = 140,
+  VerifyData = 145,
+  ComputeCompression = 146,
   RemoveGroupData = 150,
   ProcessData = 160,
   ShowResults = 170
 };
 
 enum class MethodsGroup {
-  QLEG,
+  QLEG = 1,
   QLB,
   SLEG,
   SLB,
@@ -70,7 +78,9 @@ enum class MethodsGroup {
   RAND,
   GREEDY_R,
   DSL,
-  SELECTED
+  SELECTED,
+  TARGET,
+  ALL
 };
 
 struct ObjectiveValue final {
@@ -89,7 +99,7 @@ struct Cmd final {
   std::string covDir;
   std::string resultsDir;
   std::string commonResultsDir;
-  MethodsGroup group = MethodsGroup::MCTS;
+  MethodsGroup group = MethodsGroup::ALL;
 };
 
 class Seed final {

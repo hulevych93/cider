@@ -16,6 +16,32 @@ namespace plt = matplotlibcpp;
 namespace cider {
 namespace mathplot {
 
+namespace {
+std::string getRewardYAxisName() {
+#ifdef ENG_NAMES
+  return "Total Reward (Unit)";
+#else
+  return "Сумарна винагорода за епізод навчання, ум. од.";
+#endif
+}
+
+std::string getLossYAxisName() {
+#ifdef ENG_NAMES
+  return "Average Loss (Unit)";
+#else
+  return "Середньоквадратична похибка Белмана, ум. од.";
+#endif
+}
+
+std::string getXAxisName() {
+#ifdef ENG_NAMES
+  return "Episode";
+#else
+  return "Епізод";
+#endif
+}
+}  // namespace
+
 QLearningRewardLogger::QLearningRewardLogger(const std::string& logDir,
                                              const std::string& logFileName)
     : m_path(ensurePath(logDir, logFileName)) {}
@@ -55,8 +81,8 @@ void QLearningRewardLogger::plot() {
             std::map<std::string, std::string>{
                 {"color", "red"}, {"linestyle", "-"}, {"linewidth", "0.5"}});
 
-  plt::ylabel("Total Reward (Unit)");
-  plt::xlabel("Episode");
+  plt::ylabel(getRewardYAxisName());
+  plt::xlabel(getXAxisName());
 
   plt::grid(true);
 
@@ -74,8 +100,6 @@ void QLearningRewardLogger::save() {
   plot();
   plt::save(ensurePngExtension(m_path), 1200);
 }
-
-//////////////////////////////////
 
 QLearningLossLogger::QLearningLossLogger(const std::string& logDir,
                                          const std::string& logFileName)
@@ -116,8 +140,8 @@ void QLearningLossLogger::plot() {
             std::map<std::string, std::string>{
                 {"color", "blue"}, {"linestyle", "-"}, {"linewidth", "0.5"}});
 
-  plt::ylabel("Average Loss (Unit)");
-  plt::xlabel("Episode");
+  plt::ylabel(getLossYAxisName());
+  plt::xlabel(getXAxisName());
 
   plt::grid(true);
 

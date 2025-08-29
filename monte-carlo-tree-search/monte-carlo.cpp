@@ -16,8 +16,6 @@ std::ostream& operator<<(std::ostream& os, const MonteCarloSettings& settings) {
   os << "MCTS_";
   os << "maxIter[";
   os << settings.maxIter;
-  os << "]_maxDepth[";
-  os << settings.maxDepth;
   os << "]_maxRollback[";
   os << settings.maxRollback;
   os << "]_ucbC[";
@@ -65,8 +63,8 @@ bool isValid(ObjectiveFunction objFunc, const TestCase& base) {
 double rollout(std::mt19937& gen,
                ObjectiveFunction objFunc,
                TestCase& candidate,
-               size_t max_depth,
                size_t max_rollback,
+               size_t maxDepth,
                const std::vector<recorder::Action>& actionSpace) {
   synthesis::TestScenario scenario(gen, actionSpace, objFunc);
   for (const auto& a : candidate) {
@@ -79,7 +77,8 @@ double rollout(std::mt19937& gen,
 
   synthesis::SynthesisSettingsBasic settings;
   settings.maxRollback = max_rollback;
-  settings.stopType = synthesis::StopCondition::GreaterCoverage;
+  settings.stopType = synthesis::StopCondition::LimitActions;
+  settings.limitActions = maxDepth;
   synthesis::details::synthesize(settings, actionChoosing, scenario);
 
   candidate = scenario.getResult();
@@ -195,8 +194,8 @@ TestCase run_mcts(std::mt19937& gen,
     // === Rollout ===
     TestCase candidate = expanded->path;
     const auto reward =
-        rollout(gen, settings.objFunc, candidate, settings.maxDepth,
-                settings.maxRollback, actionSpace);
+        rollout(gen, settings.objFunc, candidate, settings.maxRollback,
+                settings.maxDepth, actionSpace);
 
     // === Backpropagation ===
     backpropagate(expanded, reward, candidate);

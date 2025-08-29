@@ -34,10 +34,12 @@ int main(int argc, char* argv[]) {
     auto lState = cider::scripting::get_lua();
     luaopen_hjson(lState.get());
 
+    const auto startTime = std::chrono::steady_clock::now();
     auto startCov = cider::cfg_coverage::getCoverage();
     const auto result =
         cider::scripting::executeScript(lState.get(), script.c_str()) ? 0 : 1;
-    cider::cfg_coverage::dumpCoverageToCout(result == 0, startCov);
+
+    cider::cfg_coverage::dumpCoverageToCout(result == 0, startCov, startTime);
 
     return result;
   } catch (const std::exception& e) {

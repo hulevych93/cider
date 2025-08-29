@@ -75,6 +75,13 @@ bool LearningStage::process(const std::string& metadata,
 
   std::filesystem::path outPath(cmd.resultsDir);
   outPath /= metadata;
+
+  if (std::filesystem::exists(outPath)) {
+    std::cout << "Already existing result for: " << outPath << ". Skipping..."
+              << std::endl;
+    return true;
+  }
+
   outPath /= prefix;
   std::filesystem::create_directories(outPath);
 
@@ -102,14 +109,28 @@ bool LearningStage::process(const std::string& metadata,
         << measurer.getObjValueFunc()(input.actions).coverage;
   debug << std::endl << std::endl;
 
+  static int EpisodeCounter = 0;
+  cider::agent_model::Episode t;
+  t.episode = EpisodeCounter++;
+  t.start = std::chrono::system_clock::now();
+
   agent_model::RewardCounter rwCounter;
-  auto dump = [&rwCounter, outPath](const auto& agent) {
-    std::ofstream debug(outPath / "qtable.txt", std::ios::trunc);
+  auto dump = [&t, &cmd, &rwCounter](const auto& agent) {
+    t.end = std::chrono::system_clock::now();
+
+    std::filesystem::path resultsPath(cmd.resultsDir);
+
+    std::ofstream debug(resultsPath / "qtable.txt", std::ios::trunc);
     agent.print(debug);
+
+    std::ofstream out(resultsPath / "qtable.csv",
+                      std::ios::binary | std::ios::app);
+    out.imbue(std::locale::classic());
+    agent.printMetrics(out, t);
 
     agent_model::print(debug, rwCounter);
 
-    agent.save(outPath / "qtable_agent.img");
+    agent.save();
   };
 
   std::visit(
@@ -118,6 +139,7 @@ bool LearningStage::process(const std::string& metadata,
                         rwCounter, rwLogger, lossLogger, covLogger, dump);
       },
       m_settings);
+
   debug << std::endl << std::endl;
 
   return true;

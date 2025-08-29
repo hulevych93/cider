@@ -18,16 +18,14 @@ CoverageMeasurment::CoverageMeasurment(const Cmd& cmd, const char* module)
     : _cmd(cmd), _module(module) {}
 
 ReportOpt CoverageMeasurment::getReport(
-    const std::vector<cider::recorder::Action>& actions,
-    unsigned long& executionTimeMs) {
+    const std::vector<cider::recorder::Action>& actions) {
   const auto script = getScript(actions);
 
   assert(cleanCoverage(_cmd.covDir));
 
-  const auto start = std::chrono::steady_clock::now();
   const auto result = scripting::runScript(
       _cmd.binPath, _cmd.workingDir, script, [](const char*, std::size_t) {});
-  auto end = std::chrono::steady_clock::now();
+
   if (result) {
     std::string jsonReport;
     assert(runCoverage(_cmd.baseDir, _cmd.objectDir,
@@ -41,10 +39,6 @@ ReportOpt CoverageMeasurment::getReport(
     if (m_logger) {
       m_logger->log(_index, rootReport.value());
     }
-
-    executionTimeMs =
-        std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
-            .count();
 
     return rootReport.value();
   }
@@ -71,7 +65,7 @@ void StepperCoverageMeasurment::measure(
     m_logger->log(0U, {});
   }
 
-  m_stepSize = 20;
+  m_stepSize = 4;
 
   for (; _index < actions.size();) {
     (*this)(actions);

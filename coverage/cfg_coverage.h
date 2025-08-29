@@ -18,6 +18,7 @@ namespace cfg_coverage {
 struct Coverage final : serialization::SerializableTag {
   constexpr static const double percentageThreshold = 0.000000000005;
 
+  std::uint32_t meassureTimeMcs = 0U;
   std::uint32_t covered = 0U;
   std::uint32_t total = 0U;
   bool status = true;
@@ -38,7 +39,9 @@ bool serialize(const Coverage& obj, serialization::Serializer& serializer);
 bool deserialize(Coverage& obj,
                  const serialization::Deserializer& deserializer);
 
-void dumpCoverageToCout(bool status, const Coverage& startPoint);
+void dumpCoverageToCout(bool status,
+                        const Coverage& startPoint,
+                        const std::chrono::steady_clock::time_point& startTime);
 
 Coverage getCoverage();
 

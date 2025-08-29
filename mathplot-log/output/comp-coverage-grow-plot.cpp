@@ -81,11 +81,37 @@ Stats getStats(const std::vector<Points>& points) {
     computeMeanAndStd(data, stats.meanBrCov, stats.stdBrCov);
   }
 
+  // --- NEW: detect stagnation ---
+  auto cutByStagnation = [](std::vector<double>& mean,
+                            std::vector<double>& stdev,
+                            std::vector<double>& instr, double eps = 0.1) {
+    if (mean.empty())
+      return;
+
+    size_t lastIdx = mean.size() - 1;
+    for (size_t i = 0; i < mean.size() - 1; ++i) {
+      if (std::fabs(mean[i + 1] - mean[i]) > eps) {
+        lastIdx = i + 1;
+      } else {
+        break;
+      }
+    }
+
+    mean.resize(lastIdx + 1);
+    stdev.resize(lastIdx + 1);
+    instr.resize(lastIdx + 1);
+  };
+
+  // cut both series to the same length (lineCov dominates)
+  cutByStagnation(stats.meanLineCov, stats.stdLineCov, stats.instructions);
+  cutByStagnation(stats.meanBrCov, stats.stdBrCov, stats.instructions);
+
   return stats;
 }
 
 std::string getYAxisName(const StepperComparativeLogger::PlotType type) {
   std::string plotName;
+#ifdef ENG_NAMES
   if (type == StepperComparativeLogger::PlotType::Both) {
     plotName = "Coverage (%)";
   } else if (type == StepperComparativeLogger::PlotType::BrCov) {
@@ -93,7 +119,25 @@ std::string getYAxisName(const StepperComparativeLogger::PlotType type) {
   } else if (type == StepperComparativeLogger::PlotType::LineCov) {
     plotName = "Line Coverage (%)";
   }
+#else
+  if (type == StepperComparativeLogger::PlotType::Both) {
+    plotName = "Покриття коду, %";
+  } else if (type == StepperComparativeLogger::PlotType::BrCov) {
+    plotName = "Гілкове покриття коду, %";
+  } else if (type == StepperComparativeLogger::PlotType::LineCov) {
+    plotName = "Лінійне покриття коду, %";
+  }
+#endif
+
   return plotName;
+}
+
+std::string getXAxisName() {
+#ifdef ENG_NAMES
+  return "Instruction";
+#else
+  return "Кількість виконаних інструкцій";
+#endif
 }
 
 }  // namespace
@@ -275,12 +319,12 @@ void StepperComparativeLogger::plot() const {
 
   applyPublicationStyle();
 
-  plt::xlabel("Instruction");
+  plt::xlabel(getXAxisName());
   plt::ylabel(getYAxisName(_type));
   plt::title(" ");
   plt::grid(true);
   plt::ylim(0.0, 35.0);
-  plt::xlim(0.0, 450.0);
+  plt::xlim(0.0, 60.0);
 
   plt::legend();     // Show legend with labels
   plt::pause(0.01);  // Allow time for GUI to update

@@ -3,6 +3,7 @@
 
 #include "cfg_coverage.h"
 
+#include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -73,6 +74,7 @@ Coverage& Coverage::alignTo(const Coverage& startingPoint) {
 }
 
 bool serialize(const Coverage& obj, serialization::Serializer& serializer) {
+  serializer << obj.meassureTimeMcs;
   serializer << obj.covered;
   serializer << obj.total;
   serializer << obj.status;
@@ -82,6 +84,7 @@ bool serialize(const Coverage& obj, serialization::Serializer& serializer) {
 
 bool deserialize(Coverage& obj,
                  const serialization::Deserializer& deserializer) {
+  deserializer >> obj.meassureTimeMcs;
   deserializer >> obj.covered;
   deserializer >> obj.total;
   deserializer >> obj.status;
@@ -93,8 +96,17 @@ void Coverage::dump() const {
   std::cout << covered << ":" << total << std::endl;
 }
 
-void dumpCoverageToCout(bool status, const Coverage& startPoint) {
+void dumpCoverageToCout(
+    bool status,
+    const Coverage& startPoint,
+    const std::chrono::steady_clock::time_point& startTime) {
   auto coverage = getCoverage();
+
+  const auto end = std::chrono::steady_clock::now();
+  coverage.meassureTimeMcs =
+      std::chrono::duration_cast<std::chrono::microseconds>(end - startTime)
+          .count();
+
   coverage.alignTo(startPoint).status = status;
   const auto covJson = serializeCovReport(coverage);
   std::cout << MarkerStart << covJson << MarkerEnd << coverage.getPercentage();

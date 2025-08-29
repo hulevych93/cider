@@ -19,6 +19,26 @@ namespace plt = matplotlibcpp;
 namespace cider {
 namespace mathplot {
 
+namespace {
+
+static std::string getYAxisName() {
+#ifdef ENG_NAMES
+  return "Instructions Count";
+#else
+  return "Кількість інструкцій";
+#endif
+}
+
+static std::string getXAxisName() {
+#ifdef ENG_NAMES
+  return "Instructions Count";
+#else
+  return "Тестовий сценарій, №";
+#endif
+}
+
+}  // namespace
+
 LinesBarPlot::LinesBarPlot(const std::string& logDir,
                            const std::string& logFileName)
     : m_path(ensurePath(logDir, logFileName)) {}
@@ -89,7 +109,7 @@ std::vector<std::vector<double>> convertToMethodMajor(
 void LinesBarPlot::plot() {
   static bool done = false;
   if (!done) {
-    done = true;
+    // done = true;
   } else {
     return;
   }
@@ -129,16 +149,17 @@ void LinesBarPlot::plot() {
 
   assert(names.size() <= 3);
 
-  size_t n = testCases.size();
+  size_t n = _barData.size();
 
-  // X positions (base for each group)
   std::vector<double> x(n);
-  for (size_t i = 1; i < n; ++i)
+  // X positions (base for each group)
+  for (size_t i = 1; i < n; ++i) {
     x[i] = static_cast<double>(i);
+  }
 
   // Group offset (for 2 bars per group)
   std::vector<double> xg[names.size()];
-  double width = 0.3;
+  double width = 0.25;
 
   for (int method = 0; method < names.size(); ++method) {
     xg[method] = std::vector<double>(n, 0.0f);
@@ -153,12 +174,13 @@ void LinesBarPlot::plot() {
   }
 
   // Set ticks and labels
-  plt::xticks(x, testCases, {{"fontsize", "5"}});
-  plt::ylabel("Instructions Count");
-  plt::xlabel("Test Case");
+  plt::xticks(x, testCases, {{"fontsize", "9"}});
+  plt::ylabel(getYAxisName());
+  plt::xlabel(getXAxisName());
 
   plt::legend();
 
+  setAxisPolicy();
   applyPublicationStyle();
   plt::pause(5.5);
 

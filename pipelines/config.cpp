@@ -3,6 +3,8 @@
 
 #include "pipeline.h"
 
+#include "pipes/aggregation-pipe.h"
+#include "pipes/compression-pipe.h"
 #include "pipes/dataset-pipe.h"
 #include "pipes/dslicer-pipe.h"
 #include "pipes/greedy-r-pipe.h"
@@ -11,6 +13,7 @@
 #include "pipes/meta-pipe.h"
 #include "pipes/report-pipe.h"
 #include "pipes/synthesis-pipe.h"
+#include "pipes/verification-pipe.h"
 
 #include "agent-q-learning/q-learning-agent.h"
 #include "agent-sarsa-learning/sarsa-learning-agent.h"
@@ -88,12 +91,21 @@ auto getCackooSettings() {
   return settings;
 }
 
+auto getGreedySettings() {
+  greedy_r::GreedyRSettings settings;
+  settings.configName = "GR";
+
+  settings.top_k = 1;
+  settings.maxZeroGain = 0;
+  return settings;
+}
+
 auto getGreedyR1Settings() {
   greedy_r::GreedyRSettings settings;
   settings.configName = "GRR1";
 
   settings.top_k = 3;
-  settings.maxZeroGain = 3;
+  settings.maxZeroGain = 5;
   return settings;
 }
 
@@ -111,37 +123,37 @@ auto getGreedyR3Settings() {
   settings.configName = "GRR3";
 
   settings.top_k = 7;
-  settings.maxZeroGain = 7;
+  settings.maxZeroGain = 5;
   return settings;
 }
 
 auto getMCTS1Settings() {
   mcts::MonteCarloSettings settings;
   settings.configName = "MCTS1";
-  settings.maxIter = 50;
+  settings.maxIter = 1000;
   settings.maxDepth = 10;
   settings.ucb_C = 0.7;
-  settings.maxRollback = 30;
+  settings.maxRollback = 10;
   return settings;
 }
 
 auto getMCTS2Settings() {
   mcts::MonteCarloSettings settings;
   settings.configName = "MCTS2";
-  settings.maxIter = 50;
-  settings.maxDepth = 10;
+  settings.maxIter = 100;
+  settings.maxDepth = 500;
   settings.ucb_C = 1.4;
-  settings.maxRollback = 30;
+  settings.maxRollback = 10;
   return settings;
 }
 
 auto getMCTS3Settings() {
   mcts::MonteCarloSettings settings;
   settings.configName = "MCTS3";
-  settings.maxIter = 50;
-  settings.maxDepth = 10;
+  settings.maxIter = 100;
+  settings.maxDepth = 500;
   settings.ucb_C = 2.0;
-  settings.maxRollback = 30;
+  settings.maxRollback = 10;
   return settings;
 }
 
@@ -151,9 +163,11 @@ auto getQLearningSettings() {
   settings.prelearningEpisodes = 50U;
   settings.discountFactor = 0.85;
   settings.initialLearningRate = 0.3;
-  settings.episodes = 5000U;
+  settings.finalLearningRate = 0.1;
+  settings.episodes = 1000U;
   settings.maxRollback = 20U;
-  settings.maxStateDepth = 3U;
+  settings.coverageConvergenceCounter = 100U;
+  settings.maxStateDepth = 7U;
   return settings;
 }
 
@@ -202,7 +216,7 @@ auto getSarsaGenG1Settings() {
   synthesis::SarsaSynthesisSettings settings;
   settings.configName = "SLEG1";
   settings.epsilon = 0.1;
-  settings.maxRollback = 30U;
+  settings.maxRollback = 10U;
   settings.strategy = synthesis::GenerationStrategyType::EGreedy;
   settings.stopType = synthesis::StopCondition::GreaterCoverage;
   return settings;
@@ -212,7 +226,7 @@ auto getSarsaGenG2Settings() {
   synthesis::SarsaSynthesisSettings settings;
   settings.configName = "SLEG2";
   settings.epsilon = 0.15;
-  settings.maxRollback = 30U;
+  settings.maxRollback = 10U;
   settings.strategy = synthesis::GenerationStrategyType::EGreedy;
   settings.stopType = synthesis::StopCondition::GreaterCoverage;
   return settings;
@@ -222,7 +236,7 @@ auto getSarsaGenG3Settings() {
   synthesis::SarsaSynthesisSettings settings;
   settings.configName = "SLEG3";
   settings.epsilon = 0.25;
-  settings.maxRollback = 30U;
+  settings.maxRollback = 10U;
   settings.strategy = synthesis::GenerationStrategyType::EGreedy;
   settings.stopType = synthesis::StopCondition::GreaterCoverage;
   return settings;
@@ -262,7 +276,7 @@ auto getSarsaGenB1Settings() {
   synthesis::SarsaSynthesisSettings settings;
   settings.configName = "SLB1";
   settings.temperature = 1.5;
-  settings.maxRollback = 30U;
+  settings.maxRollback = 10U;
   settings.strategy = synthesis::GenerationStrategyType::Boltzmann;
   settings.stopType = synthesis::StopCondition::GreaterCoverage;
   return settings;
@@ -272,7 +286,7 @@ auto getSarsaGenB2Settings() {
   synthesis::SarsaSynthesisSettings settings;
   settings.configName = "SLB2";
   settings.temperature = 3.0;
-  settings.maxRollback = 30U;
+  settings.maxRollback = 10U;
   settings.strategy = synthesis::GenerationStrategyType::Boltzmann;
   settings.stopType = synthesis::StopCondition::GreaterCoverage;
   return settings;
@@ -282,7 +296,7 @@ auto getSarsaGenB3Settings() {
   synthesis::SarsaSynthesisSettings settings;
   settings.configName = "SLB3";
   settings.temperature = 5.0;
-  settings.maxRollback = 30U;
+  settings.maxRollback = 10U;
   settings.strategy = synthesis::GenerationStrategyType::Boltzmann;
   settings.stopType = synthesis::StopCondition::GreaterCoverage;
   return settings;
@@ -291,8 +305,9 @@ auto getSarsaGenB3Settings() {
 auto getRandGenSettings(size_t lines = 450) {
   synthesis::RandSynthesisSettings settings;
   settings.configName = "RAND";
-  settings.stopType = synthesis::StopCondition::LimitActions;
+  settings.stopType = synthesis::StopCondition::GreaterCoverage;
   settings.limitActions = lines;
+  settings.maxRollback = 30;
   return settings;
 }
 
@@ -326,8 +341,8 @@ const pipelines::ReportConfiguration& getReportConfigSLB() {
 }
 
 const pipelines::ReportConfiguration& getReportConfigMCTS() {
-  static const std::vector<std::string> orderedMethods = {"RAND", "MCTS1",
-                                                          "MCTS2", "MCTS3"};
+  static const std::vector<std::string> orderedMethods = {"MCTS1", "MCTS2",
+                                                          "MCTS3"};
   return orderedMethods;
 }
 
@@ -338,7 +353,7 @@ const pipelines::ReportConfiguration& getReportConfigQLEGvsQLB() {
 }
 
 const pipelines::ReportConfiguration& getReportConfigGreedyR() {
-  static const std::vector<std::string> orderedMethods = {"GRR1", "GRR2",
+  static const std::vector<std::string> orderedMethods = {"GR", "GRR1", "GRR2",
                                                           "GRR3"};
   return orderedMethods;
 }
@@ -349,10 +364,38 @@ const pipelines::ReportConfiguration& getReportConfigDSlicing() {
 }
 
 const pipelines::ReportConfiguration& getReportConfigSelected() {
-  static const std::vector<std::string> orderedMethods = {
-      "GRR1", "GRR2", "GRR3", "RAND", "QLB2", "DSL"};
+  static const std::vector<std::string> orderedMethods = {"DSL", "GRR2",
+                                                          "MCTS2", "QLB2"};
   return orderedMethods;
 }
+
+const pipelines::ReportConfiguration& getReportConfigTarget() {
+  static const std::vector<std::string> orderedMethods = {
+      "QLEG1", "QLEG2", "QLEG3", "QLB1", "QLB2", "QLB3"};
+  return orderedMethods;
+}
+
+const pipelines::ReportConfiguration& getReportALLSelected() {
+  static const std::vector<std::string> orderedMethods = {
+      "DSL",  "GR",    "GRR1",  "GRR2",  "GRR3", "MCTS1", "MCTS2", "MCTS3",
+      "RAND", "QLEG1", "QLEG2", "QLEG3", "QLB1", "QLB2",  "QLB3"};
+  return orderedMethods;
+}
+
+const pipelines::ReportConfiguration& getReportEFTOrder() {
+  static const std::vector<std::string> orderedMethods = {
+      "DSL",  "GRR1",  "GRR2",  "GRR3",  "MCTS1", "MCTS2", "MCTS3",
+      "RAND", "QLEG1", "QLEG2", "QLEG3", "QLB1",  "QLB2",  "QLB3"};
+  return orderedMethods;
+}
+
+constexpr const int StatsCount = 100U;
+constexpr const int GreedyCount = 50U;
+constexpr const int MCTSCount = 5U;
+
+}  // namespace
+
+namespace pipelines {
 
 const pipelines::ReportConfiguration& getReportConfig(MethodsGroup group) {
   switch (group) {
@@ -376,15 +419,12 @@ const pipelines::ReportConfiguration& getReportConfig(MethodsGroup group) {
       return getReportConfigDSlicing();
     case MethodsGroup::SELECTED:
       return getReportConfigSelected();
+    case MethodsGroup::TARGET:
+      return getReportConfigTarget();
+    case MethodsGroup::ALL:
+      return getReportALLSelected();
   }
 }
-
-constexpr const int StatsCount = 100U;
-constexpr const int GreedyCount = 5U;
-
-}  // namespace
-
-namespace pipelines {
 
 Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
   Pipeline pipeline(libName, cmd);
@@ -417,15 +457,19 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
       break;
     case PipelineType::MCTS1:
       pipeline.addStage(
-          std::make_unique<MctsSearchStage>(getMCTS1Settings(), GreedyCount));
+          std::make_unique<MctsSearchStage>(getMCTS1Settings(), MCTSCount));
       break;
     case PipelineType::MCTS2:
       pipeline.addStage(
-          std::make_unique<MctsSearchStage>(getMCTS2Settings(), GreedyCount));
+          std::make_unique<MctsSearchStage>(getMCTS2Settings(), MCTSCount));
       break;
     case PipelineType::MCTS3:
       pipeline.addStage(
-          std::make_unique<MctsSearchStage>(getMCTS3Settings(), GreedyCount));
+          std::make_unique<MctsSearchStage>(getMCTS3Settings(), MCTSCount));
+      break;
+    case PipelineType::Greedy:
+      pipeline.addStage(
+          std::make_unique<GreedyRStage>(getGreedySettings(), GreedyCount));
       break;
     case PipelineType::GreedyR1:
       pipeline.addStage(
@@ -441,6 +485,10 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
       break;
     case PipelineType::DSL:
       pipeline.addStage(std::make_unique<DSlicerStage>());
+      break;
+    case PipelineType::DSL_PostProcessing:
+      pipeline.addStage(std::make_unique<DQLPostProcessSlicerStage>(
+          getReportConfig(cmd.group)));
       break;
     case PipelineType::QLearningAgentLearning:
       if (!agent_model::qlearning::QLearningAgent::get().isLoaded()) {
@@ -522,6 +570,12 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
             getReportConfig(cmd.group)));
       }
       break;
+    case PipelineType::GenerationTimesBarStats:
+      if (pipeline.hasResults()) {
+        pipeline.addStage(std::make_unique<TimesBarPlotReportStage>(
+            getReportConfig(cmd.group)));
+      }
+      break;
     case PipelineType::GenerationCoverageHeatMap:
       if (pipeline.hasResults()) {
         pipeline.addStage(std::make_unique<HeatmapPlotReportStage>(
@@ -530,7 +584,23 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
       break;
     case PipelineType::GenerationEfficencyTable:
       if (pipeline.hasResults()) {
-        pipeline.addStage(std::make_unique<EfficencyReportStage>());
+        pipeline.addStage(
+            std::make_unique<EfficencyReportStage>(getReportEFTOrder()));
+      }
+      break;
+    case PipelineType::AggregateData:
+      if (pipeline.hasResults()) {
+        pipeline.addStage(std::make_unique<ResultsAgregationStage>());
+      }
+      break;
+    case PipelineType::VerifyData:
+      if (pipeline.hasResults()) {
+        pipeline.addStage(std::make_unique<ResultsVerificationStage>());
+      }
+      break;
+    case PipelineType::ComputeCompression:
+      if (pipeline.hasResults()) {
+        pipeline.addStage(std::make_unique<ResultsCompressionStage>());
       }
       break;
     case PipelineType::RemoveGroupData:
@@ -544,7 +614,12 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
         pipeline.addStage(std::make_unique<ProcessDataStage>());
       }
       break;
+    case PipelineType::QLearningStats:
+      pipeline.addStage(std::make_unique<QLearningReportStage>());
+      break;
     case PipelineType::ShowResults:
+      pipeline.addStage(
+          std::make_unique<ShowResultsStage>(getReportConfig(cmd.group)));
       break;
   }
   return pipeline;

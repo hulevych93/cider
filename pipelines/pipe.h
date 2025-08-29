@@ -22,7 +22,7 @@ class Pipe {
 
   virtual std::string getLetter() const = 0;
 
-  virtual bool needTS() const { return false; }
+  virtual bool needTS() const { return true; }
 
  protected:
   friend class Pipeline;
@@ -37,7 +37,7 @@ class Pipe {
   const Input& getInput() const;
   const Results& getResults() const;
 
-  Results& getMutableResults();
+  void replaceResults(const Results& newResults);
 
   void clearData(const std::string& methodName);
 

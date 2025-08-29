@@ -13,6 +13,8 @@ include (cmake/main.cmake)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+add_definitions(-DRESULTS_VERSION_2)
+
 include_directories(${CMAKE_SOURCE_DIR})
 
 if(NOT "${CMAKE_BUILD_TYPE}" STREQUAL "DEBUG")

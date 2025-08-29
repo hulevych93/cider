@@ -14,6 +14,10 @@
 #include "mathplot-log/output/comp-coverage-grow-plot.h"
 #include "mathplot-log/output/comp-coverage-heatmap.h"
 #include "mathplot-log/output/comp-lines-barplot.h"
+#include "mathplot-log/output/comp-time-barplot.h"
+
+#include "mathplot-log/monitoring/q-learning-cov-ep-plot.h"
+#include "mathplot-log/monitoring/q-learning-reward-loss-plot.h"
 
 #include <iostream>
 
@@ -22,6 +26,13 @@ namespace pipelines {
 
 namespace {
 
+bool ourMethod(const std::string& name) {
+  static const std::vector<std::string> orderedMethods = {
+      "QLEG1", "QLEG2", "QLEG3", "QLB1", "QLB2", "QLB3"};
+  return std::find(orderedMethods.cbegin(), orderedMethods.cend(), name) !=
+         orderedMethods.cend();
+}
+
 template <typename F>
 void processBest(const std::string& methodName,
                  const std::vector<Result>& results,
@@ -29,7 +40,7 @@ void processBest(const std::string& methodName,
                  F&& func) {
   std::vector<Result> bestResults = results;
 
-  if (methodName != "RAND") {
+  if (ourMethod(methodName)) {
     std::sort(bestResults.begin(), bestResults.end(),
               [](const auto& l, const auto& r) {
                 return l.newReport.branchCov.covered >
@@ -46,6 +57,30 @@ void processBest(const std::string& methodName,
     }
   }
 }
+
+template <typename F>
+void processBatchBest(const std::string& methodName,
+                      const std::vector<Result>& results,
+                      int max,
+                      F&& func) {
+  std::vector<Result> bestResults = results;
+
+  if (ourMethod(methodName)) {
+    std::sort(bestResults.begin(), bestResults.end(),
+              [](const auto& l, const auto& r) {
+                return l.newReport.branchCov.covered >
+                       r.newReport.branchCov.covered;
+              });
+  }
+
+  if (max < bestResults.size()) {
+    bestResults.erase(bestResults.begin() + max, bestResults.end());
+  }
+
+  func(methodName, bestResults);
+}
+
+constexpr int DataSize = 70;  // bitmap++
 
 template <typename F>
 void processBestBatch(const std::string& methodName,
@@ -68,6 +103,23 @@ void processBestBatch(const std::string& methodName,
 
 }  // namespace
 
+bool QLearningReportStage::process(const std::string& metadata,
+                                   const std::string&,
+                                   const cider::Cmd& cmd) {
+  std::filesystem::path outPath(cmd.resultsDir);
+  outPath /= metadata;
+
+  mathplot::QLearningRewardLogger rwLogger(outPath, "reward.png");
+  mathplot::QLearningLossLogger lossLogger(outPath, "loss.png");
+  mathplot::CovQLearningResultsMathplotLogger covLogger(outPath, "cov.png");
+
+  rwLogger.load();
+  lossLogger.load();
+  covLogger.load();
+
+  return true;
+}
+
 StepperReportStage::StepperReportStage(const ReportConfiguration& config)
     : _config(config) {}
 
@@ -77,10 +129,8 @@ bool StepperReportStage::process(const std::string& metadata,
   std::filesystem::path outPath(cmd.resultsDir);
   outPath /= metadata;
 
-  int dataSize = 1000;
-
   std::string graphTitle =
-      "STEP_" + libName + "_" + std::to_string(dataSize) + "_";
+      "STEP_" + libName + "_" + std::to_string(DataSize) + "_";
   for (const auto& entry : _config) {
     graphTitle += entry;
     graphTitle += "_";
@@ -126,7 +176,7 @@ bool StepperReportStage::process(const std::string& metadata,
       const auto& name = it->first;
       const auto& res = it->second;
 
-      processBest(name, res, dataSize, handleResult);
+      processBest(name, res.entries, DataSize, handleResult);
     }
   }
 
@@ -144,10 +194,7 @@ bool BoxPlotReportStage::process(const std::string& metadata,
   std::filesystem::path outPath(cmd.resultsDir);
   outPath /= metadata;
 
-  int dataSize = 150;
-
-  std::string graphTitle =
-      "CBOX" + libName + "_" + std::to_string(dataSize) + "_";
+  std::string graphTitle = "CBOX" + libName + "_";
   for (const auto& entry : _config) {
     graphTitle += entry;
     graphTitle += "_";
@@ -198,7 +245,7 @@ bool BoxPlotReportStage::process(const std::string& metadata,
     const auto& name = it->first;
     const auto& res = it->second;
 
-    processBest(name, res, dataSize, handleResult);
+    processBest(name, res.entries, DataSize, handleResult);
   }
 
   brCovLogger->plot();
@@ -218,9 +265,7 @@ bool LinesBarPlotReportStage::process(const std::string&,
                                       const cider::Cmd& cmd) {
   std::filesystem::path outPath(cmd.resultsDir);
 
-  int dataSize = 1000;
-
-  std::string graphTitle = "LINES_BAR_" + std::to_string(dataSize) + "_";
+  std::string graphTitle = "LINES_BAR_" + std::to_string(DataSize) + "_";
   for (const auto& entry : _config) {
     graphTitle += entry;
     graphTitle += "_";
@@ -248,8 +293,60 @@ bool LinesBarPlotReportStage::process(const std::string&,
       const auto& name = it->first;
       const auto& res = it->second;
 
-      processBest(name, res, dataSize, handleResult);
+      processBest(name, res.entries, DataSize, handleResult);
     }
+  }
+
+  logger->plot();
+
+  return true;
+}
+
+TimesBarPlotReportStage::TimesBarPlotReportStage(
+    const ReportConfiguration& config)
+    : _config(config) {}
+
+bool TimesBarPlotReportStage::process(const std::string& metadata,
+                                      const std::string&,
+                                      const cider::Cmd& cmd) {
+  std::filesystem::path outPath(cmd.resultsDir);
+  outPath /= metadata;
+
+  std::string graphTitle = "TIMES_BAR_" + std::to_string(DataSize) + "_";
+  for (const auto& entry : _config) {
+    graphTitle += entry;
+    graphTitle += "_";
+  }
+
+  auto logger = std::make_shared<cider::mathplot::TimesBarPlot>(
+      outPath.string(), graphTitle);
+
+  FilterManager filterManager(50, 3.5);
+
+  const auto handleResult = [&](const std::string& methodName,
+                                const Result& result) {
+    // if (filterManager.accept(methodName, result.testCaseName,
+    // result.timeElapsedMcs)) {
+    logger->log(methodName, result.timeElapsedMcs);
+    // } else {
+    // за бажанням: залогувати, що значення відкинуто як викид
+    //  std::cout << "SKIP: " << methodName << " " << result.testCaseName << " "
+    //  << result.timeElapsedMcs << std::endl;
+    // }
+  };
+
+  const auto& results = getResults();
+
+  for (const auto& methodConfig : _config) {
+    const auto it = results.find(methodConfig);
+    if (it == results.end()) {
+      std::cout << "Warning method not simlated: " << methodConfig << std::endl;
+      continue;
+    }
+    const auto& name = it->first;
+    const auto& res = it->second;
+
+    processBest(name, res.entries, DataSize, handleResult);
   }
 
   logger->plot();
@@ -267,9 +364,7 @@ bool HeatmapPlotReportStage::process(const std::string& metadata,
   std::filesystem::path outPath(cmd.resultsDir);
   outPath /= metadata;
 
-  int dataSize = 100;
-
-  std::string graphTitle = "HEATMAP_COVERAGE_" + std::to_string(dataSize) + "_";
+  std::string graphTitle = "HEATMAP_COVERAGE_" + std::to_string(DataSize) + "_";
   for (const auto& entry : _config) {
     graphTitle += entry;
     graphTitle += "_";
@@ -297,64 +392,160 @@ bool HeatmapPlotReportStage::process(const std::string& metadata,
     const auto& name = it->first;
     const auto& res = it->second;
 
-    processBest(name, res, dataSize, handleResult);
+    processBest(name, res.entries, DataSize, handleResult);
   }
 
   logger->plot();
   return true;
 }
 
+static inline void csvEsc(std::ostream& os, const std::string& s) {
+  const bool needQuotes = s.find_first_of(";\"\n\r\t") != std::string::npos;
+  if (!needQuotes) {
+    os << s;
+    return;
+  }
+  os << '"';
+  for (char c : s)
+    os << (c == '"' ? "\"\"" : std::string(1, c));
+  os << '"';
+}
+
+EfficencyReportStage::EfficencyReportStage(const ReportConfiguration& config)
+    : _config(config) {}
+
 bool EfficencyReportStage::process(const std::string& metadata,
                                    const std::string&,
                                    const cider::Cmd& cmd) {
   std::filesystem::path outPath(cmd.resultsDir);
   outPath /= metadata;
-  std::filesystem::create_directories(outPath);
-  outPath /= "efficency_table.csv";
 
-  std::ofstream out(outPath);
+  std::error_code ec;
+  std::filesystem::create_directories(outPath, ec);
+  if (ec) {
+    std::cerr << "Cannot create dir: " << outPath << " : " << ec.message()
+              << std::endl;
+    return false;
+  }
+
+  const auto& testOrLibName = getInput().testOrLibName;
+
+  outPath /= "efficency_table_" + testOrLibName + ".csv";
+  const bool writeHeader = !std::filesystem::exists(outPath);
+
+  std::ofstream out(outPath, std::ios::app | std::ios::binary);
   if (!out) {
     std::cerr << "Cannot write to: " << outPath << std::endl;
     return false;
   }
+  out.imbue(std::locale::classic());
 
-  // Header with average ± stddev
-  out << "Method;"
-      << "OldCov(%);NewCov(%);DeltaCov;"
-      << "OldCFG(%);NewCFG(%);DeltaCFG;"
-      << "OldLen;NewLen;Compression;"
-      << "Time(ms);EffScore\n";
+  if (writeHeader) {
+    out << "\xEF\xBB\xBF";  // UTF-8 BOM
+    out << "sep=;\n";
 
-  std::locale::global(std::locale("C"));
+    out << "Test Case;Method;"
+        << "Old Coverage (%);New Coverage (%);Delta Coverage;"
+        << "Old CFG (%);New CFG (%);Delta CFG;"
+        << "Old Length;New Length;Cov Reach Len; Compression;"
+        << "Execution Time (ms);"
+        << "Total Processing (ms);Sessions;Coverage Improved;"
+        << "Coverage Improvement Rate (%)\n";
+  }
 
-  const auto handleResult = [&](const std::string& method,
-                                const std::vector<Result>& results) {
-    Metrics m = computeMetrics(results);
+  auto fmt_pm = [](double avg, double stddev) {
+    std::ostringstream oss;
+    oss.imbue(std::locale::classic());
+    oss << std::fixed << std::setprecision(2) << avg << " +/- " << stddev;
+    return oss.str();
+  };
 
-    auto fmt = [](double avg, double stddev) {
-      std::ostringstream oss;
-      oss << std::fixed << std::setprecision(2) << avg << " ± " << stddev;
-      return oss.str();
-    };
+  auto fmt = [](double v) {
+    std::ostringstream oss;
+    oss.imbue(std::locale::classic());
+    oss << std::fixed << std::setprecision(2) << v << "'";
+    return oss.str();
+  };
 
-    out << method << ";" << fmt(m.avgOldCov, m.stdOldCov) << ";"
-        << fmt(m.avgNewCov, m.stdNewCov) << ";" << fmt(m.covDelta, 0.0)
-        << ";"  // stddev for delta is not reported
-        << fmt(m.avgOldCfg, m.stdOldCfg) << ";" << fmt(m.avgNewCfg, m.stdNewCfg)
-        << ";" << fmt(m.cfgDelta, 0.0) << ";" << fmt(m.avgOldLen, m.stdOldLen)
-        << ";" << fmt(m.avgNewLen, m.stdNewLen) << ";"
-        << fmt(m.compression, 0.0) << ";" << fmt(m.avgTime, m.stdTime) << ";"
-        << fmt(m.effScore, 0.0) << "\n";
+  auto csvEsc = [](std::ostream& os, const std::string& s) {
+    const bool needQuotes = s.find_first_of(";\"\n\r\t") != std::string::npos;
+    if (!needQuotes) {
+      os << s;
+      return;
+    }
+    os << '"';
+    for (char c : s)
+      os << (c == '"' ? "\"\"" : std::string(1, c));
+    os << '"';
   };
 
   const auto& results = getResults();
-  for (const auto& resIt : results) {
-    const auto& name = resIt.first;
-    const auto& res = resIt.second;
+  for (const auto& methodConfig : _config) {
+    const auto it = results.find(methodConfig);
+    if (it == results.end()) {
+      std::cout << "Warning method not simulated: " << methodConfig
+                << std::endl;
+      continue;
+    }
 
-    processBestBatch(name, res, 150, handleResult);
+    const auto& method = it->first;
+    const auto& pack = it->second;
+
+    const auto handleResults = [&](const std::string& methodName,
+                                   const std::vector<Result>& results) {
+      Metrics m = computeMetrics(results);
+
+      unsigned long sessions = results.size();
+      unsigned long covHit = 0;
+      unsigned long totalProcMcs = 0;
+
+      for (const auto& r : results) {
+        totalProcMcs += r.timeElapsedMcs;
+        if (r.newReport.branchCov.covered >= r.oldReport.branchCov.covered) {
+          covHit++;
+        }
+      }
+
+      const double totalProcMs = static_cast<double>(totalProcMcs) / 1000.0;
+      const double covRate =
+          sessions ? (100.0 * static_cast<double>(covHit) / sessions) : 0.0;
+
+      csvEsc(out, testOrLibName);
+      out << ';';
+      csvEsc(out, methodName);
+      out << ';';
+
+      out << fmt_pm(m.avgOldCov, m.stdOldCov) << ';'
+          << fmt_pm(m.avgNewCov, m.stdNewCov) << ';' << fmt(m.covDelta) << ';'
+
+          << fmt_pm(m.avgOldCfg, m.stdOldCfg) << ';'
+          << fmt_pm(m.avgNewCfg, m.stdNewCfg) << ';' << fmt(m.cfgDelta) << ';'
+
+          << fmt_pm(m.avgOldLen, m.stdOldLen) << ';'
+          << fmt_pm(m.avgNewLen, m.stdNewLen) << ';'
+          << fmt_pm(m.avgCovReachLen, m.stdCovReachLen) << ';'
+          << fmt(m.compression) << ';'
+
+          << fmt_pm(m.avgTime, m.stdTime) << ';'
+
+          << fmt(totalProcMs) << ';' << sessions << ';' << covHit << ';'
+          << fmt(covRate) << '\n';
+    };
+
+    // filter entries by test name
+    std::vector<Result> filtered;
+    filtered.reserve(pack.entries.size());
+    for (const auto& e : pack.entries) {
+      if (e.testCaseName == testOrLibName)
+        filtered.emplace_back(e);
+    }
+    if (filtered.empty())
+      continue;
+
+    processBatchBest(method, filtered, DataSize, handleResults);
   }
 
+  out.flush();
   return true;
 }
 
@@ -376,15 +567,27 @@ bool RemoveDataStage::process(const std::string&,
   return true;
 }
 
+ShowResultsStage::ShowResultsStage(const ReportConfiguration& config)
+    : _config(config) {}
+
+bool ShowResultsStage::process(const std::string&,
+                               const std::string&,
+                               const cider::Cmd&) {
+  if (_config.empty()) {
+    std::cout << "Empty config error." << std::endl;
+    return false;
+  }
+
+  for (const auto& methodConfig : _config) {
+    printResultsSummary(methodConfig, getResults());
+  }
+
+  return true;
+}
+
 bool ProcessDataStage::process(const std::string&,
                                const std::string&,
                                const cider::Cmd&) {
-  auto& mutableData = getMutableResults();
-
-  auto copys = getMutableResults();
-
-  mutableData["QLEG2"] = copys["QLEG1"];
-
   return true;
 }
 

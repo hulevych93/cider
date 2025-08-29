@@ -20,12 +20,6 @@ std::string getSarsaAgentPath(const std::string& resultsDir) {
   return outPath.string();
 }
 
-std::string getResultsPath(const std::string& resultsDir) {
-  std::filesystem::path outPath(resultsDir);
-  outPath /= "results.img";
-  return outPath.string();
-}
-
 std::string getBriefResultsPath(const std::string& resultsDir) {
   std::filesystem::path outPath(resultsDir);
   outPath /= "brief_results.img";

@@ -15,6 +15,12 @@
 namespace cider {
 namespace agent_model {
 
+struct Episode final {
+  int episode = 0;
+  std::chrono::system_clock::time_point start;
+  std::chrono::system_clock::time_point end;
+};
+
 class IAgent {
  public:
   virtual ~IAgent() = default;
@@ -31,11 +37,12 @@ class IAgent {
       const Scenario& scenario) const = 0;
 
   virtual void print(std::ostream& os) const = 0;
+  virtual void printMetrics(std::ostream& os, const Episode& episode) const = 0;
 
   virtual bool isLoaded() const = 0;
 
   virtual bool load(const std::string& filePath) = 0;
-  virtual bool save(const std::string& filePath) const = 0;
+  virtual bool save() const = 0;
 
   virtual size_t getMaxStateDepth() const = 0;
 };
