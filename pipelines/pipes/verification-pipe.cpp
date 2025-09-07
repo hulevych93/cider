@@ -29,7 +29,6 @@ bool ResultsVerificationStage::process(const std::string&,
   }
   outPath /= "verified_results.bin";
 
-  // 2) Копія всіх результатів
   auto results = getResults();
   std::cout << "[VERIFY] Recalculating coverage for methods: " << results.size()
             << std::endl;
@@ -42,10 +41,8 @@ bool ResultsVerificationStage::process(const std::string&,
 
     std::cout << "\n[METHOD " << methodIndex << "/" << results.size() << "] "
               << methodName << " | entries=" << methodStats.entries.size()
-              << " | sessions=" << methodStats.sessionsCount
-              << " | failed=" << methodStats.failedCount << std::endl;
+              << std::endl;
 
-    // Створюємо вимірювачі
     cider::gcov_coverage::CoverageMeasurment gcovMeasurer{cmd, libName.c_str()};
     cider::cfg_coverage::CoverageMeasurment cfgMeasurer{cmd, libName.c_str()};
 
@@ -105,7 +102,6 @@ bool ResultsVerificationStage::process(const std::string&,
     std::cout << "[METHOD DONE] " << methodName << std::endl;
   }
 
-  // 4) Збережемо оновлені результати
   serialization::Serializer serializer;
   serializer << results;
   serializer.save(outPath);

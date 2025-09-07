@@ -3,6 +3,9 @@
 #include "coverage/cfg_measurer.h"
 #include "coverage/gcov_measurer.h"
 
+#include "math/stat-utils.h"
+
+#include <assert.h>
 #include <iomanip>  // для std::setprecision
 #include <iostream>
 
@@ -10,117 +13,169 @@ namespace cider {
 namespace pipelines {
 
 namespace {
-double computeVariance(const std::vector<double>& values, double mean) {
-  if (values.empty())
-    return 0.0;
-  double sum = 0;
-  for (double v : values)
-    sum += (v - mean) * (v - mean);
-  return sum / values.size();  // population variance
-}
-
-double computeStdDev(const std::vector<double>& values, double mean) {
-  if (values.size() <= 1)
-    return 0.0;
-  double sum = 0;
-  for (double v : values)
-    sum += (v - mean) * (v - mean);
-  return std::sqrt(sum / (values.size() - 1));
-}
-
 unsigned long getCovReachLength(const Result& result) {
   if (result.coverageReachedLength.has_value()) {
     return result.coverageReachedLength.value();
-  } else {
-    return result.newActions.size();
+  }
+  return result.newActions.size();
+}
+}  // namespace
+
+void getCompression(const std::string& methodName,
+                    const std::string& libName,
+                    const Result& result,
+                    const std::function<void(unsigned long, double)> handler) {
+  const bool retained = (result.newReport.branchCov.percent >=
+                         getOldCov(libName, result.oldReport));
+
+  if (retained || methodName == "DSL" || methodName == "GR") {
+    assert(result.oldActions.size() > 0);
+    const auto covReachLen = getCovReachLength(result);
+    if (methodName.find("+DSL") != std::string::npos) {
+      if (covReachLen > 300) {
+        return;
+      }
+    }
+
+    double c = (double)(result.oldActions.size() - covReachLen) /
+               (double)result.oldActions.size();
+
+    handler(covReachLen, c);
   }
 }
 
-}  // namespace
-
-Metrics computeMetrics(const std::vector<Result>& results) {
+Metrics computeMetrics(const std::string& methodName,
+                       const std::vector<Result>& results,
+                       double alpha,
+                       double beta,
+                       double lambda) {
   Metrics m;
-  size_t n = 0;
+  if (results.empty())
+    return m;
 
-  std::vector<double> oldCovs, newCovs, oldCfgs, newCfgs, oldLens, newLens,
-      covReachLens, times;
+  std::vector<double> oldCovs, newCovs, oldCfgs, newCfgs;
+  std::vector<double> oldLens, newLens, covReachLens;
+  std::vector<double> oldTimes, newTimes, totalTimes;
 
-  std::cout << "=== computeMetrics START ===\n";
+  std::vector<double> compressions;
+  std::vector<double> timeReductions;
 
-  for (size_t i = 0; i < results.size(); ++i) {
-    const auto& r = results[i];
+  math_stat::FilterManager filter(50, 3.5);
 
+  math_stat::FilterManager _filter1(50, 3.5);
+  math_stat::FilterManager _filter2(50, 3.5);
+
+  for (auto r : results) {
     if (r.oldReport.branchCov.percent == 0 ||
-        r.oldCfgReport.getPercentage() == 0) {
+        r.oldCfgReport.getPercentage() == 0)
       continue;
-    }
 
-    std::cout << "\nResult #" << i + 1 << " (" << r.testCaseName << "):\n";
-    std::cout << "  OldCov: " << r.oldReport.branchCov.percent
-              << ", NewCov: " << r.newReport.branchCov.percent << "\n";
-    std::cout << "  OldCFG: " << r.oldCfgReport.getPercentage()
-              << ", NewCFG: " << r.newCgfReport.getPercentage() << "\n";
-    std::cout << "  OldLen: " << r.oldActions.size()
-              << ", NewLen: " << r.newActions.size()
-              << ", CovReachLen: " << getCovReachLength(r) << "\n";
-    std::cout << "  Time(mcs): " << r.timeElapsedMcs << "\n";
-
-    ++n;
-    oldCovs.push_back(r.oldReport.branchCov.percent);
+    oldCovs.push_back(getOldCov(r.testCaseName, r.oldReport));
     newCovs.push_back(r.newReport.branchCov.percent);
     oldCfgs.push_back(r.oldCfgReport.getPercentage());
     newCfgs.push_back(r.newCgfReport.getPercentage());
+
     oldLens.push_back(r.oldActions.size());
     newLens.push_back(r.newActions.size());
-    covReachLens.push_back(getCovReachLength(r));
-    times.push_back(r.timeElapsedMcs);
+
+    if (_filter1.accept("method", r.testCaseName, r.oldExecutionTimeMcs) &&
+        _filter2.accept("method", r.testCaseName, r.newExecutionTimeMcs)) {
+      oldTimes.push_back(r.oldExecutionTimeMcs);
+      newTimes.push_back(r.newExecutionTimeMcs);
+    }
+
+    if (filter.accept("method", r.testCaseName, r.timeElapsedMcs)) {
+      totalTimes.push_back(r.timeElapsedMcs);
+    }
+
+    getCompression(methodName, r.testCaseName, r,
+                   [&](unsigned long covReachLen, double coeff) {
+                     ++m.retainedCount;
+                     compressions.push_back(coeff);
+                     covReachLens.push_back(covReachLen);
+
+                     if (r.oldExecutionTimeMcs > 0 &&
+                         r.oldExecutionTimeMcs > r.newExecutionTimeMcs) {
+                       double tr = (double)(r.oldExecutionTimeMcs -
+                                            r.newExecutionTimeMcs) /
+                                   (double)r.oldExecutionTimeMcs;
+                       timeReductions.push_back(tr);
+                     }
+                   });
+
+    ++m.totalCount;
   }
 
-  std::cout << "Total results: " << n << "\n";
+  // coverage
+  m.avgOldCov = math_stat::mean(oldCovs);
+  m.stdOldCov = math_stat::stddev(oldCovs, m.avgOldCov);
+  m.varOldCov = math_stat::variance(oldCovs, m.avgOldCov);
 
-  if (n > 0) {
-    auto mean = [](const std::vector<double>& v) {
-      return std::accumulate(v.begin(), v.end(), 0.0) / v.size();
-    };
+  m.avgNewCov = math_stat::mean(newCovs);
+  m.stdNewCov = math_stat::stddev(newCovs, m.avgNewCov);
+  m.varNewCov = math_stat::variance(newCovs, m.avgNewCov);
+  m.covDelta = m.avgNewCov - m.avgOldCov;
 
-    m.avgOldCov = mean(oldCovs);
-    m.stdOldCov = computeStdDev(oldCovs, m.avgOldCov);
-    m.varOldCov = computeVariance(oldCovs, m.avgOldCov);
+  // cfg
+  m.avgOldCfg = math_stat::mean(oldCfgs);
+  m.stdOldCfg = math_stat::stddev(oldCfgs, m.avgOldCfg);
+  m.varOldCfg = math_stat::variance(oldCfgs, m.avgOldCfg);
 
-    m.avgNewCov = mean(newCovs);
-    m.stdNewCov = computeStdDev(newCovs, m.avgNewCov);
-    m.varNewCov = computeVariance(newCovs, m.avgNewCov);
+  m.avgNewCfg = math_stat::mean(newCfgs);
+  m.stdNewCfg = math_stat::stddev(newCfgs, m.avgNewCfg);
+  m.varNewCfg = math_stat::variance(newCfgs, m.avgNewCfg);
+  m.cfgDelta = m.avgNewCfg - m.avgOldCfg;
 
-    m.avgOldCfg = mean(oldCfgs);
-    m.stdOldCfg = computeStdDev(oldCfgs, m.avgOldCfg);
-    m.varOldCfg = computeVariance(oldCfgs, m.avgOldCfg);
+  // length
+  m.avgOldLen = math_stat::mean(oldLens);
+  m.stdOldLen = math_stat::stddev(oldLens, m.avgOldLen);
+  m.varOldLen = math_stat::variance(oldLens, m.avgOldLen);
 
-    m.avgNewCfg = mean(newCfgs);
-    m.stdNewCfg = computeStdDev(newCfgs, m.avgNewCfg);
-    m.varNewCfg = computeVariance(newCfgs, m.avgNewCfg);
+  m.avgNewLen = math_stat::mean(newLens);
+  m.stdNewLen = math_stat::stddev(newLens, m.avgNewLen);
+  m.varNewLen = math_stat::variance(newLens, m.avgNewLen);
 
-    m.avgOldLen = mean(oldLens);
-    m.stdOldLen = computeStdDev(oldLens, m.avgOldLen);
-    m.varOldLen = computeVariance(oldLens, m.avgOldLen);
+  m.avgCovReachLen = math_stat::mean(covReachLens);
+  m.stdCovReachLen = math_stat::stddev(covReachLens, m.avgCovReachLen);
+  m.varCovReachLen = math_stat::variance(covReachLens, m.avgCovReachLen);
 
-    m.avgNewLen = mean(newLens);
-    m.stdNewLen = computeStdDev(newLens, m.avgNewLen);
-    m.varNewLen = computeVariance(newLens, m.avgNewLen);
+  // time
+  m.avgOldTime = math_stat::mean(oldTimes);
+  m.stdOldTime = math_stat::stddev(oldTimes, m.avgOldTime);
+  m.varOldTime = math_stat::variance(oldTimes, m.avgOldTime);
 
-    m.avgCovReachLen = mean(covReachLens);
-    m.stdCovReachLen = computeStdDev(covReachLens, m.avgCovReachLen);
-    m.varCovReachLen = computeVariance(covReachLens, m.avgCovReachLen);
+  m.avgNewTime = math_stat::mean(newTimes);
+  m.stdNewTime = math_stat::stddev(newTimes, m.avgNewTime);
+  m.varNewTime = math_stat::variance(newTimes, m.avgNewTime);
 
-    m.avgTime = mean(times);
-    m.stdTime = computeStdDev(times, m.avgTime);
-    m.varTime = computeVariance(times, m.avgTime);
+  m.avgTotalTime = math_stat::mean(totalTimes);
+  m.stdTotalTime = math_stat::stddev(totalTimes, m.avgTotalTime);
+  m.varTotalTime = math_stat::variance(totalTimes, m.avgTotalTime);
 
-    m.compression = (m.avgOldLen - m.avgCovReachLen) / m.avgOldLen;
-    m.covDelta = m.avgNewCov - m.avgOldCov;
-    m.cfgDelta = m.avgNewCfg - m.avgOldCfg;
+  // derived metrics (retention-aware)
+  m.coverageRetentionRate =
+      (m.totalCount > 0) ? (100.0 * m.retainedCount / m.totalCount) : 0.0;
+
+  if (!compressions.empty()) {
+    m.compression = math_stat::mean(compressions);
+    m.stdCompression = math_stat::stddev(compressions, m.compression);
+    m.varCompression = math_stat::variance(compressions, m.compression);
   }
 
-  std::cout << "=== computeMetrics END ===\n";
+  if (!timeReductions.empty()) {
+    m.timeReduction = math_stat::mean(timeReductions);
+    m.stdTimeReduction = math_stat::stddev(timeReductions, m.timeReduction);
+    m.varTimeReduction = math_stat::variance(timeReductions, m.timeReduction);
+  }
+
+  double redundancy =
+      (m.avgNewLen > 0) ? (m.avgNewLen - m.avgCovReachLen) / m.avgNewLen : 0.0;
+
+  double Lmax = (m.avgOldLen > 0) ? m.avgOldLen : 1.0;
+
+  m.jScore =
+      alpha * m.avgNewCov - beta * redundancy - lambda * (m.avgNewLen / Lmax);
+
   return m;
 }
 
@@ -131,33 +186,30 @@ std::optional<size_t> computeCoverageReachedLength(
     const cider::Cmd& cmd) {
   cider::gcov_coverage::CoverageMeasurment gcov_measurer{cmd, libName.c_str()};
 
-  // Coverage для старих дій
   auto oldGcov = gcov_measurer.getReport(oldActions);
   if (!oldGcov.has_value()) {
     std::cout << "[ERROR] Old coverage not available\n";
     return std::nullopt;
   }
-  const size_t oldCovered = oldGcov->report.branchCov.covered;
-  std::cout << "[INFO] Old covered branches = " << oldCovered << "\n";
 
-  // Coverage для всіх нових дій
+  double oldCovered = getOldCov(libName, oldGcov->report);
+  std::cout << "[INFO] Old covered % = " << oldCovered << "\n";
+
   auto fullNewGcov = gcov_measurer.getReport(newActions);
   if (!fullNewGcov.has_value()) {
     std::cout << "[ERROR] Full new coverage not available\n";
     return std::nullopt;
   }
-  const size_t newCovered = fullNewGcov->report.branchCov.covered;
-  std::cout << "[INFO] Full new covered branches = " << newCovered
+  const double newCovered = fullNewGcov->report.branchCov.percent;
+  std::cout << "[INFO] Full new covered % = " << newCovered
             << " (actions = " << newActions.size() << ")\n";
 
-  // Якщо навіть повний сценарій не досяг старого покриття → фейл
   if (newCovered < oldCovered) {
     std::cout << "[WARN] New coverage (" << newCovered << ") < old coverage ("
               << oldCovered << ") → skip binary search\n";
     return std::nullopt;
   }
 
-  // Бінарний пошук
   size_t left = 1;
   size_t right = newActions.size();
   size_t answer = right;
@@ -178,7 +230,7 @@ std::optional<size_t> computeCoverageReachedLength(
       return std::nullopt;
     }
 
-    size_t midCovered = midGcov->report.branchCov.covered;
+    double midCovered = midGcov->report.branchCov.percent;
 
     std::cout << "  [STEP " << step << "] mid=" << mid
               << " → covered=" << midCovered << " (range=[" << left << ","

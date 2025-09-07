@@ -22,7 +22,7 @@ class MctsSearchStage final : public Pipe {
 
   std::string getLetter() const override { return "MCTS"; }
 
-  bool needTS() const override { return false; }
+  bool needTS() const override { return true; }
 
  private:
   std::string getConfigName() const;

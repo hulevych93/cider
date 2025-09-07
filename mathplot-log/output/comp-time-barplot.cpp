@@ -7,6 +7,7 @@
 
 #include <iostream>
 
+#include "math/stat-utils.h"
 #include "mathplot-log/utils.h"
 
 #include <matplotlibcpp.h>
@@ -31,7 +32,7 @@ static std::string getYAxisName() {
 static std::string getXAxisName() {
 #ifdef ENG_NAMES
 #else
-  return "Метод";
+  return "Метод / конфігурація";
 #endif
 }
 
@@ -47,6 +48,7 @@ void TimesBarPlot::serialize(const std::string& filePath) {
   try {
     serialization::Serializer serializer;
     serializer << _barData;
+    serializer << _order;
     serializer.save(filePath);
   } catch (...) {
     std::cout << "Graph serialization failed : " << filePath << std::endl;
@@ -55,8 +57,9 @@ void TimesBarPlot::serialize(const std::string& filePath) {
 
 bool TimesBarPlot::load() {
   try {
-    serialization::Deserializer deserializer(ensureBinExtension(m_path));
+    serialization::Deserializer deserializer(ensureExtension(m_path, ".bin"));
     deserializer >> _barData;
+    deserializer >> _order;
   } catch (const std::exception& e) {
     std::cout << e.what() << std::endl;
     return false;
@@ -78,37 +81,55 @@ void TimesBarPlot::log(const std::string& method, size_t time) {
 void TimesBarPlot::plot() {
   plt::clf();
 
-  std::vector<std::pair<std::string, double>> methodTimes;
-  for (const auto& iter : _barData) {
-    methodTimes.emplace_back(iter.first, compute_average(iter.second));
-  }
-
-  // відсортуємо методи для стабільності
-  std::sort(methodTimes.begin(), methodTimes.end(),
-            [](auto& a, auto& b) { return a.first < b.first; });
-
   std::vector<std::string> methods;
-  std::vector<double> times;
-  std::vector<double> x(methodTimes.size());
 
-  for (size_t i = 0; i < methodTimes.size(); ++i) {
-    methods.push_back(methodTimes[i].first);
-    times.push_back(methodTimes[i].second);
-    x[i] = static_cast<double>(i);
+  int i = 0;
+
+  std::vector<double> xg(_barData.size());
+
+  for (const auto& orderName : _order) {
+    const auto it = _barData.find(orderName);
+    if (it == _barData.end()) {
+      std::cout << "Warning method not simulated: " << orderName << std::endl;
+      continue;
+    }
+
+    std::vector<double> means;
+    std::vector<double> stddevs;
+
+    std::vector<double> x(1);
+    x[0] = static_cast<double>(i);
+    xg[i] = static_cast<double>(i);
+    i++;
+
+    methods.push_back(it->first);
+
+    const auto mean = math_stat::mean(it->second);
+    means.emplace_back(mean);
+    stddevs.emplace_back(math_stat::stddev(it->second, mean));
+
+    plt::bar(x, means, "black", "-", 1.0, 0.8,
+             {{"color", getColorByLabel(it->first)}});
+    plt::errorbar(x, means, stddevs,
+                  {{"fmt", "none"}, {"ecolor", "red"}, {"capsize", "3"}});
   }
 
-  plt::bar(x, times, "black", "-", 0.5, 0.8);
+  makeLegentByGroups(getColorGroups(), {0.54, 1.0});
 
-  plt::xticks(x, methods, {{"fontsize", "5"}});
+  plt::xticks(xg, methods, {{"fontsize", "7"}});
   plt::ylabel(getYAxisName());
   plt::xlabel(getXAxisName());
 
   applyPublicationStyle();
 
-  plt::save(ensurePngExtension(m_path), 1200);
+  if (_barData.size() > 5) {
+    rotateXTicks90();
+  }
+
+  plt::save(ensureExtension(m_path, ".eps"), 1200);
   plt::close();
 
-  serialize(ensureBinExtension(m_path));
+  serialize(ensureExtension(m_path, ".bin"));
 }
 
 }  // namespace mathplot

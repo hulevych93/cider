@@ -17,8 +17,9 @@ namespace cider {
 namespace pipelines {
 
 namespace {
+
 std::unordered_map<std::string, std::vector<std::vector<Result>>>
-groupIntoTestSets(const Results& results) {
+groupIntoTestSets(const Results& results, const std::string& libName) {
   std::unordered_map<std::string, std::vector<std::vector<Result>>> methodSets;
 
   std::cout << "[INFO] Start grouping results into test sets..." << std::endl;
@@ -30,26 +31,42 @@ groupIntoTestSets(const Results& results) {
               << " | total entries: " << methodResults.entries.size()
               << std::endl;
 
-    // 1. Групуємо по testCaseName
+    bool allAggregated =
+        std::all_of(methodResults.entries.begin(), methodResults.entries.end(),
+                    [&](const Result& r) { return r.testCaseName == libName; });
+
+    if (allAggregated) {
+      std::cout << "    [INFO] Detected pre-aggregated results for "
+                << methodName << ", passing through as-is" << std::endl;
+      std::vector<std::vector<Result>> sets;
+      for (auto& r : methodResults.entries) {
+        sets.push_back({r});
+      }
+      methodSets[methodName] = std::move(sets);
+      continue;
+    }
+
     std::map<std::string, std::vector<Result>> grouped;
     for (const auto& r : methodResults.entries) {
       grouped[r.testCaseName].push_back(r);
     }
-    std::cout << "    grouped into " << grouped.size() << " test cases"
-              << std::endl;
+    std::cout << "    grouped into " << grouped.size() << " test cases\n";
 
-    // 2. Знаходимо кількість сесій як максимум
     size_t sessions = 0;
-    for (const auto& [name, vec] : grouped) {
+    for (const auto& it : grouped) {
+      const auto& name = it.first;
+      const auto& vec = it.second;
+
       sessions = std::max(sessions, vec.size());
     }
     std::cout << "    sessions detected: " << sessions << std::endl;
 
-    // 3. Створюємо "sessions" наборів
     std::vector<std::vector<Result>> sets(sessions);
 
-    // 4. Розподіляємо по наборах
-    for (auto& [tcName, vec] : grouped) {
+    for (auto& itGr : grouped) {
+      const auto& tcName = itGr.first;
+      const auto& vec = itGr.second;
+
       std::cout << "      [TC] " << tcName << " | entries: " << vec.size()
                 << std::endl;
       for (size_t i = 0; i < vec.size(); ++i) {
@@ -155,10 +172,9 @@ bool ResultsAgregationStage::process(const std::string&,
 
   Results newResults;
   auto results = getResults();
-  std::cout << "[INFO] Got " << results.size() << " methods to process"
-            << std::endl;
+  std::cout << "[INFO] Got " << results.size() << " methods to process\n";
 
-  const auto& testSets = groupIntoTestSets(results);
+  const auto& testSets = groupIntoTestSets(results, libName);
   for (const auto& it : testSets) {
     const auto& method = it.first;
     const auto& pack = it.second;
@@ -170,31 +186,39 @@ bool ResultsAgregationStage::process(const std::string&,
     std::vector<Result> aggregated;
     for (size_t i = 0; i < pack.size(); ++i) {
       std::cout << "  [SESSION] " << i + 1 << "/" << pack.size() << std::endl;
+
+      if (pack[i].size() == 1 && pack[i][0].testCaseName == libName) {
+        std::cout << "    [INFO] Pre-aggregated Result detected, skipping "
+                     "aggregation\n";
+        aggregated.emplace_back(pack[i][0]);
+        continue;
+      }
+
+      std::cout << "    [INFO] Running aggregation for session..." << std::endl;
       auto aggrRes = aggregateSession(original, libName, cmd, pack[i]);
       if (aggrRes.has_value()) {
         aggregated.emplace_back(aggrRes.value());
       } else {
+        std::cout
+            << "    [WARN] First pass aggregation failed, retry with recheck\n";
         aggrRes = aggregateSession(original, libName, cmd, pack[i], true);
         if (aggrRes.has_value()) {
           aggregated.emplace_back(aggrRes.value());
         } else {
-          std::cout << "Aggregation failed: " << method << std::endl;
+          std::cout << "    [ERROR] Aggregation failed: " << method
+                    << std::endl;
         }
       }
     }
 
     auto& newEntry = newResults[method];
-    newEntry.coverageReachedCount = methodStats.coverageReachedCount;
-    newEntry.failedCount = methodStats.failedCount;
-    newEntry.sessionsCount = methodStats.sessionsCount;
-    newEntry.totalTimeElapsedMcs = methodStats.totalTimeElapsedMcs;
     newEntry.entries = std::move(aggregated);
 
     std::cout << "[DONE] Method: " << method << std::endl;
   }
 
+  std::cout << "[INFO] Aggregation stage finished successfully\n";
   replaceResults(newResults);
-
   return true;
 }
 

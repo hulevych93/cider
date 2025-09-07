@@ -6,24 +6,28 @@
 #include <string>
 #include <vector>
 
+#include "mathplot-log/output/basic-plot.h"
+
 namespace cider {
 namespace mathplot {
 
-class LinesBarPlot final {
+class LinesBarPlot final : public IBasicPlot {
  public:
   LinesBarPlot(const std::string& logDir, const std::string& logFileName);
-  ~LinesBarPlot();
+  ~LinesBarPlot() override;
+
+  void setOrder(const std::vector<std::string>& order) override {}
 
   void log(const std::string& label,
            const std::string& method,
            size_t oldLines,
            size_t newLines);
 
-  void serialize(const std::string& filePath);
+  void serialize(const std::string& filePath) override;
 
-  bool load();
+  bool load() override;
 
-  void plot();
+  void plot() override;
 
  private:
   std::unordered_map<std::string,

@@ -20,6 +20,7 @@ function(add_experiment_driver target_name)
       greedy-r
       dynamic-slicer
       mathplot-log
+      math-stat
       ${Python3_LIBRARIES}
     )
 endfunction()
@@ -75,6 +76,7 @@ set(GROUP_GREEDY_R    8)
 set(GROUP_DSL         9)
 set(GROUP_SELECTED    10)
 set(GROUP_TARGET      11)
+set(GROUP_ALL         12)
 
 # Reset the list
 set(TARGET_DEFS)
@@ -90,9 +92,9 @@ add_target_def(CS 10)
 add_target_def(RAND 20)
 
 # === MCTS Modes ===
-add_target_def(MCTS1 30)
-add_target_def(MCTS2 31)
-add_target_def(MCTS3 32)
+add_target_def(MCTS1 30 GROUP ${GROUP_MCTS})
+add_target_def(MCTS2 31 GROUP ${GROUP_MCTS})
+add_target_def(MCTS3 32 GROUP ${GROUP_MCTS})
 
 # === GRR (Greedy Random) ===
 add_target_def(GR 39 GROUP ${GROUP_GREEDY_R})
@@ -101,17 +103,17 @@ add_target_def(GRR2 41 GROUP ${GROUP_GREEDY_R})
 add_target_def(GRR3 42 GROUP ${GROUP_GREEDY_R})
 
 # === DSL ===
-add_target_def(DSL 45)
-add_target_def(DSL_POST 46 GROUP ${GROUP_TARGET})
+add_target_def(DSL 45 GROUP ${GROUP_DSL})
+add_target_def(DSL_POST 46 GROUP ${GROUP_QLEG_VS_QLB})
 
 # === QL / SARSA ===
 add_target_def(QL 50)
 add_target_def(SARSA 51)
 
 # === QLEG ===
-add_target_def(QLEG1 60)
-add_target_def(QLEG2 61)
-add_target_def(QLEG3 62)
+add_target_def(QLEG1 60 GROUP ${GROUP_QLEG})
+add_target_def(QLEG2 61 GROUP ${GROUP_QLEG})
+add_target_def(QLEG3 62 GROUP ${GROUP_QLEG})
 
 # === SLEG ===
 add_target_def(SLEG1 65)
@@ -140,6 +142,7 @@ add_target_def(CBOX_MCTS     90 GROUP ${GROUP_MCTS})
 add_target_def(CBOX_GRR      90 GROUP ${GROUP_GREEDY_R})
 add_target_def(CBOX_DSL      90 GROUP ${GROUP_DSL})
 add_target_def(CBOX_SELECT   90 GROUP ${GROUP_SELECTED})
+add_target_def(CBOX_ALL      90 GROUP ${GROUP_ALL})
 
 # === CSTEP Grouped ===
 add_target_def(CSTEP_QLEG       100 GROUP ${GROUP_QLEG})
@@ -167,6 +170,20 @@ add_target_def(TIMES_SLB        135 GROUP ${GROUP_SLB})
 add_target_def(TIMES_MCTS       135 GROUP ${GROUP_MCTS})
 add_target_def(TIMES_QLEG_VS_QLB 135 GROUP ${GROUP_QLEG_VS_QLB})
 add_target_def(TIMES_SELECT      135 GROUP ${GROUP_SELECTED})
+add_target_def(TIMES_ALL         135 GROUP ${GROUP_ALL})
+
+# === EXEC_TIMES BAR Grouped ===
+add_target_def(EXEC_TIMES_QLEG       137 GROUP ${GROUP_QLEG})
+add_target_def(EXEC_TIMES_QLB        137 GROUP ${GROUP_QLB})
+add_target_def(EXEC_TIMES_SLEG       137 GROUP ${GROUP_SLEG})
+add_target_def(EXEC_TIMES_SLB        137 GROUP ${GROUP_SLB})
+add_target_def(EXEC_TIMES_MCTS       137 GROUP ${GROUP_MCTS})
+add_target_def(EXEC_TIMES_QLEG_VS_QLB 137 GROUP ${GROUP_QLEG_VS_QLB})
+add_target_def(EXEC_TIMES_SELECT      137 GROUP ${GROUP_SELECTED})
+add_target_def(EXEC_TIMES_ALL         137 GROUP ${GROUP_ALL})
+
+# === EFFICIENCY RADAT Grouped ===
+add_target_def(RADAR_SELECT   138 GROUP ${GROUP_SELECTED})
 
 # === COMPRESSION BAR Grouped ===
 add_target_def(COMPR_QLEG        136 GROUP ${GROUP_QLEG})
@@ -176,6 +193,7 @@ add_target_def(COMPR_SLB         136 GROUP ${GROUP_SLB})
 add_target_def(COMPR_MCTS        136 GROUP ${GROUP_MCTS})
 add_target_def(COMPR_QLEG_VS_QLB 136 GROUP ${GROUP_QLEG_VS_QLB})
 add_target_def(COMPR_SELECT      136 GROUP ${GROUP_SELECTED})
+add_target_def(COMPR_ALL         136 GROUP ${GROUP_ALL})
 
 # === HM Grouped ===
 add_target_def(HM_QLEG     130 GROUP ${GROUP_QLEG})
@@ -186,6 +204,7 @@ add_target_def(HM_MCTS     130 GROUP ${GROUP_MCTS})
 add_target_def(HM_GRR      130 GROUP ${GROUP_GREEDY_R})
 add_target_def(HM_DSL      130 GROUP ${GROUP_DSL})
 add_target_def(HM_SELECT   130 GROUP ${GROUP_SELECTED})
+add_target_def(HM_ALL      130 GROUP ${GROUP_ALL})
 
 # === SHOW ===
 add_target_def(SHOW_QLEG     170 GROUP ${GROUP_QLEG})
@@ -196,6 +215,7 @@ add_target_def(SHOW_MCTS     170 GROUP ${GROUP_MCTS})
 add_target_def(SHOW_GRR      170 GROUP ${GROUP_GREEDY_R})
 add_target_def(SHOW_DSL      170 GROUP ${GROUP_DSL})
 add_target_def(SHOW_SELECT   170 GROUP ${GROUP_SELECTED})
+add_target_def(SHOW_TARGET   170 GROUP ${GROUP_TARGET})
 add_target_def(SHOW_ALL      170)
 
 # === EFT ===
@@ -207,16 +227,33 @@ add_target_def(AGG 140 GROUP ${GROUP_SELECTED})
 # === VER ===
 add_target_def(VER 145 GROUP ${GROUP_QLEG})
 
-# === COMP ===
-add_target_def(COMP 146)
+# === CALC_COMPR ===
+add_target_def(CALC_COMPR_QLEG        146 GROUP ${GROUP_QLEG})
+add_target_def(CALC_COMPR_QLB         146 GROUP ${GROUP_QLB})
+add_target_def(CALC_COMPR_SLEG        146 GROUP ${GROUP_SLEG})
+add_target_def(CALC_COMPR_SLB         146 GROUP ${GROUP_SLB})
+add_target_def(CALC_COMPR_MCTS        146 GROUP ${GROUP_MCTS})
+add_target_def(CALC_COMPR_QLEG_VS_QLB        146 GROUP ${GROUP_QLEG_VS_QLB})
+add_target_def(CALC_COMPR_SELECT      146 GROUP ${GROUP_SELECTED})
+add_target_def(CALC_COMPR_ALL         146 GROUP ${GROUP_ALL})
 
 # === REM Grouped ===
 add_target_def(RM_GRR  150 GROUP ${GROUP_GREEDY_R})
 add_target_def(RM_DSL  150 GROUP ${GROUP_DSL})
 add_target_def(RM_RAND  150 GROUP ${GROUP_RAND})
 
-# === Misc ===
-add_target_def(DONT 160)
+# === CleanUp ===
+add_target_def(CLEAN_QLEG     160 GROUP ${GROUP_QLEG})
+add_target_def(CLEAN_QLB      160 GROUP ${GROUP_QLB})
+add_target_def(CLEAN_SLEG     160 GROUP ${GROUP_SLEG})
+add_target_def(CLEAN_SLB      160 GROUP ${GROUP_SLB})
+add_target_def(CLEAN_MCTS     160 GROUP ${GROUP_MCTS})
+add_target_def(CLEAN_GRR      160 GROUP ${GROUP_GREEDY_R})
+add_target_def(CLEAN_DSL      160 GROUP ${GROUP_DSL})
+add_target_def(CLEAN_SELECT   160 GROUP ${GROUP_SELECTED})
+add_target_def(CLEAN_ALL      160)
+
+add_target_def(MOD      180)
 
 set(LIBS "" CACHE INTERNAL "List of libraries for experiment targets")
 
@@ -247,7 +284,7 @@ foreach(lib_def IN LISTS LIBS)
 endforeach()
 
 add_custom_target(hjson_RUN)
-add_dependencies(hjson_RUN hjson_MCTS2 hjson_MCTS3)
+add_dependencies(hjson_RUN hjson_QLB1 hjson_QLB2 hjson_QLB3)
 
 add_custom_target(bitmap++_RUN)
 add_dependencies(bitmap++_RUN bitmap++_GR bitmap++_GRR1 bitmap++_GRR2 bitmap++_GRR3)

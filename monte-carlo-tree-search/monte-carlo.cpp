@@ -2,9 +2,11 @@
 // SPDX-License-Identifier: MIT
 
 #include "monte-carlo.h"
+#include "monte-carlo-graph.h"
 
 #include "synthesis/synthesis.h"
 
+#include <fstream>
 #include <iostream>
 
 namespace cider {
@@ -23,29 +25,6 @@ std::ostream& operator<<(std::ostream& os, const MonteCarloSettings& settings) {
   os << "]";
   return os;
 }
-
-using TestCase = std::vector<recorder::Action>;
-
-struct MCTSNode final {
-  std::vector<recorder::Action> path;
-  MCTSNode* parent = nullptr;
-  std::unordered_map<recorder::Action,
-                     std::unique_ptr<MCTSNode>,
-                     recorder::FuzzyActionHash,
-                     recorder::FuzzyEqualPred>
-      children;
-  int visits = 0;
-  double total_reward = 0.0;
-  bool fullyExpanded = false;
-
-  double best_reward = -1e9;
-  TestCase best_path;
-
-  MCTSNode(TestCase p, MCTSNode* parent = nullptr)
-      : path(std::move(p)), parent(parent) {}
-
-  MCTSNode* best_child_ucb(double c);
-};
 
 double evaluate_reward(ObjectiveFunction objFunc, const TestCase& tc) {
   auto objValue = objFunc(tc);
@@ -148,7 +127,8 @@ void print_tree(const MCTSNode* node, int depth = 0) {
 
 TestCase run_mcts(std::mt19937& gen,
                   const MonteCarloSettings& settings,
-                  const std::vector<recorder::Action>& actionSpace) {
+                  const std::vector<recorder::Action>& actionSpace,
+                  const std::string& fileName) {
   const auto initialReward = settings.objFunc(actionSpace).coverage;
 
   auto root = std::make_unique<MCTSNode>(TestCase{});
@@ -208,6 +188,12 @@ TestCase run_mcts(std::mt19937& gen,
 
   std::cout << "\n=== Final MCTS Tree ===\n";
   print_tree(root.get());
+
+  if (!fileName.empty()) {
+    std::ofstream fileOut(fileName, std::ios::binary);
+    export_tree_dot_wrapper(root.get(), fileOut);
+    fileOut.flush();
+  }
 
   return root->best_path;
 }

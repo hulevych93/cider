@@ -39,7 +39,7 @@ void BasicBlockCovLogger::plot() const {
 }
 
 BasicBlockCovLogger::~BasicBlockCovLogger() {
-  plt::save(ensurePngExtension(m_path), 1200);
+  plt::save(ensureExtension(m_path, ".eps"), 1200);
   plt::close();
 }
 

@@ -59,7 +59,7 @@ void QLearningRewardLogger::serialize(const std::string& filePath) {
 
 bool QLearningRewardLogger::load() {
   try {
-    serialization::Deserializer deserializer(ensureBinExtension(m_path));
+    serialization::Deserializer deserializer(ensureExtension(m_path, ".bin"));
     deserializer >> ieps_;
     deserializer >> rwrd_;
   } catch (const std::exception& e) {
@@ -95,10 +95,10 @@ QLearningRewardLogger::~QLearningRewardLogger() {
 }
 
 void QLearningRewardLogger::save() {
-  serialize(ensureBinExtension(m_path));
+  serialize(ensureExtension(m_path, ".bin"));
 
   plot();
-  plt::save(ensurePngExtension(m_path), 1200);
+  plt::save(ensureExtension(m_path, ".eps"), 1200);
 }
 
 QLearningLossLogger::QLearningLossLogger(const std::string& logDir,
@@ -118,7 +118,7 @@ void QLearningLossLogger::serialize(const std::string& filePath) {
 
 bool QLearningLossLogger::load() {
   try {
-    serialization::Deserializer deserializer(ensureBinExtension(m_path));
+    serialization::Deserializer deserializer(ensureExtension(m_path, ".bin"));
     deserializer >> jeps_;
     deserializer >> loss_;
   } catch (const std::exception& e) {
@@ -154,10 +154,10 @@ QLearningLossLogger::~QLearningLossLogger() {
 }
 
 void QLearningLossLogger::save() {
-  serialize(ensureBinExtension(m_path));
+  serialize(ensureExtension(m_path, ".bin"));
 
   plot();
-  plt::save(ensurePngExtension(m_path), 1200);
+  plt::save(ensureExtension(m_path, ".eps"), 1200);
 }
 
 }  // namespace mathplot

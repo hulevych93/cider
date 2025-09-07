@@ -69,7 +69,7 @@ set(CMD_HJSON
     "${CMAKE_BINARY_DIR}/bin/hjson_player"
     "${CMAKE_BINARY_DIR}"
     "${CMAKE_BINARY_DIR}/results/hjson"
-    "${CMAKE_BINARY_DIR}/results/"
+    "${CMAKE_BINARY_DIR}/results/common_results"
 )
 set(CMD_HJSON ${CMD_HJSON} PARENT_SCOPE)
 

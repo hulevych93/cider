@@ -18,5 +18,9 @@ std::vector<recorder::Action> run_d_slicing(
     const ObjectiveFunction& objFunc,
     const std::vector<recorder::Action>& input);
 
+std::vector<recorder::Action> run_delta_d_slicing(
+    const ObjectiveFunction& objFunc,
+    const std::vector<recorder::Action>& input);
+
 }  // namespace dslicer
 }  // namespace cider

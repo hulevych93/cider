@@ -8,6 +8,8 @@
 #include <iostream>
 #include <sstream>
 
+#include <math/stat-utils.h>
+
 #include <matplotlibcpp.h>
 
 namespace plt = matplotlibcpp;
@@ -46,69 +48,195 @@ std::string getXAxisName() {
 #ifdef ENG_NAMES
   return "Policy Configuration";
 #else
-  return "Конфігурація політики";
+  return "Метод / конфігурація";
 #endif
 }
 
-void plotMannWhitney(double maxTop,
+std::string getOriginalTSName() {
+#ifdef ENG_NAMES
+  return "Original TS";
+#else
+  return "Оригінальний ТН";
+#endif
+}
+
+// === Mann–Whitney + Holm–Bonferroni support ===
+struct PairResult {
+  size_t i, j;
+  double p_raw;
+  double p_adj;
+  std::string sig;
+};
+
+// Apply Holm–Bonferroni correction
+std::vector<PairResult> holm_bonferroni(const std::vector<PairResult>& pairs,
+                                        size_t m) {
+  std::vector<PairResult> corrected = pairs;
+  std::vector<size_t> order(pairs.size());
+  std::iota(order.begin(), order.end(), 0);
+  std::sort(order.begin(), order.end(), [&](size_t a, size_t b) {
+    return pairs[a].p_raw < pairs[b].p_raw;
+  });
+
+  for (size_t rank = 0; rank < order.size(); ++rank) {
+    size_t idx = order[rank];
+    double p_adj = pairs[idx].p_raw * (m - rank);
+    if (p_adj > 1.0)
+      p_adj = 1.0;
+    corrected[idx].p_adj = p_adj;
+    corrected[idx].sig = (p_adj < 0.05) ? "*" : "ns";
+  }
+  return corrected;
+}
+
+void plotMannWhitney(const std::string& path,
+                     double maxTop,
                      const std::vector<std::string>& labels,
                      const std::vector<std::vector<double>>& plotDatas) {
-  auto justLogOut = plotDatas.size() > 4;
-
-  std::string linestyle = "-";
-  std::string linestyleWidth = "0.8";
-
-  // === Pairwise significance lines ===
-  const double baseHeight = maxTop + 20.0;
-  const double stepHeight = 5.0;
-
-  // === Mann–Whitney U + Bonferroni correction ===
   const size_t numGroups = plotDatas.size();
+  size_t m = (numGroups * (numGroups - 1)) / 2;
 
-  int pairIdx = 0;
-  int i = 0;
-  for (size_t j = i + 1; j < numGroups; ++j) {
-    try {
-      double p = mann_whitney_u(plotDatas[i], plotDatas[j], "two-sided");
-      std::cout << labels[i] << " vs " << labels[j] << "p = " << std::fixed
-                << std::setprecision(10) << p << std::endl;
+  // === GLOBAL KW ===
+  double p_kw = 1.0;
+  try {
+    p_kw = kruskal_wallis(plotDatas);
+    std::cout << "[Kruskal–Wallis] p = " << p_kw << std::endl;
+  } catch (const std::exception& e) {
+    std::cerr << "Kruskal–Wallis error: " << e.what() << std::endl;
+  }
 
-      std::ostringstream label;
-      label << "p = " << std::fixed << std::setprecision(10) << p;
-      if (p < 0.05)
-        label << " *";
-      else
-        label << " ns";
+  // === CSV long-format ===
+  std::ofstream csv(path, std::ios::out | std::ios::trunc);
+  if (!csv) {
+    std::cerr << "Cannot open CSV file: " << path << std::endl;
+    return;
+  }
+  csv << "Global_KW_p=" << p_kw << "\n";
+  csv << "GroupA;GroupB;p-raw;p-holm;Significance\n";
 
-      double x1 = i + 1;
-      double x2 = j + 1;
-      double y = baseHeight + pairIdx * stepHeight;
+  if (p_kw >= 0.05) {
+    std::cout << "[PostHoc] Global test not significant\n";
+    return;
+  }
 
-      if (!justLogOut) {
-        plt::plot({x1, x1}, {y - 0.8, y},
-                  {{"linestyle", linestyle.c_str()},
-                   {"linewidth", linestyleWidth},
-                   {"color", ColorCodes[0]}});
-        plt::plot({x2, x2}, {y - 0.8, y},
-                  {{"linestyle", linestyle.c_str()},
-                   {"linewidth", linestyleWidth},
-                   {"color", ColorCodes[0]}});
-
-        plt::plot({x1, x2}, {y, y},
-                  {{"linestyle", linestyle.c_str()},
-                   {"linewidth", linestyleWidth},
-                   {"color", ColorCodes[0]}});
-
-        plt::text(
-            (x1 + x2) / 2.0 - 0.2, y + 0.8, label.str(),
-            {{"fontname", "Helvetica"}, {"fontsize", "6"}, {"color", "black"}});
-      }
-
-      ++pairIdx;
-    } catch (const std::exception& e) {
-      std::cerr << "Mann–Whitney error: " << e.what() << std::endl;
+  // --- collect pairs ---
+  std::vector<PairResult> pairs;
+  for (size_t i = 0; i < numGroups; ++i) {
+    for (size_t j = i + 1; j < numGroups; ++j) {
+      double p_raw = mann_whitney_u(plotDatas[i], plotDatas[j], "two-sided");
+      pairs.push_back({i, j, p_raw, p_raw, "ns"});
     }
   }
+
+  // --- Holm–Bonferroni ---
+  pairs = holm_bonferroni(pairs, m);
+
+  // --- Write CSV long format ---
+  for (auto& pr : pairs) {
+    csv << labels[pr.i] << ";" << labels[pr.j] << ";" << std::setprecision(10)
+        << pr.p_raw << ";" << pr.p_adj << ";" << pr.sig << "\n";
+  }
+  csv.close();
+  std::cout << "[INFO] Mann–Whitney table written to " << path << std::endl;
+
+  // --- Draw only comparisons vs first group (e.g. DSL) ---
+  auto justLogOut = numGroups > 4;
+  if (!justLogOut) {
+    int pairIdx = 0;
+    for (auto& pr : pairs) {
+      if (pr.i != 0)
+        continue;  // тільки порівняння з першою групою
+
+      double x1 = pr.i + 1;
+      double x2 = pr.j + 1;
+      double y = maxTop + 20.0 + pairIdx * 5.0;
+
+      std::ostringstream label;
+      label << "p=" << std::fixed << std::setprecision(4) << pr.p_adj << " "
+            << pr.sig;
+
+      plt::plot({x1, x1}, {y - 0.8, y},
+                {{"linestyle", "-"}, {"linewidth", "0.8"}, {"color", "black"}});
+      plt::plot({x2, x2}, {y - 0.8, y},
+                {{"linestyle", "-"}, {"linewidth", "0.8"}, {"color", "black"}});
+      plt::plot({x1, x2}, {y, y},
+                {{"linestyle", "-"}, {"linewidth", "0.8"}, {"color", "black"}});
+      plt::text(
+          (x1 + x2) / 2.0 - 0.2, y + 0.8, label.str(),
+          {{"fontname", "Helvetica"}, {"fontsize", "6"}, {"color", "black"}});
+      ++pairIdx;
+    }
+  }
+}
+
+void exportMannWhitneyMatrix(
+    const std::string& path,
+    const std::vector<std::string>& labels,
+    const std::vector<std::vector<double>>& plotDatas) {
+  const size_t numGroups = plotDatas.size();
+  size_t m = (numGroups * (numGroups - 1)) / 2;
+
+  // === GLOBAL KW ===
+  double p_kw = 1.0;
+  try {
+    p_kw = kruskal_wallis(plotDatas);
+    std::cout << "[Kruskal–Wallis] p = " << p_kw << std::endl;
+  } catch (const std::exception& e) {
+    std::cerr << "Kruskal–Wallis error: " << e.what() << std::endl;
+  }
+
+  std::ofstream csv(path, std::ios::out | std::ios::trunc);
+  if (!csv) {
+    std::cerr << "Cannot open CSV file: " << path << std::endl;
+    return;
+  }
+  csv << "Global_KW_p=" << p_kw << "\n";
+
+  // header
+  csv << "Method";
+  for (const auto& label : labels)
+    csv << ";" << label;
+  csv << "\n";
+
+  if (p_kw >= 0.05) {
+    std::cout << "[PostHoc] Global test not significant → skip matrix\n";
+    return;
+  }
+
+  // --- collect pairs ---
+  std::vector<PairResult> pairs;
+  for (size_t i = 0; i < numGroups; ++i) {
+    for (size_t j = i + 1; j < numGroups; ++j) {
+      double p_raw = mann_whitney_u(plotDatas[i], plotDatas[j], "two-sided");
+      pairs.push_back({i, j, p_raw, p_raw, "ns"});
+    }
+  }
+
+  // --- Holm–Bonferroni ---
+  pairs = holm_bonferroni(pairs, m);
+
+  // --- Matrix init ---
+  std::vector<std::vector<std::string>> matrix(
+      numGroups, std::vector<std::string>(numGroups, "-"));
+
+  for (auto& pr : pairs) {
+    std::ostringstream cell;
+    cell << std::scientific << std::setprecision(3) << pr.p_adj << " "
+         << pr.sig;
+    matrix[pr.i][pr.j] = cell.str();
+    matrix[pr.j][pr.i] = cell.str();
+  }
+
+  // --- Write CSV ---
+  for (size_t i = 0; i < numGroups; ++i) {
+    csv << labels[i];
+    for (size_t j = 0; j < numGroups; ++j) {
+      csv << ";" << matrix[i][j];
+    }
+    csv << "\n";
+  }
+  csv.close();
+  std::cout << "[INFO] Mann–Whitney matrix written to " << path << std::endl;
 }
 
 double plotBoxStats(const std::string& path,
@@ -132,7 +260,7 @@ double plotBoxStats(const std::string& path,
 
   for (size_t i = 0; i < plotDatas.size(); ++i) {
     auto& plotData = plotDatas[i];
-    BoxStats stats = compute_box(plotData);
+    const auto stats = math_stat::compute_box(plotData);
 
     if (stats.upper_whisker > maxTop)
       maxTop = stats.upper_whisker;
@@ -158,14 +286,15 @@ double plotBoxStats(const std::string& path,
     } else {
       // Виводимо в консоль
       std::cout << labels[i] << "\t" << std::fixed << std::setprecision(2)
-                << stats.q1 << "\t" << stats.median << "\t" << stats.q3 << "\t"
-                << stats.lower_whisker << "\t" << stats.upper_whisker << "\n";
+                << stats.q1 << "'\t" << stats.median << "'\t" << stats.q3
+                << "'\t" << stats.lower_whisker << "'\t" << stats.upper_whisker
+                << "'\n";
 
       // Пишемо у CSV
       if (csv) {
         csv << labels[i] << ";" << std::fixed << std::setprecision(2)
-            << stats.q1 << ";" << stats.median << ";" << stats.q3 << ";"
-            << stats.lower_whisker << ";" << stats.upper_whisker << "\n";
+            << stats.q1 << "';" << stats.median << "';" << stats.q3 << "';"
+            << stats.lower_whisker << "';" << stats.upper_whisker << "'\n";
       }
     }
 
@@ -181,87 +310,167 @@ double plotBoxStats(const std::string& path,
   return maxTop;
 }
 
+std::array<double, 2> getYAxisLims(const std::string& libName) {
+  if (libName == "bitmap_cplusplus") {
+    return {20.0, 40.0};
+  }
+  if (libName == "hjson") {
+    return {34.0, 38.0};
+  }
+  throw std::logic_error{"Wrong library name."};
+}
+
 }  // namespace
 
-CoverageBoxPlot::CoverageBoxPlot(const std::string& logDir,
+CoverageBoxPlot::CoverageBoxPlot(const std::string& libName,
+                                 const std::string& logDir,
                                  const std::string& logFileName,
                                  PlotType type)
-    : _type(type), m_path(ensurePath(logDir, logFileName)) {}
+    : _libName(libName), _type(type), m_path(ensurePath(logDir, logFileName)) {}
 
 CoverageBoxPlot::~CoverageBoxPlot() {
-  plt::save(ensurePngExtension(m_path), 1200);
+  plt::save(ensureExtension(m_path, ".eps"), 1200);
   plt::close();
 }
 
-void CoverageBoxPlot::next(const std::string& label) {
-  _boxData.emplace_back(BoxPlotData{});
-  _current = &_boxData.back();
-
-  _current->label = label;
+void CoverageBoxPlot::serialize(const std::string& filePath) {
+  try {
+    serialization::Serializer serializer;
+    serializer << _type;
+    serializer << _boxData;
+    serializer << _order;
+    serializer << _originalCoverage;
+    serializer.save(filePath);
+  } catch (...) {
+    std::cout << "Graph serialization failed : " << filePath << std::endl;
+  }
 }
 
-void CoverageBoxPlot::log(size_t,
-                          const gcov_coverage::RootReport& coverage) const {
-  if (_current == nullptr) {
-    return;
+bool CoverageBoxPlot::load() {
+  try {
+    serialization::Deserializer deserializer(ensureExtension(m_path, ".bin"));
+    deserializer >> _type;
+    deserializer >> _boxData;
+    deserializer >> _order;
+    deserializer >> _originalCoverage;
+  } catch (const std::exception& e) {
+    std::cout << e.what() << std::endl;
+    return false;
+  }
+  return true;
+}
+
+void CoverageBoxPlot::log(const std::string& label,
+                          const gcov_coverage::CoverageReport& coverage) {
+  std::vector<double>* current = nullptr;
+
+  const auto it = _boxData.find(label);
+  if (it != _boxData.end()) {
+    auto& pointsVector = it->second;
+    current = &pointsVector;
+  } else {
+    auto& pointsVector = _boxData[label];
+    current = &pointsVector;
   }
 
   if (_type == PlotType::Both) {
     throw std::runtime_error{"ERR"};
   } else if (_type == PlotType::BrCov) {
-    _current->data.push_back(coverage.report.branchCov.percent);
+    current->push_back(coverage.branchCov.percent);
   } else if (_type == PlotType::LineCov) {
-    _current->data.push_back(coverage.report.lineCov.percent);
+    current->push_back(coverage.lineCov.percent);
   }
 }
 
-void CoverageBoxPlot::linesCount(size_t lines) {
-  if (_current == nullptr) {
-    return;
-  }
-
-  _current->lines.push_back(lines);
-}
-
-void CoverageBoxPlot::plot() const {
+void CoverageBoxPlot::plot() {
   plt::clf();
 
   std::vector<double> xticks;
+
   std::vector<std::string> labels;
   std::vector<std::vector<double>> plotDatas;
+  for (const auto& orderName : _order) {
+    const auto it = _boxData.find(orderName);
+    if (it == _boxData.end()) {
+      std::cout << "Warning method not simulated: " << orderName << std::endl;
+      continue;
+    }
 
-  std::transform(_boxData.cbegin(), _boxData.cend(),
-                 std::back_inserter(plotDatas), [&labels](const auto& entry) {
-                   labels.emplace_back(entry.label);
-                   return entry.data;
-                 });
+    labels.emplace_back(orderName);
+    plotDatas.emplace_back(it->second);
+  }
+
+  double maxTop = plotBoxStats(ensureExtension(m_path + "_stats", ".csv"),
+                               labels, plotDatas);
+  plotMannWhitney(ensureExtension(m_path + "_mannwhitney", ".csv"), maxTop,
+                  labels, plotDatas);
+  exportMannWhitneyMatrix(
+      ensureExtension(m_path + "_mannwhitney_matrix", ".csv"), labels,
+      plotDatas);
 
   xticks.resize(_boxData.size());
   for (size_t i = 0; i < _boxData.size(); ++i)
     xticks[i] = i + 1;
 
-  double maxTop = plotBoxStats(ensureCsvExtension(m_path), labels, plotDatas);
-  plotMannWhitney(maxTop, labels, plotDatas);
+  // === Plot horizontal line for max original coverage ===
+  double maxOriginalCoverage = _originalCoverage;
 
-  plt::boxplot(plotDatas, labels, true,
-               {{"patch_artist", "True"},
-                {"boxprops.linewidth", "0.6"},
-                {"capprops.linewidth", "0.6"},
-                {"whiskerprops.linewidth", "0.6"},
-                {"medianprops.linewidth", "0.6"},
-                {"flierprops.markeredgewidth", "0.8"},
-                {"flierprops.marker", "o"},
-                {"flierprops.markersize", "3.0"},
-                {"showfliers", "True"}});
+  std::cout << maxOriginalCoverage << std::endl;
 
-  plt::xticks(xticks, labels, {{"fontsize", "5"}});
+  plt::plot(std::vector<double>{0.5, xticks.back()},
+            std::vector<double>{maxOriginalCoverage, maxOriginalCoverage},
+            {{"linestyle", "-."},
+             {"color", "#c5b0d5"},
+             {"linewidth", "1.0"},
+             {"label", getOriginalTSName()}});
+
+  int i = 1;
+  for (const auto& orderName : _order) {
+    const auto iter = _boxData.find(orderName);
+    if (iter == _boxData.end()) {
+      std::cout << "Warning method not simulated: " << orderName << std::endl;
+      continue;
+    }
+
+    plt::boxplot(std::vector<std::vector<double>>{iter->second}, {iter->first},
+                 {(double)i}, true,
+                 {{"patch_artist", "True"},
+                  {"widths", "0.8"},
+                  {"boxprops.facecolor", getColorByLabel(iter->first)},
+                  {"boxprops.linewidth", "1.0"},
+                  {"boxprops.edgecolor", "black"},
+                  {"medianprops.color", "black"},
+                  {"medianprops.linewidth", "1.5"},
+                  {"whiskerprops.linewidth", "1.0"},
+                  {"whiskerprops.color", "black"},
+                  {"capprops.linewidth", "1.0"},
+                  {"capprops.color", "black"},
+                  {"flierprops.markeredgewidth", "0.8"},
+                  {"flierprops.markerfacecolor", "gray"},
+                  {"flierprops.marker", "o"},
+                  {"flierprops.markersize", "3.5"},
+                  {"showfliers", "True"}});
+    ++i;
+  }
+
+  plt::xticks(xticks, labels, {{"fontsize", "8"}});
 
   plt::ylabel(getYAxisName(_type));
   plt::xlabel(getXAxisName());
+  plt::legend();
 
-  plt::ylim(0.0, 70.0);
+  const auto& axisLims = getYAxisLims(_libName);
+  plt::ylim(axisLims[0], axisLims[1]);
+
+  plt::tight_layout();
+
+  makeLegentByGroups(getColorGroups(), {0.82, 0.43});
 
   plt::grid(true);
+
+  if (_boxData.size() > 5) {
+    rotateXTicks90();
+  }
 
   applyPublicationStyle();
   plt::pause(0.01);

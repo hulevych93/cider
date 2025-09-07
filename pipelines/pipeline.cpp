@@ -200,7 +200,7 @@ bool Pipeline::save() {
   std::cout << "Save results: " << resultsDir
             << ", status: " << save(resultsDir) << std::endl;
 
-  printResultsSummary(_results);
+  // printResultsSummary(_results);
 
   return true;
 }

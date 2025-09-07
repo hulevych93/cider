@@ -5,15 +5,25 @@
 
 #include "pipes/aggregation-pipe.h"
 #include "pipes/compression-pipe.h"
-#include "pipes/dataset-pipe.h"
+#include "pipes/data-pipe.h"
 #include "pipes/dslicer-pipe.h"
+#include "pipes/eft-pipe.h"
 #include "pipes/greedy-r-pipe.h"
 #include "pipes/learning-pipe.h"
 #include "pipes/mcts-pipe.h"
 #include "pipes/meta-pipe.h"
-#include "pipes/report-pipe.h"
 #include "pipes/synthesis-pipe.h"
 #include "pipes/verification-pipe.h"
+
+#include "pipes/graphics/cfg-heatmap-plot-report-pipe.h"
+#include "pipes/graphics/compression-bar-plot-report-pipe.h"
+#include "pipes/graphics/cov-box-plot-report-pipe.h"
+#include "pipes/graphics/cov-grow-plot-report-pipe.h"
+#include "pipes/graphics/efficiency-radar-plot-report-pipe.h"
+#include "pipes/graphics/exec-times-bar-plot-report-pipe.h"
+#include "pipes/graphics/graph-report-pipe.h"
+#include "pipes/graphics/lines-bar-plot-report-pipe.h"
+#include "pipes/graphics/times-bar-plot-report-pipe.h"
 
 #include "agent-q-learning/q-learning-agent.h"
 #include "agent-sarsa-learning/sarsa-learning-agent.h"
@@ -130,8 +140,8 @@ auto getGreedyR3Settings() {
 auto getMCTS1Settings() {
   mcts::MonteCarloSettings settings;
   settings.configName = "MCTS1";
-  settings.maxIter = 1000;
-  settings.maxDepth = 10;
+  settings.maxIter = 100;
+  settings.maxDepth = 500;
   settings.ucb_C = 0.7;
   settings.maxRollback = 10;
   return settings;
@@ -140,10 +150,10 @@ auto getMCTS1Settings() {
 auto getMCTS2Settings() {
   mcts::MonteCarloSettings settings;
   settings.configName = "MCTS2";
-  settings.maxIter = 100;
-  settings.maxDepth = 500;
+  settings.maxIter = 50;
+  settings.maxDepth = 800;
   settings.ucb_C = 1.4;
-  settings.maxRollback = 10;
+  settings.maxRollback = 100;
   return settings;
 }
 
@@ -195,8 +205,8 @@ auto getQGenG1Settings() {
 auto getQGenG2Settings() {
   synthesis::QSynthesisSettings settings;
   settings.configName = "QLEG2";
-  settings.epsilon = 0.15;
-  settings.maxRollback = 30U;
+  settings.epsilon = 0.2;
+  settings.maxRollback = 50U;
   settings.strategy = synthesis::GenerationStrategyType::EGreedy;
   settings.stopType = synthesis::StopCondition::GreaterCoverage;
   return settings;
@@ -317,8 +327,8 @@ const pipelines::ReportConfiguration& getReportConfigRAND() {
 }
 
 const pipelines::ReportConfiguration& getReportConfigQLEG() {
-  static const std::vector<std::string> orderedMethods = {"RAND", "QLEG1",
-                                                          "QLEG2", "QLEG3"};
+  static const std::vector<std::string> orderedMethods = {"QLEG1", "QLEG2",
+                                                          "QLEG3"};
   return orderedMethods;
 }
 
@@ -347,8 +357,7 @@ const pipelines::ReportConfiguration& getReportConfigMCTS() {
 }
 
 const pipelines::ReportConfiguration& getReportConfigQLEGvsQLB() {
-  static const std::vector<std::string> orderedMethods = {"RAND", "QLEG2",
-                                                          "QLB2"};
+  static const std::vector<std::string> orderedMethods = {"QLB1"};
   return orderedMethods;
 }
 
@@ -364,34 +373,39 @@ const pipelines::ReportConfiguration& getReportConfigDSlicing() {
 }
 
 const pipelines::ReportConfiguration& getReportConfigSelected() {
-  static const std::vector<std::string> orderedMethods = {"DSL", "GRR2",
-                                                          "MCTS2", "QLB2"};
+  static const std::vector<std::string> orderedMethods = {
+      "DSL", "GR", "GRR2", "MCTS2", "QLB2+DSL"};
   return orderedMethods;
 }
 
 const pipelines::ReportConfiguration& getReportConfigTarget() {
   static const std::vector<std::string> orderedMethods = {
-      "QLEG1", "QLEG2", "QLEG3", "QLB1", "QLB2", "QLB3"};
+      //"QLEG1", "QLEG2", "QLEG3", "QLB1", "QLB2", "QLB3"
+      "QLB2+DSL"};
   return orderedMethods;
 }
 
 const pipelines::ReportConfiguration& getReportALLSelected() {
   static const std::vector<std::string> orderedMethods = {
-      "DSL",  "GR",    "GRR1",  "GRR2",  "GRR3", "MCTS1", "MCTS2", "MCTS3",
-      "RAND", "QLEG1", "QLEG2", "QLEG3", "QLB1", "QLB2",  "QLB3"};
+      "DSL",       "GR",        "GRR1",     "GRR2",     "GRR3",
+      "MCTS1",     "MCTS2",     "MCTS3",    "QLEG1",    "QLEG2",
+      "QLEG3",     "QLB1",      "QLB2",     "QLB3",     "QLEG1+DSL",
+      "QLEG2+DSL", "QLEG3+DSL", "QLB1+DSL", "QLB2+DSL", "QLB3+DSL"};
   return orderedMethods;
 }
 
 const pipelines::ReportConfiguration& getReportEFTOrder() {
   static const std::vector<std::string> orderedMethods = {
-      "DSL",  "GRR1",  "GRR2",  "GRR3",  "MCTS1", "MCTS2", "MCTS3",
-      "RAND", "QLEG1", "QLEG2", "QLEG3", "QLB1",  "QLB2",  "QLB3"};
+      "DSL",      "GR",       "GRR1",    "GRR2",      "GRR3",      "MCTS1",
+      "MCTS2",    "MCTS3",    "RAND",    "QLEG1",     "QLEG2",     "QLEG3",
+      "QLB1",     "QLB2",     "QLB3",    "QLEG1+DSL", "QLEG2+DSL", "QLEG3+DSL",
+      "QLB1+DSL", "QLB2+DSL", "QLB3+DSL"};
   return orderedMethods;
 }
 
-constexpr const int StatsCount = 100U;
-constexpr const int GreedyCount = 50U;
-constexpr const int MCTSCount = 5U;
+constexpr const int StatsCount = 30U;
+constexpr const int GreedyCount = 1U;
+constexpr const int MCTSCount = 1U;
 
 }  // namespace
 
@@ -576,9 +590,21 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
             getReportConfig(cmd.group)));
       }
       break;
+    case PipelineType::GenerationExecTimesBarStats:
+      if (pipeline.hasResults()) {
+        pipeline.addStage(std::make_unique<ExecTimesBarPlotReportStage>(
+            getReportConfig(cmd.group)));
+      }
+      break;
     case PipelineType::GenerationCoverageHeatMap:
       if (pipeline.hasResults()) {
         pipeline.addStage(std::make_unique<HeatmapPlotReportStage>(
+            getReportConfig(cmd.group)));
+      }
+      break;
+    case PipelineType::GenerationCompressionBarStats:
+      if (pipeline.hasResults()) {
+        pipeline.addStage(std::make_unique<CompressionBarPlotReportStage>(
             getReportConfig(cmd.group)));
       }
       break;
@@ -586,6 +612,12 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
       if (pipeline.hasResults()) {
         pipeline.addStage(
             std::make_unique<EfficencyReportStage>(getReportEFTOrder()));
+      }
+      break;
+    case PipelineType::GenerationEfficienctRadarPlotStats:
+      if (pipeline.hasResults()) {
+        pipeline.addStage(std::make_unique<EfficiencyRadarPlotReportStage>(
+            getReportEFTOrder()));
       }
       break;
     case PipelineType::AggregateData:
@@ -600,7 +632,8 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
       break;
     case PipelineType::ComputeCompression:
       if (pipeline.hasResults()) {
-        pipeline.addStage(std::make_unique<ResultsCompressionStage>());
+        pipeline.addStage(std::make_unique<ResultsCompressionStage>(
+            getReportConfig(cmd.group)));
       }
       break;
     case PipelineType::RemoveGroupData:
@@ -609,9 +642,15 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
             std::make_unique<RemoveDataStage>(getReportConfig(cmd.group)));
       }
       break;
-    case PipelineType::ProcessData:
+    case PipelineType::CleanupData:
       if (pipeline.hasResults()) {
-        pipeline.addStage(std::make_unique<ProcessDataStage>());
+        pipeline.addStage(
+            std::make_unique<CleanUpDataStage>(getReportConfig(cmd.group)));
+      }
+      break;
+    case PipelineType::ModifyData:
+      if (pipeline.hasResults()) {
+        pipeline.addStage(std::make_unique<ModifyDataStage>());
       }
       break;
     case PipelineType::QLearningStats:

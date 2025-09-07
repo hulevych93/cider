@@ -7,6 +7,7 @@
 
 #include <iostream>
 
+#include "math/stat-utils.h"
 #include "mathplot-log/utils.h"
 
 #include <matplotlibcpp.h>
@@ -58,7 +59,7 @@ void LinesBarPlot::serialize(const std::string& filePath) {
 
 bool LinesBarPlot::load() {
   try {
-    serialization::Deserializer deserializer(ensureBinExtension(m_path));
+    serialization::Deserializer deserializer(ensureExtension(m_path, ".bin"));
     deserializer >> _barData;
     deserializer >> _oldLines;
   } catch (const std::exception& e) {
@@ -139,7 +140,7 @@ void LinesBarPlot::plot() {
         names.emplace_back(methodIt.first);
       }
 
-      lines[i - 1].emplace_back(compute_average(methodIt.second));
+      lines[i - 1].emplace_back(math_stat::mean(methodIt.second));
       j++;
     }
     i++;
@@ -184,8 +185,8 @@ void LinesBarPlot::plot() {
   applyPublicationStyle();
   plt::pause(5.5);
 
-  serialize(ensureBinExtension(m_path));
-  plt::save(ensurePngExtension(m_path), 1200);
+  serialize(ensureExtension(m_path, ".bin"));
+  plt::save(ensureExtension(m_path, ".eps"), 1200);
   plt::close();
 }
 

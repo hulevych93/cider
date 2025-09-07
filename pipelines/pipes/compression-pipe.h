@@ -10,6 +10,8 @@ namespace pipelines {
 
 class ResultsCompressionStage final : public Pipe {
  public:
+  explicit ResultsCompressionStage(const ReportConfiguration& config);
+
   bool process(const std::string& metadata,
                const std::string& libName,
                const cider::Cmd& cmd) override;
@@ -17,6 +19,9 @@ class ResultsCompressionStage final : public Pipe {
   std::string getLetter() const override { return "COMPR"; }
 
   bool needTS() const override { return true; }
+
+ private:
+  ReportConfiguration _config;
 };
 
 }  // namespace pipelines

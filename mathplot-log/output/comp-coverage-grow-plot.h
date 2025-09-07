@@ -3,16 +3,13 @@
 
 #pragma once
 
-#include "recorder/details/action.h"
-#include "recorder/details/params.h"
-
 #include "coverage/logger.h"
 #include "metaheuristics/metasearch.h"
 
-#include "agent-model/logger.h"
-
 #include "serialization/deserializer.h"
 #include "serialization/serializer.h"
+
+#include "mathplot-log/output/basic-plot.h"
 
 namespace cider {
 namespace mathplot {
@@ -27,38 +24,45 @@ struct Points : serialization::SerializableTag {
 bool serialize(const Points& obj, serialization::Serializer& serializer);
 bool deserialize(Points& obj, const serialization::Deserializer& deserializer);
 
-class StepperComparativeLogger : public gcov_coverage::ICoverageLogger {
+class StepperComparativePlot : public IBasicPlot,
+                               public gcov_coverage::ICoverageLogger {
  public:
   enum class PlotType { BrCov, LineCov, Both };
 
-  StepperComparativeLogger(const std::string& logDir,
-                           const std::string& logFileName,
-                           PlotType type = PlotType::BrCov);
-  ~StepperComparativeLogger() override;
+  StepperComparativePlot(const std::string& libName,
+                         const std::string& logDir,
+                         const std::string& logFileName,
+                         PlotType type = PlotType::BrCov);
+  ~StepperComparativePlot() override;
 
-  void log(size_t index,
-           const gcov_coverage::RootReport& coverage) const override;
+  void log(size_t index, const gcov_coverage::RootReport& coverage) override;
 
-  void serialize(const std::string& filePath);
+  void setOrder(const std::vector<std::string>& order) override {
+    _order = order;
+  }
 
-  bool load();
+  void serialize(const std::string& filePath) override;
+
+  bool load() override;
 
   void next(const std::string& name);
 
-  void plot() const;
+  void plot() override;
+
+  void setOriginalCov(double cov) override { _originalCoverage = cov; }
 
  private:
+  std::string _libName;
+
   PlotType _type;
-  mutable std::unordered_map<std::string, std::vector<Points>> _graphs;
+  std::unordered_map<std::string, std::vector<Points>> _graphs;
   std::vector<std::string> _order;
 
   Points* _current = nullptr;
-  int _style = 0;
-  int _color = 0;
-  int _marker = 0;
+  double _originalCoverage = 0.0;
 
   std::string m_path;
-  mutable size_t _updateCounter = 0;
+  size_t _updateCounter = 0;
 };
 
 }  // namespace mathplot

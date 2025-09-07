@@ -59,13 +59,17 @@ enum class PipelineType {
   GenerationCoverageHeatMap = 130,
   GenerationTimesBarStats = 135,
   GenerationCompressionBarStats = 136,
+  GenerationExecTimesBarStats = 137,
+  GenerationEfficienctRadarPlotStats = 138,
 
   AggregateData = 140,
   VerifyData = 145,
   ComputeCompression = 146,
   RemoveGroupData = 150,
-  ProcessData = 160,
-  ShowResults = 170
+  CleanupData = 160,
+  ShowResults = 170,
+
+  ModifyData = 180,
 };
 
 enum class MethodsGroup {
@@ -80,7 +84,7 @@ enum class MethodsGroup {
   DSL,
   SELECTED,
   TARGET,
-  ALL
+  ALL,
 };
 
 struct ObjectiveValue final {

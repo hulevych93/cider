@@ -21,7 +21,13 @@ bool DSlicerStage::process(const std::string&,
 
   try {
     gcov_coverage::CoverageMeasurment measurer{cmd, libName.c_str()};
-    output = dslicer::run_d_slicing(measurer.getObjValueFunc(), input.actions);
+    if (input.actions.size() < 10000) {
+      output =
+          dslicer::run_d_slicing(measurer.getObjValueFunc(), input.actions);
+    } else {
+      output = dslicer::run_delta_d_slicing(measurer.getObjValueFunc(),
+                                            input.actions);
+    }
   } catch (const std::exception& e) {
     std::cerr << e.what();
     return false;
@@ -53,6 +59,8 @@ bool DQLPostProcessSlicerStage::process(const std::string&,
   auto results = getResults();
 
   std::cout << "[INFO] PostProcessDSlicerStage: start\n";
+
+  int i = 0;
   for (const auto& methodName : _config) {
     auto it = results.find(methodName);
     if (it == results.end()) {
@@ -64,20 +72,33 @@ bool DQLPostProcessSlicerStage::process(const std::string&,
     std::string newMethodName = methodName + "+DSL";
 
     std::cout << "  [PROCESS] " << methodName << " -> " << newMethodName
-              << " | entries: " << methodResults.size() << "\n";
+              << " | entries: " << getDataSize(libName) << "\n";
 
-    for (const auto& r : methodResults) {
+    int j = 0;
+    const auto handleResult = [this, &i, &j](
+                                  int*, const std::string& methodName,
+                                  const std::string& libName,
+                                  const cider::Cmd& cmd, const Result& r) {
       auto start = std::chrono::steady_clock::now();
       recorder::Actions sliced;
       auto newActions = deepCopy(r.newActions);
 
       try {
-        gcov_coverage::CoverageMeasurment measurer{cmd, libName.c_str()};
-        // запускаємо d-slicing на newActions!
-        sliced = dslicer::run_d_slicing(measurer.getObjValueFunc(), newActions);
+        cfg_coverage::CoverageMeasurment measurer{cmd, libName.c_str()};
+
+        if (newActions.size() < 10000) {
+          sliced =
+              dslicer::run_d_slicing(measurer.getObjValueFunc(), newActions);
+        } else {
+          sliced = dslicer::run_delta_d_slicing(measurer.getObjValueFunc(),
+                                                newActions);
+        }
       } catch (const std::exception& e) {
         std::cerr << "[ERROR] D-Slicing failed: " << e.what() << "\n";
-        continue;
+      }
+
+      if (sliced.empty()) {
+        return;
       }
 
       auto end = std::chrono::steady_clock::now();
@@ -91,13 +112,22 @@ bool DQLPostProcessSlicerStage::process(const std::string&,
       result.oldActions = deepCopy(r.oldActions);
       result.newActions = deepCopy(sliced);
 
-      pushResult(libName.c_str(), cmd, newMethodName, result);
+      pushResult(libName.c_str(), cmd, methodName, result);
+
+      std::cout << "[" << i << "," << _config.size() << "]";
+      std::cout << "[" << j << "," << getDataSize(libName) << "]";
 
       std::cout << "    [OK] " << r.testCaseName
                 << " | oldLen=" << r.newActions.size()
                 << " -> newLen=" << sliced.size() << " | time=" << elapsed_mcs
                 << " mcs\n";
-    }
+      j++;
+    };
+
+    processBest((int*)(nullptr), newMethodName, libName, cmd, methodResults,
+                getDataSize(libName), handleResult);
+
+    i++;
   }
 
   std::cout << "[INFO] PostProcessDSlicerStage: done\n";

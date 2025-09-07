@@ -17,30 +17,81 @@ namespace plt = matplotlibcpp;
 namespace cider {
 namespace mathplot {
 
+namespace {
+std::string getYAxisName() {
+#ifdef ENG_NAMES
+  return "Method / configuration";
+#else
+  return "Метод / конфігурація";
+#endif
+}
+
+std::string getXAxisName() {
+#ifdef ENG_NAMES
+  return "Basic Block IDs";
+#else
+  return "Ідентифікатор базового блоку програми, ум. од.";
+#endif
+}
+
+std::string getOriginalTSName() {
+#ifdef ENG_NAMES
+  return "Original TS";
+#else
+  return "Оригінальний ТН";
+#endif
+}
+}  // namespace
+
 CoverageHeatmapPlot::CoverageHeatmapPlot(const std::string& logDir,
                                          const std::string& logFileName)
     : m_path(ensurePath(logDir, logFileName)) {}
 
 CoverageHeatmapPlot::~CoverageHeatmapPlot() {
-  plt::save(ensurePngExtension(m_path), 1200);
+  plt::save(ensureExtension(m_path, ".eps"), 1200);
   plt::close();
+}
+
+void CoverageHeatmapPlot::serialize(const std::string& filePath) {
+  try {
+    serialization::Serializer serializer;
+    serializer << _rawMatrix;
+    serializer << _order;
+    serializer << _original;
+    serializer.save(filePath);
+  } catch (...) {
+    std::cout << "Graph serialization failed : " << filePath << std::endl;
+  }
+}
+
+bool CoverageHeatmapPlot::load() {
+  try {
+    serialization::Deserializer deserializer(ensureExtension(m_path, ".bin"));
+    deserializer >> _rawMatrix;
+    deserializer >> _order;
+    deserializer >> _original;
+  } catch (const std::exception& e) {
+    std::cout << e.what() << std::endl;
+    return false;
+  }
+  return true;
 }
 
 void CoverageHeatmapPlot::add(const std::string& methodLabel,
                               const std::vector<uint8_t>& coveredBranches) {
-  m_rawMatrix[methodLabel].push_back(coveredBranches);
+  _rawMatrix[methodLabel].push_back(coveredBranches);
 }
 
 void CoverageHeatmapPlot::plot() {
   plt::clf();
 
-  if (m_rawMatrix.empty() || m_original.empty())
+  if (_rawMatrix.empty() || _original.empty())
     return;
 
   std::vector<std::string> methodNames;
   size_t totalBranches = 0;
 
-  for (auto iter = m_rawMatrix.begin(); iter != m_rawMatrix.end(); ++iter) {
+  for (auto iter = _rawMatrix.begin(); iter != _rawMatrix.end(); ++iter) {
     const auto& rows = iter->second;
     if (!rows.empty()) {
       totalBranches = rows[0].size();
@@ -48,14 +99,20 @@ void CoverageHeatmapPlot::plot() {
     }
   }
 
-  if (m_original.size() != totalBranches)
+  if (_original.size() != totalBranches)
     throw std::runtime_error("Baseline coverage mask size mismatch");
 
   std::vector<std::vector<double>> Z_filtered;
 
-  for (auto iter = m_rawMatrix.begin(); iter != m_rawMatrix.end(); ++iter) {
-    const std::string& method = iter->first;
-    const auto& rows = iter->second;
+  for (const auto& orderName : _order) {
+    const auto it = _rawMatrix.find(orderName);
+    if (it == _rawMatrix.end()) {
+      std::cout << "Warning method not simulated: " << orderName << std::endl;
+      continue;
+    }
+
+    const std::string& method = it->first;
+    const auto& rows = it->second;
 
     methodNames.push_back(method);
 
@@ -72,7 +129,7 @@ void CoverageHeatmapPlot::plot() {
 
     Z_filtered.emplace_back();
     for (size_t i = 0; i < totalBranches; ++i) {
-      if (m_original[i])
+      if (_original[i])
         Z_filtered.back().push_back(avg[i]);
     }
   }
@@ -83,20 +140,24 @@ void CoverageHeatmapPlot::plot() {
   for (size_t i = 0; i < methodsCount; ++i)
     y[i] = i;
 
-  auto img = plt::imshow_pylist(Z_filtered, {{"cmap", "Blues"},
+  auto img = plt::imshow_pylist(Z_filtered, {{"cmap", "magma"},
                                              {"interpolation", "none"},
                                              {"vmin", "0.0"},
                                              {"vmax", "1.0"},
                                              {"aspect", "auto"}});
   plt::colorbar(img);
 
+  tightLighout();
   applyPublicationStyle();
-  plt::yticks(y, methodNames);
-  // plt::xticks(xticks);
-  plt::xlabel("Branch");
+  plt::yticks(y, methodNames, {{"fontsize", "7"}});
+
+  plt::xlabel(getXAxisName());
+  plt::ylabel(getYAxisName());
   plt::grid(false);
 
   plt::pause(0.01);
+
+  serialize(ensureExtension(m_path, ".bin"));
 }
 
 }  // namespace mathplot

@@ -69,7 +69,7 @@ set(CMD_BITMAP
     "${CMAKE_BINARY_DIR}/bin/bitmap++_player"
     "${CMAKE_BINARY_DIR}"
     "${CMAKE_BINARY_DIR}/results/bitmap++/"
-    "${CMAKE_BINARY_DIR}/results/"
+    "${CMAKE_BINARY_DIR}/results/common_results"
 )
 set(CMD_BITMAP ${CMD_BITMAP} PARENT_SCOPE)
 

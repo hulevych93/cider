@@ -54,7 +54,7 @@ using ReportOpt = std::optional<RootReport>;
 class ICoverageLogger {
  public:
   virtual ~ICoverageLogger() = default;
-  virtual void log(size_t index, const RootReport& coverage) const = 0;
+  virtual void log(size_t index, const RootReport& coverage) = 0;
 };
 
 class CompositeLogger final : public ICoverageLogger {
@@ -63,7 +63,7 @@ class CompositeLogger final : public ICoverageLogger {
     loggers_.emplace_back(std::move(logger));
   }
 
-  void log(size_t index, const RootReport& coverage) const override {
+  void log(size_t index, const RootReport& coverage) override {
     for (const auto& logger : loggers_) {
       logger->log(index, coverage);
     }
@@ -77,12 +77,12 @@ class FileLogger : public ICoverageLogger {
  public:
   FileLogger(const std::string& logDir, const std::string& logFileName);
 
-  void log(size_t index, const RootReport& coverage) const override;
+  void log(size_t index, const RootReport& coverage) override;
 
   void other() { _report << "Optimized script log" << std::endl; }
 
  private:
-  mutable std::ofstream _report;
+  std::ofstream _report;
 };
 
 }  // namespace gcov_coverage

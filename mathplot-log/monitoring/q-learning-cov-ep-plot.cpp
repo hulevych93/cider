@@ -34,7 +34,7 @@ void CovQLearningResultsMathplotLogger::serialize(const std::string& filePath) {
 
 bool CovQLearningResultsMathplotLogger::load() {
   try {
-    serialization::Deserializer deserializer(ensureBinExtension(m_path));
+    serialization::Deserializer deserializer(ensureExtension(m_path, ".bin"));
     deserializer >> ieps_;
     deserializer >> cov_;
   } catch (const std::exception& e) {
@@ -79,10 +79,10 @@ void CovQLearningResultsMathplotLogger::plot() {
 }
 
 CovQLearningResultsMathplotLogger::~CovQLearningResultsMathplotLogger() {
-  serialize(ensureBinExtension(m_path));
+  serialize(ensureExtension(m_path, ".bin"));
 
   plot();
-  plt::save(ensurePngExtension(m_path), 1200);
+  plt::save(ensureExtension(m_path, ".eps"), 1200);
 }
 
 }  // namespace mathplot

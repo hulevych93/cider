@@ -33,7 +33,7 @@ using TestCase = std::vector<recorder::Action>;
 TestCase run_greedy_r(std::mt19937& gen,
                       const GreedyRSettings& settings,
                       const std::vector<recorder::Action>& actionSpace) {
-  const auto fullCoverage = settings.objFunc(actionSpace).coverage;
+  auto fullCoverage = settings.objFunc(actionSpace).coverage;
 
   std::vector<recorder::Action> selected;
   std::vector<bool> used(actionSpace.size(), false);
@@ -63,7 +63,6 @@ TestCase run_greedy_r(std::mt19937& gen,
 
       double gain = cov - currentCoverage;
       if (gain > 0) {
-        std::cout << "  [Trial] Action #" << i << ", gain = " << gain << "\n";
         candidates.push_back({i, gain, cov});
       } else {
         others.push_back({i, gain, cov});

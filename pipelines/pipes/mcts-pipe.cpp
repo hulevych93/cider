@@ -10,6 +10,8 @@
 #include "coverage/cfg_measurer.h"
 #include "coverage/gcov_measurer.h"
 
+#include "monte-carlo-tree-search/monte-carlo-graph.h"
+
 #include "mathplot-log/monitoring/metasearch-basic-block-cov-plot.h"
 
 #include <assert.h>

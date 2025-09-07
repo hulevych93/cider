@@ -19,9 +19,7 @@ using ReportOpt = std::optional<RootReport>;
 struct CoverageMeasurment {
   CoverageMeasurment(const Cmd& cmd, const char* module);
 
-  void setLogger(const std::shared_ptr<ICoverageLogger>& logger) {
-    m_logger = logger;
-  }
+  void setLogger(ICoverageLogger* logger) { m_logger = logger; }
 
   double operator()(const std::vector<cider::recorder::Action>& actions) {
     const auto rootReport = getReport(actions);
@@ -53,7 +51,7 @@ struct CoverageMeasurment {
   const Cmd& _cmd;
   mutable size_t _index = 0U;
   const char* _module;
-  std::shared_ptr<ICoverageLogger> m_logger;
+  ICoverageLogger* m_logger = nullptr;
 };
 
 struct StepperCoverageMeasurment final : CoverageMeasurment {

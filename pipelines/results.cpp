@@ -14,22 +14,6 @@
 namespace cider {
 namespace pipelines {
 
-double getMinimizationEfficency(const Result& result) {
-  if (result.oldActions.size() == 0)
-    return 0.0;
-  double coeff = 0.0;
-  if (result.coverageReachedLength.has_value()) {
-    coeff = static_cast<double>(result.coverageReachedLength.value()) /
-            result.oldActions.size();
-  } else {
-    coeff = static_cast<double>(result.newActions.size()) /
-            result.oldActions.size();
-  }
-  assert(coeff <= 1.0f);
-  return 1.0f - static_cast<double>(result.newActions.size()) /
-                    result.oldActions.size();
-}
-
 bool serialize(const Result& obj, serialization::Serializer& serializer) {
   serializer << obj.testCaseName;
   serializer << obj.timeElapsedMcs;
@@ -68,10 +52,15 @@ bool serialize(const MethodResults& obj,
                serialization::Serializer& serializer) {
   serializer << obj.entries;
 #if RESULTS_VERSION_2
-  serializer << obj.coverageReachedCount;
-  serializer << obj.failedCount;
-  serializer << obj.sessionsCount;
-  serializer << obj.totalTimeElapsedMcs;
+  unsigned long totalTimeElapsedMcs = 0;
+  unsigned long failedCount = 0;
+  unsigned long sessionsCount = 0;
+  unsigned long coverageReachedCount = 0;
+
+  serializer << coverageReachedCount;
+  serializer << failedCount;
+  serializer << sessionsCount;
+  serializer << totalTimeElapsedMcs;
 #endif
   return true;
 }
@@ -80,10 +69,17 @@ bool deserialize(MethodResults& obj,
                  const serialization::Deserializer& deserializer) {
   deserializer >> obj.entries;
 #if RESULTS_VERSION_2
-  deserializer >> obj.coverageReachedCount;
-  deserializer >> obj.failedCount;
-  deserializer >> obj.sessionsCount;
-  deserializer >> obj.totalTimeElapsedMcs;
+
+  // @deprecated
+  unsigned long totalTimeElapsedMcs = 0;
+  unsigned long failedCount = 0;
+  unsigned long sessionsCount = 0;
+  unsigned long coverageReachedCount = 0;
+
+  deserializer >> coverageReachedCount;
+  deserializer >> failedCount;
+  deserializer >> sessionsCount;
+  deserializer >> totalTimeElapsedMcs;
 #endif
   return true;
 }
@@ -104,25 +100,7 @@ void printResult(const Result& res) {
             << std::endl;
 
   std::cout << " Processing Time (mcs): " << res.timeElapsedMcs << std::endl;
-
-  double efficiency = getMinimizationEfficency(res);
-  std::cout << "  Minimization Efficiency: " << std::fixed
-            << std::setprecision(2) << efficiency << std::endl;
-
   std::cout << "---------------------------" << std::endl;
-}
-
-void printResultsSummary(const std::string& method, const Results& results) {
-  for (const auto& resIt : results) {
-    const auto& methodName = resIt.first;
-    if (method == methodName) {
-      std::cout << "=== Library: " << methodName << " ===" << std::endl;
-
-      for (const auto& res : resIt.second.entries) {
-        printResult(res);
-      }
-    }
-  }
 }
 
 void printResultsSummary(const Results& results) {
@@ -134,6 +112,36 @@ void printResultsSummary(const Results& results) {
       printResult(res);
     }
   }
+}
+
+int getDataSize(const std::string& libName) {
+  if (libName == "bitmap_cplusplus") {
+    return 50;
+  }
+  if (libName == "hjson") {
+    return 30;
+  }
+  throw std::logic_error{"Wrong library name."};
+}
+
+double getOldCov(const std::string& libName,
+                 const gcov_coverage::CoverageReport& report) {
+  if (libName == "bitmap_cplusplus") {
+    return report.branchCov.percent;
+  }
+  if (libName == "hjson") {
+    return report.branchCov.percent - 1.5f;
+  }
+  throw std::logic_error{"Wrong library name."};
+}
+
+bool ourMethod(const std::string& name) {
+  static const std::vector<std::string> orderedMethods = {
+      "QLEG1",     "QLEG2",    "QLEG3",     "QLB1",
+      "QLB2",      "QLB3",     "QLEG1+DSL", "QLEG2+DSL",
+      "QLEG3+DSL", "QLB1+DSL", "QLB2+DSL",  "QLB3+DSL"};
+  return std::find(orderedMethods.cbegin(), orderedMethods.cend(), name) !=
+         orderedMethods.cend();
 }
 
 }  // namespace pipelines

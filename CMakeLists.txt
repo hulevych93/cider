@@ -60,6 +60,7 @@ add_subdirectory(monte-carlo-tree-search)
 add_subdirectory(dynamic-slicer)
 add_subdirectory(greedy-r)
 add_subdirectory(pipelines)
+add_subdirectory(math)
 
 add_subdirectory(tools/cider)
 

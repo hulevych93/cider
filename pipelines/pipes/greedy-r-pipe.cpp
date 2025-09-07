@@ -82,6 +82,9 @@ bool GreedyRStage::process(const std::string& metadata,
     result.newActions = deepCopy(output);
 
     pushResult(libName.c_str(), cmd, getConfigName(), result);
+    std::cout << "[" << idx << "," << _numberOfRuns
+              << "]: " << (double)elapsed_mcs / 1000 << " ms elapsed"
+              << std::endl;
   }
 
   return success;

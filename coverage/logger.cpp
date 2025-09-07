@@ -38,7 +38,7 @@ FileLogger::FileLogger(const std::string& logDir,
   _report.open(outPath, std::ios::out | std::ios::app);
 }
 
-void FileLogger::log(size_t index, const RootReport& coverage) const {
+void FileLogger::log(size_t index, const RootReport& coverage) {
   printTableEntry(_report, index, coverage.report);
 }
 

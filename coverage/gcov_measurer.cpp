@@ -14,6 +14,19 @@
 namespace cider {
 namespace gcov_coverage {
 
+namespace {
+template <typename Func>
+bool rerty(Func&& func) {
+  int count = 0;
+  auto success = false;
+  while (!success && count < 5) {
+    success = func();
+    count++;
+  }
+  return success;
+}
+}  // namespace
+
 CoverageMeasurment::CoverageMeasurment(const Cmd& cmd, const char* module)
     : _cmd(cmd), _module(module) {}
 
@@ -21,26 +34,28 @@ ReportOpt CoverageMeasurment::getReport(
     const std::vector<cider::recorder::Action>& actions) {
   const auto script = getScript(actions);
 
-  assert(cleanCoverage(_cmd.covDir));
+  rerty([&]() -> bool { return cleanCoverage(_cmd.covDir); });
 
   const auto result = scripting::runScript(
       _cmd.binPath, _cmd.workingDir, script, [](const char*, std::size_t) {});
 
   if (result) {
     std::string jsonReport;
-    assert(runCoverage(_cmd.baseDir, _cmd.objectDir,
-                       [&](const char* data, std::size_t size) {
-                         jsonReport += std::string{data, size};
-                       }));
+
+    rerty([&]() -> bool {
+      return runCoverage(_cmd.baseDir, _cmd.objectDir,
+                         [&](const char* data, std::size_t size) {
+                           jsonReport += std::string{data, size};
+                         });
+    });
 
     const auto rootReport = parseJsonCovReport(jsonReport, false);
-    assert(rootReport.has_value());
 
-    if (m_logger) {
+    if (rootReport.has_value() && m_logger) {
       m_logger->log(_index, rootReport.value());
     }
 
-    return rootReport.value();
+    return rootReport;
   }
 
   return std::nullopt;
@@ -65,7 +80,7 @@ void StepperCoverageMeasurment::measure(
     m_logger->log(0U, {});
   }
 
-  m_stepSize = 4;
+  m_stepSize = 20;
 
   for (; _index < actions.size();) {
     (*this)(actions);

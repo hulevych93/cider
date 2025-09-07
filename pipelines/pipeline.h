@@ -55,24 +55,9 @@ class Pipeline final {
   const Results& getResults() const { return _results; }
   Results& getMutableResults() { return _results; }
 
-  void pushResult(const std::string& name,
-                  const Result& result,
-                  bool success = true) {
+  void pushResult(const std::string& name, const Result& result, bool) {
     auto& results = _results[name];
     results.entries.emplace_back(std::move(result));
-    results.totalTimeElapsedMcs += result.timeElapsedMcs;
-
-    if (result.oldReport.branchCov.percent <=
-        result.newReport.branchCov.percent) {
-      results.coverageReachedCount++;
-    }
-
-    results.sessionsCount++;
-
-    if (!success) {
-      results.failedCount++;
-    }
-
     _resultsChanged = true;
   }
 

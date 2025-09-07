@@ -34,15 +34,16 @@ CfgCoverageOpt CoverageMeasurment::getReport(
                            });
   if (result) {
     std::string jsonStr = readCoverageFromStream(jsonReport);
-    assert(!jsonStr.empty());
+
     try {
       const auto rootReport = deserializeCovReport(jsonStr);
-      assert(rootReport.has_value());
-      if (rootReport->status) {
-        if (m_logger) {
-          m_logger->log(_index, rootReport.value());
+      if (rootReport.has_value()) {
+        if (rootReport->status) {
+          if (m_logger) {
+            m_logger->log(_index, rootReport.value());
+          }
+          return rootReport.value();
         }
-        return rootReport.value();
       }
     } catch (...) {
       std::cerr << "Failed to parse coverage JSON!\n";

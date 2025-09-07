@@ -1,0 +1,205 @@
+// Copyright (C) 2025 Hulevych Mykhailo
+// SPDX-License-Identifier: MIT
+
+#include "comp-efficiency-radarplot.h"
+
+#include <matplotlibcpp.h>
+
+#include <iomanip>
+#include <iostream>
+
+#include <math/stat-utils.h>
+
+#include "mathplot-log/utils.h"
+
+namespace plt = matplotlibcpp;
+
+namespace cider {
+namespace mathplot {
+
+std::vector<std::string> getMetrics() {
+#ifdef ENG_NAMES
+  return {"Compression, %", "Time Reduction, %", "Processing Time, %",
+          "Retention Rate, %"};
+#else
+  return {"Cтиснення ТС, %", "Зменшення часу\nвиконання ТС, %",
+          "Загальний\nчас обробки ТС, %", "Гілкове\nпокриття ТС, %"};
+#endif
+}
+
+bool serialize(const RadarData& obj, serialization::Serializer& serializer) {
+  serializer << obj.compressionCoefficients;
+  serializer << obj.timeReductions;
+  serializer << obj.processingTimes;
+  serializer << obj.branchCoverage;
+  return true;
+}
+
+bool deserialize(RadarData& obj,
+                 const serialization::Deserializer& deserializer) {
+  deserializer >> obj.compressionCoefficients;
+  deserializer >> obj.timeReductions;
+  deserializer >> obj.processingTimes;
+  deserializer >> obj.branchCoverage;
+  return true;
+}
+
+EfficiencyRadarPlot::EfficiencyRadarPlot(const std::string& logDir,
+                                         const std::string& logFileName)
+    : m_path(ensurePath(logDir, logFileName)) {}
+
+EfficiencyRadarPlot::~EfficiencyRadarPlot() {}
+
+void EfficiencyRadarPlot::logCompression(const std::string& method,
+                                         double coeff) {
+  _radarData[method].compressionCoefficients.push_back(coeff);
+}
+
+void EfficiencyRadarPlot::logTimeReduction(const std::string& method,
+                                           double reductionRate) {
+  _radarData[method].timeReductions.push_back(reductionRate);
+}
+
+void EfficiencyRadarPlot::logProcessingTime(const std::string& method,
+                                            double processingRate) {
+  _radarData[method].processingTimes.push_back(processingRate);
+}
+
+void EfficiencyRadarPlot::logCoverage(const std::string& method, double branchCoverage) {
+  _radarData[method].branchCoverage.push_back(branchCoverage);
+}
+
+void EfficiencyRadarPlot::serialize(const std::string& filePath) {
+  try {
+    serialization::Serializer serializer;
+    serializer << _radarData;
+    serializer << _order;
+    serializer.save(filePath);
+  } catch (...) {
+    std::cout << "Radar serialization failed: " << filePath << std::endl;
+  }
+}
+
+bool EfficiencyRadarPlot::load() {
+  try {
+    serialization::Deserializer deserializer(ensureExtension(m_path, ".bin"));
+    deserializer >> _radarData;
+    deserializer >> _order;
+  } catch (const std::exception& e) {
+    std::cout << "Radar load failed: " << e.what() << std::endl;
+    return false;
+  }
+  return true;
+}
+
+void EfficiencyRadarPlot::plot() {
+  plt::clf();
+
+  if (_order.empty() || _radarData.empty()) {
+    std::cout << "No data for radar plot\n";
+    return;
+  }
+
+  struct NormVals final {
+    double comp, timeRed, procTime, branchCov;
+  };
+  std::unordered_map<std::string, NormVals> avgVals;
+
+  for (const auto& method : _order) {
+    const auto it = _radarData.find(method);
+    if (it == _radarData.end())
+      continue;
+
+    const auto& d = it->second;
+
+    avgVals[method] = {math_stat::mean(d.compressionCoefficients),
+                       math_stat::mean(d.timeReductions),
+                       math_stat::mean(d.processingTimes), math_stat::mean(d.branchCoverage)};
+  }
+
+  double minComp = 1e9, maxComp = 0, minTR = 1e9, maxTR = 0, minProc = 1e18,
+         maxProc = 0, minBranchCov = 1e9, maxBranchCov = 0;
+
+  for (auto& kv : avgVals) {
+    minComp = 0; // std::min(minComp, kv.second.comp);
+    maxComp = std::max(maxComp, kv.second.comp);
+    minTR = 0; // std::min(minTR, kv.second.timeRed);
+    maxTR = std::max(maxTR, kv.second.timeRed);
+    minProc = 0; // std::min(minProc, kv.second.procTime);
+    maxProc = std::max(maxProc, kv.second.procTime);
+    minBranchCov = 0; // std::min(minRet, kv.second.retention);
+    maxBranchCov = std::max(maxBranchCov, kv.second.branchCov);
+  }
+
+  const auto& metrics = getMetrics();
+  size_t numVars = metrics.size();
+  std::vector<double> angles(numVars + 1);
+
+  for (size_t i = 0; i < numVars; i++) {
+    angles[i] = 2 * M_PI * i / numVars;
+  }
+  angles[numVars] = angles[0];
+
+  for (auto& method : _order) {
+    const auto it = avgVals.find(method);
+    if (it == avgVals.end())
+      continue;
+
+    const auto& v = it->second;
+    std::vector<double> values = {
+        v.comp,
+        v.timeRed,
+        math_stat::normalize(v.procTime, minProc, maxProc),
+        v.branchCov / 100};
+    values.push_back(values[0]);
+
+    std::vector<double> xs(values.size()), ys(values.size());
+    for (size_t i = 0; i < values.size(); i++) {
+      xs[i] = values[i] * cos(angles[i]);
+      ys[i] = values[i] * sin(angles[i]);
+    }
+
+    plt::plot(xs, ys, {{"linewidth", "0.2"}});
+    plt::fill(xs, ys, {{"label", method}}, 0.4);
+  }
+
+  plt::text(1.1, 0.0, metrics[0]);
+  plt::text(-0.4, 1.15, metrics[1]);
+  plt::text(-1.85, 0.0, metrics[2]);
+  plt::text(-0.2, -1.20, metrics[3]);
+
+  std::vector<double> levels = {0.0, 0.2, 0.4, 0.6, 0.8, 1.0};
+  for (double r : levels) {
+    std::vector<double> xs(numVars + 1), ys(numVars + 1);
+    for (size_t i = 0; i < numVars; i++) {
+      xs[i] = r * cos(angles[i]);
+      ys[i] = r * sin(angles[i]);
+    }
+    xs[numVars] = xs[0];
+    ys[numVars] = ys[0];
+
+    plt::plot(xs, ys,
+              {{"color", "gray"}, {"linestyle", "--"}, {"linewidth", "0.2"}});
+
+    std::ostringstream oss;
+    oss << std::setprecision(3) << (r * 100);
+
+    const auto cordX = -0.05;
+    const auto cordY = r + 0.01;
+    plt::text(cordX, cordY, oss.str(),
+              {{"ha", "left"}, {"va", "center"}, {"fontsize", "6"}});
+  }
+
+  disableFrame();
+
+  plt::legend();
+  plt::axis("equal");
+
+  plt::save(ensureExtension(m_path, ".png"), 1200);
+  plt::close();
+
+  serialize(ensureExtension(m_path, ".bin"));
+}
+
+}  // namespace mathplot
+}  // namespace cider
