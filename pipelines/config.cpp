@@ -101,6 +101,26 @@ auto getCackooSettings() {
   return settings;
 }
 
+auto getDSLSettings() {
+  dslicer::DSlicingSettings settings;
+  settings.configName = "DSL";
+  return settings;
+}
+
+auto getDSL_F_Settings() {
+  dslicer::FastDSlicingSettings settings;
+  settings.configName = "DSL-F";
+  settings.checkStep = 5;
+  return settings;
+}
+
+auto getDSL_FM_Settings() {
+  dslicer::FastMultiPassDSlicingSettings settings;
+  settings.configName = "DSL-FM";
+  settings.initialStepRatio = 0.2;
+  return settings;
+}
+
 auto getGreedySettings() {
   greedy_r::GreedyRSettings settings;
   settings.configName = "GR";
@@ -357,7 +377,8 @@ const pipelines::ReportConfiguration& getReportConfigMCTS() {
 }
 
 const pipelines::ReportConfiguration& getReportConfigQLEGvsQLB() {
-  static const std::vector<std::string> orderedMethods = {"QLB1"};
+  static const std::vector<std::string> orderedMethods = {
+      "QLEG1", "QLEG2", "QLEG3", "QLB1", "QLB2", "QLB3"};
   return orderedMethods;
 }
 
@@ -368,13 +389,14 @@ const pipelines::ReportConfiguration& getReportConfigGreedyR() {
 }
 
 const pipelines::ReportConfiguration& getReportConfigDSlicing() {
-  static const std::vector<std::string> orderedMethods = {"RAND", "DSL1"};
+  static const std::vector<std::string> orderedMethods = {"DSL", "DSL-F",
+                                                          "DSL-FM"};
   return orderedMethods;
 }
 
 const pipelines::ReportConfiguration& getReportConfigSelected() {
-  static const std::vector<std::string> orderedMethods = {
-      "DSL", "GR", "GRR2", "MCTS2", "QLB2+DSL"};
+  static const std::vector<std::string> orderedMethods = {"DSL", "GR", "GRR2",
+                                                          "MCTS2", "QLB2+DSL"};
   return orderedMethods;
 }
 
@@ -498,11 +520,25 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
           std::make_unique<GreedyRStage>(getGreedyR3Settings(), GreedyCount));
       break;
     case PipelineType::DSL:
-      pipeline.addStage(std::make_unique<DSlicerStage>());
+      pipeline.addStage(std::make_unique<DSlicerStage>(getDSLSettings()));
+      break;
+    case PipelineType::FastDSL:
+      pipeline.addStage(std::make_unique<DSlicerStage>(getDSL_F_Settings()));
+      break;
+    case PipelineType::FastDSLMultiPass:
+      pipeline.addStage(std::make_unique<DSlicerStage>(getDSL_FM_Settings()));
       break;
     case PipelineType::DSL_PostProcessing:
       pipeline.addStage(std::make_unique<DQLPostProcessSlicerStage>(
-          getReportConfig(cmd.group)));
+          getDSLSettings(), getReportConfig(cmd.group)));
+      break;
+    case PipelineType::DSL_F_PostProcessing:
+      pipeline.addStage(std::make_unique<DQLPostProcessSlicerStage>(
+          getDSL_F_Settings(), getReportConfig(cmd.group)));
+      break;
+    case PipelineType::DSL_FM_PostProcessing:
+      pipeline.addStage(std::make_unique<DQLPostProcessSlicerStage>(
+          getDSL_FM_Settings(), getReportConfig(cmd.group)));
       break;
     case PipelineType::QLearningAgentLearning:
       if (!agent_model::qlearning::QLearningAgent::get().isLoaded()) {

@@ -30,6 +30,9 @@ struct CoverageMeasurment final {
 
   CfgCoverageOpt getReport(const std::vector<cider::recorder::Action>& actions);
 
+  CoveragePerAction getFineReport(
+      const std::vector<cider::recorder::Action>& actions);
+
   double operator()(const std::vector<cider::recorder::Action>& actions) {
     const auto rootReport = getReport(actions);
     if (rootReport.has_value()) {
@@ -52,8 +55,25 @@ struct CoverageMeasurment final {
     };
   }
 
-  std::string getScript(
-      const std::vector<cider::recorder::Action>& actions) const;
+  auto getFastObjValueFunc() {
+    return [this](const std::vector<cider::recorder::Action>& actions)
+               -> FineObjectiveValue {
+      const auto rootReport = getFineReport(actions);
+
+      FineObjectiveValue value;
+      if (!rootReport.empty()) {
+        value.coverage = rootReport.back().getPercentage();
+        value.fineCoveredTracks.reserve(rootReport.size());
+        for (const auto& entry : rootReport) {
+          value.fineCoveredTracks.emplace_back(entry.coveredTracks);
+        }
+      }
+      return value;
+    };
+  }
+
+  std::string getScript(const std::vector<cider::recorder::Action>& actions,
+                        bool enableMarks = false) const;
 
  private:
   const Cmd& _cmd;

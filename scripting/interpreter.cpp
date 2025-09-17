@@ -39,5 +39,44 @@ bool executeScript(lua_State* L, const char* script) {
   return ok;
 }
 
+int LuaActionHook::cider_mark(lua_State* L) {
+  int idx = luaL_checkinteger(L, 1);
+  LuaActionHook& self = instance();
+  if (self.functor_) {
+    self.functor_(L, idx);
+  }
+  return 0;
+}
+
+int LuaActionHook::l_cider_mark_init(lua_State* L) {
+  int total = luaL_checkinteger(L, 1);
+  LuaActionHook& self = instance();
+  if (self.initFunc_) {
+    self.initFunc_(total);
+  }
+  return 0;
+}
+
+void LuaActionHook::setHook(lua_State* L, HookInitFn initFn, HookFn fn) {
+  functor_ = std::move(fn);
+  initFunc_ = std::move(initFn);
+
+  lua_pushcfunction(L, l_cider_mark_init);
+  lua_setglobal(L, "cider_mark_init");
+
+  lua_pushcfunction(L, cider_mark);
+  lua_setglobal(L, "cider_mark");
+}
+
+void LuaActionHook::clear(lua_State* L) {
+  lua_pushnil(L);
+  lua_setglobal(L, "cider_mark");
+  functor_ = nullptr;
+
+  lua_pushnil(L);
+  lua_setglobal(L, "cider_mark_init");
+  initFunc_ = nullptr;
+}
+
 }  // namespace scripting
 }  // namespace cider

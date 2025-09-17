@@ -15,10 +15,9 @@ namespace dslicer {
 
 using TestCase = std::vector<recorder::Action>;
 
-TestCase run_d_slicing(const ObjectiveFunction& objFunc,
+TestCase run_d_slicing(const DSlicingSettings& settings,
                        const std::vector<recorder::Action>& actionSpace) {
-  auto targetCovered = objFunc(actionSpace).coverage;
-  targetCovered -= 1.5f;
+  auto targetCovered = settings.objFunc(actionSpace).coverage;
 
   std::vector<recorder::Action> sliced = deepCopy(actionSpace);
 
@@ -29,7 +28,7 @@ TestCase run_d_slicing(const ObjectiveFunction& objFunc,
     std::vector<recorder::Action> trial = sliced;
     trial.erase(trial.begin() + i);
 
-    auto cov = objFunc(trial).coverage;
+    auto cov = settings.objFunc(trial).coverage;
 
     if (cov >= targetCovered) {
       std::cout << "  [Slice] Removing action #" << i << " → OK\n"
@@ -40,8 +39,8 @@ TestCase run_d_slicing(const ObjectiveFunction& objFunc,
     }
   }
 
-  const auto targetCoveredRecheck = objFunc(actionSpace).coverage;
-  auto finalCov = objFunc(sliced).coverage;
+  const auto targetCoveredRecheck = settings.objFunc(actionSpace).coverage;
+  auto finalCov = settings.objFunc(sliced).coverage;
   if (finalCov < targetCoveredRecheck) {
     std::cout << "[Slice] Recheck FAILED: final=" << finalCov
               << " < target=" << targetCoveredRecheck
@@ -52,49 +51,236 @@ TestCase run_d_slicing(const ObjectiveFunction& objFunc,
   return sliced;
 }
 
-TestCase run_delta_d_slicing(const ObjectiveFunction& objFunc,
-                             const std::vector<recorder::Action>& actionSpace) {
-  const auto target = objFunc(actionSpace).coverage;
+std::vector<recorder::Action> run_d_slicing_fast_checked(
+    const FastDSlicingSettings& settings,
+    const std::vector<recorder::Action>& actionSpace,
+    double baseline) {
+  auto currentSpace = deepCopy(actionSpace);
 
-  TestCase current = deepCopy(actionSpace);
-  size_t n = 2;
+  if (baseline <= std::numeric_limits<double>::epsilon()) {
+    auto baseCov = settings.objFunc(currentSpace);
+    baseline = baseCov.coverage;
+  }
 
-  std::cout << "[ddmin] Start: length=" << current.size()
-            << ", coverage=" << target << "\n";
+  std::vector<recorder::Action> steps;
+  steps.reserve(currentSpace.size());
+  for (size_t i = 0; i < currentSpace.size(); ++i) {
+    steps.push_back({currentSpace[i]});
+  }
 
-  while (current.size() >= 2) {
-    size_t chunkSize = (current.size() + n - 1) / n;  // ceil
-    bool reduced = false;
+  std::cout << "[Slice-Fast] Original length=" << steps.size()
+            << " baseline=" << baseline << "\n";
 
-    for (size_t i = 0; i < current.size(); i += chunkSize) {
-      TestCase trial = current;
-      trial.erase(trial.begin() + i,
-                  trial.begin() + std::min(current.size(), i + chunkSize));
+  size_t removedCount = 0;
+  std::vector<recorder::Action> lastRemoved;
 
-      auto cov = objFunc(trial).coverage;
+  for (size_t i = 0; i < steps.size();) {
+    lastRemoved.push_back(steps[i]);
+    steps.erase(steps.begin() + i);
+    ++removedCount;
 
-      std::cout << "  [ddmin] Try removing block [" << i << ":"
-                << std::min(current.size(), i + chunkSize)
-                << "), trial len=" << trial.size() << ", coverage=" << cov
+    if (removedCount % settings.checkStep == 0) {
+
+      auto newCov = settings.objFunc(steps);
+      std::cout << "  [Check@" << removedCount
+                << "] coverage=" << newCov.coverage << " baseline=" << baseline
                 << "\n";
 
-      if (cov >= target) {
-        std::cout << "  [ddmin] Removing block accepted\n";
-        current = std::move(trial);
-        n = std::max((size_t)2, n - 1);  // зменшуємо гранулярність
-        reduced = true;
-        break;
-      }
-    }
+      if (newCov.coverage + 1e-9 < baseline) {
+        std::cout << "[WARN] Drop detected → rollback last "
+                  << lastRemoved.size() << " removals\n";
 
-    if (!reduced) {
-      if (n >= current.size())
-        break;
-      n = std::min(current.size(), n * 2);  // збільшуємо гранулярність
+        for (auto& s : lastRemoved) {
+          steps.insert(steps.begin() + i, s);
+          ++i;
+        }
+      }
+
+      lastRemoved.clear();
     }
   }
 
-  std::cout << "[ddmin] Finished: length=" << current.size() << "\n";
+  // результат
+  std::vector<recorder::Action> result;
+  result.reserve(steps.size());
+  for (auto& s : steps)
+    result.push_back(s);
+
+  auto finalCov = settings.objFunc(result);
+  std::cout << "[Slice-Fast] Final length=" << result.size()
+            << " coverage=" << finalCov.coverage << " baseline=" << baseline
+            << "\n";
+
+  return result;
+}
+
+std::vector<recorder::Action> run_d_slicing_fast_checked_tracks(
+    const FastDSlicingSettings& settings,
+    const std::vector<recorder::Action>& actionSpace,
+    double baseline) {
+  auto currentSpace = deepCopy(actionSpace);
+
+  if (baseline <= std::numeric_limits<double>::epsilon()) {
+    auto baseCov = settings.objFunc(currentSpace);
+    baseline = baseCov.coverage;
+  }
+
+  FineObjectiveValue fineRes = settings.fineObjFunc(currentSpace);
+  if (fineRes.fineCoveredTracks.empty())
+    return currentSpace;
+
+  size_t trackCount = 0;
+  for (auto& cov : fineRes.fineCoveredTracks) {
+    if (!cov.empty()) {
+      trackCount = cov.size();
+      break;
+    }
+  }
+  if (trackCount == 0) {
+    std::cout << "[Slice-Fast] No coverage tracks found\n";
+    return currentSpace;
+  }
+
+  struct Step final {
+    recorder::Action action;
+    std::vector<std::uint8_t> coverage;
+  };
+
+  std::vector<Step> steps;
+  steps.reserve(currentSpace.size());
+  for (size_t i = 0; i < currentSpace.size(); ++i) {
+    std::vector<std::uint8_t> cov;
+    if (fineRes.fineCoveredTracks[i].empty()) {
+      cov.assign(trackCount, 0);
+    } else {
+      cov = fineRes.fineCoveredTracks[i];
+    }
+    steps.push_back({currentSpace[i], std::move(cov)});
+  }
+
+  std::cout << "[Slice-Fast] Original length=" << steps.size()
+            << " tracks=" << trackCount << " baseline=" << baseline << "\n";
+
+  std::vector<int> freq(trackCount, 0);
+  for (auto& s : steps)
+    for (size_t j = 0; j < trackCount; ++j)
+      if (s.coverage[j])
+        ++freq[j];
+
+  size_t removedCount = 0;
+  std::vector<Step> lastRemoved;
+
+  for (size_t i = 0; i < steps.size();) {
+    const auto& cov = steps[i].coverage;
+    bool removable = true;
+    int uniq = 0, dup = 0;
+
+    for (size_t j = 0; j < trackCount; ++j) {
+      if (!cov[j])
+        continue;
+      if (freq[j] == 1) {
+        removable = false;
+        ++uniq;
+      } else {
+        ++dup;
+      }
+    }
+
+    if (removable) {
+      for (size_t j = 0; j < trackCount; ++j)
+        if (cov[j])
+          --freq[j];
+
+      std::cout << "  [Slice-Fast] Removing step " << i << " (uniq=" << uniq
+                << ", dup=" << dup << ")\n";
+
+      lastRemoved.push_back(steps[i]);
+      steps.erase(steps.begin() + i);
+      ++removedCount;
+
+      if (removedCount % settings.checkStep == 0) {
+        auto scenario = [&]() {
+          std::vector<recorder::Action> out;
+          for (auto& s : steps)
+            out.push_back(s.action);
+          return out;
+        }();
+        auto newCov = settings.objFunc(scenario);
+        std::cout << "  [Check@" << removedCount
+                  << "] coverage=" << newCov.coverage
+                  << " baseline=" << baseline << "\n";
+        if (newCov.coverage + 1e-9 < baseline) {
+          std::cout << "[WARN] Drop detected → rollback last "
+                    << lastRemoved.size() << " removals\n";
+
+          for (auto& s : lastRemoved) {
+            steps.insert(steps.begin() + i, s);
+            for (size_t j = 0; j < trackCount; ++j)
+              if (s.coverage[j])
+                ++freq[j];
+            ++i;
+          }
+          lastRemoved.clear();
+
+          continue;
+        } else {
+          lastRemoved.clear();
+        }
+      }
+    } else {
+      std::cout << "  [Slice-Fast] Keeping  step " << i << " (uniq=" << uniq
+                << ", dup=" << dup << ")\n";
+      ++i;
+    }
+  }
+
+  // результат
+  std::vector<recorder::Action> result;
+  result.reserve(steps.size());
+  for (auto& s : steps)
+    result.push_back(s.action);
+
+  auto finalCov = settings.objFunc(result);
+  std::cout << "[Slice-Fast] Final length=" << result.size()
+            << " coverage=" << finalCov.coverage << " baseline=" << baseline
+            << "\n";
+
+  return result;
+}
+
+std::vector<recorder::Action> run_d_slicing_fast_multipass(
+    const FastMultiPassDSlicingSettings& settings,
+    const std::vector<recorder::Action>& actionSpace) {
+  std::vector<recorder::Action> current = deepCopy(actionSpace);
+
+  auto initialStepRatio = settings.initialStepRatio;
+  size_t n = current.size();
+
+  while (true) {
+    n = current.size();
+    if (n <= 3)
+      break;
+
+    size_t step = static_cast<size_t>(n * initialStepRatio);
+    if (step < 1)
+      step = 1;
+
+    std::cout << "[Slice-Fast-Percent] length=" << n << " step=" << step << " ("
+              << initialStepRatio * 100 << "%)\n";
+
+    FastDSlicingSettings fastSettings;
+    fastSettings.objFunc = settings.objFunc;
+    fastSettings.fineObjFunc = settings.fineObjFunc;
+    fastSettings.checkStep = step;
+
+    current = run_d_slicing_fast_checked(fastSettings, current, settings.baseline);
+    current = deepCopy(current);
+
+    if (step == 1)
+      break;
+    initialStepRatio /= 2.0;
+  }
+
   return current;
 }
 

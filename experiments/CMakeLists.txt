@@ -103,8 +103,14 @@ add_target_def(GRR2 41 GROUP ${GROUP_GREEDY_R})
 add_target_def(GRR3 42 GROUP ${GROUP_GREEDY_R})
 
 # === DSL ===
+add_target_def(DSL_FM 43 GROUP ${GROUP_DSL})
+add_target_def(DSL_F 44 GROUP ${GROUP_DSL})
 add_target_def(DSL 45 GROUP ${GROUP_DSL})
+
+
 add_target_def(DSL_POST 46 GROUP ${GROUP_QLEG_VS_QLB})
+add_target_def(DSL_F_POST 47 GROUP ${GROUP_QLEG_VS_QLB})
+add_target_def(DSL_FM_POST 48 GROUP ${GROUP_QLEG_VS_QLB})
 
 # === QL / SARSA ===
 add_target_def(QL 50)

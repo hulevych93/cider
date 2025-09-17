@@ -46,7 +46,7 @@ bool Pipe::pushResult(const std::string& libName,
     success++;
   }
 
-  printResult(result);
+  printResult(methodName, libName, result);
   _owner->pushResult(methodName, std::move(result), success == 2U);
   return true;
 }

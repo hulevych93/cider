@@ -34,6 +34,8 @@ struct Coverage final : serialization::SerializableTag {
   Coverage& alignTo(const Coverage& startingPoint);
 };
 
+using CoveragePerAction = std::vector<Coverage>;
+
 bool serialize(const Coverage& obj, serialization::Serializer& serializer);
 
 bool deserialize(Coverage& obj,
@@ -43,13 +45,19 @@ void dumpCoverageToCout(bool status,
                         const Coverage& startPoint,
                         const std::chrono::steady_clock::time_point& startTime);
 
+void dumpCoverageToCout(const CoveragePerAction& coverage);
+
 Coverage getCoverage();
 
 std::string readCoverageFromStream(const std::string& input);
 
 std::optional<Coverage> deserializeCovReport(const std::string& buffer);
 
+CoveragePerAction deserializeCovPerActReport(const std::string& buffer);
+
 std::string serializeCovReport(const Coverage& report);
+
+std::string serializeCovReport(const CoveragePerAction& report);
 
 void printTableEntry(std::ostream& ss,
                      const size_t index,

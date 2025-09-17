@@ -20,12 +20,19 @@ namespace {
 
 class CodeSinkImpl : public CodeSink {
  public:
-  CodeSinkImpl(const SessionSettings& settings) : _settings(settings) {}
+  CodeSinkImpl(int& actionNumber, const SessionSettings& settings)
+      : _actionNumber(actionNumber), _settings(settings) {
+    if (_settings.enableMarks) {
+      _sink +=
+          "cider_mark_init(" + std::to_string(_settings.numActions) + ")\n";
+    }
+  }
 
   std::string getScript() {
     _locals.clear();
     _localCounter = 0u;
     _lineCounter = 0u;
+
     return std::move(_sink);
   }
 
@@ -60,6 +67,10 @@ class CodeSinkImpl : public CodeSink {
     }
 
     format(codeTemplate, fmt_args);
+
+    if (_settings.enableMarks) {
+      _sink += "cider_mark(" + std::to_string(_actionNumber) + ")\n";
+    }
   }
 
   std::string searchForLocalVar(const void* object) const override {
@@ -81,6 +92,10 @@ class CodeSinkImpl : public CodeSink {
       }
 
       _locals.erase(localIt);
+
+      if (_settings.enableMarks) {
+        _sink += "cider_mark(" + std::to_string(_actionNumber) + ")\n";
+      }
     }
   }
 
@@ -147,6 +162,7 @@ class CodeSinkImpl : public CodeSink {
   size_t _localCounter = 0u;
   size_t _lineCounter = 0u;
   SessionSettings _settings;
+  int& _actionNumber;
 };
 
 std::string nullParamProcessor(const std::string&, const Param&, CodeSink&) {
@@ -208,7 +224,7 @@ ScriptGenerator::ScriptGenerator(std::string moduleName,
     : _module(std::move(moduleName)),
       _langContext(fixLanguageContext(context)),
       _settings(settings),
-      _sink(std::make_unique<CodeSinkImpl>(settings)) {}
+      _sink(std::make_unique<CodeSinkImpl>(_actionNumber, settings)) {}
 
 ScriptGenerator::~ScriptGenerator() = default;
 
@@ -223,6 +239,8 @@ void ScriptGenerator::operator()(const Function& context) {
 
   const auto args = produceArgs(context.params);
   _sink->processFunctionCall(nullptr, result.name, args, codeTemplate);
+
+  ++_actionNumber;
 }
 
 void ScriptGenerator::operator()(const ClassMethod& context) {
@@ -237,6 +255,8 @@ void ScriptGenerator::operator()(const ClassMethod& context) {
   const auto args = produceArgs(context.method.params);
   _sink->processFunctionCall(context.objectAddress, result.name, args,
                              codeTemplate);
+
+  ++_actionNumber;
 }
 
 void ScriptGenerator::operator()(const ClassBinaryOp& context) {
@@ -245,6 +265,8 @@ void ScriptGenerator::operator()(const ClassBinaryOp& context) {
   const auto args = produceArgs({context.param});
   _sink->processFunctionCall(context.objectAddress, std::string{}, args,
                              codeTemplate);
+
+  ++_actionNumber;
 }
 
 void ScriptGenerator::operator()(const ClassUnaryOp& context) {
@@ -255,10 +277,14 @@ void ScriptGenerator::operator()(const ClassUnaryOp& context) {
 
   _sink->processFunctionCall(context.objectAddress, result.name, {},
                              codeTemplate);
+
+  ++_actionNumber;
 }
 
 void ScriptGenerator::operator()(const ClassDestructor& context) {
   _sink->unregisterLocalVar(context.objectAddress);
+
+  ++_actionNumber;
 }
 
 std::vector<std::string> ScriptGenerator::produceArgs(
@@ -286,14 +312,20 @@ void ScriptGenerator::discard() {
   static_cast<CodeSinkImpl&>(*_sink).getScript();
 }
 
-ScriptGenerator makeLuaGenerator(const std::string& moduleName) {
+ScriptGenerator makeLuaGenerator(const std::string& moduleName,
+                                 bool enableMarks,
+                                 int actionsNumber) {
   LanguageContext context;
   context.funcProducer = lua::produceFunctionCall;
   context.paramProducer = lua::produceParamCode;
   context.binaryOpProducer = lua::produceBinaryOpCall;
   context.functionNameMutator = lua::mutateFunctionName;
   context.unaryOpProducer = lua::produceUnaryOpCall;
-  return ScriptGenerator{moduleName, context};
+
+  SessionSettings settings;
+  settings.enableMarks = enableMarks;
+  settings.numActions = actionsNumber;
+  return ScriptGenerator{moduleName, context, settings};
 }
 
 std::string generateScript(ScriptGenerator& generator,

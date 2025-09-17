@@ -39,24 +39,24 @@ ReportOpt CoverageMeasurment::getReport(
   const auto result = scripting::runScript(
       _cmd.binPath, _cmd.workingDir, script, [](const char*, std::size_t) {});
 
-  if (result) {
-    std::string jsonReport;
+  // if (result) {
+  std::string jsonReport;
 
-    rerty([&]() -> bool {
-      return runCoverage(_cmd.baseDir, _cmd.objectDir,
-                         [&](const char* data, std::size_t size) {
-                           jsonReport += std::string{data, size};
-                         });
-    });
+  rerty([&]() -> bool {
+    return runCoverage(_cmd.baseDir, _cmd.objectDir,
+                       [&](const char* data, std::size_t size) {
+                         jsonReport += std::string{data, size};
+                       });
+  });
 
-    const auto rootReport = parseJsonCovReport(jsonReport, false);
+  const auto rootReport = parseJsonCovReport(jsonReport, false);
 
-    if (rootReport.has_value() && m_logger) {
-      m_logger->log(_index, rootReport.value());
-    }
-
-    return rootReport;
+  if (rootReport.has_value() && m_logger) {
+    m_logger->log(_index, rootReport.value());
   }
+
+  return rootReport;
+  // }
 
   return std::nullopt;
 }

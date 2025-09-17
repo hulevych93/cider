@@ -29,8 +29,13 @@ enum class PipelineType {
   GreedyR2 = 41,
   GreedyR3 = 42,
 
+  FastDSLMultiPass = 43,
+  FastDSL = 44,
   DSL = 45,
+
   DSL_PostProcessing = 46,
+  DSL_F_PostProcessing = 47,
+  DSL_FM_PostProcessing = 48,
 
   QLearningAgentLearning = 50,
   SarsaAgentLearning = 51,
@@ -90,6 +95,11 @@ enum class MethodsGroup {
 struct ObjectiveValue final {
   double coverage = 0.0;
   std::vector<std::uint8_t> coveredTracks;
+};
+
+struct FineObjectiveValue final {
+  double coverage = 0.0;
+  std::vector<std::vector<std::uint8_t>> fineCoveredTracks;
 };
 
 struct Cmd final {

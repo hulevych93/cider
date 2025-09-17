@@ -96,6 +96,10 @@ void plotMannWhitney(const std::string& path,
   const size_t numGroups = plotDatas.size();
   size_t m = (numGroups * (numGroups - 1)) / 2;
 
+  if(numGroups <= 3) {
+      return;
+  }
+
   // === GLOBAL KW ===
   double p_kw = 1.0;
   try {
@@ -140,7 +144,7 @@ void plotMannWhitney(const std::string& path,
   std::cout << "[INFO] Mann–Whitney table written to " << path << std::endl;
 
   // --- Draw only comparisons vs first group (e.g. DSL) ---
-  auto justLogOut = numGroups > 4;
+  auto justLogOut = numGroups >= 4;
   if (!justLogOut) {
     int pairIdx = 0;
     for (auto& pr : pairs) {
@@ -149,7 +153,7 @@ void plotMannWhitney(const std::string& path,
 
       double x1 = pr.i + 1;
       double x2 = pr.j + 1;
-      double y = maxTop + 20.0 + pairIdx * 5.0;
+      double y = maxTop + pairIdx * 5.0;
 
       std::ostringstream label;
       label << "p=" << std::fixed << std::setprecision(4) << pr.p_adj << " "
@@ -245,7 +249,7 @@ double plotBoxStats(const std::string& path,
   auto justLogOut = plotDatas.size() > 4;
 
   int idx = 1;
-  const double offsetBase = 0.3;
+  const double offsetBase = 0.23;
   double maxTop = 0;
 
   std::ofstream csv;
@@ -271,11 +275,11 @@ double plotBoxStats(const std::string& path,
       oss << text << " = " << std::fixed << std::setprecision(2) << value;
       plt::text(
           x, y, oss.str(),
-          {{"fontname", "Helvetica"}, {"fontsize", "5"}, {"color", "black"}});
+          {{"fontname", "Helvetica"}, {"fontsize", "7"}, {"color", "black"}});
     };
 
     double y = stats.q1;
-    double deltaY = 1.5;  // Vertical spacing
+    double deltaY = 0.25;  // Vertical spacing
 
     if (!justLogOut) {
       add_label(idx + offsetBase, y, stats.q1, "Q1");
@@ -312,7 +316,7 @@ double plotBoxStats(const std::string& path,
 
 std::array<double, 2> getYAxisLims(const std::string& libName) {
   if (libName == "bitmap_cplusplus") {
-    return {20.0, 40.0};
+    return {26.0, 32.0};
   }
   if (libName == "hjson") {
     return {34.0, 38.0};
@@ -330,6 +334,7 @@ CoverageBoxPlot::CoverageBoxPlot(const std::string& libName,
 
 CoverageBoxPlot::~CoverageBoxPlot() {
   plt::save(ensureExtension(m_path, ".eps"), 1200);
+  serialize(ensureExtension(m_path, ".bin"));
   plt::close();
 }
 
@@ -435,7 +440,7 @@ void CoverageBoxPlot::plot() {
     plt::boxplot(std::vector<std::vector<double>>{iter->second}, {iter->first},
                  {(double)i}, true,
                  {{"patch_artist", "True"},
-                  {"widths", "0.8"},
+                  {"widths", "0.4"},
                   {"boxprops.facecolor", getColorByLabel(iter->first)},
                   {"boxprops.linewidth", "1.0"},
                   {"boxprops.edgecolor", "black"},
@@ -462,9 +467,11 @@ void CoverageBoxPlot::plot() {
   const auto& axisLims = getYAxisLims(_libName);
   plt::ylim(axisLims[0], axisLims[1]);
 
-  plt::tight_layout();
+  if(_boxData.size() > 4) {
+     makeLegentByGroups(getColorGroups(), {0.82, 0.43});
 
-  makeLegentByGroups(getColorGroups(), {0.82, 0.43});
+     plt::tight_layout();
+  }
 
   plt::grid(true);
 

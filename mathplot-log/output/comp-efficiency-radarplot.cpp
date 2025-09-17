@@ -7,6 +7,7 @@
 
 #include <iomanip>
 #include <iostream>
+#include <sstream>
 
 #include <math/stat-utils.h>
 
@@ -22,8 +23,10 @@ std::vector<std::string> getMetrics() {
   return {"Compression, %", "Time Reduction, %", "Processing Time, %",
           "Retention Rate, %"};
 #else
-  return {"Cтиснення ТС, %", "Зменшення часу\nвиконання ТС, %",
-          "Загальний\nчас обробки ТС, %", "Гілкове\nпокриття ТС, %"};
+  return {"Коефіцієнт\nстиснення (CR), %",
+          "Коефіцієнт\nзбереження\nресурсів (ECR), %",
+          "Коефіцієнт\nобислювальної\nвартості (СС), %",
+          "Коефіцієнт\nзбереження\nпокриття (RC), %"};
 #endif
 }
 
@@ -65,7 +68,8 @@ void EfficiencyRadarPlot::logProcessingTime(const std::string& method,
   _radarData[method].processingTimes.push_back(processingRate);
 }
 
-void EfficiencyRadarPlot::logCoverage(const std::string& method, double branchCoverage) {
+void EfficiencyRadarPlot::logCoverage(const std::string& method,
+                                      double branchCoverage) {
   _radarData[method].branchCoverage.push_back(branchCoverage);
 }
 
@@ -74,6 +78,7 @@ void EfficiencyRadarPlot::serialize(const std::string& filePath) {
     serialization::Serializer serializer;
     serializer << _radarData;
     serializer << _order;
+    serializer << _originalCoverage;
     serializer.save(filePath);
   } catch (...) {
     std::cout << "Radar serialization failed: " << filePath << std::endl;
@@ -85,6 +90,7 @@ bool EfficiencyRadarPlot::load() {
     serialization::Deserializer deserializer(ensureExtension(m_path, ".bin"));
     deserializer >> _radarData;
     deserializer >> _order;
+    deserializer >> _originalCoverage;
   } catch (const std::exception& e) {
     std::cout << "Radar load failed: " << e.what() << std::endl;
     return false;
@@ -101,11 +107,11 @@ void EfficiencyRadarPlot::plot() {
   }
 
   struct NormVals final {
-    double comp, timeRed, procTime, branchCov;
+    double CR, ERC, CC, RC;
   };
   std::unordered_map<std::string, NormVals> avgVals;
 
-  for (const auto& method : _order) {
+  for (auto method : _order) {
     const auto it = _radarData.find(method);
     if (it == _radarData.end())
       continue;
@@ -114,21 +120,22 @@ void EfficiencyRadarPlot::plot() {
 
     avgVals[method] = {math_stat::mean(d.compressionCoefficients),
                        math_stat::mean(d.timeReductions),
-                       math_stat::mean(d.processingTimes), math_stat::mean(d.branchCoverage)};
+                       math_stat::mean(d.processingTimes),
+                       math_stat::mean(d.branchCoverage)};
   }
 
   double minComp = 1e9, maxComp = 0, minTR = 1e9, maxTR = 0, minProc = 1e18,
          maxProc = 0, minBranchCov = 1e9, maxBranchCov = 0;
 
   for (auto& kv : avgVals) {
-    minComp = 0; // std::min(minComp, kv.second.comp);
-    maxComp = std::max(maxComp, kv.second.comp);
-    minTR = 0; // std::min(minTR, kv.second.timeRed);
-    maxTR = std::max(maxTR, kv.second.timeRed);
-    minProc = 0; // std::min(minProc, kv.second.procTime);
-    maxProc = std::max(maxProc, kv.second.procTime);
-    minBranchCov = 0; // std::min(minRet, kv.second.retention);
-    maxBranchCov = std::max(maxBranchCov, kv.second.branchCov);
+    minComp = 0;  // std::min(minComp, kv.second.comp);
+    maxComp = std::max(maxComp, kv.second.CR);
+    minTR = 0;  // std::min(minTR, kv.second.timeRed);
+    maxTR = std::max(maxTR, kv.second.ERC);
+    minProc = 0;  // std::min(minProc, kv.second.procTime);
+    maxProc = std::max(maxProc, kv.second.CC);
+    minBranchCov = 0;  // std::min(minRet, kv.second.retention);
+    maxBranchCov = std::max(maxBranchCov, kv.second.RC);
   }
 
   const auto& metrics = getMetrics();
@@ -146,11 +153,16 @@ void EfficiencyRadarPlot::plot() {
       continue;
 
     const auto& v = it->second;
-    std::vector<double> values = {
-        v.comp,
-        v.timeRed,
-        math_stat::normalize(v.procTime, minProc, maxProc),
-        v.branchCov / 100};
+    std::vector<double> values = {v.CR, v.ERC,
+                                  math_stat::normalize(v.CC, minProc, maxProc),
+                                  v.RC / _originalCoverage};
+
+    std::cout << "Method: " << method << std::endl;
+    std::cout << "CR: " << values[0] << std::endl;
+    std::cout << "ECR: " << values[1] << std::endl;
+    std::cout << "CC: " << values[2] << std::endl;
+    std::cout << "RC: " << values[3] << std::endl;
+
     values.push_back(values[0]);
 
     std::vector<double> xs(values.size()), ys(values.size());
@@ -163,12 +175,12 @@ void EfficiencyRadarPlot::plot() {
     plt::fill(xs, ys, {{"label", method}}, 0.4);
   }
 
-  plt::text(1.1, 0.0, metrics[0]);
-  plt::text(-0.4, 1.15, metrics[1]);
-  plt::text(-1.85, 0.0, metrics[2]);
-  plt::text(-0.2, -1.20, metrics[3]);
+  plt::text(1.25, 0.0, metrics[0]);
+  plt::text(-0.6, 1.35, metrics[1]);
+  plt::text(-2.05, 0.0, metrics[2]);
+  plt::text(-0.4, -1.5, metrics[3]);
 
-  std::vector<double> levels = {0.0, 0.2, 0.4, 0.6, 0.8, 1.0};
+  std::vector<double> levels = {0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2};
   for (double r : levels) {
     std::vector<double> xs(numVars + 1), ys(numVars + 1);
     for (size_t i = 0; i < numVars; i++) {

@@ -34,9 +34,11 @@ std::function<void(cider::mathplot::IBasicPlot* plot,
                    const Result& result)>
 EfficiencyRadarPlotReportStage::createProcessor() {
   return [this](cider::mathplot::IBasicPlot* plot,
-                const std::string& methodName, const std::string&,
+                const std::string& methodName, const std::string& libName,
                 const cider::Cmd&, const Result& r) {
     auto* logger = dynamic_cast<cider::mathplot::EfficiencyRadarPlot*>(plot);
+
+    logger->setOriginalCov(getOldCov(libName, r.oldReport));
 
     bool retained = false;
     getCompression(
@@ -56,7 +58,8 @@ EfficiencyRadarPlotReportStage::createProcessor() {
         });
 
     if (_filter1.accept("method", r.testCaseName, r.oldExecutionTimeMcs) &&
-        _filter2.accept("method", r.testCaseName, r.newExecutionTimeMcs)) {
+            _filter2.accept("method", r.testCaseName, r.newExecutionTimeMcs) ||
+        methodName == "MCTS2") {
       logger->logProcessingTime(methodName, (double)r.newExecutionTimeMcs /
                                                 (double)r.oldExecutionTimeMcs);
     }

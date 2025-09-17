@@ -53,9 +53,39 @@ CfgCoverageOpt CoverageMeasurment::getReport(
   return std::nullopt;
 }
 
+CoveragePerAction CoverageMeasurment::getFineReport(
+    const std::vector<cider::recorder::Action>& actions) {
+  const auto script = getScript(actions, true);
+  if (script.empty()) {
+    return {};
+  }
+
+  const auto binaryPath = std::string{_cmd.binPath} + "_fine";
+
+  std::string jsonReport;
+  const auto result =
+      scripting::runScript(binaryPath, _cmd.workingDir, script,
+                           [&](const char* data, std::size_t size) {
+                             jsonReport += std::string{data, size};
+                           });
+  // if (result) {
+  std::string jsonStr = readCoverageFromStream(jsonReport);
+
+  try {
+    return deserializeCovPerActReport(jsonStr);
+  } catch (...) {
+    std::cerr << "Failed to parse coverage JSON!\n";
+  }
+  // }
+
+  return {};
+}
+
 std::string CoverageMeasurment::getScript(
-    const std::vector<cider::recorder::Action>& actions) const {
-  auto generator = cider::recorder::makeLuaGenerator(_module);
+    const std::vector<cider::recorder::Action>& actions,
+    bool enableMarks) const {
+  auto generator =
+      cider::recorder::makeLuaGenerator(_module, enableMarks, actions.size());
   ++_index;
   return cider::recorder::generateScript(generator, actions, 999999U);
 }

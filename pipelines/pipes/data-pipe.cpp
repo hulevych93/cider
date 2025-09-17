@@ -56,9 +56,10 @@ bool ShowResultsStage::process(const std::string&,
 
     std::cout << "=== METHOD: " << method << " ===" << std::endl;
 
-    const auto handleResults = [&](int*, const std::string&, const std::string&,
+    const auto handleResults = [&](int*, const std::string& methodName,
+                                   const std::string& libName,
                                    const cider::Cmd&, const Result& result) {
-      printResult(result);
+      printResult(methodName, libName, result);
     };
 
     processBest((int*)(nullptr), methodConfig, libName, cmd, pack.entries,

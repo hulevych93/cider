@@ -112,6 +112,11 @@ void dumpCoverageToCout(
   std::cout << MarkerStart << covJson << MarkerEnd << coverage.getPercentage();
 }
 
+void dumpCoverageToCout(const CoveragePerAction& coverage) {
+  const auto covJson = serializeCovReport(coverage);
+  std::cout << MarkerStart << covJson << MarkerEnd;
+}
+
 Coverage getCoverage() {
   Coverage coverage;
   coverage.total = max_guard_id;
@@ -158,7 +163,30 @@ std::optional<Coverage> deserializeCovReport(const std::string& buffer) {
   return report;
 }
 
+CoveragePerAction deserializeCovPerActReport(const std::string& buffer) {
+  CoveragePerAction report;
+  try {
+    serialization::Deserializer deserializer(buffer.data(), buffer.size());
+    deserializer >> report;
+  } catch (...) {
+  }
+
+  return report;
+}
+
 std::string serializeCovReport(const Coverage& report) {
+  try {
+    serialization::Serializer serializer;
+    serializer << report;
+    return std::string(reinterpret_cast<const char*>(serializer.getData()),
+                       serializer.getSize());
+  } catch (...) {
+  }
+
+  return {};
+}
+
+std::string serializeCovReport(const CoveragePerAction& report) {
   try {
     serialization::Serializer serializer;
     serializer << report;

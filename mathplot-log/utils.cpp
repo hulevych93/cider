@@ -178,7 +178,8 @@ void rotateXTicks90() {
   }
 }
 
-void makeLegentByGroups(const std::vector<std::string>& groups,  const std::vector<double>& positions) {
+void makeLegentByGroups(const std::vector<std::string>& groups,
+                        const std::vector<double>& positions) {
   std::vector<std::string> legendLabels = groups;
   std::vector<std::string> legendColors;
 

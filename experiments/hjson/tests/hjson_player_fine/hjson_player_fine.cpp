@@ -34,13 +34,36 @@ int main(int argc, char* argv[]) {
     auto lState = cider::scripting::get_lua();
     luaopen_hjson(lState.get());
 
-    const auto startTime = std::chrono::steady_clock::now();
+    cider::cfg_coverage::CoveragePerAction traceCoverage;
+
     auto startCov = cider::cfg_coverage::getCoverage();
+    const auto startTime = std::chrono::steady_clock::now();
+
+    cider::scripting::LuaActionHook::instance().setHook(
+        lState.get(), [&](int numActions) { traceCoverage.resize(numActions); },
+        [&](lua_State* L, int idx) {
+          (void)L;  // unused
+
+          cider::cfg_coverage::Coverage cov =
+              cider::cfg_coverage::getCoverage();
+
+          const auto end = std::chrono::steady_clock::now();
+          cov.meassureTimeMcs =
+              std::chrono::duration_cast<std::chrono::microseconds>(end -
+                                                                    startTime)
+                  .count();
+
+          cov.alignTo(startCov).status = true;
+
+          traceCoverage[idx] = cov;
+        });
 
     const auto result =
         cider::scripting::executeScript(lState.get(), script.c_str()) ? 0 : 1;
 
-    cider::cfg_coverage::dumpCoverageToCout(result == 0, startCov, startTime);
+    cider::scripting::LuaActionHook::instance().clear(lState.get());
+
+    cider::cfg_coverage::dumpCoverageToCout(traceCoverage);
 
     return result;
   } catch (const std::exception& e) {

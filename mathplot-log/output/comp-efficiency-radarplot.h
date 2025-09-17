@@ -41,6 +41,8 @@ class EfficiencyRadarPlot final : public IBasicPlot {
   void logProcessingTime(const std::string& method, double processingRate);
   void logCoverage(const std::string& method, double branchCoverage);
 
+  void setOriginalCov(double cov) override { _originalCoverage = cov; }
+
   void serialize(const std::string& filePath) override;
 
   bool load() override;
@@ -50,6 +52,7 @@ class EfficiencyRadarPlot final : public IBasicPlot {
  private:
   std::unordered_map<std::string, RadarData> _radarData;
   std::vector<std::string> _order;
+  double _originalCoverage;
 
   std::string m_path;
 };

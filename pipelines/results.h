@@ -50,8 +50,9 @@ bool serialize(const MethodResults& obj, serialization::Serializer& serializer);
 bool deserialize(MethodResults& obj,
                  const serialization::Deserializer& deserializer);
 
-void printResultsSummary(const Results& results);
-void printResult(const Result& result);
+void printResult(const std::string& methodName,
+                 const std::string& libName,
+                 const Result& result);
 
 int getDataSize(const std::string& libName);
 

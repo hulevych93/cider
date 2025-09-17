@@ -63,9 +63,13 @@ class ScriptGenerator final {
   SessionSettings _settings;
 
   std::unique_ptr<CodeSink> _sink;
+
+  int _actionNumber = 0;
 };
 
-ScriptGenerator makeLuaGenerator(const std::string& moduleName);
+ScriptGenerator makeLuaGenerator(const std::string& moduleName,
+                                 bool enableMarks = false,
+                                 int actionsNumber = 0);
 
 std::string generateScript(ScriptGenerator& generator,
                            const std::vector<cider::recorder::Action>& actions,

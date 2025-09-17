@@ -43,7 +43,8 @@ void setAxisPolicy();
 
 void disableFrame();
 
-void makeLegentByGroups(const std::vector<std::string>& groups, const std::vector<double>& positions);
+void makeLegentByGroups(const std::vector<std::string>& groups,
+                        const std::vector<double>& positions);
 
 inline std::vector<std::string> getColorGroups() {
   std::vector<std::string> groups;

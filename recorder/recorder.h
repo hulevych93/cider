@@ -23,6 +23,8 @@ struct SessionSettings final {
   bool printLines = false;
   bool enableGC = false;
   bool ignoreErrors = false;
+  bool enableMarks = false;
+  int numActions = 0;
   std::string testName;
 };
 

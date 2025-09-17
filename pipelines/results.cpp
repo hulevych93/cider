@@ -9,6 +9,8 @@
 #include <iostream>
 #include <sstream>
 
+#include "metrics.h"
+
 #include <assert.h>
 
 namespace cider {
@@ -84,7 +86,9 @@ bool deserialize(MethodResults& obj,
   return true;
 }
 
-void printResult(const Result& res) {
+void printResult(const std::string& methodName,
+                 const std::string& libName,
+                 const Result& res) {
   std::cout << "Test Case: " << res.testCaseName << std::endl;
 
   std::cout << "  Old Actions: " << res.oldActions.size()
@@ -100,18 +104,14 @@ void printResult(const Result& res) {
             << std::endl;
 
   std::cout << " Processing Time (mcs): " << res.timeElapsedMcs << std::endl;
+
+  getCompression(
+      methodName, libName, res, [](unsigned long newCount, double compression) {
+        std::cout << "  Compression: " << compression
+                  << " % (new count=" << newCount << ")" << std::endl;
+      });
+
   std::cout << "---------------------------" << std::endl;
-}
-
-void printResultsSummary(const Results& results) {
-  for (const auto& resIt : results) {
-    const auto& methodName = resIt.first;
-    std::cout << "=== METHOD: " << methodName << " ===" << std::endl;
-
-    for (const auto& res : resIt.second.entries) {
-      printResult(res);
-    }
-  }
 }
 
 int getDataSize(const std::string& libName) {

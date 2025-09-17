@@ -11,6 +11,53 @@
 namespace cider {
 namespace pipelines {
 
+namespace {
+
+template <typename SettingsType>
+bool runDynamicSlicing(SettingsType settings,
+                       const std::string& libName,
+                       const cider::Cmd& cmd,
+                       const recorder::Actions& input,
+                       recorder::Actions& output) {
+  try {
+    gcov_coverage::CoverageMeasurment measurer{cmd, libName.c_str()};
+    cfg_coverage::CoverageMeasurment fastMeasurer{cmd, libName.c_str()};
+
+    if constexpr (std::is_same_v<SettingsType, dslicer::DSlicingSettings>) {
+      settings.objFunc = measurer.getObjValueFunc();
+      output = dslicer::run_d_slicing(settings, input);
+    } else if constexpr (std::is_same_v<SettingsType,
+                                        dslicer::FastDSlicingSettings>) {
+      settings.objFunc = measurer.getObjValueFunc();
+      settings.fineObjFunc = fastMeasurer.getFastObjValueFunc();
+      output = dslicer::run_d_slicing_fast_checked(settings, input);
+    } else if constexpr (std::is_same_v<
+                             SettingsType,
+                             dslicer::FastMultiPassDSlicingSettings>) {
+      settings.objFunc = measurer.getObjValueFunc();
+      settings.fineObjFunc = fastMeasurer.getFastObjValueFunc();
+
+      const auto report = measurer.getReport(input);
+      if(report.has_value()) {
+          const auto baseline = getOldCov(libName, report->report);
+          settings.baseline = baseline;
+      }
+
+      output = dslicer::run_d_slicing_fast_multipass(settings, input);
+    }
+  } catch (const std::exception& e) {
+    std::cerr << e.what();
+    return false;
+  }
+
+  return true;
+}
+
+}  // namespace
+
+DSlicerStage::DSlicerStage(const dslicer::DSLSettings& settings)
+    : _settings(settings) {}
+
 bool DSlicerStage::process(const std::string&,
                            const std::string& libName,
                            const cider::Cmd& cmd) {
@@ -19,19 +66,12 @@ bool DSlicerStage::process(const std::string&,
   auto start = std::chrono::steady_clock::now();
   recorder::Actions output;
 
-  try {
-    gcov_coverage::CoverageMeasurment measurer{cmd, libName.c_str()};
-    if (input.actions.size() < 10000) {
-      output =
-          dslicer::run_d_slicing(measurer.getObjValueFunc(), input.actions);
-    } else {
-      output = dslicer::run_delta_d_slicing(measurer.getObjValueFunc(),
-                                            input.actions);
-    }
-  } catch (const std::exception& e) {
-    std::cerr << e.what();
-    return false;
-  }
+  const bool success = std::visit(
+      [&](const auto& settings) -> bool {
+        return runDynamicSlicing(settings, libName, cmd,
+                                 deepCopy(input.actions), output);
+      },
+      _settings);
 
   auto end = std::chrono::steady_clock::now();
   unsigned long elapsed_mcs =
@@ -44,14 +84,18 @@ bool DSlicerStage::process(const std::string&,
   result.oldActions = deepCopy(input.actions);
   result.newActions = deepCopy(output);
 
-  pushResult(libName.c_str(), cmd, "DSL", result);
+  const auto slicerMethod = std::visit(
+      [](const auto& settings) { return settings.configName; }, _settings);
 
-  return true;
+  pushResult(libName.c_str(), cmd, slicerMethod, result);
+
+  return success;
 }
 
 DQLPostProcessSlicerStage::DQLPostProcessSlicerStage(
+    const dslicer::DSLSettings& settings,
     const ReportConfiguration& config)
-    : _config(config) {}
+    : _config(config), _settings(settings) {}
 
 bool DQLPostProcessSlicerStage::process(const std::string&,
                                         const std::string& libName,
@@ -69,7 +113,11 @@ bool DQLPostProcessSlicerStage::process(const std::string&,
     }
 
     const auto& methodResults = it->second.entries;
-    std::string newMethodName = methodName + "+DSL";
+
+    const auto slicerMethod = std::visit(
+        [](const auto& settings) { return settings.configName; }, _settings);
+
+    std::string newMethodName = methodName + "+" + slicerMethod;
 
     std::cout << "  [PROCESS] " << methodName << " -> " << newMethodName
               << " | entries: " << getDataSize(libName) << "\n";
@@ -83,19 +131,12 @@ bool DQLPostProcessSlicerStage::process(const std::string&,
       recorder::Actions sliced;
       auto newActions = deepCopy(r.newActions);
 
-      try {
-        cfg_coverage::CoverageMeasurment measurer{cmd, libName.c_str()};
-
-        if (newActions.size() < 10000) {
-          sliced =
-              dslicer::run_d_slicing(measurer.getObjValueFunc(), newActions);
-        } else {
-          sliced = dslicer::run_delta_d_slicing(measurer.getObjValueFunc(),
-                                                newActions);
-        }
-      } catch (const std::exception& e) {
-        std::cerr << "[ERROR] D-Slicing failed: " << e.what() << "\n";
-      }
+      std::visit(
+          [&](const auto& settings) -> bool {
+            return runDynamicSlicing(settings, libName, cmd, newActions,
+                                     sliced);
+          },
+          _settings);
 
       if (sliced.empty()) {
         return;
