@@ -135,7 +135,7 @@ auto getDSL_FM3_Settings() {
   dslicer::FastMultiPassDSlicingSettings settings;
   settings.configName = "DSL-FM3";
   settings.initialStepRatio = 0.2;
-  settings.minimalGranularity = 2;
+  settings.minimalGranularity = 1;
   return settings;
 }
 
@@ -431,9 +431,14 @@ const pipelines::ReportConfiguration& getReportALLSelected() {
       "MCTS1",        "MCTS2",        "MCTS3",       "QLEG1",
       "QLEG2",        "QLEG3",        "QLB1",        "QLB2",
       "QLB3",         "QLEG1+DSL",    "QLEG2+DSL",   "QLEG3+DSL",
-      "QLB1+DSL",     "QLB2+DSL",     "QLB3+DSL",    "QLEG1+DSL-FM",
-      "QLEG2+DSL-FM", "QLEG3+DSL-FM", "QLB1+DSL-FM", "QLB2+DSL-FM",
-      "QLB3+DSL-FM"};
+      "QLB1+DSL",     "QLB2+DSL",     "QLB3+DSL",
+      "QLEG1+DSL-FM1", "QLEG2+DSL-FM1", "QLEG3+DSL-FM1",
+      "QLB1+DSL-FM1", "QLB2+DSL-FM1", "QLB3+DSL-FM1",
+        "QLEG1+DSL-FM2", "QLEG2+DSL-FM2", "QLEG3+DSL-FM2",
+        "QLB1+DSL-FM2", "QLB2+DSL-FM2", "QLB3+DSL-FM2",
+        "QLEG1+DSL-FM3", "QLEG2+DSL-FM3", "QLEG3+DSL-FM3",
+        "QLB1+DSL-FM3", "QLB2+DSL-FM3", "QLB3+DSL-FM3"
+    };
   return orderedMethods;
 }
 
