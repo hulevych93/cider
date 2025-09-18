@@ -29,9 +29,11 @@ enum class PipelineType {
   GreedyR2 = 41,
   GreedyR3 = 42,
 
-  FastDSLMultiPass = 43,
-  FastDSL = 44,
   DSL = 45,
+
+  DSL_FM1 = 35,
+  DSL_FM2 = 36,
+  DSL_FM3 = 37,
 
   DSL_PostProcessing = 46,
   DSL_F_PostProcessing = 47,

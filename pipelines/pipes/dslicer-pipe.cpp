@@ -38,9 +38,9 @@ bool runDynamicSlicing(SettingsType settings,
       settings.fineObjFunc = fastMeasurer.getFastObjValueFunc();
 
       const auto report = measurer.getReport(input);
-      if(report.has_value()) {
-          const auto baseline = getOldCov(libName, report->report);
-          settings.baseline = baseline;
+      if (report.has_value()) {
+        const auto baseline = getOldCov(libName, report->report);
+        settings.baseline = baseline;
       }
 
       output = dslicer::run_d_slicing_fast_multipass(settings, input);

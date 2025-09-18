@@ -45,6 +45,7 @@ struct FastMultiPassDSlicingSettings final {
   ObjectiveFunction objFunc;
   FineObjectiveFunc fineObjFunc;
   double initialStepRatio = 0.2;
+  size_t minimalGranularity = 1;
   double baseline = 0.0;
 };
 
