@@ -114,17 +114,16 @@ void CompressionBarPlot::plot() {
                   {{"fmt", "none"}, {"ecolor", "red"}, {"capsize", "3"}});
   }
 
-  makeLegentByGroups(getColorGroups(), {0.54, 1.0});
+  if (_barData.size() > 4) {
+      makeLegentByGroups(getColorGroups(), {0.54, 1.0});
+      rotateXTicks90();
+  }
 
   plt::xticks(xg, methods, {{"fontsize", "7"}});
   plt::ylabel(getYAxisName());
   plt::xlabel(getXAxisName());
 
   applyPublicationStyle();
-
-  if (_barData.size() > 5) {
-    rotateXTicks90();
-  }
 
   plt::save(ensureExtension(m_path, ".eps"), 1200);
   plt::close();

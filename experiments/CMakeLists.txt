@@ -196,6 +196,7 @@ add_target_def(RADAR_SELECT   138 GROUP ${GROUP_SELECTED})
 # === COMPRESSION BAR Grouped ===
 add_target_def(COMPR_QLEG        136 GROUP ${GROUP_QLEG})
 add_target_def(COMPR_QLB         136 GROUP ${GROUP_QLB})
+add_target_def(COMPR_DSL         136 GROUP ${GROUP_DSL})
 add_target_def(COMPR_SLEG        136 GROUP ${GROUP_SLEG})
 add_target_def(COMPR_SLB         136 GROUP ${GROUP_SLB})
 add_target_def(COMPR_MCTS        136 GROUP ${GROUP_MCTS})

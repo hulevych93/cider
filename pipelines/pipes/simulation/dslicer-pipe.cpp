@@ -23,11 +23,15 @@ bool runDynamicSlicing(SettingsType settings,
   try {
     if constexpr (std::is_same_v<SettingsType, dslicer::DSlicingSettings>) {
       settings.objFunc = objFunc;
+      settings.baseline = baseline;
+
       output = dslicer::run_d_slicing(settings, input);
     } else if constexpr (std::is_same_v<SettingsType,
                                         dslicer::FastDSlicingSettings>) {
       settings.objFunc = objFunc;
       settings.fineObjFunc = fineObjFunc;
+      settings.baseline = baseline;
+
       output = dslicer::run_d_slicing_fast_checked(settings, input);
     } else if constexpr (std::is_same_v<
                              SettingsType,

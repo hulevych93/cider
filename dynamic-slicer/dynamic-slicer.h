@@ -22,6 +22,7 @@ using FineObjectiveFunc =
 struct DSlicingSettings final {
   const char* configName = "DSL_NAN";
   ObjectiveFunction objFunc;
+  double baseline = 0.0;
 };
 
 std::ostream& operator<<(std::ostream& os, const DSlicingSettings& s);
@@ -35,14 +36,14 @@ struct FastDSlicingSettings final {
   ObjectiveFunction objFunc;
   FineObjectiveFunc fineObjFunc;
   size_t checkStep = 5;
+  double baseline = 0.0;
 };
 
 std::ostream& operator<<(std::ostream& os, const FastDSlicingSettings& s);
 
 std::vector<recorder::Action> run_d_slicing_fast_checked(
     const FastDSlicingSettings& settings,
-    const std::vector<recorder::Action>& actionSpace,
-    double baseline = 0);
+    const std::vector<recorder::Action>& actionSpace);
 
 struct FastMultiPassDSlicingSettings final {
   const char* configName = "DSL-FM_NAN";

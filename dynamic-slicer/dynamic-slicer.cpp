@@ -37,7 +37,17 @@ using TestCase = std::vector<recorder::Action>;
 
 TestCase run_d_slicing(const DSlicingSettings& settings,
                        const std::vector<recorder::Action>& actionSpace) {
-  auto targetCovered = settings.objFunc(actionSpace).coverage;
+  auto targetCovered = settings.baseline;
+
+  if (targetCovered <= std::numeric_limits<double>::epsilon()) {
+      auto baseCov = settings.objFunc(actionSpace);
+      targetCovered = baseCov.coverage;
+  }
+
+  const auto currentCoverage = settings.objFunc(actionSpace);
+  if(currentCoverage.coverage < targetCovered) {
+      return actionSpace;
+  }
 
   std::vector<recorder::Action> sliced = deepCopy(actionSpace);
 
@@ -73,13 +83,19 @@ TestCase run_d_slicing(const DSlicingSettings& settings,
 
 std::vector<recorder::Action> run_d_slicing_fast_checked(
     const FastDSlicingSettings& settings,
-    const std::vector<recorder::Action>& actionSpace,
-    double baseline) {
+    const std::vector<recorder::Action>& actionSpace) {
   auto currentSpace = deepCopy(actionSpace);
+
+  auto baseline = settings.baseline;
 
   if (baseline <= std::numeric_limits<double>::epsilon()) {
     auto baseCov = settings.objFunc(currentSpace);
     baseline = baseCov.coverage;
+  }
+
+  const auto currentCoverage = settings.objFunc(currentSpace);
+  if(currentCoverage.coverage < baseline) {
+      return currentSpace;
   }
 
   std::cout << "[Slice-Fast] Original length=" << currentSpace.size()
@@ -119,13 +135,19 @@ std::vector<recorder::Action> run_d_slicing_fast_checked(
 
 std::vector<recorder::Action> run_d_slicing_fast_checked_tracks(
     const FastDSlicingSettings& settings,
-    const std::vector<recorder::Action>& actionSpace,
-    double baseline) {
+    const std::vector<recorder::Action>& actionSpace) {
   auto currentSpace = deepCopy(actionSpace);
 
+  auto baseline = settings.baseline;
+
   if (baseline <= std::numeric_limits<double>::epsilon()) {
-    auto baseCov = settings.objFunc(currentSpace);
-    baseline = baseCov.coverage;
+      auto baseCov = settings.objFunc(currentSpace);
+      baseline = baseCov.coverage;
+  }
+
+  const auto currentCoverage = settings.objFunc(currentSpace);
+  if(currentCoverage.coverage < baseline) {
+      return currentSpace;
   }
 
   FineObjectiveValue fineRes = settings.fineObjFunc(currentSpace);
@@ -256,6 +278,13 @@ std::vector<recorder::Action> run_d_slicing_fast_multipass(
     const std::vector<recorder::Action>& actionSpace) {
   std::vector<recorder::Action> current = deepCopy(actionSpace);
 
+  auto baseline = settings.baseline;
+
+  if (baseline <= std::numeric_limits<double>::epsilon()) {
+      auto baseCov = settings.objFunc(actionSpace);
+      baseline = baseCov.coverage;
+  }
+
   auto initialStepRatio = settings.initialStepRatio;
   size_t n = current.size();
 
@@ -275,9 +304,10 @@ std::vector<recorder::Action> run_d_slicing_fast_multipass(
     fastSettings.objFunc = settings.objFunc;
     fastSettings.fineObjFunc = settings.fineObjFunc;
     fastSettings.checkStep = step;
+    fastSettings.baseline = baseline;
 
     current =
-        run_d_slicing_fast_checked(fastSettings, current, settings.baseline);
+        run_d_slicing_fast_checked(fastSettings, current);
     current = deepCopy(current);
 
     if (step == settings.minimalGranularity) {
