@@ -55,39 +55,43 @@ bool runDynamicSlicing(SettingsType settings,
 
 }  // namespace
 
-DSlicerStage::DSlicerStage(const dslicer::DSLSettings& settings)
-    : _settings(settings) {}
+DSlicerStage::DSlicerStage(const dslicer::DSLSettings& settings,
+                           int numberOfRuns)
+    : _settings(settings), _numberOfRuns(numberOfRuns) {}
 
 bool DSlicerStage::process(const std::string&,
                            const std::string& libName,
                            const cider::Cmd& cmd) {
+  bool success = false;
   const auto& input = getInput();
 
-  auto start = std::chrono::steady_clock::now();
-  recorder::Actions output;
+  for (int idx = 0; idx < _numberOfRuns; ++idx) {
+    auto start = std::chrono::steady_clock::now();
+    recorder::Actions output;
 
-  const bool success = std::visit(
-      [&](const auto& settings) -> bool {
-        return runDynamicSlicing(settings, libName, cmd,
-                                 deepCopy(input.actions), output);
-      },
-      _settings);
+    success = std::visit(
+        [&](const auto& settings) -> bool {
+          return runDynamicSlicing(settings, libName, cmd,
+                                   deepCopy(input.actions), output);
+        },
+        _settings);
 
-  auto end = std::chrono::steady_clock::now();
-  unsigned long elapsed_mcs =
-      std::chrono::duration_cast<std::chrono::microseconds>(end - start)
-          .count();
+    auto end = std::chrono::steady_clock::now();
+    unsigned long elapsed_mcs =
+        std::chrono::duration_cast<std::chrono::microseconds>(end - start)
+            .count();
 
-  Result result;
-  result.testCaseName = input.testOrLibName;
-  result.timeElapsedMcs = elapsed_mcs;
-  result.oldActions = deepCopy(input.actions);
-  result.newActions = deepCopy(output);
+    Result result;
+    result.testCaseName = input.testOrLibName;
+    result.timeElapsedMcs = elapsed_mcs;
+    result.oldActions = deepCopy(input.actions);
+    result.newActions = deepCopy(output);
 
-  const auto slicerMethod = std::visit(
-      [](const auto& settings) { return settings.configName; }, _settings);
+    const auto slicerMethod = std::visit(
+        [](const auto& settings) { return settings.configName; }, _settings);
 
-  pushResult(libName.c_str(), cmd, slicerMethod, result);
+    pushResult(libName.c_str(), cmd, slicerMethod, result);
+  }
 
   return success;
 }

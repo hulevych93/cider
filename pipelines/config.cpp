@@ -542,17 +542,17 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
           std::make_unique<GreedyRStage>(getGreedyR3Settings(), GreedyCount));
       break;
     case PipelineType::DSL:
-      pipeline.addStage(std::make_unique<DSlicerStage>(getDSLSettings()));
+      pipeline.addStage(std::make_unique<DSlicerStage>(getDSLSettings(), 5));
       break;
     case PipelineType::DSL_FM1:
-      pipeline.addStage(std::make_unique<DSlicerStage>(getDSL_FM1_Settings()));
+      pipeline.addStage(std::make_unique<DSlicerStage>(getDSL_FM1_Settings(), 5));
       break;
     case PipelineType::DSL_FM2:
-        pipeline.addStage(std::make_unique<DSlicerStage>(getDSL_FM2_Settings()));
-        break;
+      pipeline.addStage(std::make_unique<DSlicerStage>(getDSL_FM2_Settings(), 5));
+      break;
     case PipelineType::DSL_FM3:
-        pipeline.addStage(std::make_unique<DSlicerStage>(getDSL_FM3_Settings()));
-        break;
+      pipeline.addStage(std::make_unique<DSlicerStage>(getDSL_FM3_Settings(), 5));
+      break;
     case PipelineType::DSL_PostProcessing:
       pipeline.addStage(std::make_unique<DQLPostProcessSlicerStage>(
           getDSLSettings(), getReportConfig(cmd.group)));
