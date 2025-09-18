@@ -18,14 +18,14 @@ std::ostream& operator<<(std::ostream& os, const DSlicingSettings& s) {
   return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const FastDSlicingSettings& s) {
+std::ostream& operator<<(std::ostream& os, const BatchDSlicingSettings& s) {
   os << "DSL-F"
-     << "_checkStep[" << s.checkStep << "]";
+     << "_checkStep[" << s.batchSize << "]";
   return os;
 }
 
 std::ostream& operator<<(std::ostream& os,
-                         const FastMultiPassDSlicingSettings& s) {
+                         const BatchMultiPassDSlicingSettings& s) {
   os << "DSL-FM"
      << "_initStepRatio[" << s.initialStepRatio << "]"
      << "_minGran[" << s.minimalGranularity << "]"
@@ -81,8 +81,8 @@ TestCase run_d_slicing(const DSlicingSettings& settings,
   return sliced;
 }
 
-std::vector<recorder::Action> run_d_slicing_fast_checked(
-    const FastDSlicingSettings& settings,
+std::vector<recorder::Action> run_d_slicing_batch(
+    const BatchDSlicingSettings& settings,
     const std::vector<recorder::Action>& actionSpace) {
   auto currentSpace = deepCopy(actionSpace);
 
@@ -98,12 +98,12 @@ std::vector<recorder::Action> run_d_slicing_fast_checked(
     return currentSpace;
   }
 
-  std::cout << "[Slice-Fast] Original length=" << currentSpace.size()
+  std::cout << "[Slice-Batch] Original length=" << currentSpace.size()
             << " baseline=" << baseline << "\n";
 
   size_t i = 0;
   while (i < currentSpace.size()) {
-    size_t batchEnd = std::min(i + settings.checkStep, currentSpace.size());
+    size_t batchEnd = std::min(i + settings.batchSize, currentSpace.size());
     std::vector<recorder::Action> removedBatch(currentSpace.begin() + i,
                                                currentSpace.begin() + batchEnd);
 
@@ -126,15 +126,60 @@ std::vector<recorder::Action> run_d_slicing_fast_checked(
   }
 
   auto finalCov = settings.objFunc(currentSpace);
-  std::cout << "[Slice-Fast] Final length=" << currentSpace.size()
+  std::cout << "[Slice-Batch] Final length=" << currentSpace.size()
             << " coverage=" << finalCov.coverage << " baseline=" << baseline
             << "\n";
 
   return currentSpace;
 }
 
+std::vector<recorder::Action> run_d_slicing_batch_multipass(
+    const BatchMultiPassDSlicingSettings& settings,
+    const std::vector<recorder::Action>& actionSpace) {
+  std::vector<recorder::Action> current = deepCopy(actionSpace);
+
+  auto baseline = settings.baseline;
+
+  if (baseline <= std::numeric_limits<double>::epsilon()) {
+    auto baseCov = settings.objFunc(actionSpace);
+    baseline = baseCov.coverage;
+  }
+
+  auto initialStepRatio = settings.initialStepRatio;
+  size_t n = current.size();
+
+  while (true) {
+    n = current.size();
+    if (n <= 3)
+      break;
+
+    size_t step = static_cast<size_t>(n * initialStepRatio);
+    if (step < settings.minimalGranularity)
+      step = settings.minimalGranularity;
+
+    std::cout << "[Multipass-Batch-Percent] length=" << n << " step=" << step
+              << " (" << initialStepRatio * 100 << "%)\n";
+
+    BatchDSlicingSettings fastSettings;
+    fastSettings.objFunc = settings.objFunc;
+    fastSettings.fineObjFunc = settings.fineObjFunc;
+    fastSettings.batchSize = step;
+    fastSettings.baseline = baseline;
+
+    current = run_d_slicing_batch(fastSettings, current);
+    current = deepCopy(current);
+
+    if (step == settings.minimalGranularity) {
+      break;
+    }
+    initialStepRatio /= 2.0;
+  }
+
+  return current;
+}
+
 std::vector<recorder::Action> run_d_slicing_fast_checked_tracks(
-    const FastDSlicingSettings& settings,
+    const BatchTracksDSlicingSettings& settings,
     const std::vector<recorder::Action>& actionSpace) {
   auto currentSpace = deepCopy(actionSpace);
 
@@ -162,7 +207,7 @@ std::vector<recorder::Action> run_d_slicing_fast_checked_tracks(
     }
   }
   if (trackCount == 0) {
-    std::cout << "[Slice-Fast] No coverage tracks found\n";
+    std::cout << "[Slice-Batch-Trace] No coverage tracks found\n";
     return currentSpace;
   }
 
@@ -173,6 +218,7 @@ std::vector<recorder::Action> run_d_slicing_fast_checked_tracks(
 
   std::vector<Step> steps;
   steps.reserve(currentSpace.size());
+
   for (size_t i = 0; i < currentSpace.size(); ++i) {
     std::vector<std::uint8_t> cov;
     if (fineRes.fineCoveredTracks[i].empty()) {
@@ -183,7 +229,7 @@ std::vector<recorder::Action> run_d_slicing_fast_checked_tracks(
     steps.push_back({currentSpace[i], std::move(cov)});
   }
 
-  std::cout << "[Slice-Fast] Original length=" << steps.size()
+  std::cout << "[Slice-Batch-Trace] Original length=" << steps.size()
             << " tracks=" << trackCount << " baseline=" << baseline << "\n";
 
   std::vector<int> freq(trackCount, 0);
@@ -216,24 +262,26 @@ std::vector<recorder::Action> run_d_slicing_fast_checked_tracks(
         if (cov[j])
           --freq[j];
 
-      std::cout << "  [Slice-Fast] Removing step " << i << " (uniq=" << uniq
-                << ", dup=" << dup << ")\n";
+      std::cout << "  [Slice-Batch-Trace] Removing step " << i
+                << " (uniq=" << uniq << ", dup=" << dup << ")\n";
 
       lastRemoved.push_back(steps[i]);
       steps.erase(steps.begin() + i);
       ++removedCount;
 
-      if (removedCount % settings.checkStep == 0) {
+      if (removedCount % 5 == 0) {
         auto scenario = [&]() {
           std::vector<recorder::Action> out;
           for (auto& s : steps)
             out.push_back(s.action);
           return out;
         }();
+
         auto newCov = settings.objFunc(scenario);
         std::cout << "  [Check@" << removedCount
                   << "] coverage=" << newCov.coverage
                   << " baseline=" << baseline << "\n";
+
         if (newCov.coverage + 1e-9 < baseline) {
           std::cout << "[WARN] Drop detected → rollback last "
                     << lastRemoved.size() << " removals\n";
@@ -245,77 +293,27 @@ std::vector<recorder::Action> run_d_slicing_fast_checked_tracks(
                 ++freq[j];
             ++i;
           }
-          lastRemoved.clear();
-
-          continue;
-        } else {
-          lastRemoved.clear();
         }
+        lastRemoved.clear();
       }
     } else {
-      std::cout << "  [Slice-Fast] Keeping  step " << i << " (uniq=" << uniq
-                << ", dup=" << dup << ")\n";
+      std::cout << "  [Slice-Batch-Trace] Keeping  step " << i
+                << " (uniq=" << uniq << ", dup=" << dup << ")\n";
       ++i;
     }
   }
 
-  // результат
   std::vector<recorder::Action> result;
   result.reserve(steps.size());
   for (auto& s : steps)
     result.push_back(s.action);
 
   auto finalCov = settings.objFunc(result);
-  std::cout << "[Slice-Fast] Final length=" << result.size()
+  std::cout << "[Slice-Batch-Trace] Final length=" << result.size()
             << " coverage=" << finalCov.coverage << " baseline=" << baseline
             << "\n";
 
   return result;
-}
-
-std::vector<recorder::Action> run_d_slicing_fast_multipass(
-    const FastMultiPassDSlicingSettings& settings,
-    const std::vector<recorder::Action>& actionSpace) {
-  std::vector<recorder::Action> current = deepCopy(actionSpace);
-
-  auto baseline = settings.baseline;
-
-  if (baseline <= std::numeric_limits<double>::epsilon()) {
-    auto baseCov = settings.objFunc(actionSpace);
-    baseline = baseCov.coverage;
-  }
-
-  auto initialStepRatio = settings.initialStepRatio;
-  size_t n = current.size();
-
-  while (true) {
-    n = current.size();
-    if (n <= 3)
-      break;
-
-    size_t step = static_cast<size_t>(n * initialStepRatio);
-    if (step < settings.minimalGranularity)
-      step = settings.minimalGranularity;
-
-    std::cout << "[Slice-Fast-Percent] length=" << n << " step=" << step << " ("
-              << initialStepRatio * 100 << "%)\n";
-
-    FastDSlicingSettings fastSettings;
-    fastSettings.objFunc = settings.objFunc;
-    fastSettings.fineObjFunc = settings.fineObjFunc;
-    fastSettings.checkStep = step;
-    fastSettings.baseline = baseline;
-
-    current = run_d_slicing_fast_checked(fastSettings, current);
-    current = deepCopy(current);
-
-    if (step == settings.minimalGranularity) {
-      break;
-    }
-    initialStepRatio /= 2.0;
-  }
-
-  return current;
 }
 
 }  // namespace dslicer

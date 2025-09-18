@@ -35,6 +35,8 @@ enum class PipelineType {
   DSL_FM2 = 36,
   DSL_FM3 = 37,
 
+  DSL_TR = 15,
+
   DSL_PostProcessing = 46,
   DSL_FM1_PostProcessing = 47,
   DSL_FM2_PostProcessing = 48,

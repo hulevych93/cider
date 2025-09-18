@@ -108,6 +108,7 @@ add_target_def(DSL_FM2 36 GROUP ${GROUP_DSL})
 add_target_def(DSL_FM3 37 GROUP ${GROUP_DSL})
 
 add_target_def(DSL 45 GROUP ${GROUP_DSL})
+add_target_def(DSL_TR 15 GROUP ${GROUP_DSL})
 
 add_target_def(DSL_POST 46 GROUP ${GROUP_QLEG_VS_QLB})
 add_target_def(DSL_FM1_POST 47 GROUP ${GROUP_QLEG_VS_QLB})

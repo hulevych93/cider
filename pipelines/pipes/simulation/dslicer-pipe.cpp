@@ -27,20 +27,20 @@ bool runDynamicSlicing(SettingsType settings,
 
       output = dslicer::run_d_slicing(settings, input);
     } else if constexpr (std::is_same_v<SettingsType,
-                                        dslicer::FastDSlicingSettings>) {
+                                        dslicer::BatchDSlicingSettings>) {
       settings.objFunc = objFunc;
       settings.fineObjFunc = fineObjFunc;
       settings.baseline = baseline;
 
-      output = dslicer::run_d_slicing_fast_checked(settings, input);
+      output = dslicer::run_d_slicing_batch(settings, input);
     } else if constexpr (std::is_same_v<
                              SettingsType,
-                             dslicer::FastMultiPassDSlicingSettings>) {
+                             dslicer::BatchMultiPassDSlicingSettings>) {
       settings.objFunc = objFunc;
       settings.fineObjFunc = fineObjFunc;
       settings.baseline = baseline;
 
-      output = dslicer::run_d_slicing_fast_multipass(settings, input);
+      output = dslicer::run_d_slicing_batch_multipass(settings, input);
     }
   } catch (const std::exception& e) {
     std::cerr << e.what();
@@ -115,48 +115,48 @@ bool DQLPostProcessSlicerStage::process(const std::string&,
     cfg_coverage::CoverageMeasurment fastMeasurer{cmd, libName.c_str()};
 
     int j = 0;
-    const auto handleResult =
-        [this, &i, &j, &fastMeasurer, &measurer](
-            int*, const std::string& methodName, const std::string& libName,
-            const cider::Cmd& cmd, const Result& r) {
-          auto start = std::chrono::steady_clock::now();
-          recorder::Actions sliced;
-          auto newActions = deepCopy(r.newActions);
+    const auto handleResult = [this, &i, &j, &fastMeasurer, &measurer](
+                                  int*, const std::string& methodName,
+                                  const std::string& libName,
+                                  const cider::Cmd& cmd, const Result& r) {
+      auto start = std::chrono::steady_clock::now();
+      recorder::Actions sliced;
+      auto newActions = deepCopy(r.newActions);
 
-          std::visit(
-              [&](const auto& settings) -> bool {
-                return runDynamicSlicing(settings, measurer.getObjValueFunc(),
-                                         fastMeasurer.getFastObjValueFunc(),
-                                         newActions, sliced, 0.0f);
-              },
-              _settings);
+      std::visit(
+          [&](const auto& settings) -> bool {
+            return runDynamicSlicing(settings, measurer.getObjValueFunc(),
+                                     fastMeasurer.getFastObjValueFunc(),
+                                     newActions, sliced, 0.0f);
+          },
+          _settings);
 
-          if (sliced.empty()) {
-            return;
-          }
+      if (sliced.empty()) {
+        return;
+      }
 
-          auto end = std::chrono::steady_clock::now();
-          unsigned long elapsed_mcs =
-              std::chrono::duration_cast<std::chrono::microseconds>(end - start)
-                  .count();
+      auto end = std::chrono::steady_clock::now();
+      unsigned long elapsed_mcs =
+          std::chrono::duration_cast<std::chrono::microseconds>(end - start)
+              .count();
 
-          Result result;
-          result.testCaseName = r.testCaseName;
-          result.timeElapsedMcs = r.timeElapsedMcs + elapsed_mcs;
-          result.oldActions = deepCopy(r.oldActions);
-          result.newActions = deepCopy(sliced);
+      Result result;
+      result.testCaseName = r.testCaseName;
+      result.timeElapsedMcs = r.timeElapsedMcs + elapsed_mcs;
+      result.oldActions = deepCopy(r.oldActions);
+      result.newActions = deepCopy(sliced);
 
-          pushResult(libName.c_str(), cmd, methodName, result);
+      pushResult(libName.c_str(), cmd, methodName, result);
 
-          std::cout << "[" << i << "," << _config.size() << "]";
-          std::cout << "[" << j << "," << getDataSize(libName) << "]";
+      std::cout << "[" << i << "," << _config.size() << "]";
+      std::cout << "[" << j << "," << getDataSize(libName) << "]";
 
-          std::cout << "    [OK] " << r.testCaseName
-                    << " | oldLen=" << r.newActions.size()
-                    << " -> newLen=" << sliced.size()
-                    << " | time=" << elapsed_mcs << " mcs\n";
-          j++;
-        };
+      std::cout << "    [OK] " << r.testCaseName
+                << " | oldLen=" << r.newActions.size()
+                << " -> newLen=" << sliced.size() << " | time=" << elapsed_mcs
+                << " mcs\n";
+      j++;
+    };
 
     processBest((int*)(nullptr), newMethodName, libName, cmd, methodResults,
                 getDataSize(libName), handleResult);

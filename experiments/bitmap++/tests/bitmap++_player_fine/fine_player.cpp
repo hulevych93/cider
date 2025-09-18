@@ -45,6 +45,11 @@ int main(int argc, char* argv[]) {
         [&](lua_State* L, int idx) {
           (void)L;  // unused
 
+          static std::vector<std::uint8_t> seenBlocks;
+          if (seenBlocks.empty()) {
+            seenBlocks.resize(startCov.coveredTracks.size(), 0);
+          }
+
           cider::cfg_coverage::Coverage cov =
               cider::cfg_coverage::getCoverage();
 
@@ -56,7 +61,17 @@ int main(int argc, char* argv[]) {
 
           cov.alignTo(startCov).status = true;
 
-          traceCoverage[idx] = cov;
+          std::vector<std::uint8_t> delta(cov.coveredTracks.size(), 0);
+          for (size_t j = 0; j < cov.coveredTracks.size(); ++j) {
+            if (cov.coveredTracks[j] && !seenBlocks[j]) {
+              delta[j] = 1;
+              seenBlocks[j] = 1;
+            }
+          }
+
+          traceCoverage[idx].coveredTracks = std::move(delta);
+          traceCoverage[idx].meassureTimeMcs = cov.meassureTimeMcs;
+          traceCoverage[idx].status = cov.status;
         });
 
     const auto result =

@@ -31,21 +31,21 @@ std::vector<recorder::Action> run_d_slicing(
     const DSlicingSettings& settings,
     const std::vector<recorder::Action>& input);
 
-struct FastDSlicingSettings final {
+struct BatchDSlicingSettings final {
   const char* configName = "DSL-F_NAN";
   ObjectiveFunction objFunc;
   FineObjectiveFunc fineObjFunc;
-  size_t checkStep = 5;
+  size_t batchSize = 5;
   double baseline = 0.0;
 };
 
-std::ostream& operator<<(std::ostream& os, const FastDSlicingSettings& s);
+std::ostream& operator<<(std::ostream& os, const BatchDSlicingSettings& s);
 
-std::vector<recorder::Action> run_d_slicing_fast_checked(
-    const FastDSlicingSettings& settings,
+std::vector<recorder::Action> run_d_slicing_batch(
+    const BatchDSlicingSettings& settings,
     const std::vector<recorder::Action>& actionSpace);
 
-struct FastMultiPassDSlicingSettings final {
+struct BatchMultiPassDSlicingSettings final {
   const char* configName = "DSL-FM_NAN";
   ObjectiveFunction objFunc;
   FineObjectiveFunc fineObjFunc;
@@ -55,15 +55,32 @@ struct FastMultiPassDSlicingSettings final {
 };
 
 std::ostream& operator<<(std::ostream& os,
-                         const FastMultiPassDSlicingSettings& s);
+                         const BatchMultiPassDSlicingSettings& s);
 
-std::vector<recorder::Action> run_d_slicing_fast_multipass(
-    const FastMultiPassDSlicingSettings& settings,
+std::vector<recorder::Action> run_d_slicing_batch_multipass(
+    const BatchMultiPassDSlicingSettings& settings,
+    const std::vector<recorder::Action>& actionSpace);
+
+struct BatchTracksDSlicingSettings final {
+  const char* configName = "DSL-TR_NAN";
+  ObjectiveFunction objFunc;
+  FineObjectiveFunc fineObjFunc;
+  double baseline = 0.0;
+};
+
+inline std::ostream& operator<<(std::ostream& os,
+                                const BatchTracksDSlicingSettings& s) {
+  return os;
+}
+
+std::vector<recorder::Action> run_d_slicing_fast_tracks(
+    const BatchTracksDSlicingSettings& settings,
     const std::vector<recorder::Action>& actionSpace);
 
 using DSLSettings = std::variant<DSlicingSettings,
-                                 FastDSlicingSettings,
-                                 FastMultiPassDSlicingSettings>;
+                                 BatchDSlicingSettings,
+                                 BatchMultiPassDSlicingSettings,
+                                 BatchTracksDSlicingSettings>;
 
 }  // namespace dslicer
 }  // namespace cider

@@ -109,14 +109,14 @@ auto getDSLSettings() {
 }
 
 auto getDSL_F_Settings() {
-  dslicer::FastDSlicingSettings settings;
+  dslicer::BatchDSlicingSettings settings;
   settings.configName = "DSL-F";
-  settings.checkStep = 5;
+  settings.batchSize = 5;
   return settings;
 }
 
 auto getDSL_FM1_Settings() {
-  dslicer::FastMultiPassDSlicingSettings settings;
+  dslicer::BatchMultiPassDSlicingSettings settings;
   settings.configName = "DSL-FM1";
   settings.initialStepRatio = 0.2;
   settings.minimalGranularity = 5;
@@ -124,7 +124,7 @@ auto getDSL_FM1_Settings() {
 }
 
 auto getDSL_FM2_Settings() {
-  dslicer::FastMultiPassDSlicingSettings settings;
+  dslicer::BatchMultiPassDSlicingSettings settings;
   settings.configName = "DSL-FM2";
   settings.initialStepRatio = 0.2;
   settings.minimalGranularity = 3;
@@ -132,10 +132,16 @@ auto getDSL_FM2_Settings() {
 }
 
 auto getDSL_FM3_Settings() {
-  dslicer::FastMultiPassDSlicingSettings settings;
+  dslicer::BatchMultiPassDSlicingSettings settings;
   settings.configName = "DSL-FM3";
   settings.initialStepRatio = 0.2;
   settings.minimalGranularity = 1;
+  return settings;
+}
+
+auto getDSL_TR_Settings() {
+  dslicer::BatchTracksDSlicingSettings settings;
+  settings.configName = "DSL-TR";
   return settings;
 }
 
@@ -395,7 +401,8 @@ const pipelines::ReportConfiguration& getReportConfigMCTS() {
 }
 
 const pipelines::ReportConfiguration& getReportConfigQLEGvsQLB() {
-  static const std::vector<std::string> orderedMethods = {"QLEG1"};
+  static const std::vector<std::string> orderedMethods = {
+      "QLEG2", "QLEG3", "QLB1", "QLB2", "QLB3"};
   return orderedMethods;
 }
 
@@ -577,6 +584,10 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
     case PipelineType::DSL_FM3:
       pipeline.addStage(
           std::make_unique<DSlicerStage>(getDSL_FM3_Settings(), 5));
+      break;
+    case PipelineType::DSL_TR:
+      pipeline.addStage(
+          std::make_unique<DSlicerStage>(getDSL_TR_Settings(), 5));
       break;
     case PipelineType::DSL_PostProcessing:
       pipeline.addStage(std::make_unique<DQLPostProcessSlicerStage>(
