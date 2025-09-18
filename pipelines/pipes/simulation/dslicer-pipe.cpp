@@ -90,7 +90,6 @@ bool DQLPostProcessSlicerStage::process(const std::string&,
                                         const std::string& libName,
                                         const cider::Cmd& cmd) {
   auto results = getResults();
-  const auto& input = getInput();
 
   std::cout << "[INFO] PostProcessDSlicerStage: start\n";
 
@@ -115,15 +114,9 @@ bool DQLPostProcessSlicerStage::process(const std::string&,
     gcov_coverage::CoverageMeasurment measurer{cmd, libName.c_str()};
     cfg_coverage::CoverageMeasurment fastMeasurer{cmd, libName.c_str()};
 
-    double baseline = 0.0f;
-    const auto report = measurer.getReport(input.actions);
-    if (report.has_value()) {
-      baseline = getOldCov(libName, report->report);
-    }
-
     int j = 0;
     const auto handleResult =
-        [this, &i, &j, &fastMeasurer, &measurer, baseline](
+        [this, &i, &j, &fastMeasurer, &measurer](
             int*, const std::string& methodName, const std::string& libName,
             const cider::Cmd& cmd, const Result& r) {
           auto start = std::chrono::steady_clock::now();
@@ -134,7 +127,7 @@ bool DQLPostProcessSlicerStage::process(const std::string&,
               [&](const auto& settings) -> bool {
                 return runDynamicSlicing(settings, measurer.getObjValueFunc(),
                                          fastMeasurer.getFastObjValueFunc(),
-                                         newActions, sliced, baseline);
+                                         newActions, sliced, 0.0f);
               },
               _settings);
 
