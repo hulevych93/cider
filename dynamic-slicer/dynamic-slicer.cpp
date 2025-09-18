@@ -13,6 +13,26 @@
 namespace cider {
 namespace dslicer {
 
+std::ostream& operator<<(std::ostream& os, const DSlicingSettings& s) {
+  os << "DSL";
+  return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const FastDSlicingSettings& s) {
+  os << "DSL-F"
+     << "_checkStep[" << s.checkStep << "]";
+  return os;
+}
+
+std::ostream& operator<<(std::ostream& os,
+                         const FastMultiPassDSlicingSettings& s) {
+  os << "DSL-FM"
+     << "_initStepRatio[" << s.initialStepRatio << "]"
+     << "_minGran[" << s.minimalGranularity << "]"
+     << "_baseline[" << s.baseline << "]";
+  return os;
+}
+
 using TestCase = std::vector<recorder::Action>;
 
 TestCase run_d_slicing(const DSlicingSettings& settings,
@@ -62,55 +82,39 @@ std::vector<recorder::Action> run_d_slicing_fast_checked(
     baseline = baseCov.coverage;
   }
 
-  std::vector<recorder::Action> steps;
-  steps.reserve(currentSpace.size());
-  for (size_t i = 0; i < currentSpace.size(); ++i) {
-    steps.push_back({currentSpace[i]});
-  }
-
-  std::cout << "[Slice-Fast] Original length=" << steps.size()
+  std::cout << "[Slice-Fast] Original length=" << currentSpace.size()
             << " baseline=" << baseline << "\n";
 
-  size_t removedCount = 0;
-  std::vector<recorder::Action> lastRemoved;
+  size_t i = 0;
+  while (i < currentSpace.size()) {
+    size_t batchEnd = std::min(i + settings.checkStep, currentSpace.size());
+    std::vector<recorder::Action> removedBatch(currentSpace.begin() + i,
+                                               currentSpace.begin() + batchEnd);
 
-  for (size_t i = 0; i < steps.size();) {
-    lastRemoved.push_back(steps[i]);
-    steps.erase(steps.begin() + i);
-    ++removedCount;
+    currentSpace.erase(currentSpace.begin() + i,
+                       currentSpace.begin() + batchEnd);
 
-    if (removedCount % settings.checkStep == 0) {
-      auto newCov = settings.objFunc(steps);
-      std::cout << "  [Check@" << removedCount
-                << "] coverage=" << newCov.coverage << " baseline=" << baseline
-                << "\n";
+    auto newCov = settings.objFunc(currentSpace);
+    std::cout << "  [Check@" << (i + removedBatch.size())
+              << "] coverage=" << newCov.coverage << " baseline=" << baseline
+              << "\n";
 
-      if (newCov.coverage + 1e-9 < baseline) {
-        std::cout << "[WARN] Drop detected → rollback last "
-                  << lastRemoved.size() << " removals\n";
+    if (newCov.coverage + 1e-9 < baseline) {
+      std::cout << "[WARN] Drop detected → rollback batch ("
+                << removedBatch.size() << ")\n";
 
-        for (auto& s : lastRemoved) {
-          steps.insert(steps.begin() + i, s);
-          ++i;
-        }
-      }
-
-      lastRemoved.clear();
+      currentSpace.insert(currentSpace.begin() + i, removedBatch.begin(),
+                          removedBatch.end());
+      i = batchEnd;
     }
   }
 
-  // результат
-  std::vector<recorder::Action> result;
-  result.reserve(steps.size());
-  for (auto& s : steps)
-    result.push_back(s);
-
-  auto finalCov = settings.objFunc(result);
-  std::cout << "[Slice-Fast] Final length=" << result.size()
+  auto finalCov = settings.objFunc(currentSpace);
+  std::cout << "[Slice-Fast] Final length=" << currentSpace.size()
             << " coverage=" << finalCov.coverage << " baseline=" << baseline
             << "\n";
 
-  return result;
+  return currentSpace;
 }
 
 std::vector<recorder::Action> run_d_slicing_fast_checked_tracks(

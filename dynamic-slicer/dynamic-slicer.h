@@ -24,6 +24,8 @@ struct DSlicingSettings final {
   ObjectiveFunction objFunc;
 };
 
+std::ostream& operator<<(std::ostream& os, const DSlicingSettings& s);
+
 std::vector<recorder::Action> run_d_slicing(
     const DSlicingSettings& settings,
     const std::vector<recorder::Action>& input);
@@ -34,6 +36,8 @@ struct FastDSlicingSettings final {
   FineObjectiveFunc fineObjFunc;
   size_t checkStep = 5;
 };
+
+std::ostream& operator<<(std::ostream& os, const FastDSlicingSettings& s);
 
 std::vector<recorder::Action> run_d_slicing_fast_checked(
     const FastDSlicingSettings& settings,
@@ -48,6 +52,9 @@ struct FastMultiPassDSlicingSettings final {
   size_t minimalGranularity = 1;
   double baseline = 0.0;
 };
+
+std::ostream& operator<<(std::ostream& os,
+                         const FastMultiPassDSlicingSettings& s);
 
 std::vector<recorder::Action> run_d_slicing_fast_multipass(
     const FastMultiPassDSlicingSettings& settings,

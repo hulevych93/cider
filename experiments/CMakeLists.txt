@@ -110,8 +110,9 @@ add_target_def(DSL_FM3 37 GROUP ${GROUP_DSL})
 add_target_def(DSL 45 GROUP ${GROUP_DSL})
 
 add_target_def(DSL_POST 46 GROUP ${GROUP_QLEG_VS_QLB})
-add_target_def(DSL_F_POST 47 GROUP ${GROUP_QLEG_VS_QLB})
-add_target_def(DSL_FM_POST 48 GROUP ${GROUP_QLEG_VS_QLB})
+add_target_def(DSL_FM1_POST 47 GROUP ${GROUP_QLEG_VS_QLB})
+add_target_def(DSL_FM2_POST 48 GROUP ${GROUP_QLEG_VS_QLB})
+add_target_def(DSL_FM3_POST 49 GROUP ${GROUP_QLEG_VS_QLB})
 
 # === QL / SARSA ===
 add_target_def(QL 50)
@@ -291,7 +292,7 @@ foreach(lib_def IN LISTS LIBS)
 endforeach()
 
 add_custom_target(hjson_RUN)
-add_dependencies(hjson_RUN hjson_QLB1 hjson_QLB2 hjson_QLB3)
+add_dependencies(hjson_RUN hjson_DSL_FM1 hjson_DSL_FM2 hjson_DSL_FM3)
 
 add_custom_target(bitmap++_RUN)
-add_dependencies(bitmap++_RUN bitmap++_GR bitmap++_GRR1 bitmap++_GRR2 bitmap++_GRR3)
+add_dependencies(bitmap++_RUN bitmap++_DSL_FM1 bitmap++_DSL_FM2 bitmap++_DSL_FM3)

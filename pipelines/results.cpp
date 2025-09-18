@@ -137,11 +137,14 @@ double getOldCov(const std::string& libName,
 
 bool ourMethod(const std::string& name) {
   static const std::vector<std::string> orderedMethods = {
-      "QLEG1",        "QLEG2",        "QLEG3",        "QLB1",
-      "QLB2",         "QLB3",         "QLEG1+DSL",    "QLEG2+DSL",
-      "QLEG3+DSL",    "QLB1+DSL",     "QLB2+DSL",     "QLB3+DSL",
-      "QLEG1+DSL-FM", "QLEG2+DSL-FM", "QLEG3+DSL-FM", "QLB1+DSL-FM",
-      "QLB2+DSL-FM",  "QLB3+DSL-FM"};
+      "QLEG1",         "QLEG2",         "QLEG3",         "QLB1",
+      "QLB2",          "QLB3",          "QLEG1+DSL",     "QLEG2+DSL",
+      "QLEG3+DSL",     "QLB1+DSL",      "QLB2+DSL",      "QLB3+DSL",
+      "QLEG1+DSL-FM1", "QLEG2+DSL-FM1", "QLEG3+DSL-FM1", "QLB1+DSL-FM1",
+      "QLB2+DSL-FM1",  "QLB3+DSL-FM1",  "QLEG1+DSL-FM2", "QLEG2+DSL-FM2",
+      "QLEG3+DSL-FM2", "QLB1+DSL-FM2",  "QLB2+DSL-FM2",  "QLB3+DSL-FM2",
+      "QLEG1+DSL-FM3", "QLEG2+DSL-FM3", "QLEG3+DSL-FM3", "QLB1+DSL-FM3",
+      "QLB2+DSL-FM3",  "QLB3+DSL-FM3"};
   return std::find(orderedMethods.cbegin(), orderedMethods.cend(), name) !=
          orderedMethods.cend();
 }

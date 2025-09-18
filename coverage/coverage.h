@@ -36,8 +36,9 @@ enum class PipelineType {
   DSL_FM3 = 37,
 
   DSL_PostProcessing = 46,
-  DSL_F_PostProcessing = 47,
-  DSL_FM_PostProcessing = 48,
+  DSL_FM1_PostProcessing = 47,
+  DSL_FM2_PostProcessing = 48,
+  DSL_FM3_PostProcessing = 49,
 
   QLearningAgentLearning = 50,
   SarsaAgentLearning = 51,

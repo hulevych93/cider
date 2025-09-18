@@ -1,10 +1,7 @@
 // Copyright (C) 2022-2025 Hulevych Mykhailo
 // SPDX-License-Identifier: MIT
 
-#include "synthesis-pipe.h"
-
-#include "synthesis/agent-synthesis.h"
-#include "synthesis/rand-synthesis.h"
+#include "simulation-pipe.h"
 
 #include "coverage/cfg_measurer.h"
 #include "coverage/gcov_measurer.h"
@@ -15,36 +12,31 @@
 namespace cider {
 namespace pipelines {
 
-namespace {
+SimulationPipe::SimulationPipe(int numberOfRuns)
+    : _numberOfRuns(numberOfRuns) {}
 
-void getPrefix(const synthesis::SynthesisSettings& settings,
-               std::string& prefix) {
-  std::stringstream os;
-  std::visit([&os](const auto& s) { os << "_" << s; }, settings);
-  prefix = os.str();
-}
-
-}  // namespace
-
-SynthesisStage::SynthesisStage(const synthesis::SynthesisSettings& settings,
-                               int numberOfRuns)
-    : m_settings(settings), _numberOfRuns(numberOfRuns) {}
-
-bool SynthesisStage::process(const std::string& metadata,
+bool SimulationPipe::process(const std::string& metadata,
                              const std::string& libName,
                              const cider::Cmd& cmd) {
-  std::string prefix;
-  getPrefix(m_settings, prefix);
+  std::string prefix = getPrefix();
 
   std::filesystem::path outPath(cmd.resultsDir);
   outPath /= metadata;
   outPath /= prefix;
   std::filesystem::create_directories(outPath);
 
+  const auto& input = getInput();
+
   cider::cfg_coverage::CoverageMeasurment measurer{cmd, libName.c_str()};
   measurer.setLogger(outPath.string(), "cfg_generation_log.txt");
 
-  const auto& input = getInput();
+  gcov_coverage::CoverageMeasurment measurerGcov{cmd, libName.c_str()};
+
+  double baseline = 0.0f;
+  const auto report = measurerGcov.getReport(input.actions);
+  if (report.has_value()) {
+    baseline = getOldCov(libName, report->report);
+  }
 
   bool success = true;
   for (int idx = 0; idx < _numberOfRuns;) {
@@ -52,13 +44,9 @@ bool SynthesisStage::process(const std::string& metadata,
     const auto start = std::chrono::steady_clock::now();
 
     try {
-      success = std::visit(
-          [&](const auto& s) {
-            return synthesis::synthesize(Seed::instance().get(), s,
-                                         measurer.getObjValueFunc(),
-                                         input.actions, output);
-          },
-          m_settings);
+      success = simulate(outPath, baseline, input.actions, output,
+                         measurerGcov.getObjValueFunc(),
+                         measurer.getFastObjValueFunc());
     } catch (const std::exception& e) {
       std::cerr << e.what();
       success = false;
@@ -78,14 +66,13 @@ bool SynthesisStage::process(const std::string& metadata,
     if (pushResult(libName.c_str(), cmd, getConfigName(), result)) {
       idx++;
     }
+
+    std::cout << "[" << idx << "," << _numberOfRuns
+              << "]: " << (double)elapsed_mcs / 1000 << " ms elapsed"
+              << std::endl;
   }
 
   return success;
-}
-
-std::string SynthesisStage::getConfigName() const {
-  return std::visit([&](const auto& settings) { return settings.configName; },
-                    m_settings);
 }
 
 }  // namespace pipelines
