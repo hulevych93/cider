@@ -96,8 +96,8 @@ void plotMannWhitney(const std::string& path,
   const size_t numGroups = plotDatas.size();
   size_t m = (numGroups * (numGroups - 1)) / 2;
 
-  if(numGroups <= 3) {
-      return;
+  if (numGroups <= 3) {
+    return;
   }
 
   // === GLOBAL KW ===
@@ -467,10 +467,10 @@ void CoverageBoxPlot::plot() {
   const auto& axisLims = getYAxisLims(_libName);
   plt::ylim(axisLims[0], axisLims[1]);
 
-  if(_boxData.size() > 4) {
-     makeLegentByGroups(getColorGroups(), {0.82, 0.43});
+  if (_boxData.size() > 4) {
+    makeLegentByGroups(getColorGroups(), {0.82, 0.43});
 
-     plt::tight_layout();
+    plt::tight_layout();
   }
 
   plt::grid(true);

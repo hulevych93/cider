@@ -11,7 +11,8 @@ namespace pipelines {
 
 class DSlicerStage final : public Pipe {
  public:
-  explicit DSlicerStage(const dslicer::DSLSettings& settings);
+  explicit DSlicerStage(const dslicer::DSLSettings& settings,
+                        int numberOfRuns);
 
   bool process(const std::string& metadata,
                const std::string& libName,
@@ -21,6 +22,7 @@ class DSlicerStage final : public Pipe {
 
  private:
   dslicer::DSLSettings _settings;
+  const int _numberOfRuns;
 };
 
 class DQLPostProcessSlicerStage final : public Pipe {

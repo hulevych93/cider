@@ -114,10 +114,27 @@ auto getDSL_F_Settings() {
   return settings;
 }
 
-auto getDSL_FM_Settings() {
+auto getDSL_FM1_Settings() {
   dslicer::FastMultiPassDSlicingSettings settings;
-  settings.configName = "DSL-FM";
+  settings.configName = "DSL-FM1";
   settings.initialStepRatio = 0.2;
+  settings.minimalGranularity = 5;
+  return settings;
+}
+
+auto getDSL_FM2_Settings() {
+  dslicer::FastMultiPassDSlicingSettings settings;
+  settings.configName = "DSL-FM2";
+  settings.initialStepRatio = 0.2;
+  settings.minimalGranularity = 3;
+  return settings;
+}
+
+auto getDSL_FM3_Settings() {
+  dslicer::FastMultiPassDSlicingSettings settings;
+  settings.configName = "DSL-FM3";
+  settings.initialStepRatio = 0.2;
+  settings.minimalGranularity = 2;
   return settings;
 }
 
@@ -377,8 +394,7 @@ const pipelines::ReportConfiguration& getReportConfigMCTS() {
 }
 
 const pipelines::ReportConfiguration& getReportConfigQLEGvsQLB() {
-  static const std::vector<std::string> orderedMethods = {
-      "QLEG1", "QLEG2", "QLEG3", "QLB1", "QLB2", "QLB3"};
+  static const std::vector<std::string> orderedMethods = {"QLEG1"};
   return orderedMethods;
 }
 
@@ -409,19 +425,25 @@ const pipelines::ReportConfiguration& getReportConfigTarget() {
 
 const pipelines::ReportConfiguration& getReportALLSelected() {
   static const std::vector<std::string> orderedMethods = {
-      "DSL",       "GR",        "GRR1",     "GRR2",     "GRR3",
-      "MCTS1",     "MCTS2",     "MCTS3",    "QLEG1",    "QLEG2",
-      "QLEG3",     "QLB1",      "QLB2",     "QLB3",     "QLEG1+DSL",
-      "QLEG2+DSL", "QLEG3+DSL", "QLB1+DSL", "QLB2+DSL", "QLB3+DSL"};
+      "DSL",          "GR",           "GRR1",         "GRR2",
+      "GRR3",         "MCTS1",        "MCTS2",        "MCTS3",
+      "QLEG1",        "QLEG2",        "QLEG3",        "QLB1",
+      "QLB2",         "QLB3",         "QLEG1+DSL",    "QLEG2+DSL",
+      "QLEG3+DSL",    "QLB1+DSL",     "QLB2+DSL",     "QLB3+DSL",
+      "QLEG1+DSL-FM", "QLEG2+DSL-FM", "QLEG3+DSL-FM", "QLB1+DSL-FM",
+      "QLB2+DSL-FM",  "QLB3+DSL-FM"};
   return orderedMethods;
 }
 
 const pipelines::ReportConfiguration& getReportEFTOrder() {
   static const std::vector<std::string> orderedMethods = {
-      "DSL",      "GR",       "GRR1",    "GRR2",      "GRR3",      "MCTS1",
-      "MCTS2",    "MCTS3",    "RAND",    "QLEG1",     "QLEG2",     "QLEG3",
-      "QLB1",     "QLB2",     "QLB3",    "QLEG1+DSL", "QLEG2+DSL", "QLEG3+DSL",
-      "QLB1+DSL", "QLB2+DSL", "QLB3+DSL"};
+      "DSL",         "GR",           "GRR1",         "GRR2",
+      "GRR3",        "MCTS1",        "MCTS2",        "MCTS3",
+      "RAND",        "QLEG1",        "QLEG2",        "QLEG3",
+      "QLB1",        "QLB2",         "QLB3",         "QLEG1+DSL",
+      "QLEG2+DSL",   "QLEG3+DSL",    "QLB1+DSL",     "QLB2+DSL",
+      "QLB3+DSL",    "QLEG1+DSL-FM", "QLEG2+DSL-FM", "QLEG3+DSL-FM",
+      "QLB1+DSL-FM", "QLB2+DSL-FM",  "QLB3+DSL-FM"};
   return orderedMethods;
 }
 
@@ -520,13 +542,16 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
           std::make_unique<GreedyRStage>(getGreedyR3Settings(), GreedyCount));
       break;
     case PipelineType::DSL:
-      pipeline.addStage(std::make_unique<DSlicerStage>(getDSLSettings()));
+      pipeline.addStage(std::make_unique<DSlicerStage>(getDSLSettings(), 5));
       break;
-    case PipelineType::FastDSL:
-      pipeline.addStage(std::make_unique<DSlicerStage>(getDSL_F_Settings()));
+    case PipelineType::DSL_FM1:
+      pipeline.addStage(std::make_unique<DSlicerStage>(getDSL_FM1_Settings(), 5));
       break;
-    case PipelineType::FastDSLMultiPass:
-      pipeline.addStage(std::make_unique<DSlicerStage>(getDSL_FM_Settings()));
+    case PipelineType::DSL_FM2:
+      pipeline.addStage(std::make_unique<DSlicerStage>(getDSL_FM2_Settings(), 5));
+      break;
+    case PipelineType::DSL_FM3:
+      pipeline.addStage(std::make_unique<DSlicerStage>(getDSL_FM3_Settings(), 5));
       break;
     case PipelineType::DSL_PostProcessing:
       pipeline.addStage(std::make_unique<DQLPostProcessSlicerStage>(
@@ -538,7 +563,7 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
       break;
     case PipelineType::DSL_FM_PostProcessing:
       pipeline.addStage(std::make_unique<DQLPostProcessSlicerStage>(
-          getDSL_FM_Settings(), getReportConfig(cmd.group)));
+          getDSL_FM2_Settings(), getReportConfig(cmd.group)));
       break;
     case PipelineType::QLearningAgentLearning:
       if (!agent_model::qlearning::QLearningAgent::get().isLoaded()) {

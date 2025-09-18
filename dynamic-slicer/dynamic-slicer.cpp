@@ -80,7 +80,6 @@ std::vector<recorder::Action> run_d_slicing_fast_checked(
     ++removedCount;
 
     if (removedCount % settings.checkStep == 0) {
-
       auto newCov = settings.objFunc(steps);
       std::cout << "  [Check@" << removedCount
                 << "] coverage=" << newCov.coverage << " baseline=" << baseline
@@ -262,8 +261,8 @@ std::vector<recorder::Action> run_d_slicing_fast_multipass(
       break;
 
     size_t step = static_cast<size_t>(n * initialStepRatio);
-    if (step < 1)
-      step = 1;
+    if (step < settings.minimalGranularity)
+      step = settings.minimalGranularity;
 
     std::cout << "[Slice-Fast-Percent] length=" << n << " step=" << step << " ("
               << initialStepRatio * 100 << "%)\n";
@@ -273,11 +272,13 @@ std::vector<recorder::Action> run_d_slicing_fast_multipass(
     fastSettings.fineObjFunc = settings.fineObjFunc;
     fastSettings.checkStep = step;
 
-    current = run_d_slicing_fast_checked(fastSettings, current, settings.baseline);
+    current =
+        run_d_slicing_fast_checked(fastSettings, current, settings.baseline);
     current = deepCopy(current);
 
-    if (step == 1)
+    if (step == settings.minimalGranularity) {
       break;
+    }
     initialStepRatio /= 2.0;
   }
 
