@@ -8,16 +8,12 @@
 
 #include "coverage/coverage.h"
 
+#include "tracks-slicer.h"
+
 #include <variant>
 
 namespace cider {
 namespace dslicer {
-
-using ObjectiveFunction =
-    std::function<ObjectiveValue(const std::vector<recorder::Action>&)>;
-
-using FineObjectiveFunc =
-    std::function<FineObjectiveValue(const std::vector<recorder::Action>&)>;
 
 struct DSlicingSettings final {
   const char* configName = "DSL_NAN";
@@ -59,22 +55,6 @@ std::ostream& operator<<(std::ostream& os,
 
 std::vector<recorder::Action> run_d_slicing_batch_multipass(
     const BatchMultiPassDSlicingSettings& settings,
-    const std::vector<recorder::Action>& actionSpace);
-
-struct BatchTracksDSlicingSettings final {
-  const char* configName = "DSL-TR_NAN";
-  ObjectiveFunction objFunc;
-  FineObjectiveFunc fineObjFunc;
-  double baseline = 0.0;
-};
-
-inline std::ostream& operator<<(std::ostream& os,
-                                const BatchTracksDSlicingSettings& s) {
-  return os;
-}
-
-std::vector<recorder::Action> run_d_slicing_fast_tracks(
-    const BatchTracksDSlicingSettings& settings,
     const std::vector<recorder::Action>& actionSpace);
 
 using DSLSettings = std::variant<DSlicingSettings,

@@ -587,7 +587,7 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
       break;
     case PipelineType::DSL_TR:
       pipeline.addStage(
-          std::make_unique<DSlicerStage>(getDSL_TR_Settings(), 5));
+          std::make_unique<DSlicerStage>(getDSL_TR_Settings(), 1));
       break;
     case PipelineType::DSL_PostProcessing:
       pipeline.addStage(std::make_unique<DQLPostProcessSlicerStage>(

@@ -41,6 +41,13 @@ bool runDynamicSlicing(SettingsType settings,
       settings.baseline = baseline;
 
       output = dslicer::run_d_slicing_batch_multipass(settings, input);
+    } else if constexpr (std::is_same_v<SettingsType,
+                                        dslicer::BatchTracksDSlicingSettings>) {
+      settings.objFunc = objFunc;
+      settings.fineObjFunc = fineObjFunc;
+      settings.baseline = baseline;
+
+      output = dslicer::run_d_slicing_fast_tracks(settings, input);
     }
   } catch (const std::exception& e) {
     std::cerr << e.what();
