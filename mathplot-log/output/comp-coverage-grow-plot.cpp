@@ -141,18 +141,18 @@ Stats getStats(const std::vector<Points>& points) {
   };
 
   // cut both series to the same length (lineCov dominates)
-  // cutByStagnation(stats.meanLineCov, stats.stdLineCov, stats.instructions);
-  // cutByStagnation(stats.meanBrCov, stats.stdBrCov, stats.instructions);
+  cutByStagnation(stats.meanLineCov, stats.stdLineCov, stats.instructions);
+  cutByStagnation(stats.meanBrCov, stats.stdBrCov, stats.instructions);
 
   return stats;
 }
 
 std::array<double, 2> getAxisLims(const std::string& libName) {
   if (libName == "bitmap_cplusplus") {
-    return {60.0, 35.0};
+    return {30.0, 30.0};
   }
   if (libName == "hjson") {
-    return {600.0, 40.0};
+    return {350.0, 40.0};
   }
   throw std::logic_error{"Wrong library name."};
 }
@@ -222,7 +222,6 @@ void StepperComparativePlot::next(const std::string& name) {
     auto& pointsVector = _graphs[name];
     pointsVector.emplace_back(Points{});
     _current = &pointsVector.back();
-    serialize(ensureExtension(m_path, ".bin"));
   }
 }
 
@@ -249,8 +248,6 @@ void StepperComparativePlot::plot() {
   }
 
   plt::clf();  // Clear previous frame
-
-  int marker = 0;
 
   // === Plot horizontal line for max original coverage ===
   if (_originalCoverage == 0.0f) {
@@ -311,9 +308,9 @@ void StepperComparativePlot::plot() {
                     {"label", prefix + name.c_str()},
                     {"color", getColorByLabel(name)},
                     {"linestyle", "-"},
-                    {"linewidth", "1.5"},
-                    {"marker", MarkerStyles[marker]},
-                    {"markersize", (marker == 3 ? "2.5" : "1.5")}});
+                    {"linewidth", "1.0"},
+                    {"marker", getMarkerByConfig(name)},
+                    {"markersize", "3.5"}});
 
       std::vector<double> lower(stats.meanBrCov.size());
       std::vector<double> upper(stats.meanBrCov.size());
@@ -332,10 +329,6 @@ void StepperComparativePlot::plot() {
           stats.instructions, lower, upper,
           {{"color", getColorByLabel(name)}, {"edgecolor", "none"}}, 0.2);
     }
-
-    marker++;
-    if (marker >= 4)
-      marker = 0;
   }
 
   applyPublicationStyle();

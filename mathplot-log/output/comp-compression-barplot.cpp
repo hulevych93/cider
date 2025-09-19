@@ -115,8 +115,8 @@ void CompressionBarPlot::plot() {
   }
 
   if (_barData.size() > 4) {
-      makeLegentByGroups(getColorGroups(), {0.54, 1.0});
-      rotateXTicks90();
+    makeLegentByGroups(getColorGroups(), {0.54, 1.0});
+    rotateXTicks90();
   }
 
   plt::xticks(xg, methods, {{"fontsize", "7"}});

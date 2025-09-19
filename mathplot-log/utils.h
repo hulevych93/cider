@@ -15,13 +15,6 @@ constexpr const char* LineStyles[] = {
     ":",   // dotted line
 };
 
-constexpr const char* MarkerStyles[] = {
-    "o",
-    "s",
-    "D",
-    "*",
-};
-
 std::string ensureExtension(const std::string& path, const std::string& ext);
 
 std::string ensurePath(const std::string& logDir,
@@ -60,20 +53,36 @@ inline std::vector<std::string> getColorGroups() {
 
 inline std::string getColorByLabel(const std::string& label) {
   if (label.rfind("DSL", 0) == 0)
-    return "#1f77b4";  // синій
+    return "#1f77b4";
   if (label.rfind("GR", 0) == 0)
-    return "#2ca02c";  // зелений
+    return "#2ca02c";
   if (label.rfind("MCTS", 0) == 0)
-    return "#1f9e89";  // бірюзово-зелений
+    return "#1f9e89";
   if (label.rfind("QLEG", 0) == 0 && label.find("+DSL") == std::string::npos)
-    return "#9467bd";  // фіолетовий
+    return "#9467bd";
   if (label.rfind("QLB", 0) == 0 && label.find("+DSL") == std::string::npos)
-    return "#c49c94";  // коричневий
+    return "#c49c94";
   if (label.rfind("QLEG", 0) == 0 && label.find("+DSL") != std::string::npos)
-    return "#17becf";  // бірюзовий
+    return "#17becf";
   if (label.rfind("QLB", 0) == 0 && label.find("+DSL") != std::string::npos)
-    return "#ff7f0e";  // помаранчевий
-  return "#7f7f7f";    // сірий дефолт
+    return "#ff7f0e";
+  return "#7f7f7f";
+}
+
+inline std::string getMarkerByConfig(const std::string& label) {
+  for (int conf = 1; conf <= 4; ++conf) {
+    if (label.find(std::to_string(conf)) != std::string::npos) {
+      switch (conf) {
+        case 1:
+          return "o";
+        case 2:
+          return "s";
+        case 3:
+          return "^";
+      }
+    }
+  }
+  return "D";
 }
 
 }  // namespace cider

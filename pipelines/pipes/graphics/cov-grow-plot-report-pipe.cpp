@@ -36,14 +36,15 @@ StepperReportStage::createProcessor() {
     auto* logger = dynamic_cast<cider::mathplot::StepperComparativePlot*>(plot);
 
     getCompression(
-        methodName, libName, result,
-        [&](unsigned long /*covReachLen*/, double) {
+        methodName, libName, result, [&](unsigned long covReachLen, double) {
           logger->setOriginalCov(getOldCov(libName, result.oldReport));
+
           logger->next(methodName);
           cider::gcov_coverage::StepperCoverageMeasurment stepper{
               cmd, libName.c_str()};
           stepper.setLogger(logger);
-          stepper.measure(result.newActions);
+          stepper.measure(result.newActions, getCoverageGrowStep(libName),
+                          covReachLen);
         });
   };
 }

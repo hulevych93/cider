@@ -57,13 +57,12 @@ struct CoverageMeasurment {
 struct StepperCoverageMeasurment final : CoverageMeasurment {
   StepperCoverageMeasurment(const Cmd& cmd, const char* module);
 
-  void measure(const std::vector<cider::recorder::Action>& actions);
+  void measure(const std::vector<cider::recorder::Action>& actions,
+               const size_t stepSize,
+               const std::optional<size_t> covReachLen);
 
   std::string getScript(
       const std::vector<cider::recorder::Action>& actions) const override;
-
- private:
-  unsigned int m_stepSize = 0;
 };
 
 }  // namespace gcov_coverage

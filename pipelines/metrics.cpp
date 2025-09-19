@@ -28,19 +28,40 @@ void getCompression(const std::string& methodName,
   const bool retained = (result.newReport.branchCov.percent >=
                          getOldCov(libName, result.oldReport));
 
+  std::cout << "[Compression] method=" << methodName << " lib=" << libName
+            << " oldActions=" << result.oldActions.size()
+            << " newCov=" << result.newReport.branchCov.percent
+            << " oldCov=" << getOldCov(libName, result.oldReport)
+            << " retained=" << (retained ? "true" : "false") << std::endl;
+
   if (retained || methodName == "DSL" || methodName == "GR") {
-    assert(result.oldActions.size() > 0);
+    if (result.oldActions.empty()) {
+      std::cout << "[Compression] skipped: oldActions empty" << std::endl;
+      return;
+    }
+
     const auto covReachLen = getCovReachLength(result);
+
+    std::cout << "[Compression] covReachLen=" << covReachLen
+              << " (actions=" << result.oldActions.size() << ")" << std::endl;
+
     if (methodName.find("+DSL") != std::string::npos) {
       if (covReachLen > 300) {
+        std::cout << "[Compression] skipped: covReachLen>300" << std::endl;
         return;
       }
     }
 
-    double c = (double)(result.oldActions.size() - covReachLen) /
-               (double)result.oldActions.size();
+    double c = static_cast<double>(result.oldActions.size() - covReachLen) /
+               static_cast<double>(result.oldActions.size());
+
+    std::cout << "[Compression] final covReachLen=" << covReachLen
+              << " compression=" << c << std::endl;
 
     handler(covReachLen, c);
+  } else {
+    std::cout << "[Compression] skipped: retained=false and method!="
+              << "DSL/GR" << std::endl;
   }
 }
 

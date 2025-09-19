@@ -56,6 +56,8 @@ void printResult(const std::string& methodName,
 
 int getDataSize(const std::string& libName);
 
+size_t getCoverageGrowStep(const std::string& libName);
+
 double getOldCov(const std::string& libName,
                  const gcov_coverage::CoverageReport& report);
 

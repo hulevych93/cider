@@ -124,6 +124,16 @@ int getDataSize(const std::string& libName) {
   throw std::logic_error{"Wrong library name."};
 }
 
+size_t getCoverageGrowStep(const std::string& libName) {
+  if (libName == "bitmap_cplusplus") {
+    return 3;
+  }
+  if (libName == "hjson") {
+    return 5;
+  }
+  throw std::logic_error{"Wrong library name."};
+}
+
 double getOldCov(const std::string& libName,
                  const gcov_coverage::CoverageReport& report) {
   if (libName == "bitmap_cplusplus") {

@@ -73,20 +73,38 @@ StepperCoverageMeasurment::StepperCoverageMeasurment(const Cmd& cmd,
     : CoverageMeasurment(cmd, module) {}
 
 void StepperCoverageMeasurment::measure(
-    const std::vector<cider::recorder::Action>& actions) {
+    const std::vector<cider::recorder::Action>& actions,
+    const size_t stepSize,
+    const std::optional<size_t> covReachLen) {
   std::cout << "actions size: " << actions.size() << std::endl;
 
   if (m_logger) {
     m_logger->log(0U, {});
   }
 
-  m_stepSize = 20;
+  _index = 0;
 
   for (; _index < actions.size();) {
     (*this)(actions);
+    const size_t nextIndex = _index + stepSize;
 
-    assert(m_stepSize > 0);
-    _index += m_stepSize;
+    if (covReachLen.has_value()) {
+      const auto richLenIntex = covReachLen.value() - 1;
+      if (richLenIntex > _index && richLenIntex < nextIndex &&
+          richLenIntex < actions.size()) {
+        _index = richLenIntex;
+        std::cout << "[CovReach] forced log at i=" << _index << "\n";
+        (*this)(actions);
+      }
+    }
+
+    _index = nextIndex;
+  }
+
+  if (_index - stepSize < actions.size() - 1) {
+    _index = actions.size() - 1;
+    std::cout << "[CovReach] final log at i=" << _index << "\n";
+    (*this)(actions);
   }
 }
 
