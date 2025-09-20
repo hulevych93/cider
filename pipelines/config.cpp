@@ -115,6 +115,14 @@ auto getDSL_F_Settings() {
   return settings;
 }
 
+auto getDSL_FM0_Settings() {
+  dslicer::BatchMultiPassDSlicingSettings settings;
+  settings.configName = "DSL-FM0";
+  settings.initialStepRatio = 0.2;
+  settings.minimalGranularity = 7;
+  return settings;
+}
+
 auto getDSL_FM1_Settings() {
   dslicer::BatchMultiPassDSlicingSettings settings;
   settings.configName = "DSL-FM1";
@@ -573,6 +581,10 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
     case PipelineType::DSL:
       pipeline.addStage(std::make_unique<DSlicerStage>(getDSLSettings(), 5));
       break;
+    case PipelineType::DSL_FM0:
+        pipeline.addStage(
+            std::make_unique<DSlicerStage>(getDSL_FM0_Settings(), 5));
+        break;
     case PipelineType::DSL_FM1:
       pipeline.addStage(
           std::make_unique<DSlicerStage>(getDSL_FM1_Settings(), 5));
@@ -593,6 +605,10 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
       pipeline.addStage(std::make_unique<DQLPostProcessSlicerStage>(
           getDSLSettings(), getReportConfig(cmd.group)));
       break;
+    case PipelineType::DSL_FM0_PostProcessing:
+        pipeline.addStage(std::make_unique<DQLPostProcessSlicerStage>(
+            getDSL_FM0_Settings(), getReportConfig(cmd.group)));
+        break;
     case PipelineType::DSL_FM1_PostProcessing:
       pipeline.addStage(std::make_unique<DQLPostProcessSlicerStage>(
           getDSL_FM1_Settings(), getReportConfig(cmd.group)));

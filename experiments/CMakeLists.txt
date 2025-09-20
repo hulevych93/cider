@@ -103,14 +103,16 @@ add_target_def(GRR2 41 GROUP ${GROUP_GREEDY_R})
 add_target_def(GRR3 42 GROUP ${GROUP_GREEDY_R})
 
 # === DSL ===
+add_target_def(DSL_FM0 34 GROUP ${GROUP_DSL})
 add_target_def(DSL_FM1 35 GROUP ${GROUP_DSL})
 add_target_def(DSL_FM2 36 GROUP ${GROUP_DSL})
 add_target_def(DSL_FM3 37 GROUP ${GROUP_DSL})
 
-add_target_def(DSL 45 GROUP ${GROUP_DSL})
+add_target_def(DSL 44 GROUP ${GROUP_DSL})
 add_target_def(DSL_TR 15 GROUP ${GROUP_DSL})
 
-add_target_def(DSL_POST 46 GROUP ${GROUP_DSL})
+add_target_def(DSL_POST 45 GROUP ${GROUP_DSL})
+add_target_def(DSL_FM0_POST 46 GROUP ${GROUP_QLEG_VS_QLB})
 add_target_def(DSL_FM1_POST 47 GROUP ${GROUP_QLEG_VS_QLB})
 add_target_def(DSL_FM2_POST 48 GROUP ${GROUP_QLEG_VS_QLB})
 add_target_def(DSL_FM3_POST 49 GROUP ${GROUP_QLEG_VS_QLB})

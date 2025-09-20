@@ -29,15 +29,17 @@ enum class PipelineType {
   GreedyR2 = 41,
   GreedyR3 = 42,
 
-  DSL = 45,
-
+  DSL_FM0 = 34,
   DSL_FM1 = 35,
   DSL_FM2 = 36,
   DSL_FM3 = 37,
 
+  DSL = 44,
+
   DSL_TR = 15,
 
-  DSL_PostProcessing = 46,
+  DSL_PostProcessing = 45,
+  DSL_FM0_PostProcessing = 46,
   DSL_FM1_PostProcessing = 47,
   DSL_FM2_PostProcessing = 48,
   DSL_FM3_PostProcessing = 49,
