@@ -30,8 +30,6 @@ struct Coverage final : serialization::SerializableTag {
   Coverage& operator=(const Coverage& rhs);
 
   void dump() const;
-
-  Coverage& alignTo(const Coverage& startingPoint);
 };
 
 using CoveragePerAction = std::vector<Coverage>;
@@ -41,8 +39,9 @@ bool serialize(const Coverage& obj, serialization::Serializer& serializer);
 bool deserialize(Coverage& obj,
                  const serialization::Deserializer& deserializer);
 
+void zeroCfgCounters(int* blockCount = nullptr);
+
 void dumpCoverageToCout(bool status,
-                        const Coverage& startPoint,
                         const std::chrono::steady_clock::time_point& startTime);
 
 void dumpCoverageToCout(const CoveragePerAction& coverage);

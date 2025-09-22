@@ -66,13 +66,6 @@ double Coverage::getPercentage() const {
   return result * 100.0f;
 }
 
-Coverage& Coverage::alignTo(const Coverage& startingPoint) {
-  assert(total == startingPoint.total);
-  assert(covered >= startingPoint.covered);
-  covered = covered - startingPoint.covered;
-  return *this;
-}
-
 bool serialize(const Coverage& obj, serialization::Serializer& serializer) {
   serializer << obj.meassureTimeMcs;
   serializer << obj.covered;
@@ -96,9 +89,22 @@ void Coverage::dump() const {
   tlog_info << covered << ":" << total << std::endl;
 }
 
+void zeroCfgCounters(int* blockCount) {
+    int j = 0;
+    for(int i = 0; i < max_guard_id; ++i) {
+        if(coverage_map[i] == 1) {
+            ++j;
+            coverage_map[i] = 0; // not relative block
+        }
+    }
+    if(blockCount) {
+        *blockCount = max_guard_id;
+    }
+    tlog_info << "Not relative block count " << j << std::endl;
+}
+
 void dumpCoverageToCout(
     bool status,
-    const Coverage& startPoint,
     const std::chrono::steady_clock::time_point& startTime) {
   auto coverage = getCoverage();
 
@@ -107,7 +113,7 @@ void dumpCoverageToCout(
       std::chrono::duration_cast<std::chrono::microseconds>(end - startTime)
           .count();
 
-  coverage.alignTo(startPoint).status = status;
+  coverage.status = status;
   const auto covJson = serializeCovReport(coverage);
   tlog_info << MarkerStart << covJson << MarkerEnd << coverage.getPercentage();
 }

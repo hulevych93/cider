@@ -37,8 +37,10 @@ int main(int argc, char* argv[]) {
 
     cider::cfg_coverage::CoveragePerAction traceCoverage;
 
-    auto startCov = cider::cfg_coverage::getCoverage();
     const auto startTime = std::chrono::steady_clock::now();
+
+    int* blockCount = new int;
+    *blockCount = 0;
 
     cider::scripting::LuaActionHook::instance().setHook(
         lState.get(), [&](int numActions) { traceCoverage.resize(numActions); },
@@ -47,7 +49,8 @@ int main(int argc, char* argv[]) {
 
           static std::vector<std::uint8_t> seenBlocks;
           if (seenBlocks.empty()) {
-            seenBlocks.resize(startCov.coveredTracks.size(), 0);
+            assert(blockCount);
+            seenBlocks.resize(*blockCount, 0);
           }
 
           cider::cfg_coverage::Coverage cov =
@@ -59,7 +62,7 @@ int main(int argc, char* argv[]) {
                                                                     startTime)
                   .count();
 
-          cov.alignTo(startCov).status = true;
+          cov.status = true;
 
           std::vector<std::uint8_t> delta(cov.coveredTracks.size(), 0);
           for (size_t j = 0; j < cov.coveredTracks.size(); ++j) {
@@ -74,11 +77,10 @@ int main(int argc, char* argv[]) {
           traceCoverage[idx].status = cov.status;
         });
 
+    cider::cfg_coverage::zeroCfgCounters(blockCount);
+
     const auto result =
         cider::scripting::executeScript(lState.get(), script.c_str()) ? 0 : 1;
-
-    std::ofstream debugScript("script.lua");
-    debugScript << script;
 
     cider::scripting::LuaActionHook::instance().clear(lState.get());
 
