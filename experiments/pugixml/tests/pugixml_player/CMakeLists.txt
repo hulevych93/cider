@@ -21,6 +21,7 @@ set(PLAYER_LIBS
     pugixml_traced
     ${Lua_LIBRARIES}
     ${PLATFORM_LIBRARIES}
+    ${TinyLog_LIBRARIES}
 )
 
 add_executable(pugixml_player player.cpp ${TESTED_FILES})

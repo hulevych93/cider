@@ -7,7 +7,7 @@
 #include "metaheuristics/args_mutator.h"
 
 #include <assert.h>
-#include <iostream>
+#include <tlog.h>
 
 namespace cider {
 namespace metasearch {
@@ -49,7 +49,7 @@ void Search::initialize(const ActionsCallback& callback) {
       solution.objVal = objValue;
       _harmonyMemory[i] = std::move(solution);
     } else {
-      std::cout << "Bad script during nest generation" << std::endl;
+      tlog_info << "Bad script during nest generation" << std::endl;
     }
   }
 
@@ -69,7 +69,7 @@ void Search::run() {
       break;
     }
 
-    std::cout << "Iter: " << iteration << std::endl;
+    tlog_info << "Iter: " << iteration << std::endl;
     Harmony newHarmony = generateHarmony(getWorst());
     if (auto mutated = mutateHarmony(newHarmony)) {
       if (updateHarmonyMemory(*mutated)) {
@@ -96,7 +96,7 @@ Harmony Search::generateHarmony(const Harmony& harmony) const {
       newHarmony.actions = std::move(actions);
       newHarmony.objVal = objValue;
     } else {
-      std::cout << "Bad script during nest generation" << std::endl;
+      tlog_info << "Bad script during nest generation" << std::endl;
     }
   }
   return newHarmony;
@@ -126,7 +126,7 @@ std::optional<Harmony> Search::mutateHarmony(const Harmony& harmony) const {
   const auto objValue = _settings.objFunc(mutatedHarmony.actions);
   if (objValue > std::numeric_limits<double>::epsilon()) {
     mutatedHarmony.objVal = objValue;
-    std::cout << objValue << std::endl;
+    tlog_info << objValue << std::endl;
     return mutatedHarmony;
   }
 
@@ -152,15 +152,15 @@ Harmony& Search::getWorst() {
 const Harmony& Search::getBest() const {
   const auto& best =
       *std::max_element(_harmonyMemory.begin(), _harmonyMemory.end());
-  std::cout << "Best :" << best.objVal << std::endl;
+  tlog_info << "Best :" << best.objVal << std::endl;
   return best;
 }
 
 void Search::dump() {
   int idx = 0;
-  std::cout << _harmonyMemory.size() << std::endl;
+  tlog_info << _harmonyMemory.size() << std::endl;
   for (const auto& harmony : _harmonyMemory) {
-    std::cout << "Harmony[" << idx << "]: " << harmony.objVal << std::endl;
+    tlog_info << "Harmony[" << idx << "]: " << harmony.objVal << std::endl;
     ++idx;
   }
 }

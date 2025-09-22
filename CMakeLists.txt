@@ -45,6 +45,7 @@ add_subdirectory(thirdparty/cxxopts)
 add_subdirectory(thirdparty/nlohmann)
 add_subdirectory(thirdparty/pybind)
 add_subdirectory(thirdparty/tpl)
+add_subdirectory(thirdparty/tinylog)
 
 add_subdirectory(thirdparty/mathplotlib)
 add_subdirectory(mathplot-log)

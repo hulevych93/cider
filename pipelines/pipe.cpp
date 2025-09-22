@@ -8,6 +8,8 @@
 
 #include "metrics.h"
 
+#include <tlog.h>
+
 namespace cider {
 namespace pipelines {
 
@@ -41,7 +43,7 @@ bool Pipe::pushResult(const std::string& libName,
                                               result.newActions, libName, cmd);
   if (reached.has_value()) {
     result.coverageReachedLength = *reached;
-    std::cout << "    [OK] " << result.testCaseName
+    tlog_info << "    [OK] " << result.testCaseName
               << " coverage reached at length = " << *reached << "\n";
     success++;
   }

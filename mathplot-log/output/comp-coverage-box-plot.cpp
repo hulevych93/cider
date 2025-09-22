@@ -5,7 +5,7 @@
 
 #include <assert.h>
 
-#include <iostream>
+#include <tlog.h>
 #include <sstream>
 
 #include <math/stat-utils.h>
@@ -104,7 +104,7 @@ void plotMannWhitney(const std::string& path,
   double p_kw = 1.0;
   try {
     p_kw = kruskal_wallis(plotDatas);
-    std::cout << "[Kruskal–Wallis] p = " << p_kw << std::endl;
+    tlog_info << "[Kruskal–Wallis] p = " << p_kw << std::endl;
   } catch (const std::exception& e) {
     std::cerr << "Kruskal–Wallis error: " << e.what() << std::endl;
   }
@@ -119,7 +119,7 @@ void plotMannWhitney(const std::string& path,
   csv << "GroupA;GroupB;p-raw;p-holm;Significance\n";
 
   if (p_kw >= 0.05) {
-    std::cout << "[PostHoc] Global test not significant\n";
+    tlog_info << "[PostHoc] Global test not significant\n";
     return;
   }
 
@@ -141,7 +141,7 @@ void plotMannWhitney(const std::string& path,
         << pr.p_raw << ";" << pr.p_adj << ";" << pr.sig << "\n";
   }
   csv.close();
-  std::cout << "[INFO] Mann–Whitney table written to " << path << std::endl;
+  tlog_info << "[INFO] Mann–Whitney table written to " << path << std::endl;
 
   // --- Draw only comparisons vs first group (e.g. DSL) ---
   auto justLogOut = numGroups >= 4;
@@ -184,7 +184,7 @@ void exportMannWhitneyMatrix(
   double p_kw = 1.0;
   try {
     p_kw = kruskal_wallis(plotDatas);
-    std::cout << "[Kruskal–Wallis] p = " << p_kw << std::endl;
+    tlog_info << "[Kruskal–Wallis] p = " << p_kw << std::endl;
   } catch (const std::exception& e) {
     std::cerr << "Kruskal–Wallis error: " << e.what() << std::endl;
   }
@@ -203,7 +203,7 @@ void exportMannWhitneyMatrix(
   csv << "\n";
 
   if (p_kw >= 0.05) {
-    std::cout << "[PostHoc] Global test not significant → skip matrix\n";
+    tlog_info << "[PostHoc] Global test not significant → skip matrix\n";
     return;
   }
 
@@ -240,7 +240,7 @@ void exportMannWhitneyMatrix(
     csv << "\n";
   }
   csv.close();
-  std::cout << "[INFO] Mann–Whitney matrix written to " << path << std::endl;
+  tlog_info << "[INFO] Mann–Whitney matrix written to " << path << std::endl;
 }
 
 double plotBoxStats(const std::string& path,
@@ -258,8 +258,8 @@ double plotBoxStats(const std::string& path,
     if (csv) {
       csv << "Label;Q1;Median;Q3;Lower;Upper\n";
     }
-    std::cout << "\n[BoxStats Table]\n";
-    std::cout << "Label\tQ1\tMedian\tQ3\tLower\tUpper\n";
+    tlog_info << "\n[BoxStats Table]\n";
+    tlog_info << "Label\tQ1\tMedian\tQ3\tLower\tUpper\n";
   }
 
   for (size_t i = 0; i < plotDatas.size(); ++i) {
@@ -289,7 +289,7 @@ double plotBoxStats(const std::string& path,
       add_label(idx + offsetBase, y + deltaY * 4, stats.upper_whisker, "Upper");
     } else {
       // Виводимо в консоль
-      std::cout << labels[i] << "\t" << std::fixed << std::setprecision(2)
+      tlog_info << labels[i] << "\t" << std::fixed << std::setprecision(2)
                 << stats.q1 << "'\t" << stats.median << "'\t" << stats.q3
                 << "'\t" << stats.lower_whisker << "'\t" << stats.upper_whisker
                 << "'\n";
@@ -308,7 +308,7 @@ double plotBoxStats(const std::string& path,
   if (csv.is_open()) {
     csv.flush();
     csv.close();
-    std::cout << "[INFO] Box stats saved to boxstats.csv\n";
+    tlog_info << "[INFO] Box stats saved to boxstats.csv\n";
   }
 
   return maxTop;
@@ -347,7 +347,7 @@ void CoverageBoxPlot::serialize(const std::string& filePath) {
     serializer << _originalCoverage;
     serializer.save(filePath);
   } catch (...) {
-    std::cout << "Graph serialization failed : " << filePath << std::endl;
+    tlog_info << "Graph serialization failed : " << filePath << std::endl;
   }
 }
 
@@ -359,7 +359,7 @@ bool CoverageBoxPlot::load() {
     deserializer >> _order;
     deserializer >> _originalCoverage;
   } catch (const std::exception& e) {
-    std::cout << e.what() << std::endl;
+    tlog_info << e.what() << std::endl;
     return false;
   }
   return true;
@@ -397,7 +397,7 @@ void CoverageBoxPlot::plot() {
   for (const auto& orderName : _order) {
     const auto it = _boxData.find(orderName);
     if (it == _boxData.end()) {
-      std::cout << "Warning method not simulated: " << orderName << std::endl;
+      tlog_info << "Warning method not simulated: " << orderName << std::endl;
       continue;
     }
 
@@ -420,7 +420,7 @@ void CoverageBoxPlot::plot() {
   // === Plot horizontal line for max original coverage ===
   double maxOriginalCoverage = _originalCoverage;
 
-  std::cout << maxOriginalCoverage << std::endl;
+  tlog_info << maxOriginalCoverage << std::endl;
 
   plt::plot(std::vector<double>{0.5, xticks.back()},
             std::vector<double>{maxOriginalCoverage, maxOriginalCoverage},
@@ -433,7 +433,7 @@ void CoverageBoxPlot::plot() {
   for (const auto& orderName : _order) {
     const auto iter = _boxData.find(orderName);
     if (iter == _boxData.end()) {
-      std::cout << "Warning method not simulated: " << orderName << std::endl;
+      tlog_info << "Warning method not simulated: " << orderName << std::endl;
       continue;
     }
 

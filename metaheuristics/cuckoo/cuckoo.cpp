@@ -4,8 +4,8 @@
 #include "cuckoo.h"
 
 #include <assert.h>
+#include <tlog.h>
 #include <cmath>
-#include <iostream>
 #include <numeric>
 #include <random>
 
@@ -110,7 +110,7 @@ void Search::initialize(const ActionsCallback& callback) {
       _memory.emplace_back(std::move(newNest));
       ++i;
     } else {
-      std::cout << "Bad script during nest generation" << std::endl;
+      tlog_info << "Bad script during nest generation" << std::endl;
     }
   }
 
@@ -126,7 +126,7 @@ void Search::run() {
   for (int iteration = 1U;
        iterWithoutUpdates <= _settings.maxIterationsWithoutUpdates;
        ++iteration, ++iterWithoutUpdates) {
-    std::cout << "Iter: " << iteration << std::endl;
+    tlog_info << "Iter: " << iteration << std::endl;
 
     if (_settings.maxIter != 0 && iteration > _settings.maxIter) {
       break;
@@ -136,9 +136,9 @@ void Search::run() {
       auto& nest = _memory[i];
       auto newNest = generateNest(nest);
       if (newNest.has_value()) {
-        std::cout << newNest->objVal << std::endl;
+        tlog_info << newNest->objVal << std::endl;
         if (newNest->objVal > nest.objVal) {
-          std::cout << " <- " << nest.objVal << std::endl;
+          tlog_info << " <- " << nest.objVal << std::endl;
           nest = deepCopy(*newNest);
           iterWithoutUpdates = 0U;
           dump();
@@ -164,7 +164,7 @@ void Search::run() {
         newNest.objVal = objValue;
         _memory[i] = std::move(newNest);
       } else {
-        std::cout << "Bad script during nest generation" << std::endl;
+        tlog_info << "Bad script during nest generation" << std::endl;
       }
     }
   }
@@ -189,14 +189,14 @@ std::optional<Nest> Search::generateNest(const Nest& nest) const {
 
 const Nest& Search::getBest() const {
   const auto& best = *std::max_element(_memory.begin(), _memory.end());
-  std::cout << "Best :" << best.objVal << std::endl;
+  tlog_info << "Best :" << best.objVal << std::endl;
   return best;
 }
 
 void Search::dump() {
   int idx = 0;
   for (const auto& cuckoo : _memory) {
-    std::cout << "Nest[" << idx << "]: " << cuckoo.objVal << std::endl;
+    tlog_info << "Nest[" << idx << "]: " << cuckoo.objVal << std::endl;
     ++idx;
   }
 }

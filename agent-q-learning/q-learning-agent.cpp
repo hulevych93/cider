@@ -3,7 +3,7 @@
 
 #include "q-learning-agent.h"
 
-#include <iostream>
+#include <tlog.h>
 #include <random>
 
 namespace cider {
@@ -28,7 +28,7 @@ double QLearningAgent::updateQValues(const recorder::Actions& state,
     }
   }
 
-  std::cout << "lr: " << learningRate << ", r: " << reward
+  tlog_info << "lr: " << learningRate << ", r: " << reward
             << ", mV: " << maxQValue << ", qv: " << qValue << " -> ";
 
   qValue += learningRate * (reward + discount * maxQValue - qValue);
@@ -36,7 +36,7 @@ double QLearningAgent::updateQValues(const recorder::Actions& state,
   float target = reward + discount * maxQValue;
   float loss = 0.5f * (qValue - target) * (qValue - target);
 
-  std::cout << qValue << ", target:" << target << ", loss: " << loss
+  tlog_info << qValue << ", target:" << target << ", loss: " << loss
             << std::endl;
 
   return loss;

@@ -3,7 +3,7 @@
 
 #include "dslicer-pipe.h"
 
-#include <iostream>
+#include <tlog.h>
 
 #include "coverage/cfg_measurer.h"
 #include "coverage/gcov_measurer.h"
@@ -98,13 +98,13 @@ bool DQLPostProcessSlicerStage::process(const std::string&,
                                         const cider::Cmd& cmd) {
   auto results = getResults();
 
-  std::cout << "[INFO] PostProcessDSlicerStage: start\n";
+  tlog_info << "[INFO] PostProcessDSlicerStage: start\n";
 
   int i = 0;
   for (const auto& methodName : _config) {
     auto it = results.find(methodName);
     if (it == results.end()) {
-      std::cout << "  [WARN] Method not found: " << methodName << "\n";
+      tlog_info << "  [WARN] Method not found: " << methodName << "\n";
       continue;
     }
 
@@ -115,7 +115,7 @@ bool DQLPostProcessSlicerStage::process(const std::string&,
 
     std::string newMethodName = methodName + "+" + slicerMethod;
 
-    std::cout << "  [PROCESS] " << methodName << " -> " << newMethodName
+    tlog_info << "  [PROCESS] " << methodName << " -> " << newMethodName
               << " | entries: " << getDataSize(libName) << "\n";
 
     gcov_coverage::CoverageMeasurment measurer{cmd, libName.c_str()};
@@ -155,10 +155,10 @@ bool DQLPostProcessSlicerStage::process(const std::string&,
 
       pushResult(libName.c_str(), cmd, methodName, result);
 
-      std::cout << "[" << i << "," << _config.size() << "]";
-      std::cout << "[" << j << "," << getDataSize(libName) << "]";
+      tlog_info << "[" << i << "," << _config.size() << "]";
+      tlog_info << "[" << j << "," << getDataSize(libName) << "]";
 
-      std::cout << "    [OK] " << r.testCaseName
+      tlog_info << "    [OK] " << r.testCaseName
                 << " | oldLen=" << r.newActions.size()
                 << " -> newLen=" << sliced.size() << " | time=" << elapsed_mcs
                 << " mcs\n";
@@ -171,7 +171,7 @@ bool DQLPostProcessSlicerStage::process(const std::string&,
     i++;
   }
 
-  std::cout << "[INFO] PostProcessDSlicerStage: done\n";
+  tlog_info << "[INFO] PostProcessDSlicerStage: done\n";
   return true;
 }
 

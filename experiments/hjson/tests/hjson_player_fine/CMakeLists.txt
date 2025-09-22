@@ -20,6 +20,7 @@ set(PLAYER_LIBS
     coverage
     ${Lua_LIBRARIES}
     ${PLATFORM_LIBRARIES}
+    ${TinyLog_LIBRARIES}
 )
 
 add_executable(hjson_player_fine hjson_player_fine.cpp)

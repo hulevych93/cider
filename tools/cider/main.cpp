@@ -35,7 +35,7 @@ void print_error(const std::string& msg) {
 }
 
 void print_help(const cxxopts::Options& options) {
-  std::cout << options.help({"", "compilation"}) << '\n';
+  tlog_info << options.help({"", "compilation"}) << '\n';
 }
 
 template <typename Functor>
@@ -90,7 +90,7 @@ int main(int argc, char* argv[]) {
       return 0;
     }
     if (options.count("version")) {
-      std::cout << "cider version "
+      tlog_info << "cider version "
                 << "1.0"
                 << "\n";
       return 0;

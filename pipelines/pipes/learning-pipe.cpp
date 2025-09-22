@@ -15,7 +15,7 @@
 #include "mathplot-log/monitoring/q-learning-reward-loss-plot.h"
 
 #include <assert.h>
-#include <iostream>
+#include <tlog.h>
 
 namespace cider {
 namespace pipelines {
@@ -77,7 +77,7 @@ bool LearningStage::process(const std::string& metadata,
   outPath /= metadata;
 
   if (std::filesystem::exists(outPath)) {
-    std::cout << "Already existing result for: " << outPath << ". Skipping..."
+    tlog_info << "Already existing result for: " << outPath << ". Skipping..."
               << std::endl;
     return true;
   }

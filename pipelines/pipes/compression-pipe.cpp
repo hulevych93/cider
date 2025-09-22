@@ -10,7 +10,7 @@
 
 #include "pipelines/metrics.h"
 
-#include <iostream>
+#include <tlog.h>
 #include <thread>
 
 namespace cider {
@@ -24,7 +24,7 @@ bool ResultsCompressionStage::process(const std::string&,
                                       const std::string& libName,
                                       const cider::Cmd& cmd) {
   if (_config.empty()) {
-    std::cout << "Empty config error." << std::endl;
+    tlog_info << "Empty config error." << std::endl;
     return false;
   }
 
@@ -33,7 +33,7 @@ bool ResultsCompressionStage::process(const std::string&,
   for (const auto& methodConfig : _config) {
     auto it = results.find(methodConfig);
     if (it == results.end()) {
-      std::cout << "Warning method not simulated: " << methodConfig
+      tlog_info << "Warning method not simulated: " << methodConfig
                 << std::endl;
       continue;
     }
@@ -43,7 +43,7 @@ bool ResultsCompressionStage::process(const std::string&,
 
     i++;
 
-    std::cout << "  [METHOD] " << method
+    tlog_info << "  [METHOD] " << method
               << " | entries: " << pack.entries.size() << std::endl;
 
     int j = 0;
@@ -51,15 +51,15 @@ bool ResultsCompressionStage::process(const std::string&,
       j++;
       auto reached = computeCoverageReachedLength(r.oldActions, r.newActions,
                                                   libName, cmd);
-      std::cout << "[" << i << "," << results.size() << "][" << j << ","
+      tlog_info << "[" << i << "," << results.size() << "][" << j << ","
                 << pack.entries.size() << "]" << std::endl;
       if (reached.has_value()) {
         r.coverageReachedLength = *reached;
-        std::cout << "[OK] " << r.testCaseName
+        tlog_info << "[OK] " << r.testCaseName
                   << " coverage reached at length = " << *reached << "\n";
       } else {
         r.coverageReachedLength = r.newActions.size();
-        std::cout << "[FAIL] " << r.testCaseName
+        tlog_info << "[FAIL] " << r.testCaseName
                   << " never reached old coverage, "
                   << "fallback = full length "
                   << r.coverageReachedLength.value() << "\n";

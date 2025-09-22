@@ -5,7 +5,7 @@
 
 #include <assert.h>
 
-#include <iostream>
+#include <tlog.h>
 
 #include "math/stat-utils.h"
 #include "mathplot-log/utils.h"
@@ -51,7 +51,7 @@ void CompressionBarPlot::serialize(const std::string& filePath) {
     serializer << _order;
     serializer.save(filePath);
   } catch (...) {
-    std::cout << "Graph serialization failed : " << filePath << std::endl;
+    tlog_info << "Graph serialization failed : " << filePath << std::endl;
   }
 }
 
@@ -61,7 +61,7 @@ bool CompressionBarPlot::load() {
     deserializer >> _barData;
     deserializer >> _order;
   } catch (const std::exception& e) {
-    std::cout << e.what() << std::endl;
+    tlog_info << e.what() << std::endl;
     return false;
   }
   return true;
@@ -90,7 +90,7 @@ void CompressionBarPlot::plot() {
   for (const auto& orderName : _order) {
     const auto it = _barData.find(orderName);
     if (it == _barData.end()) {
-      std::cout << "Warning method not simulated: " << orderName << std::endl;
+      tlog_info << "Warning method not simulated: " << orderName << std::endl;
       continue;
     }
 

@@ -7,4 +7,6 @@ cider_collect_src(LIST_OUT "tests")
 
 add_library(math-stat ${LIST_OUT})
 
+target_include_directories(math-stat PRIVATE ${TinyLog_INCLUDE_DIRS})
+
 add_dependencies(math-stat ${CIDER_THIRDPARTY_TARGET_NAME})

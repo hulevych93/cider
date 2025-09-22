@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <iostream>
+#include <tlog.h>
 
 #include <cppast/cppast_fwd.hpp>
 #include <cppast/detail/intrusive_list.hpp>

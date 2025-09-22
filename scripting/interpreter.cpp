@@ -5,7 +5,7 @@
 
 #include <lua.hpp>
 
-#include <iostream>
+#include <tlog.h>
 
 namespace cider {
 namespace scripting {
@@ -34,7 +34,7 @@ bool executeScript(lua_State* L, const char* script) {
   const bool ok = luaL_loadstring(L, script) == LUA_OK &&
                   lua_pcall(L, 0, LUA_MULTRET, 0) == LUA_OK;
   if (!ok) {
-    std::cout << popResult(L);
+    tlog_info << popResult(L);
   }
   return ok;
 }

@@ -4,7 +4,10 @@
 function(add_experiment_driver target_name)
     add_executable(${target_name}_driver coverage_driver.cpp)
 
-    target_include_directories(${target_name}_driver PRIVATE ${Python3_INCLUDE_DIRS} ${PyBind_INCLUDE_DIRS})
+    target_include_directories(${target_name}_driver PRIVATE
+        ${Python3_INCLUDE_DIRS}
+        ${PyBind_INCLUDE_DIRS}
+        ${TinyLog_INCLUDE_DIRS})
 
     target_link_libraries(${target_name}_driver PUBLIC
       coverage
@@ -21,6 +24,7 @@ function(add_experiment_driver target_name)
       dynamic-slicer
       mathplot-log
       math-stat
+      ${TinyLog_LIBRARIES}
       ${Python3_LIBRARIES}
     )
 endfunction()

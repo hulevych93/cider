@@ -7,7 +7,7 @@
 #include "synthesis/rand-synthesis.h"
 
 #include <assert.h>
-#include <iostream>
+#include <tlog.h>
 
 namespace cider {
 namespace pipelines {

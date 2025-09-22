@@ -10,6 +10,8 @@ add_library(coverage ${LIST_OUT})
 target_include_directories(coverage PRIVATE ${Tpl_INCLUDE_DIRS})
 target_include_directories(coverage PRIVATE ${NLohMann_INCLUDE_DIRS})
 
+target_include_directories(coverage PRIVATE ${TinyLog_INCLUDE_DIRS})
+
 target_link_libraries(coverage PUBLIC
   ${Tpl_LIBRARIES}
   ${PLATFORM_LIBRARIES}

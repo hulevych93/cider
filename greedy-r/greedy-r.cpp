@@ -5,10 +5,10 @@
 
 #include "synthesis/synthesis.h"
 
+#include <tlog.h>
 #include <algorithm>
 #include <cstdint>
 #include <functional>
-#include <iostream>
 #include <numeric>
 #include <string>
 #include <unordered_set>
@@ -39,7 +39,7 @@ TestCase run_greedy_r(std::mt19937& gen,
   std::vector<bool> used(actionSpace.size(), false);
   double currentCoverage = 0.0;
 
-  std::cout << "[Greedy-R] Target covered tracks: " << fullCoverage << "\n";
+  tlog_info << "[Greedy-R] Target covered tracks: " << fullCoverage << "\n";
 
   size_t step = 0;
   size_t zeroGain = 0;
@@ -70,12 +70,12 @@ TestCase run_greedy_r(std::mt19937& gen,
     }
 
     if (candidates.empty() && zeroGain >= settings.maxZeroGain) {
-      std::cout << "[Greedy-R] No further gain, stopping.\n";
+      tlog_info << "[Greedy-R] No further gain, stopping.\n";
       break;
     }
 
     if (candidates.empty() && others.empty()) {
-      std::cout << "[Greedy-R] No further actions, stopping.\n";
+      tlog_info << "[Greedy-R] No further actions, stopping.\n";
       break;
     }
 
@@ -108,18 +108,18 @@ TestCase run_greedy_r(std::mt19937& gen,
 
     ++step;
 
-    std::cout << "[Greedy-R] Step " << step << ": selected action #"
+    tlog_info << "[Greedy-R] Step " << step << ": selected action #"
               << winner.index << ", gain = " << winner.gain
               << ", total covered = " << currentCoverage << "/" << fullCoverage
               << "\n";
 
     if (currentCoverage >= fullCoverage) {
-      std::cout << "[Greedy-R] Target coverage reached.\n";
+      tlog_info << "[Greedy-R] Target coverage reached.\n";
       break;
     }
   }
 
-  std::cout << "[Greedy-R] Final script length: " << selected.size() << "\n";
+  tlog_info << "[Greedy-R] Final script length: " << selected.size() << "\n";
   return selected;
 }
 

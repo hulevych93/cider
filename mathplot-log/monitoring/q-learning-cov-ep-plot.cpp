@@ -5,7 +5,7 @@
 
 #include <assert.h>
 
-#include <iostream>
+#include <tlog.h>
 
 #include <matplotlibcpp.h>
 
@@ -28,7 +28,7 @@ void CovQLearningResultsMathplotLogger::serialize(const std::string& filePath) {
     serializer << cov_;
     serializer.save(filePath);
   } catch (...) {
-    std::cout << "Graph serialization failed : " << filePath << std::endl;
+    tlog_info << "Graph serialization failed : " << filePath << std::endl;
   }
 }
 
@@ -38,7 +38,7 @@ bool CovQLearningResultsMathplotLogger::load() {
     deserializer >> ieps_;
     deserializer >> cov_;
   } catch (const std::exception& e) {
-    std::cout << e.what() << std::endl;
+    tlog_info << e.what() << std::endl;
     return false;
   }
   return true;

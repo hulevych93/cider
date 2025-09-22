@@ -9,7 +9,7 @@
 #include "synthesis/synthesis.h"
 
 #include <assert.h>
-#include <iostream>
+#include <tlog.h>
 
 namespace cider {
 namespace metasearch {
@@ -65,7 +65,7 @@ harmony::Harmony Search::generateHarmony(
   if (objValue > std::numeric_limits<double>::epsilon()) {
     newHarmony.objVal = objValue;
   } else {
-    std::cout << "Bad script during nest generation" << std::endl;
+    tlog_info << "Bad script during nest generation" << std::endl;
   }
 
   return newHarmony;
@@ -96,7 +96,7 @@ std::optional<harmony::Harmony> Search::mutateHarmony(
   const auto objValue = _settings.objFunc(mutatedHarmony.actions);
   if (objValue > std::numeric_limits<double>::epsilon()) {
     mutatedHarmony.objVal = objValue;
-    std::cout << objValue << std::endl;
+    tlog_info << objValue << std::endl;
     return mutatedHarmony;
   }
 

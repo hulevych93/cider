@@ -20,6 +20,7 @@ set(PLAYER_LIBS
     coverage
     ${Lua_LIBRARIES}
     ${PLATFORM_LIBRARIES}
+    ${TinyLog_LIBRARIES}
 )
 
 add_executable(bitmap++_player player.cpp ${TESTED_FILES})

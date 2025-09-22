@@ -5,9 +5,9 @@
 
 #include "synthesis/synthesis.h"
 
+#include <tlog.h>
 #include <array>
 #include <iomanip>
-#include <iostream>
 #include <limits>
 #include <ostream>
 #include <sstream>

@@ -4,7 +4,7 @@
 #include "comp-coverage-heatmap.h"
 
 #include <fmt/format.h>
-#include <iostream>
+#include <tlog.h>
 #include <numeric>
 #include <sstream>
 #include <stdexcept>
@@ -60,7 +60,7 @@ void CoverageHeatmapPlot::serialize(const std::string& filePath) {
     serializer << _original;
     serializer.save(filePath);
   } catch (...) {
-    std::cout << "Graph serialization failed : " << filePath << std::endl;
+    tlog_info << "Graph serialization failed : " << filePath << std::endl;
   }
 }
 
@@ -71,7 +71,7 @@ bool CoverageHeatmapPlot::load() {
     deserializer >> _order;
     deserializer >> _original;
   } catch (const std::exception& e) {
-    std::cout << e.what() << std::endl;
+    tlog_info << e.what() << std::endl;
     return false;
   }
   return true;
@@ -107,7 +107,7 @@ void CoverageHeatmapPlot::plot() {
   for (const auto& orderName : _order) {
     const auto it = _rawMatrix.find(orderName);
     if (it == _rawMatrix.end()) {
-      std::cout << "Warning method not simulated: " << orderName << std::endl;
+      tlog_info << "Warning method not simulated: " << orderName << std::endl;
       continue;
     }
 

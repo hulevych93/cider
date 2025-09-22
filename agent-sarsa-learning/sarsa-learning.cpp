@@ -6,7 +6,7 @@
 #include "agent-model/scenario.h"
 #include "agent-model/utils.h"
 
-#include <iostream>
+#include <tlog.h>
 #include <thread>
 
 #include <assert.h>
@@ -86,7 +86,7 @@ void learningSession(const SarsaLearningSettings& settings,
                     settings.episodes, i);
     const auto expRate = linearDecay(0.9, 0.1, settings.episodes, i);
 
-    std::cout << "Episode: " << i << ", expRate: " << expRate << std::endl;
+    tlog_info << "Episode: " << i << ", expRate: " << expRate << std::endl;
 
     agent_model::LearningScenario scenario(
         counter, Seed::instance().get(), settings.maxStateDepth, list, objFunc);

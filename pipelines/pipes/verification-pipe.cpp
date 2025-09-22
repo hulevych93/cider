@@ -10,7 +10,7 @@
 
 #include "pipelines/metrics.h"
 
-#include <iostream>
+#include <tlog.h>
 #include <thread>
 
 namespace cider {
@@ -30,7 +30,7 @@ bool ResultsVerificationStage::process(const std::string&,
   outPath /= "verified_results.bin";
 
   auto results = getResults();
-  std::cout << "[VERIFY] Recalculating coverage for methods: " << results.size()
+  tlog_info << "[VERIFY] Recalculating coverage for methods: " << results.size()
             << std::endl;
 
   size_t methodIndex = 0;
@@ -39,7 +39,7 @@ bool ResultsVerificationStage::process(const std::string&,
     const auto& methodName = methodPair.first;
     auto& methodStats = methodPair.second;
 
-    std::cout << "\n[METHOD " << methodIndex << "/" << results.size() << "] "
+    tlog_info << "\n[METHOD " << methodIndex << "/" << results.size() << "] "
               << methodName << " | entries=" << methodStats.entries.size()
               << std::endl;
 
@@ -49,7 +49,7 @@ bool ResultsVerificationStage::process(const std::string&,
     size_t entryIndex = 0;
     for (auto& entry : methodStats.entries) {
       ++entryIndex;
-      std::cout << "  [ENTRY " << entryIndex << "/"
+      tlog_info << "  [ENTRY " << entryIndex << "/"
                 << methodStats.entries.size()
                 << "] TestCase=" << entry.testCaseName
                 << " | oldActions=" << entry.oldActions.size()
@@ -68,44 +68,44 @@ bool ResultsVerificationStage::process(const std::string&,
 
       if (oldGcov.has_value()) {
         entry.oldReport = oldGcov->report;
-        std::cout << "    [GCOV-OLD] Coverage recalculated";
+        tlog_info << "    [GCOV-OLD] Coverage recalculated";
       } else {
-        std::cout << "    [GCOV-OLD] FAILED" << std::endl;
+        tlog_info << "    [GCOV-OLD] FAILED" << std::endl;
       }
 
       if (newGcov.has_value()) {
         entry.newReport = newGcov->report;
-        std::cout << "    [GCOV-NEW] Coverage recalculated";
+        tlog_info << "    [GCOV-NEW] Coverage recalculated";
       } else {
-        std::cout << "    [GCOV-NEW] FAILED" << std::endl;
+        tlog_info << "    [GCOV-NEW] FAILED" << std::endl;
       }
 
       if (oldCfg.has_value()) {
         entry.oldCfgReport = oldCfg.value();
         entry.oldExecutionTimeMcs = oldCfg->meassureTimeMcs;
-        std::cout << "    [CFG-OLD] Coverage ok, time="
+        tlog_info << "    [CFG-OLD] Coverage ok, time="
                   << entry.oldExecutionTimeMcs << " mcs" << std::endl;
       } else {
-        std::cout << "    [CFG-OLD] FAILED" << std::endl;
+        tlog_info << "    [CFG-OLD] FAILED" << std::endl;
       }
 
       if (newCfg.has_value()) {
         entry.newCgfReport = newCfg.value();
         entry.newExecutionTimeMcs = newCfg->meassureTimeMcs;
-        std::cout << "    [CFG-NEW] Coverage ok, time="
+        tlog_info << "    [CFG-NEW] Coverage ok, time="
                   << entry.newExecutionTimeMcs << " mcs" << std::endl;
       } else {
-        std::cout << "    [CFG-NEW] FAILED" << std::endl;
+        tlog_info << "    [CFG-NEW] FAILED" << std::endl;
       }
     }
 
-    std::cout << "[METHOD DONE] " << methodName << std::endl;
+    tlog_info << "[METHOD DONE] " << methodName << std::endl;
   }
 
   serialization::Serializer serializer;
   serializer << results;
   serializer.save(outPath);
-  std::cout << "\n[VERIFY] Updated results saved to: " << outPath << std::endl;
+  tlog_info << "\n[VERIFY] Updated results saved to: " << outPath << std::endl;
 
   return true;
 }

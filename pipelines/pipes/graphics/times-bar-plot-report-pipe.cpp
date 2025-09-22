@@ -5,7 +5,7 @@
 
 #include "mathplot-log/output/comp-time-barplot.h"
 
-#include <iostream>
+#include <tlog.h>
 
 namespace cider {
 namespace pipelines {
@@ -35,7 +35,7 @@ TimesBarPlotReportStage::createProcessor() {
                        result.timeElapsedMcs)) {
       logger->log(methodName, result.timeElapsedMcs);
     } else {
-      std::cout << "SKIP: " << methodName << " " << result.testCaseName << " "
+      tlog_info << "SKIP: " << methodName << " " << result.testCaseName << " "
                 << result.timeElapsedMcs << std::endl;
     }
   };

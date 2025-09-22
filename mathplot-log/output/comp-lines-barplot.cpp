@@ -5,7 +5,7 @@
 
 #include <assert.h>
 
-#include <iostream>
+#include <tlog.h>
 
 #include "math/stat-utils.h"
 #include "mathplot-log/utils.h"
@@ -53,7 +53,7 @@ void LinesBarPlot::serialize(const std::string& filePath) {
     serializer << _oldLines;
     serializer.save(filePath);
   } catch (...) {
-    std::cout << "Graph serialization failed : " << filePath << std::endl;
+    tlog_info << "Graph serialization failed : " << filePath << std::endl;
   }
 }
 
@@ -63,7 +63,7 @@ bool LinesBarPlot::load() {
     deserializer >> _barData;
     deserializer >> _oldLines;
   } catch (const std::exception& e) {
-    std::cout << e.what() << std::endl;
+    tlog_info << e.what() << std::endl;
     return false;
   }
   return true;
@@ -79,7 +79,7 @@ void LinesBarPlot::log(const std::string& label,
     auto& data = labelMap[method];
     data.emplace_back(newLines);
   } else {
-    std::cout << label << std::endl;
+    tlog_info << label << std::endl;
     auto& labelMap = _barData[label];
     auto& data = labelMap[method];
     _oldLines[label] = oldLines;

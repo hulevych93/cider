@@ -3,7 +3,7 @@
 
 #include "session.h"
 
-#include <iostream>
+#include <tlog.h>
 
 namespace cider {
 namespace recorder {
@@ -28,7 +28,7 @@ std::string ScriptRecordSessionImpl::getScript(const size_t instuctions) {
 
       } catch (const std::exception& ex) {
         if (_settings.ignoreErrors) {
-          std::cout << "Call generation ignored, what: " << ex.what()
+          tlog_info << "Call generation ignored, what: " << ex.what()
                     << std::endl;
         } else {
           throw;

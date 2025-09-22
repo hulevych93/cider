@@ -7,7 +7,7 @@
 #include "coverage/gcov_measurer.h"
 
 #include <assert.h>
-#include <iostream>
+#include <tlog.h>
 
 namespace cider {
 namespace pipelines {
@@ -67,7 +67,7 @@ bool SimulationPipe::process(const std::string& metadata,
       idx++;
     }
 
-    std::cout << "[" << idx << "," << _numberOfRuns
+    tlog_info << "[" << idx << "," << _numberOfRuns
               << "]: " << (double)elapsed_mcs / 1000 << " ms elapsed"
               << std::endl;
   }

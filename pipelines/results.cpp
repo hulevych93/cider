@@ -3,10 +3,10 @@
 
 #include "results.h"
 
+#include <tlog.h>
 #include <chrono>
 #include <ctime>
 #include <iomanip>
-#include <iostream>
 #include <sstream>
 
 #include "metrics.h"
@@ -89,29 +89,29 @@ bool deserialize(MethodResults& obj,
 void printResult(const std::string& methodName,
                  const std::string& libName,
                  const Result& res) {
-  std::cout << "Test Case: " << res.testCaseName << std::endl;
+  tlog_info << "Test Case: " << res.testCaseName << std::endl;
 
-  std::cout << "  Old Actions: " << res.oldActions.size()
+  tlog_info << "  Old Actions: " << res.oldActions.size()
             << ", New Actions: " << res.newActions.size() << std::endl;
 
-  std::cout << "  Old Test Exectution Time (mcs): " << res.oldExecutionTimeMcs
+  tlog_info << "  Old Test Exectution Time (mcs): " << res.oldExecutionTimeMcs
             << ", New Test Exectution Time (mcs): " << res.newExecutionTimeMcs
             << std::endl;
 
-  std::cout << "  BR Coverage: "
+  tlog_info << "  BR Coverage: "
             << "Old = " << res.oldReport.branchCov.percent
             << " %, New = " << res.newReport.branchCov.percent << " %"
             << std::endl;
 
-  std::cout << " Processing Time (mcs): " << res.timeElapsedMcs << std::endl;
+  tlog_info << " Processing Time (mcs): " << res.timeElapsedMcs << std::endl;
 
   getCompression(
       methodName, libName, res, [](unsigned long newCount, double compression) {
-        std::cout << "  Compression: " << compression
+        tlog_info << "  Compression: " << compression
                   << " % (new count=" << newCount << ")" << std::endl;
       });
 
-  std::cout << "---------------------------" << std::endl;
+  tlog_info << "---------------------------" << std::endl;
 }
 
 int getDataSize(const std::string& libName) {

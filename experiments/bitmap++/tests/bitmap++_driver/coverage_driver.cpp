@@ -6,7 +6,7 @@
 #include <pybind11/embed.h>
 namespace py = pybind11;
 
-#include <iostream>
+#include <tlog.h>
 
 extern int test_chess_board();
 extern int test_primitives();
@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
   pipeline.run(getTS, getTCs);
 
   if (pipeline.newResuls()) {
-    std::cout << "Save results? (y/n): ";
+    tlog_info << "Save results? (y/n): ";
     char decision;
     if (!cider::pipelines::isDebuggerAttached()) {
       std::cin >> decision;
@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) {
     }
     if (decision == 'y' || decision == 'Y') {
       pipeline.save();
-      std::cout << "Saved.\n";
+      tlog_info << "Saved.\n";
     }
   }
 

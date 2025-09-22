@@ -5,7 +5,7 @@
 
 #include <assert.h>
 
-#include <iostream>
+#include <tlog.h>
 #include <thread>
 
 #include "recorder/details/generator.h"
@@ -76,7 +76,7 @@ void StepperCoverageMeasurment::measure(
     const std::vector<cider::recorder::Action>& actions,
     const size_t stepSize,
     const std::optional<size_t> covReachLen) {
-  std::cout << "actions size: " << actions.size() << std::endl;
+  tlog_info << "actions size: " << actions.size() << std::endl;
 
   if (m_logger) {
     m_logger->log(0U, {});
@@ -93,7 +93,7 @@ void StepperCoverageMeasurment::measure(
       if (richLenIntex > _index && richLenIntex < nextIndex &&
           richLenIntex < actions.size()) {
         _index = richLenIntex;
-        std::cout << "[CovReach] forced log at i=" << _index << "\n";
+        tlog_info << "[CovReach] forced log at i=" << _index << "\n";
         (*this)(actions);
       }
     }
@@ -103,7 +103,7 @@ void StepperCoverageMeasurment::measure(
 
   if (_index - stepSize < actions.size() - 1) {
     _index = actions.size() - 1;
-    std::cout << "[CovReach] final log at i=" << _index << "\n";
+    tlog_info << "[CovReach] final log at i=" << _index << "\n";
     (*this)(actions);
   }
 }

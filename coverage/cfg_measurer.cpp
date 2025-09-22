@@ -5,8 +5,8 @@
 
 #include <assert.h>
 
+#include <tlog.h>
 #include <filesystem>
-#include <iostream>
 
 #include "recorder/details/generator.h"
 #include "scripting/runner.h"

@@ -1,8 +1,8 @@
 // Copyright (C) 2022-2025 Hulevych Mykhailo
 // SPDX-License-Identifier: MIT
 
+#include <tlog.h>
 #include <fstream>
-#include <iostream>
 
 #include "coverage/cfg_measurer.h"
 #include "coverage/coverage.h"

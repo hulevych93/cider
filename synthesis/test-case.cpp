@@ -3,7 +3,7 @@
 
 #include "test-case.h"
 
-#include <iostream>
+#include <tlog.h>
 #include <thread>
 
 #include <assert.h>
@@ -31,7 +31,7 @@ TestScenario::TestScenario(std::mt19937& gen,
 
   const auto objValue = _objFunc(initial);
   if (objValue.coverage > std::numeric_limits<double>::epsilon()) {
-    std::cout << "Initial: " << objValue.coverage << std::endl;
+    tlog_info << "Initial: " << objValue.coverage << std::endl;
     _initialObjVal = objValue;
   } else {
     throw std::logic_error{"Bad initial script."};

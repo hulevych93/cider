@@ -9,7 +9,7 @@
 
 #include "mathplot-log/monitoring/q-learning-cov-ep-plot.h"
 
-#include <iostream>
+#include <tlog.h>
 #include <thread>
 
 #include <assert.h>
@@ -84,7 +84,7 @@ void learningSession(const QLearningSettings& settings,
                     settings.episodes, i);
     const auto expRate = linearDecay(0.9, 0.1, settings.episodes, i);
 
-    std::cout << "Episode: " << i << ", expRate: " << expRate
+    tlog_info << "Episode: " << i << ", expRate: " << expRate
               << ", LR: " << learningRate << std::endl;
 
     LearningScenario scenario(counter, Seed::instance().get(),

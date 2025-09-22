@@ -9,8 +9,9 @@
 #include "serialization/serializer.h"
 
 #include <iomanip>
-#include <iostream>
 #include <random>
+
+#include <tlog.h>
 
 namespace cider {
 namespace agent_model {
@@ -58,7 +59,7 @@ static std::string tsISO(const std::chrono::system_clock::time_point& tp) {
 
 QTableAgent::QTableAgent(const std::string& path)
     : _gen(Seed::instance().get()), m_loaded(load(path)), m_path(path) {
-  std::cout << "Load agent: " << path << ", status: " << m_loaded << std::endl;
+  tlog_info << "Load agent: " << path << ", status: " << m_loaded << std::endl;
 }
 
 bool QTableAgent::load(const std::string& filePath) {
@@ -69,10 +70,10 @@ bool QTableAgent::load(const std::string& filePath) {
     for (const auto& entry : m_qtable) {
       m_maxStateDepth = std::max(m_maxStateDepth, entry.first.size());
     }
-    std::cout << "Max recorder::Actions size: " << m_maxStateDepth << std::endl;
+    tlog_info << "Max recorder::Actions size: " << m_maxStateDepth << std::endl;
 
   } catch (const std::exception& e) {
-    std::cout << e.what() << std::endl;
+    tlog_info << e.what() << std::endl;
     return false;
   }
   return true;
@@ -145,14 +146,14 @@ std::optional<recorder::Action> QTableAgent::findBestOrRandomAvailableAction(
     const auto& qValues =
         getBestFromAvailable(availableActions, qValuesIter->second);
     if (!qValues.empty()) {
-      std::cout << "E-Greedy action" << std::endl;
+      tlog_info << "E-Greedy action" << std::endl;
       std::uniform_int_distribution<size_t> indexDist(0, qValues.size() - 1);
       return qValues[indexDist(_gen)];
     }
 
     return std::nullopt;
   } else {
-    std::cout << "fallback to random: 1" << std::endl;
+    tlog_info << "fallback to random: 1" << std::endl;
     std::uniform_int_distribution<size_t> indexDist(
         0, availableActions.size() - 1);
     return availableActions[indexDist(_gen)];
@@ -184,7 +185,7 @@ std::optional<recorder::Action> QTableAgent::chooseBolzmanAction(
   std::optional<recorder::Action> action;
   const auto qValuesIt = m_qtable.find(scenario.getCurrentState());
   if (qValuesIt == m_qtable.cend()) {
-    std::cout << "fallback to random: 1" << std::endl;
+    tlog_info << "fallback to random: 1" << std::endl;
     action = scenario.getRandomAction();
   } else {
     const auto& availableActions = scenario.getAvailableActions();
@@ -196,7 +197,7 @@ std::optional<recorder::Action> QTableAgent::chooseBolzmanAction(
         getAvailableQValues(availableActions, qValuesIt->second);
 
     if (qValues.empty()) {
-      std::cout << "fallback to random: 2" << std::endl;
+      tlog_info << "fallback to random: 2" << std::endl;
       return scenario.getRandomAction();
     }
 
@@ -210,7 +211,7 @@ std::optional<recorder::Action> QTableAgent::chooseBolzmanAction(
     }
 
     if (sum == 0.0f || std::isinf(sum)) {
-      std::cout << "fallback to random: 3" << std::endl;
+      tlog_info << "fallback to random: 3" << std::endl;
       return scenario.getRandomAction();
     }
 
@@ -227,7 +228,7 @@ std::optional<recorder::Action> QTableAgent::chooseBolzmanAction(
     for (; i < index; ++i, ++qValIt)
       ;
 
-    std::cout << "Bolzman action" << std::endl;
+    tlog_info << "Bolzman action" << std::endl;
 
     action = qValIt->first;
   }

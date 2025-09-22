@@ -7,9 +7,9 @@
 
 #include <process.hpp>
 
+#include <tlog.h>
 #include <filesystem>
 #include <fstream>
-#include <iostream>
 
 namespace tpl = TinyProcessLib;
 
@@ -87,7 +87,7 @@ std::optional<RootReport> parseJsonCovReport(const std::string& json,
 
 std::string loadFile(const std::string& path) {
   if (!std::filesystem::exists(path)) {
-    std::cout << path << "doesn't exist" << std::endl;
+    tlog_info << path << "doesn't exist" << std::endl;
   }
   std::ifstream scr1(path, std::ios::binary);
   scr1.seekg(0, std::ios::end);
@@ -101,8 +101,8 @@ std::string loadFile(const std::string& path) {
 bool cleanCoverage(const std::string& workingDir) {
   tpl::Process process(
       std::string{"find "} + workingDir + " -name \"*.gcda\" -delete", "",
-      [](const char* data, std::size_t) { std::cout << data; },
-      [](const char* data, std::size_t) { std::cout << data; });
+      [](const char* data, std::size_t) { tlog_info << data; },
+      [](const char* data, std::size_t) { tlog_info << data; });
   return process.get_exit_status() == 0;
 }
 

@@ -3,8 +3,8 @@
 
 #include "dynamic-slicer.h"
 
+#include <tlog.h>
 #include <algorithm>
-#include <iostream>
 #include <numeric>
 #include <string>
 #include <unordered_set>
@@ -40,7 +40,7 @@ std::vector<recorder::Action> run_d_slicing_fast_tracks(
     }
   }
   if (trackCount == 0) {
-    std::cout << "[Slice-Batch-Trace] No coverage tracks found\n";
+    tlog_info << "[Slice-Batch-Trace] No coverage tracks found\n";
     return currentSpace;
   }
 
@@ -58,7 +58,7 @@ std::vector<recorder::Action> run_d_slicing_fast_tracks(
     steps.push_back({currentSpace[i], std::move(cov)});
   }
 
-  std::cout << "[Slice-Batch-Trace] Original length=" << steps.size()
+  tlog_info << "[Slice-Batch-Trace] Original length=" << steps.size()
             << " tracks=" << trackCount << " baseline=" << baseline << "\n";
 
   std::vector<int> freq(trackCount, 0);
@@ -117,7 +117,7 @@ std::vector<recorder::Action> run_d_slicing_fast_tracks(
         if (cov[j])
           --freq[j];
 
-      std::cout << "  [Slice-Batch-Trace] Removing step " << i
+      tlog_info << "  [Slice-Batch-Trace] Removing step " << i
                 << " (uniq=" << uniq << ", dup=" << dup << ")\n";
 
       steps.erase(steps.begin() + i);
@@ -126,12 +126,12 @@ std::vector<recorder::Action> run_d_slicing_fast_tracks(
       if (pendingInBatch >= batchSize || i >= steps.size()) {
         auto scenario = buildScenario();
         auto newCov = settings.objFunc(scenario);
-        std::cout << "  [Check@" << (removedTotal + pendingInBatch)
+        tlog_info << "  [Check@" << (removedTotal + pendingInBatch)
                   << "] coverage=" << newCov.coverage
                   << " baseline=" << baseline << "\n";
 
         if (newCov.coverage + 1e-9 < baseline) {
-          std::cout << "[WARN] Drop detected → rollback last " << pendingInBatch
+          tlog_info << "[WARN] Drop detected → rollback last " << pendingInBatch
                     << " removals\n";
           steps = std::move(snapSteps);
           freq = std::move(snapFreq);
@@ -145,7 +145,7 @@ std::vector<recorder::Action> run_d_slicing_fast_tracks(
         }
       }
     } else {
-      std::cout << "  [Slice-Batch-Trace] Keeping  step " << i
+      tlog_info << "  [Slice-Batch-Trace] Keeping  step " << i
                 << " (uniq=" << uniq << ", dup=" << dup << ")\n";
       ++i;
     }
@@ -157,7 +157,7 @@ std::vector<recorder::Action> run_d_slicing_fast_tracks(
     result.push_back(s.action);
 
   auto finalCov = settings.objFunc(result);
-  std::cout << "[Slice-Batch-Trace] Final length=" << result.size()
+  tlog_info << "[Slice-Batch-Trace] Final length=" << result.size()
             << " coverage=" << finalCov.coverage << " baseline=" << baseline
             << "\n";
 

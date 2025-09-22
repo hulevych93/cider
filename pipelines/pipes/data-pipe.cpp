@@ -8,7 +8,7 @@
 #include "coverage/cfg_measurer.h"
 #include "coverage/gcov_measurer.h"
 
-#include <iostream>
+#include <tlog.h>
 
 namespace cider {
 namespace pipelines {
@@ -20,7 +20,7 @@ bool RemoveDataStage::process(const std::string&,
                               const std::string&,
                               const cider::Cmd&) {
   if (_config.empty()) {
-    std::cout << "Empty config error." << std::endl;
+    tlog_info << "Empty config error." << std::endl;
     return false;
   }
 
@@ -38,7 +38,7 @@ bool ShowResultsStage::process(const std::string&,
                                const std::string& libName,
                                const cider::Cmd& cmd) {
   if (_config.empty()) {
-    std::cout << "Empty config error." << std::endl;
+    tlog_info << "Empty config error." << std::endl;
     return false;
   }
 
@@ -46,7 +46,7 @@ bool ShowResultsStage::process(const std::string&,
   for (const auto& methodConfig : _config) {
     const auto it = results.find(methodConfig);
     if (it == results.end()) {
-      std::cout << "Warning method not simulated: " << methodConfig
+      tlog_info << "Warning method not simulated: " << methodConfig
                 << std::endl;
       continue;
     }
@@ -54,7 +54,7 @@ bool ShowResultsStage::process(const std::string&,
     const auto& method = it->first;
     const auto& pack = it->second;
 
-    std::cout << "=== METHOD: " << method << " ===" << std::endl;
+    tlog_info << "=== METHOD: " << method << " ===" << std::endl;
 
     const auto handleResults = [&](int*, const std::string& methodName,
                                    const std::string& libName,
@@ -76,7 +76,7 @@ bool CleanUpDataStage::process(const std::string&,
                                const std::string&,
                                const cider::Cmd&) {
   if (_config.empty()) {
-    std::cout << "Empty config error." << std::endl;
+    tlog_info << "Empty config error." << std::endl;
     return false;
   }
 

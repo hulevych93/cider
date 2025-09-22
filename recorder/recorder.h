@@ -5,7 +5,7 @@
 
 #include "recorder/actions_observer.h"
 
-#include <iostream>
+#include <tlog.h>
 
 namespace cider {
 namespace recorder {
@@ -54,7 +54,7 @@ auto recordScript(const char* moduleName,
   try {
     f();
   } catch (const std::exception& e) {
-    std::cout << e.what();
+    tlog_info << e.what();
   }
   out.emplace_back(std::move(session));
 }
@@ -74,7 +74,7 @@ auto recordScriptWithResult(
     return res;
 
   } catch (const std::exception& e) {
-    std::cout << e.what();
+    tlog_info << e.what();
     throw;
   }
 }

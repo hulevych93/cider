@@ -8,7 +8,7 @@
 #include "agent-q-learning/q-learning-agent.h"
 #include "agent-sarsa-learning/sarsa-learning-agent.h"
 
-#include <iostream>
+#include <tlog.h>
 
 #include <assert.h>
 

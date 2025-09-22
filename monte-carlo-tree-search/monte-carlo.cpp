@@ -6,8 +6,8 @@
 
 #include "synthesis/synthesis.h"
 
+#include <tlog.h>
 #include <fstream>
-#include <iostream>
 
 namespace cider {
 namespace mcts {
@@ -63,7 +63,7 @@ double rollout(std::mt19937& gen,
   candidate = scenario.getResult();
 
   double reward = evaluate_reward(objFunc, candidate);
-  std::cout << "[Rollout] len=" << candidate.size() << ", reward=" << reward
+  tlog_info << "[Rollout] len=" << candidate.size() << ", reward=" << reward
             << "\n";
   return reward;
 }
@@ -73,7 +73,7 @@ void backpropagate(MCTSNode* node, double reward, const TestCase& testCase) {
     node->visits++;
     node->total_reward += reward;
 
-    std::cout << "Backprop @node depth=" << node->path.size()
+    tlog_info << "Backprop @node depth=" << node->path.size()
               << ", rollout len=" << testCase.size() << ", reward=" << reward
               << ", prev_best=" << node->best_reward << "\n";
 
@@ -99,7 +99,7 @@ MCTSNode* MCTSNode::best_child_ucb(double c) {
         q + c * std::sqrt(std::log(visits + 1.0) / (child->visits + 1e-4));
 
     if (MctsDebugEnable) {
-      std::cout << "[UCB] depth=" << child->path.size()
+      tlog_info << "[UCB] depth=" << child->path.size()
                 << ", visits=" << child->visits << ", Q=" << q
                 << ", UCB=" << ucb << "\n";
     }
@@ -118,7 +118,7 @@ void print_tree(const MCTSNode* node, int depth = 0) {
     return;
   std::string indent(depth * 2, ' ');
   double q = node->visits ? node->total_reward / node->visits : 0.0;
-  std::cout << indent << "[Node depth=" << depth << ", visits=" << node->visits
+  tlog_info << indent << "[Node depth=" << depth << ", visits=" << node->visits
             << ", Q=" << q << ", best_reward=" << node->best_reward << "]\n";
   for (const auto& child_pair : node->children) {
     print_tree(child_pair.second.get(), depth + 1);
@@ -134,7 +134,7 @@ TestCase run_mcts(std::mt19937& gen,
   auto root = std::make_unique<MCTSNode>(TestCase{});
 
   for (int sim = 0; sim < settings.maxIter; ++sim) {
-    std::cout << "\n[Iter " << sim << "]\n";
+    tlog_info << "\n[Iter " << sim << "]\n";
     MCTSNode* node = root.get();
 
     // === Selection ===
@@ -166,7 +166,7 @@ TestCase run_mcts(std::mt19937& gen,
     }
 
     if (!expanded) {
-      std::cout << "[Expansion] No valid actions. Skipping sim.\n";
+      tlog_info << "[Expansion] No valid actions. Skipping sim.\n";
       node->fullyExpanded = true;
       continue;
     }
@@ -181,12 +181,12 @@ TestCase run_mcts(std::mt19937& gen,
     backpropagate(expanded, reward, candidate);
   }
 
-  std::cout << "Initial size: " << actionSpace.size()
+  tlog_info << "Initial size: " << actionSpace.size()
             << ", initial reward: " << initialReward << std::endl;
-  std::cout << "Best path size: " << root->best_path.size()
+  tlog_info << "Best path size: " << root->best_path.size()
             << ", best reward: " << root->best_reward << std::endl;
 
-  std::cout << "\n=== Final MCTS Tree ===\n";
+  tlog_info << "\n=== Final MCTS Tree ===\n";
   print_tree(root.get());
 
   if (!fileName.empty()) {

@@ -3,7 +3,7 @@
 
 #include "sarsa-learning-agent.h"
 
-#include <iostream>
+#include <tlog.h>
 #include <random>
 
 namespace cider {
@@ -22,7 +22,7 @@ double SarsaLearningAgent::updateQValues(const recorder::Actions& state,
   auto& qValue = qValues[action];
   const double nextQValue = m_qtable[nextState][nextAction];
 
-  std::cout << "lr: " << learningRate << ", r: " << reward
+  tlog_info << "lr: " << learningRate << ", r: " << reward
             << ", nextQ: " << nextQValue << ", qv: " << qValue << " -> ";
 
   qValue += learningRate * (reward + discount * nextQValue - qValue);
@@ -30,7 +30,7 @@ double SarsaLearningAgent::updateQValues(const recorder::Actions& state,
   float target = reward + discount * nextQValue;
   float loss = 0.5f * (qValue - target) * (qValue - target);
 
-  std::cout << qValue << ", target:" << target << ", loss: " << loss
+  tlog_info << qValue << ", target:" << target << ", loss: " << loss
             << std::endl;
 
   return loss;

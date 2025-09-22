@@ -9,7 +9,7 @@
 
 #include "pipelines/metrics.h"
 
-#include <iostream>
+#include <tlog.h>
 
 namespace cider {
 namespace pipelines {
@@ -48,7 +48,7 @@ ExecTimesBarPlotReportStage::createProcessor() {
                        logger->log(methodName, result.oldExecutionTimeMcs,
                                    result.newExecutionTimeMcs);
                      } else {
-                       std::cout << "SKIP: " << methodName << " "
+                       tlog_info << "SKIP: " << methodName << " "
                                  << result.testCaseName << " "
                                  << result.oldExecutionTimeMcs << " "
                                  << result.newExecutionTimeMcs << std::endl;

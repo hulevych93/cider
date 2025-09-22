@@ -6,8 +6,8 @@
 #include "math/stat-utils.h"
 
 #include <assert.h>
+#include <tlog.h>
 #include <iomanip>  // для std::setprecision
-#include <iostream>
 
 namespace cider {
 namespace pipelines {
@@ -28,7 +28,7 @@ void getCompression(const std::string& methodName,
   const bool retained = (result.newReport.branchCov.percent >=
                          getOldCov(libName, result.oldReport));
 
-  std::cout << "[Compression] method=" << methodName << " lib=" << libName
+  tlog_info << "[Compression] method=" << methodName << " lib=" << libName
             << " oldActions=" << result.oldActions.size()
             << " newCov=" << result.newReport.branchCov.percent
             << " oldCov=" << getOldCov(libName, result.oldReport)
@@ -36,18 +36,18 @@ void getCompression(const std::string& methodName,
 
   if (retained || methodName == "DSL" || methodName == "GR") {
     if (result.oldActions.empty()) {
-      std::cout << "[Compression] skipped: oldActions empty" << std::endl;
+      tlog_info << "[Compression] skipped: oldActions empty" << std::endl;
       return;
     }
 
     const auto covReachLen = getCovReachLength(result);
 
-    std::cout << "[Compression] covReachLen=" << covReachLen
+    tlog_info << "[Compression] covReachLen=" << covReachLen
               << " (actions=" << result.oldActions.size() << ")" << std::endl;
 
     if (methodName.find("+DSL") != std::string::npos) {
-      if (covReachLen > 300) {
-        std::cout << "[Compression] skipped: covReachLen>300" << std::endl;
+      if (covReachLen > 500) {
+        tlog_info << "[Compression] skipped: covReachLen>500" << std::endl;
         return;
       }
     }
@@ -55,12 +55,12 @@ void getCompression(const std::string& methodName,
     double c = static_cast<double>(result.oldActions.size() - covReachLen) /
                static_cast<double>(result.oldActions.size());
 
-    std::cout << "[Compression] final covReachLen=" << covReachLen
+    tlog_info << "[Compression] final covReachLen=" << covReachLen
               << " compression=" << c << std::endl;
 
     handler(covReachLen, c);
   } else {
-    std::cout << "[Compression] skipped: retained=false and method!="
+    tlog_info << "[Compression] skipped: retained=false and method!="
               << "DSL/GR" << std::endl;
   }
 }
@@ -209,24 +209,24 @@ std::optional<size_t> computeCoverageReachedLength(
 
   auto oldGcov = gcov_measurer.getReport(oldActions);
   if (!oldGcov.has_value()) {
-    std::cout << "[ERROR] Old coverage not available\n";
+    tlog_info << "[ERROR] Old coverage not available\n";
     return std::nullopt;
   }
 
   double oldCovered = getOldCov(libName, oldGcov->report);
-  std::cout << "[INFO] Old covered % = " << oldCovered << "\n";
+  tlog_info << "[INFO] Old covered % = " << oldCovered << "\n";
 
   auto fullNewGcov = gcov_measurer.getReport(newActions);
   if (!fullNewGcov.has_value()) {
-    std::cout << "[ERROR] Full new coverage not available\n";
+    tlog_info << "[ERROR] Full new coverage not available\n";
     return std::nullopt;
   }
   const double newCovered = fullNewGcov->report.branchCov.percent;
-  std::cout << "[INFO] Full new covered % = " << newCovered
+  tlog_info << "[INFO] Full new covered % = " << newCovered
             << " (actions = " << newActions.size() << ")\n";
 
   if (newCovered < oldCovered) {
-    std::cout << "[WARN] New coverage (" << newCovered << ") < old coverage ("
+    tlog_info << "[WARN] New coverage (" << newCovered << ") < old coverage ("
               << oldCovered << ") → skip binary search\n";
     return std::nullopt;
   }
@@ -235,7 +235,7 @@ std::optional<size_t> computeCoverageReachedLength(
   size_t right = newActions.size();
   size_t answer = right;
 
-  std::cout << "[INFO] Start binary search in range [1, " << right << "]\n";
+  tlog_info << "[INFO] Start binary search in range [1, " << right << "]\n";
 
   int step = 0;
   while (left <= right) {
@@ -246,31 +246,31 @@ std::optional<size_t> computeCoverageReachedLength(
     auto midGcov = gcov_measurer.getReport(prefix);
 
     if (!midGcov.has_value()) {
-      std::cout << "[ERROR] Coverage failed at length " << mid << " (step "
+      tlog_info << "[ERROR] Coverage failed at length " << mid << " (step "
                 << step << ")\n";
       return std::nullopt;
     }
 
     double midCovered = midGcov->report.branchCov.percent;
 
-    std::cout << "  [STEP " << step << "] mid=" << mid
+    tlog_info << "  [STEP " << step << "] mid=" << mid
               << " → covered=" << midCovered << " (range=[" << left << ","
               << right << "])\n";
 
     if (midCovered >= oldCovered) {
       answer = mid;
-      std::cout << "    ✓ Candidate found at " << mid
+      tlog_info << "    ✓ Candidate found at " << mid
                 << " (covered=" << midCovered << " >= " << oldCovered << ")\n";
       if (mid == 1)
         break;
       right = mid - 1;
     } else {
-      std::cout << "    ✗ Too low, moving right\n";
+      tlog_info << "    ✗ Too low, moving right\n";
       left = mid + 1;
     }
   }
 
-  std::cout << "[INFO] Minimal length where coverage reached = " << answer
+  tlog_info << "[INFO] Minimal length where coverage reached = " << answer
             << " / " << newActions.size() << "\n";
 
   return answer;

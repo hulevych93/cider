@@ -4,10 +4,10 @@
 #include "metaheuristics/args_mutator.h"
 
 #include <assert.h>
+#include <tlog.h>
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
-#include <iostream>
 #include <random>
 
 namespace {

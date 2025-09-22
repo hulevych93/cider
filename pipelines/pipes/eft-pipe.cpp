@@ -10,7 +10,7 @@
 
 #include "pipelines/metrics.h"
 
-#include <iostream>
+#include <tlog.h>
 
 namespace cider {
 namespace pipelines {
@@ -116,7 +116,7 @@ bool EfficencyReportStage::process(const std::string& metadata,
   for (const auto& methodConfig : _config) {
     const auto it = results.find(methodConfig);
     if (it == results.end()) {
-      std::cout << "Warning method not simulated: " << methodConfig
+      tlog_info << "Warning method not simulated: " << methodConfig
                 << std::endl;
       continue;
     }

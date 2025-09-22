@@ -3,9 +3,9 @@
 
 #include "meta-pipe.h"
 
+#include <tlog.h>
 #include <filesystem>
 #include <fstream>
-#include <iostream>
 
 #include "coverage/cfg_measurer.h"
 #include "coverage/gcov_measurer.h"

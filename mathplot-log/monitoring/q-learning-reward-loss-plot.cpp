@@ -5,7 +5,7 @@
 
 #include <assert.h>
 
-#include <iostream>
+#include <tlog.h>
 
 #include <matplotlibcpp.h>
 
@@ -53,7 +53,7 @@ void QLearningRewardLogger::serialize(const std::string& filePath) {
     serializer << rwrd_;
     serializer.save(filePath);
   } catch (...) {
-    std::cout << "Graph serialization failed : " << filePath << std::endl;
+    tlog_info << "Graph serialization failed : " << filePath << std::endl;
   }
 }
 
@@ -63,7 +63,7 @@ bool QLearningRewardLogger::load() {
     deserializer >> ieps_;
     deserializer >> rwrd_;
   } catch (const std::exception& e) {
-    std::cout << e.what() << std::endl;
+    tlog_info << e.what() << std::endl;
     return false;
   }
   return true;
@@ -112,7 +112,7 @@ void QLearningLossLogger::serialize(const std::string& filePath) {
     serializer << loss_;
     serializer.save(filePath);
   } catch (...) {
-    std::cout << "Graph serialization failed : " << filePath << std::endl;
+    tlog_info << "Graph serialization failed : " << filePath << std::endl;
   }
 }
 
@@ -122,7 +122,7 @@ bool QLearningLossLogger::load() {
     deserializer >> jeps_;
     deserializer >> loss_;
   } catch (const std::exception& e) {
-    std::cout << e.what() << std::endl;
+    tlog_info << e.what() << std::endl;
     return false;
   }
   return true;

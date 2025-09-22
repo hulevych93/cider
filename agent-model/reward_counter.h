@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <iostream>
+#include <ostream>
 
 namespace cider {
 namespace agent_model {

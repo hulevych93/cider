@@ -4,7 +4,7 @@
 #include "comp-exec-time-barplot.h"
 
 #include <assert.h>
-#include <iostream>
+#include <tlog.h>
 
 #include "math/stat-utils.h"
 #include "mathplot-log/utils.h"
@@ -74,7 +74,7 @@ void ExecTimesBarPlot::serialize(const std::string& filePath) {
     serializer << _order;
     serializer.save(filePath);
   } catch (...) {
-    std::cout << "Graph serialization failed : " << filePath << std::endl;
+    tlog_info << "Graph serialization failed : " << filePath << std::endl;
   }
 }
 
@@ -84,7 +84,7 @@ bool ExecTimesBarPlot::load() {
     deserializer >> _barData;
     deserializer >> _order;
   } catch (const std::exception& e) {
-    std::cout << e.what() << std::endl;
+    tlog_info << e.what() << std::endl;
     return false;
   }
   return true;
@@ -118,14 +118,14 @@ void ExecTimesBarPlot::plot() {
   for (const auto& orderName : _order) {
     const auto it = _barData.find(orderName);
     if (it == _barData.end()) {
-      std::cout << "Warning method not simulated: " << orderName << std::endl;
+      tlog_info << "Warning method not simulated: " << orderName << std::endl;
       continue;
     }
 
     const auto& times = it->second;
 
     if (times.oldTimes.empty() || times.newTimes.empty()) {
-      std::cout << "Method " << orderName
+      tlog_info << "Method " << orderName
                 << " missing old/new times for plotting!" << std::endl;
       continue;
     }
@@ -151,7 +151,7 @@ void ExecTimesBarPlot::plot() {
   }
 
   double oldMean = math_stat::mean(oldTimes);
-  std::cout << oldMean << std::endl;
+  tlog_info << oldMean << std::endl;
 
   plt::plot(std::vector<double>{0.0, xg.back()},
             std::vector<double>{oldMean, oldMean},

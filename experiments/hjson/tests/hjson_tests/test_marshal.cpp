@@ -159,8 +159,6 @@ static void _examine(std::string filename) {
   }
   std::string name(filename.begin(), filename.begin() + pos);
 
-  // std::cout << "running " << name << '\n';
-
   bool shouldFail = !name.compare(0, 4, "fail");
 
   Hjson::HjsonHooked::Value root;

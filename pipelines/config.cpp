@@ -463,6 +463,12 @@ const pipelines::ReportConfiguration& getReportALLSelected() {
                                                           "QLB1+DSL",
                                                           "QLB2+DSL",
                                                           "QLB3+DSL",
+                                                          "QLEG1+DSL-FM0",
+                                                          "QLEG2+DSL-FM0",
+                                                          "QLEG3+DSL-FM0",
+                                                          "QLB1+DSL-FM0",
+                                                          "QLB2+DSL-FM0",
+                                                          "QLB3+DSL-FM0",
                                                           "QLEG1+DSL-FM1",
                                                           "QLEG2+DSL-FM1",
                                                           "QLEG3+DSL-FM1",
@@ -582,9 +588,9 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
       pipeline.addStage(std::make_unique<DSlicerStage>(getDSLSettings(), 5));
       break;
     case PipelineType::DSL_FM0:
-        pipeline.addStage(
-            std::make_unique<DSlicerStage>(getDSL_FM0_Settings(), 5));
-        break;
+      pipeline.addStage(
+          std::make_unique<DSlicerStage>(getDSL_FM0_Settings(), 5));
+      break;
     case PipelineType::DSL_FM1:
       pipeline.addStage(
           std::make_unique<DSlicerStage>(getDSL_FM1_Settings(), 5));
@@ -606,9 +612,9 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
           getDSLSettings(), getReportConfig(cmd.group)));
       break;
     case PipelineType::DSL_FM0_PostProcessing:
-        pipeline.addStage(std::make_unique<DQLPostProcessSlicerStage>(
-            getDSL_FM0_Settings(), getReportConfig(cmd.group)));
-        break;
+      pipeline.addStage(std::make_unique<DQLPostProcessSlicerStage>(
+          getDSL_FM0_Settings(), getReportConfig(cmd.group)));
+      break;
     case PipelineType::DSL_FM1_PostProcessing:
       pipeline.addStage(std::make_unique<DQLPostProcessSlicerStage>(
           getDSL_FM1_Settings(), getReportConfig(cmd.group)));

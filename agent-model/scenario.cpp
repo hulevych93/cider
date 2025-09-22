@@ -1,6 +1,6 @@
 #include "scenario.h"
 
-#include <iostream>
+#include <tlog.h>
 
 namespace cider {
 namespace agent_model {
@@ -35,7 +35,7 @@ std::optional<double> rewardFunction(
     const auto coverageSame = abs(objValue.coverage - targetValue.coverage) <
                               std::numeric_limits<double>::epsilon();
 
-    std::cout << objValue.coverage << std::endl;
+    tlog_info << objValue.coverage << std::endl;
 
     if (coverageBigger) {
       rwCounter.covGrow++;
@@ -152,7 +152,7 @@ std::optional<double> LearningScenario::getReward() const {
     const double lenghtMultiplier = calculateContinuousMultiplier(
         _rwCounter, _initialSize, _actions.size());
 
-    std::cout << "Multi: " << lenghtMultiplier << ", old: " << _initialSize
+    tlog_info << "Multi: " << lenghtMultiplier << ", old: " << _initialSize
               << ", new: " << _actions.size() << std::endl;
 
     result = normalize_reward(result.value() * lenghtMultiplier);

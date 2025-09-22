@@ -3,10 +3,10 @@
 
 #include "cfg_coverage.h"
 
+#include <tlog.h>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
-#include <iostream>
 
 #include <assert.h>
 
@@ -93,7 +93,7 @@ bool deserialize(Coverage& obj,
 }
 
 void Coverage::dump() const {
-  std::cout << covered << ":" << total << std::endl;
+  tlog_info << covered << ":" << total << std::endl;
 }
 
 void dumpCoverageToCout(
@@ -109,12 +109,12 @@ void dumpCoverageToCout(
 
   coverage.alignTo(startPoint).status = status;
   const auto covJson = serializeCovReport(coverage);
-  std::cout << MarkerStart << covJson << MarkerEnd << coverage.getPercentage();
+  tlog_info << MarkerStart << covJson << MarkerEnd << coverage.getPercentage();
 }
 
 void dumpCoverageToCout(const CoveragePerAction& coverage) {
   const auto covJson = serializeCovReport(coverage);
-  std::cout << MarkerStart << covJson << MarkerEnd;
+  tlog_info << MarkerStart << covJson << MarkerEnd;
 }
 
 Coverage getCoverage() {

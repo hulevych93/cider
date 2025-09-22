@@ -10,7 +10,7 @@
 
 #include "pipelines/metrics.h"
 
-#include <iostream>
+#include <tlog.h>
 #include <thread>
 
 namespace cider {
@@ -22,12 +22,12 @@ std::unordered_map<std::string, std::vector<std::vector<Result>>>
 groupIntoTestSets(const Results& results, const std::string& libName) {
   std::unordered_map<std::string, std::vector<std::vector<Result>>> methodSets;
 
-  std::cout << "[INFO] Start grouping results into test sets..." << std::endl;
+  tlog_info << "[INFO] Start grouping results into test sets..." << std::endl;
   for (const auto& it : results) {
     const auto& methodName = it.first;
     const auto& methodResults = it.second;
 
-    std::cout << "  [METHOD] " << methodName
+    tlog_info << "  [METHOD] " << methodName
               << " | total entries: " << methodResults.entries.size()
               << std::endl;
 
@@ -36,7 +36,7 @@ groupIntoTestSets(const Results& results, const std::string& libName) {
                     [&](const Result& r) { return r.testCaseName == libName; });
 
     if (allAggregated) {
-      std::cout << "    [INFO] Detected pre-aggregated results for "
+      tlog_info << "    [INFO] Detected pre-aggregated results for "
                 << methodName << ", passing through as-is" << std::endl;
       std::vector<std::vector<Result>> sets;
       for (auto& r : methodResults.entries) {
@@ -50,7 +50,7 @@ groupIntoTestSets(const Results& results, const std::string& libName) {
     for (const auto& r : methodResults.entries) {
       grouped[r.testCaseName].push_back(r);
     }
-    std::cout << "    grouped into " << grouped.size() << " test cases\n";
+    tlog_info << "    grouped into " << grouped.size() << " test cases\n";
 
     size_t sessions = 0;
     for (const auto& it : grouped) {
@@ -59,7 +59,7 @@ groupIntoTestSets(const Results& results, const std::string& libName) {
 
       sessions = std::max(sessions, vec.size());
     }
-    std::cout << "    sessions detected: " << sessions << std::endl;
+    tlog_info << "    sessions detected: " << sessions << std::endl;
 
     std::vector<std::vector<Result>> sets(sessions);
 
@@ -67,7 +67,7 @@ groupIntoTestSets(const Results& results, const std::string& libName) {
       const auto& tcName = itGr.first;
       const auto& vec = itGr.second;
 
-      std::cout << "      [TC] " << tcName << " | entries: " << vec.size()
+      tlog_info << "      [TC] " << tcName << " | entries: " << vec.size()
                 << std::endl;
       for (size_t i = 0; i < vec.size(); ++i) {
         sets[i].push_back(vec[i]);
@@ -77,7 +77,7 @@ groupIntoTestSets(const Results& results, const std::string& libName) {
     methodSets[methodName] = std::move(sets);
   }
 
-  std::cout << "[INFO] Grouping finished" << std::endl;
+  tlog_info << "[INFO] Grouping finished" << std::endl;
   return methodSets;
 }
 
@@ -89,7 +89,7 @@ std::optional<Result> aggregateSession(
     bool recheck = false) {
   Result aggregated;
   aggregated.testCaseName = libName;
-  std::cout << "[INFO] Aggregating session with " << session.size()
+  tlog_info << "[INFO] Aggregating session with " << session.size()
             << " results..." << std::endl;
 
   aggregated.oldActions = oldActions;
@@ -107,7 +107,7 @@ std::optional<Result> aggregateSession(
       auto trialCfg = cfg_measurer.getReport(trialNewActions);
 
       if (!trialGcov.has_value() || !trialCfg.has_value()) {
-        std::cout << "  [WARN] Skipping " << r.testCaseName
+        tlog_info << "  [WARN] Skipping " << r.testCaseName
                   << " — invalid coverage report after adding actions\n";
         continue;
       }
@@ -124,7 +124,7 @@ std::optional<Result> aggregateSession(
     }
   }
 
-  std::cout << "  total time (mcs): " << aggregated.timeElapsedMcs
+  tlog_info << "  total time (mcs): " << aggregated.timeElapsedMcs
             << " | oldActions: " << aggregated.oldActions.size()
             << " | newActions: " << aggregated.newActions.size() << std::endl;
 
@@ -154,9 +154,9 @@ std::optional<Result> aggregateSession(
     aggregated.newReport = newGcovReport->report;
     aggregated.newCgfReport = newCfgReport.value();
     aggregated.newExecutionTimeMcs = newCfgReport->meassureTimeMcs;
-    std::cout << "  Final coverage reports loaded" << std::endl;
+    tlog_info << "  Final coverage reports loaded" << std::endl;
   } else {
-    std::cout << "  [ERROR] Final coverage reports failed!" << std::endl;
+    tlog_info << "  [ERROR] Final coverage reports failed!" << std::endl;
     return std::nullopt;
   }
 
@@ -172,7 +172,7 @@ bool ResultsAgregationStage::process(const std::string&,
 
   Results newResults;
   auto results = getResults();
-  std::cout << "[INFO] Got " << results.size() << " methods to process\n";
+  tlog_info << "[INFO] Got " << results.size() << " methods to process\n";
 
   const auto& testSets = groupIntoTestSets(results, libName);
   for (const auto& it : testSets) {
@@ -180,21 +180,21 @@ bool ResultsAgregationStage::process(const std::string&,
     const auto& pack = it.second;
     const auto& methodStats = results[method];
 
-    std::cout << "[PROCESS] Method: " << method
+    tlog_info << "[PROCESS] Method: " << method
               << " | sessions: " << pack.size() << std::endl;
 
     std::vector<Result> aggregated;
     for (size_t i = 0; i < pack.size(); ++i) {
-      std::cout << "  [SESSION] " << i + 1 << "/" << pack.size() << std::endl;
+      tlog_info << "  [SESSION] " << i + 1 << "/" << pack.size() << std::endl;
 
       if (pack[i].size() == 1 && pack[i][0].testCaseName == libName) {
-        std::cout << "    [INFO] Pre-aggregated Result detected, skipping "
+        tlog_info << "    [INFO] Pre-aggregated Result detected, skipping "
                      "aggregation\n";
         aggregated.emplace_back(pack[i][0]);
         continue;
       }
 
-      std::cout << "    [INFO] Running aggregation for session..." << std::endl;
+      tlog_info << "    [INFO] Running aggregation for session..." << std::endl;
       auto aggrRes = aggregateSession(original, libName, cmd, pack[i]);
       if (aggrRes.has_value()) {
         aggregated.emplace_back(aggrRes.value());
@@ -205,7 +205,7 @@ bool ResultsAgregationStage::process(const std::string&,
         if (aggrRes.has_value()) {
           aggregated.emplace_back(aggrRes.value());
         } else {
-          std::cout << "    [ERROR] Aggregation failed: " << method
+          tlog_info << "    [ERROR] Aggregation failed: " << method
                     << std::endl;
         }
       }
@@ -214,10 +214,10 @@ bool ResultsAgregationStage::process(const std::string&,
     auto& newEntry = newResults[method];
     newEntry.entries = std::move(aggregated);
 
-    std::cout << "[DONE] Method: " << method << std::endl;
+    tlog_info << "[DONE] Method: " << method << std::endl;
   }
 
-  std::cout << "[INFO] Aggregation stage finished successfully\n";
+  tlog_info << "[INFO] Aggregation stage finished successfully\n";
   replaceResults(newResults);
   return true;
 }

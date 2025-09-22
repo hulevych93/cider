@@ -4,9 +4,9 @@
 #include "coverage.h"
 
 #include <assert.h>
+#include <tlog.h>
 #include <filesystem>
 #include <fstream>
-#include <iostream>
 
 namespace cider {
 
@@ -26,14 +26,14 @@ Cmd::Cmd(int argc, char* argv[]) {
     group = static_cast<MethodsGroup>(std::atoi(argv[9]));
   }
 
-  std::cout << (int)pipelineType << " " << workingDir << " " << baseDir << " "
+  tlog_info << (int)pipelineType << " " << workingDir << " " << baseDir << " "
             << objectDir << " " << binPath << " " << covDir << " " << resultsDir
             << " " << commonResultsDir << " " << (int)group << std::endl;
 }
 
 std::string loadFile(const std::string& path) {
   if (!std::filesystem::exists(path)) {
-    std::cout << path << "doesn't exist" << std::endl;
+    tlog_info << path << "doesn't exist" << std::endl;
   }
   std::ifstream scr1(path, std::ios::binary);
   scr1.seekg(0, std::ios::end);

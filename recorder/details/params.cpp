@@ -3,7 +3,7 @@
 
 #include "params.h"
 
-#include <iostream>
+#include <tlog.h>
 
 namespace cider {
 namespace recorder {

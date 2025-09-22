@@ -7,7 +7,7 @@
 
 #include "pipelines/metrics.h"
 
-#include <iostream>
+#include <tlog.h>
 
 namespace cider {
 namespace pipelines {

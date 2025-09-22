@@ -11,8 +11,8 @@
 namespace py = pybind11;
 using namespace py::literals;
 
+#include <tlog.h>
 #include <filesystem>
-#include <iostream>
 
 #include <matplotlibcpp.h>
 
@@ -101,8 +101,8 @@ double mann_whitney_u(const std::vector<double>& group1,
     for (double val : group1)
       py_group1.append(val);
 
-    std::cout << "py_group1: " << group1.size() << std::endl;
-    std::cout << "py_group2: " << group2.size() << std::endl;
+    tlog_info << "py_group1: " << group1.size() << std::endl;
+    tlog_info << "py_group2: " << group2.size() << std::endl;
 
     py::list py_group2;
     for (double val : group2)

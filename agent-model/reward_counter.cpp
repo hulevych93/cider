@@ -1,7 +1,6 @@
 #include "reward_counter.h"
 
 #include <iomanip>
-#include <iostream>
 #include <sstream>
 
 namespace cider {

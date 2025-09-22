@@ -4,8 +4,8 @@
 #pragma once
 
 #include <math.h>
+#include <tlog.h>
 #include <deque>
-#include <iostream>
 
 namespace cider {
 namespace agent_model {
@@ -93,7 +93,7 @@ class AdvancedAdaptiveLearningRate final {
       if (steps_without_improvement >= patience) {
         learning_rate = std::max(min_lr, learning_rate * decrease_factor);
         steps_without_improvement = 0;
-        std::cout << "Learning Rate descreased: " << learning_rate << std::endl;
+        tlog_info << "Learning Rate descreased: " << learning_rate << std::endl;
       }
     }
 
@@ -111,7 +111,7 @@ class AdvancedAdaptiveLearningRate final {
     if (std::fabs(average_reward - current_reward) <
         reward_stability_threshold) {
       learning_rate = std::min(max_lr, learning_rate * 1.1f);
-      std::cout << "Stable reward, incresing Learning Rate: " << learning_rate
+      tlog_info << "Stable reward, incresing Learning Rate: " << learning_rate
                 << std::endl;
     }
 

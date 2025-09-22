@@ -5,7 +5,7 @@
 
 #include <assert.h>
 
-#include <iostream>
+#include <tlog.h>
 
 #include "recorder/details/generator.h"
 
@@ -17,7 +17,7 @@ FileLogger::FileLogger(const std::string& logDir,
   std::filesystem::path outPath(logDir);
   std::filesystem::create_directories(outPath);
   outPath /= logFileName;
-  std::cout << "Out file: " << outPath << std::endl;
+  tlog_info << "Out file: " << outPath << std::endl;
   _report.open(outPath, std::ios::out | std::ios::app);
 }
 
@@ -34,7 +34,7 @@ FileLogger::FileLogger(const std::string& logDir,
   std::filesystem::path outPath(logDir);
   std::filesystem::create_directories(outPath);
   outPath /= logFileName;
-  std::cout << "Out file: " << outPath << std::endl;
+  tlog_info << "Out file: " << outPath << std::endl;
   _report.open(outPath, std::ios::out | std::ios::app);
 }
 

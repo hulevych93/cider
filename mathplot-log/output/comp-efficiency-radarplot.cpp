@@ -5,8 +5,8 @@
 
 #include <matplotlibcpp.h>
 
+#include <tlog.h>
 #include <iomanip>
-#include <iostream>
 #include <sstream>
 
 #include <math/stat-utils.h>
@@ -81,7 +81,7 @@ void EfficiencyRadarPlot::serialize(const std::string& filePath) {
     serializer << _originalCoverage;
     serializer.save(filePath);
   } catch (...) {
-    std::cout << "Radar serialization failed: " << filePath << std::endl;
+    tlog_info << "Radar serialization failed: " << filePath << std::endl;
   }
 }
 
@@ -92,7 +92,7 @@ bool EfficiencyRadarPlot::load() {
     deserializer >> _order;
     deserializer >> _originalCoverage;
   } catch (const std::exception& e) {
-    std::cout << "Radar load failed: " << e.what() << std::endl;
+    tlog_info << "Radar load failed: " << e.what() << std::endl;
     return false;
   }
   return true;
@@ -102,7 +102,7 @@ void EfficiencyRadarPlot::plot() {
   plt::clf();
 
   if (_order.empty() || _radarData.empty()) {
-    std::cout << "No data for radar plot\n";
+    tlog_info << "No data for radar plot\n";
     return;
   }
 
@@ -157,11 +157,11 @@ void EfficiencyRadarPlot::plot() {
                                   math_stat::normalize(v.CC, minProc, maxProc),
                                   v.RC / _originalCoverage};
 
-    std::cout << "Method: " << method << std::endl;
-    std::cout << "CR: " << values[0] << std::endl;
-    std::cout << "ECR: " << values[1] << std::endl;
-    std::cout << "CC: " << values[2] << std::endl;
-    std::cout << "RC: " << values[3] << std::endl;
+    tlog_info << "Method: " << method << std::endl;
+    tlog_info << "CR: " << values[0] << std::endl;
+    tlog_info << "ECR: " << values[1] << std::endl;
+    tlog_info << "CC: " << values[2] << std::endl;
+    tlog_info << "RC: " << values[3] << std::endl;
 
     values.push_back(values[0]);
 

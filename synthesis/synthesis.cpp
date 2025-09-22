@@ -3,7 +3,7 @@
 
 #include "synthesis.h"
 
-#include <iostream>
+#include <tlog.h>
 #include <thread>
 
 #include <assert.h>
@@ -96,7 +96,7 @@ bool synthesize(const SynthesisSettingsBasic& settings,
     const auto selectedOpt = actionChoosing(testCase);
 
     if (!selectedOpt.has_value()) {
-      std::cout << "No selected action" << std::endl;
+      tlog_info << "No selected action" << std::endl;
       break;
     }
 
@@ -111,7 +111,7 @@ bool synthesize(const SynthesisSettingsBasic& settings,
       testCase.rollback();
       ++rollbackCount;
       if (rollbackCount > settings.maxRollback) {
-        std::cout << "Max rollback reached [" << settings.maxRollback << "]"
+        tlog_info << "Max rollback reached [" << settings.maxRollback << "]"
                   << std::endl;
         break;
       }

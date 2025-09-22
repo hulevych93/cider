@@ -7,7 +7,7 @@ cider_collect_src(LIST_OUT "tests")
 
 add_library(mathplot-log ${LIST_OUT})
 
-target_include_directories(mathplot-log PRIVATE ${MathPlot_INCLUDE_DIRS})
+target_include_directories(mathplot-log PRIVATE ${MathPlot_INCLUDE_DIRS} ${TinyLog_INCLUDE_DIRS})
 
 add_definitions(-DWITHOUT_NUMPY)
 

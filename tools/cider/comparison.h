@@ -9,7 +9,7 @@
 #include "ast_handler.h"
 #include "namespaces_stack.h"
 
-#include <iostream>
+#include <tlog.h>
 
 namespace cppast {
 class cpp_member_variable;

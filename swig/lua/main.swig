@@ -8,7 +8,6 @@
 %include <types.swig>
 
 %inline %{
-#include <iostream>
 
 namespace cider {
 

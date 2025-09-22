@@ -7,6 +7,6 @@ cider_collect_src(LIST_OUT "tests")
 
 add_library(pipelines ${LIST_OUT})
 
-target_include_directories(pipelines PRIVATE ${NLohMann_INCLUDE_DIRS})
+target_include_directories(pipelines PRIVATE ${TinyLog_INCLUDE_DIRS})
 
 add_dependencies(pipelines ${CIDER_THIRDPARTY_TARGET_NAME})

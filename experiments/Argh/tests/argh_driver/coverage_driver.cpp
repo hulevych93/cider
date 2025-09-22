@@ -3,7 +3,7 @@
 
 #include "pipelines/pipeline.h"
 
-#include <iostream>
+#include <tlog.h>
 
 extern void run_tests(
     const std::function<void(const char* name, std::function<void()>)>&

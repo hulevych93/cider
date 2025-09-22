@@ -6,7 +6,7 @@
 #include "mathplot-log/monitoring/q-learning-cov-ep-plot.h"
 #include "mathplot-log/monitoring/q-learning-reward-loss-plot.h"
 
-#include <iostream>
+#include <tlog.h>
 
 namespace cider {
 namespace pipelines {
@@ -56,7 +56,7 @@ bool GraphReportStage::process(const std::string& metadata,
     for (const auto& methodConfig : _config) {
       const auto it = results.find(methodConfig);
       if (it == results.end()) {
-        std::cout << "Warning: method not simulated: " << methodConfig << "\n";
+        tlog_info << "Warning: method not simulated: " << methodConfig << "\n";
         continue;
       }
 

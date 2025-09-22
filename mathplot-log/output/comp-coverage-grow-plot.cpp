@@ -5,7 +5,7 @@
 
 #include <assert.h>
 
-#include <iostream>
+#include <tlog.h>
 
 #include <matplotlibcpp.h>
 
@@ -70,14 +70,14 @@ struct Stats final {
 };
 
 void printStats(const Stats& stats, const std::string& name = "Stats") {
-  std::cout << "--- " << name << " ---\n";
+  tlog_info << "--- " << name << " ---\n";
 
   auto printVector = [](const std::string& label,
                         const std::vector<double>& vec) {
-    std::cout << label << " (" << vec.size() << "): ";
+    tlog_info << label << " (" << vec.size() << "): ";
     for (double val : vec)
-      std::cout << val << " ";
-    std::cout << "\n";
+      tlog_info << val << " ";
+    tlog_info << "\n";
   };
 
   printVector("Instructions", stats.instructions);
@@ -194,7 +194,7 @@ void StepperComparativePlot::serialize(const std::string& filePath) {
     serializer << _originalCoverage;
     serializer.save(filePath);
   } catch (...) {
-    std::cout << "Graph serialization failed : " << filePath << std::endl;
+    tlog_info << "Graph serialization failed : " << filePath << std::endl;
   }
 }
 
@@ -206,7 +206,7 @@ bool StepperComparativePlot::load() {
     deserializer >> _order;
     deserializer >> _originalCoverage;
   } catch (const std::exception& e) {
-    std::cout << e.what() << std::endl;
+    tlog_info << e.what() << std::endl;
     return false;
   }
   return true;
@@ -257,7 +257,7 @@ void StepperComparativePlot::plot() {
     _originalCoverage -= 1.5f;
   }
 
-  std::cout << _originalCoverage << std::endl;
+  tlog_info << _originalCoverage << std::endl;
 
   const auto& axisLims = getAxisLims(_libName);
   plt::plot(std::vector<double>{0, axisLims[0]},

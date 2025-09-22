@@ -10,7 +10,7 @@
 #include "recorder/details/lua/lua_func.h"
 #include "recorder/details/lua/lua_params.h"
 
-#include <iostream>
+#include <tlog.h>
 #include <unordered_map>
 
 namespace cider {

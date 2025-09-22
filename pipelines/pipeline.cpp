@@ -11,9 +11,9 @@
 #include <chrono>
 #include <ctime>
 
+#include <tlog.h>
 #include <filesystem>
 #include <iomanip>
-#include <iostream>
 #include <sstream>
 
 #include <sys/sysctl.h>
@@ -48,7 +48,7 @@ bool isDebuggerAttached() {
 
 void stopPoint() {
   if (!isDebuggerAttached()) {
-    std::cout << "Press Enter to continue...\n";
+    tlog_info << "Press Enter to continue...\n";
     std::cin.get();
   }
 }
@@ -67,7 +67,7 @@ bool Pipeline::load(const std::string& resultsPath) {
 
         if (fileName == "results.img") {
           _results.clear();
-          std::cout << "Loading: " << path.string() << std::endl;
+          tlog_info << "Loading: " << path.string() << std::endl;
           serialization::Deserializer deserializer(path.string());
           deserializer >> _results;
           _oldResults = false;
@@ -79,7 +79,7 @@ bool Pipeline::load(const std::string& resultsPath) {
 
           if (std::find(config.cbegin(), config.cend(), methodName) !=
               config.cend()) {
-            std::cout << "Loading: " << path.string() << std::endl;
+            tlog_info << "Loading: " << path.string() << std::endl;
 
             MethodResults methodResults;
             serialization::Deserializer deserializer(path.string());
@@ -87,7 +87,7 @@ bool Pipeline::load(const std::string& resultsPath) {
 
             _results[methodName] = std::move(methodResults);
           } else {
-            std::cout << "SKIP Loading: " << methodName << std::endl;
+            tlog_info << "SKIP Loading: " << methodName << std::endl;
           }
           _oldResults = false;
         }
@@ -142,7 +142,7 @@ Pipeline::Pipeline(const std::string& libName, const cider::Cmd& cmd)
   agent_model::sarsa::SarsaLearningAgent::setPath(
       paths::getSarsaAgentPath(cmd.resultsDir));
 
-  std::cout << "Load results: " << cmd.resultsDir
+  tlog_info << "Load results: " << cmd.resultsDir
             << ", status: " << load(cmd.resultsDir) << std::endl;
 }
 
@@ -164,7 +164,7 @@ bool Pipeline::run(SessionsGetter getTS, SessionsGetter getTCs) {
 
   auto scrNum = 0;
   for (const auto& session : sessions) {
-    std::cout << "num: " << scrNum++ << "\t name: " << session->getName()
+    tlog_info << "num: " << scrNum++ << "\t name: " << session->getName()
               << "\t count op: " << session->getInstructionsCount()
               << std::endl;
   }
@@ -173,7 +173,7 @@ bool Pipeline::run(SessionsGetter getTS, SessionsGetter getTCs) {
 
   scrNum = 0;
   for (const auto& session : sessions) {
-    std::cout << "num: " << scrNum << "\t name: " << session->getName()
+    tlog_info << "num: " << scrNum << "\t name: " << session->getName()
               << "\t count op: " << session->getInstructionsCount()
               << std::endl;
     const auto metadata = dateTime + '_' + config + '/' + session->getName();
@@ -182,7 +182,7 @@ bool Pipeline::run(SessionsGetter getTS, SessionsGetter getTCs) {
     _input.testOrLibName = session->getName();
 
     if (!run(metadata)) {
-      std::cout << "pipeline failed." << std::endl;
+      tlog_info << "pipeline failed." << std::endl;
     }
 
     ++scrNum;
@@ -197,7 +197,7 @@ bool Pipeline::run(SessionsGetter getTS, SessionsGetter getTCs) {
 
 bool Pipeline::save() {
   const auto& resultsDir = _cmd.resultsDir;
-  std::cout << "Save results: " << resultsDir
+  tlog_info << "Save results: " << resultsDir
             << ", status: " << save(resultsDir) << std::endl;
 
   // printResultsSummary(_results);
