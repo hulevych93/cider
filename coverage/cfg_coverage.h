@@ -28,8 +28,6 @@ struct Coverage final : serialization::SerializableTag {
   double getPercentage() const;
 
   Coverage& operator=(const Coverage& rhs);
-
-  void dump() const;
 };
 
 using CoveragePerAction = std::vector<Coverage>;

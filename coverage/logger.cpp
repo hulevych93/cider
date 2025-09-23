@@ -5,8 +5,7 @@
 
 #include <assert.h>
 
-#include <tlog.h>
-
+#include <iostream>
 #include "recorder/details/generator.h"
 
 namespace cider {
@@ -17,7 +16,7 @@ FileLogger::FileLogger(const std::string& logDir,
   std::filesystem::path outPath(logDir);
   std::filesystem::create_directories(outPath);
   outPath /= logFileName;
-  tlog_info << "Out file: " << outPath << std::endl;
+  std::cout << "Out file: " << outPath << std::endl;
   _report.open(outPath, std::ios::out | std::ios::app);
 }
 
@@ -34,7 +33,7 @@ FileLogger::FileLogger(const std::string& logDir,
   std::filesystem::path outPath(logDir);
   std::filesystem::create_directories(outPath);
   outPath /= logFileName;
-  tlog_info << "Out file: " << outPath << std::endl;
+  std::cout << "Out file: " << outPath << std::endl;
   _report.open(outPath, std::ios::out | std::ios::app);
 }
 

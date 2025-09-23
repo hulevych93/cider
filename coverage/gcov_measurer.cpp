@@ -5,9 +5,9 @@
 
 #include <assert.h>
 
-#include <tlog.h>
 #include <thread>
 
+#include <iostream>
 #include "recorder/details/generator.h"
 #include "scripting/runner.h"
 
@@ -39,24 +39,24 @@ ReportOpt CoverageMeasurment::getReport(
   const auto result = scripting::runScript(
       _cmd.binPath, _cmd.workingDir, script, [](const char*, std::size_t) {});
 
-  // if (result) {
-  std::string jsonReport;
+  if (result) {
+    std::string jsonReport;
 
-  rerty([&]() -> bool {
-    return runCoverage(_cmd.baseDir, _cmd.objectDir,
-                       [&](const char* data, std::size_t size) {
-                         jsonReport += std::string{data, size};
-                       });
-  });
+    rerty([&]() -> bool {
+      return runCoverage(_cmd.baseDir, _cmd.objectDir,
+                         [&](const char* data, std::size_t size) {
+                           jsonReport += std::string{data, size};
+                         });
+    });
 
-  const auto rootReport = parseJsonCovReport(jsonReport, false);
+    const auto rootReport = parseJsonCovReport(jsonReport, false);
 
-  if (rootReport.has_value() && m_logger) {
-    m_logger->log(_index, rootReport.value());
+    if (rootReport.has_value() && m_logger) {
+      m_logger->log(_index, rootReport.value());
+    }
+
+    return rootReport;
   }
-
-  return rootReport;
-  // }
 
   return std::nullopt;
 }
@@ -76,7 +76,7 @@ void StepperCoverageMeasurment::measure(
     const std::vector<cider::recorder::Action>& actions,
     const size_t stepSize,
     const std::optional<size_t> covReachLen) {
-  tlog_info << "actions size: " << actions.size() << std::endl;
+  std::cout << "actions size: " << actions.size() << std::endl;
 
   if (m_logger) {
     m_logger->log(0U, {});
@@ -93,7 +93,7 @@ void StepperCoverageMeasurment::measure(
       if (richLenIntex > _index && richLenIntex < nextIndex &&
           richLenIntex < actions.size()) {
         _index = richLenIntex;
-        tlog_info << "[CovReach] forced log at i=" << _index << "\n";
+        std::cout << "[CovReach] forced log at i=" << _index << "\n";
         (*this)(actions);
       }
     }
@@ -103,7 +103,7 @@ void StepperCoverageMeasurment::measure(
 
   if (_index - stepSize < actions.size() - 1) {
     _index = actions.size() - 1;
-    tlog_info << "[CovReach] final log at i=" << _index << "\n";
+    std::cout << "[CovReach] final log at i=" << _index << "\n";
     (*this)(actions);
   }
 }

@@ -3,10 +3,10 @@
 
 #include "cfg_coverage.h"
 
-#include <tlog.h>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 
 #include <assert.h>
 
@@ -85,22 +85,18 @@ bool deserialize(Coverage& obj,
   return true;
 }
 
-void Coverage::dump() const {
-  tlog_info << covered << ":" << total << std::endl;
-}
-
 void zeroCfgCounters(int* blockCount) {
-    int j = 0;
-    for(int i = 0; i < max_guard_id; ++i) {
-        if(coverage_map[i] == 1) {
-            ++j;
-            coverage_map[i] = 0; // not relative block
-        }
+  int j = 0;
+  for (int i = 0; i < max_guard_id; ++i) {
+    if (coverage_map[i] == 1) {
+      ++j;
+      coverage_map[i] = 0;  // not relative block
     }
-    if(blockCount) {
-        *blockCount = max_guard_id;
-    }
-    tlog_info << "Not relative block count " << j << std::endl;
+  }
+  if (blockCount) {
+    *blockCount = max_guard_id;
+  }
+  std::cout << "Not relative block count " << j << std::endl;
 }
 
 void dumpCoverageToCout(
@@ -115,12 +111,12 @@ void dumpCoverageToCout(
 
   coverage.status = status;
   const auto covJson = serializeCovReport(coverage);
-  tlog_info << MarkerStart << covJson << MarkerEnd << coverage.getPercentage();
+  std::cout << MarkerStart << covJson << MarkerEnd << coverage.getPercentage();
 }
 
 void dumpCoverageToCout(const CoveragePerAction& coverage) {
   const auto covJson = serializeCovReport(coverage);
-  tlog_info << MarkerStart << covJson << MarkerEnd;
+  std::cout << MarkerStart << covJson << MarkerEnd;
 }
 
 Coverage getCoverage() {

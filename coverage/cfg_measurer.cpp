@@ -5,7 +5,6 @@
 
 #include <assert.h>
 
-#include <tlog.h>
 #include <filesystem>
 
 #include "recorder/details/generator.h"

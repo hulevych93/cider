@@ -5,9 +5,9 @@
 
 #include <nlohmann/json.hpp>
 
+#include <iostream>
 #include <process.hpp>
 
-#include <tlog.h>
 #include <filesystem>
 #include <fstream>
 
@@ -87,7 +87,7 @@ std::optional<RootReport> parseJsonCovReport(const std::string& json,
 
 std::string loadFile(const std::string& path) {
   if (!std::filesystem::exists(path)) {
-    tlog_info << path << "doesn't exist" << std::endl;
+    std::cout << path << "doesn't exist" << std::endl;
   }
   std::ifstream scr1(path, std::ios::binary);
   scr1.seekg(0, std::ios::end);
@@ -101,17 +101,18 @@ std::string loadFile(const std::string& path) {
 bool cleanCoverage(const std::string& workingDir) {
   tpl::Process process(
       std::string{"find "} + workingDir + " -name \"*.gcda\" -delete", "",
-      [](const char* data, std::size_t) { tlog_info << data; },
-      [](const char* data, std::size_t) { tlog_info << data; });
+      [](const char* data, std::size_t) { std::cout << data; },
+      [](const char* data, std::size_t) { std::cout << data; });
   return process.get_exit_status() == 0;
 }
 
 bool runCoverage(const std::string& base,
                  const std::string& objectDir,
                  std::function<void(const char*, std::size_t)> callback) {
-  tpl::Process process("gcovr --json-summary --json-summary-pretty -r" + base +
-                           " --object-directory=" + objectDir,
-                       "", callback, nullptr);
+  tpl::Process process(
+      "gcovr --gcov-delete --json-summary --json-summary-pretty -r" + base +
+          " --object-directory=" + objectDir,
+      "", callback, nullptr);
   return process.get_exit_status() == 0;
 }
 
