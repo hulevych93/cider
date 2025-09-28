@@ -5,6 +5,7 @@
 
 #include "coverage/cfg_measurer.h"
 #include "coverage/gcov_measurer.h"
+#include "coverage/gcov_measurer_llvm.h"
 
 #include <assert.h>
 #include <tlog.h>
@@ -30,7 +31,7 @@ bool SimulationPipe::process(const std::string& metadata,
   cider::cfg_coverage::CoverageMeasurment measurer{cmd, libName.c_str()};
   measurer.setLogger(outPath.string(), "cfg_generation_log.txt");
 
-  gcov_coverage::CoverageMeasurment measurerGcov{cmd, libName.c_str()};
+  llvm_gc_coverage::CoverageMeasurment measurerGcov{cmd, libName.c_str()};
 
   double baseline = 0.0f;
   const auto report = measurerGcov.getReport(input.actions);
@@ -44,9 +45,10 @@ bool SimulationPipe::process(const std::string& metadata,
     const auto start = std::chrono::steady_clock::now();
 
     try {
-      success = simulate(outPath, baseline, input.actions, output,
-                         measurerGcov.getObjValueFunc(),
-                         measurer.getFastObjValueFunc());
+      success =
+          simulate(outPath, baseline, input.actions, output,
+                   measurerGcov.getObjValueFunc(), measurer.getObjValueFunc(),
+                   measurer.getFastObjValueFunc());
     } catch (const std::exception& e) {
       std::cerr << e.what();
       success = false;

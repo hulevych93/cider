@@ -189,6 +189,33 @@ auto getGreedyR3Settings() {
   return settings;
 }
 
+auto getGreedyRTracks1Settings() {
+  greedy_r::GreedyRTracksSettings settings;
+  settings.configName = "GRR-T1";
+
+  settings.top_k = 3;
+  settings.temperature = 1.0;
+  return settings;
+}
+
+auto getGreedyRTracks2Settings() {
+  greedy_r::GreedyRTracksSettings settings;
+  settings.configName = "GRR-T2";
+
+  settings.top_k = 5;
+  settings.temperature = 2.0;
+  return settings;
+}
+
+auto getGreedyRTracks3Settings() {
+  greedy_r::GreedyRTracksSettings settings;
+  settings.configName = "GRR-T3";
+
+  settings.top_k = 7;
+  settings.temperature = 3.0;
+  return settings;
+}
+
 auto getMCTS1Settings() {
   mcts::MonteCarloSettings settings;
   settings.configName = "MCTS1";
@@ -410,13 +437,13 @@ const pipelines::ReportConfiguration& getReportConfigMCTS() {
 
 const pipelines::ReportConfiguration& getReportConfigQLEGvsQLB() {
   static const std::vector<std::string> orderedMethods = {
-      "QLEG2", "QLEG3", "QLB1", "QLB2", "QLB3"};
+      "QLEG1", "QLEG2", "QLEG3", "QLB1", "QLB2", "QLB3"};
   return orderedMethods;
 }
 
 const pipelines::ReportConfiguration& getReportConfigGreedyR() {
-  static const std::vector<std::string> orderedMethods = {"GR", "GRR1", "GRR2",
-                                                          "GRR3"};
+  static const std::vector<std::string> orderedMethods = {
+      "GR", "GRR1", "GRR2", "GRR3", "GRR-T1", "GRR-T2", "GRR-T3"};
   return orderedMethods;
 }
 
@@ -440,58 +467,38 @@ const pipelines::ReportConfiguration& getReportConfigTarget() {
 }
 
 const pipelines::ReportConfiguration& getReportALLSelected() {
-  static const std::vector<std::string> orderedMethods = {"DSL",
-                                                          "DSL-FM1",
-                                                          "DSL-FM2",
-                                                          "DSL-FM3",
-                                                          "GR",
-                                                          "GRR1",
-                                                          "GRR2",
-                                                          "GRR3",
-                                                          "MCTS1",
-                                                          "MCTS2",
-                                                          "MCTS3",
-                                                          "QLEG1",
-                                                          "QLEG2",
-                                                          "QLEG3",
-                                                          "QLB1",
-                                                          "QLB2",
-                                                          "QLB3",
-                                                          "QLEG1+DSL",
-                                                          "QLEG2+DSL",
-                                                          "QLEG3+DSL",
-                                                          "QLB1+DSL",
-                                                          "QLB2+DSL",
-                                                          "QLB3+DSL",
-                                                          "QLEG1+DSL-FM0",
-                                                          "QLEG2+DSL-FM0",
-                                                          "QLEG3+DSL-FM0",
-                                                          "QLB1+DSL-FM0",
-                                                          "QLB2+DSL-FM0",
-                                                          "QLB3+DSL-FM0",
-                                                          "QLEG1+DSL-FM1",
-                                                          "QLEG2+DSL-FM1",
-                                                          "QLEG3+DSL-FM1",
-                                                          "QLB1+DSL-FM1",
-                                                          "QLB2+DSL-FM1",
-                                                          "QLB3+DSL-FM1",
-                                                          "QLEG1+DSL-FM2",
-                                                          "QLEG2+DSL-FM2",
-                                                          "QLEG3+DSL-FM2",
-                                                          "QLB1+DSL-FM2",
-                                                          "QLB2+DSL-FM2",
-                                                          "QLB3+DSL-FM2",
-                                                          "QLEG1+DSL-FM3",
-                                                          "QLEG2+DSL-FM3",
-                                                          "QLEG3+DSL-FM3",
-                                                          "QLB1+DSL-FM3",
-                                                          "QLB2+DSL-FM3",
-                                                          "QLB3+DSL-FM3"};
+  static const std::vector<std::string> orderedMethods = {
+      "DSL", "DSL-FM1", "DSL-FM2", "DSL-FM3", "GR", "GRR1", "GRR2", "GRR3",
+      "GRR-T1", "GRR-T2", "GRR-T3", "MCTS1", "MCTS2", "MCTS3",
+
+      // --- QLEG1 ---
+      "QLEG1", "QLEG1+DSL", "QLEG1+DSL-FM0", "QLEG1+DSL-FM1", "QLEG1+DSL-FM2",
+      "QLEG1+DSL-FM3",
+
+      // --- QLEG2 ---
+      "QLEG2", "QLEG2+DSL", "QLEG2+DSL-FM0", "QLEG2+DSL-FM1", "QLEG2+DSL-FM2",
+      "QLEG2+DSL-FM3",
+
+      // --- QLEG3 ---
+      "QLEG3", "QLEG3+DSL", "QLEG3+DSL-FM0", "QLEG3+DSL-FM1", "QLEG3+DSL-FM2",
+      "QLEG3+DSL-FM3",
+
+      // --- QLB1 ---
+      "QLB1", "QLB1+DSL", "QLB1+DSL-FM0", "QLB1+DSL-FM1", "QLB1+DSL-FM2",
+      "QLB1+DSL-FM3",
+
+      // --- QLB2 ---
+      "QLB2", "QLB2+DSL", "QLB2+DSL-FM0", "QLB2+DSL-FM1", "QLB2+DSL-FM2",
+      "QLB2+DSL-FM3",
+
+      // --- QLB3 ---
+      "QLB3", "QLB3+DSL", "QLB3+DSL-FM0", "QLB3+DSL-FM1", "QLB3+DSL-FM2",
+      "QLB3+DSL-FM3"};
   return orderedMethods;
 }
 
 constexpr const int StatsCount = 30U;
-constexpr const int GreedyCount = 1U;
+constexpr const int GreedyCount = 5U;
 constexpr const int MCTSCount = 1U;
 
 }  // namespace
@@ -583,6 +590,18 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
     case PipelineType::GreedyR3:
       pipeline.addStage(
           std::make_unique<GreedyRStage>(getGreedyR3Settings(), GreedyCount));
+      break;
+    case PipelineType::GreedyRTracks1:
+      pipeline.addStage(std::make_unique<GreedyRStage>(
+          getGreedyRTracks1Settings(), GreedyCount));
+      break;
+    case PipelineType::GreedyRTracks2:
+      pipeline.addStage(std::make_unique<GreedyRStage>(
+          getGreedyRTracks2Settings(), GreedyCount));
+      break;
+    case PipelineType::GreedyRTracks3:
+      pipeline.addStage(std::make_unique<GreedyRStage>(
+          getGreedyRTracks3Settings(), GreedyCount));
       break;
     case PipelineType::DSL:
       pipeline.addStage(std::make_unique<DSlicerStage>(getDSLSettings(), 5));

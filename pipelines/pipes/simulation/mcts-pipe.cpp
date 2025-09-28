@@ -15,6 +15,7 @@ bool MctsSearchStage::simulate(const std::string& /*outPath*/,
                                const recorder::Actions& input,
                                recorder::Actions& output,
                                const ObjectiveFunction& objFunc,
+                               const ObjectiveFunction& /*objFuncСfg*/,
                                const FineObjectiveFunction& /*fineObjFunc*/) {
   m_settings.objFunc = objFunc;
   output = mcts::run_mcts(Seed::instance().get(), m_settings, input);

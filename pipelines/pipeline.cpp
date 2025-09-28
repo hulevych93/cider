@@ -16,35 +16,8 @@
 #include <iomanip>
 #include <sstream>
 
-#include <sys/sysctl.h>
-#include <sys/types.h>
-#include <unistd.h>
-
 namespace cider {
 namespace pipelines {
-
-bool isDebuggerAttached() {
-  int mib[4];
-  struct kinfo_proc info;
-  size_t size;
-
-  // Initialize the flags so that, if sysctl fails, we get a predictable result.
-  info.kp_proc.p_flag = 0;
-
-  mib[0] = CTL_KERN;
-  mib[1] = KERN_PROC;
-  mib[2] = KERN_PROC_PID;
-  mib[3] = getpid();
-
-  size = sizeof(info);
-
-  if (sysctl(mib, 4, &info, &size, nullptr, 0) == -1) {
-    return true;  // false
-  }
-
-  // P_TRACED is set if the process is being debugged
-  return true;  // (info.kp_proc.p_flag & P_TRACED) != 0;
-}
 
 void stopPoint() {
   if (!isDebuggerAttached()) {

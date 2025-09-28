@@ -84,7 +84,5 @@ class Pipeline final {
 
 Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd);
 
-bool isDebuggerAttached();
-
 }  // namespace pipelines
 }  // namespace cider

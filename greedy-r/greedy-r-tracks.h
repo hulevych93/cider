@@ -8,33 +8,31 @@
 
 #include "coverage/coverage.h"
 
-#include "greedy-r-tracks.h"
-
-#include <variant>
-
 namespace cider {
 namespace greedy_r {
 
 using ObjectiveFunction =
     std::function<ObjectiveValue(const std::vector<recorder::Action>&)>;
 
-struct GreedyRSettings final {
-  const char* configName = "GREEDY_R_NAN";
-  size_t maxZeroGain = 10;
+using FineObjectiveFunction =
+    std::function<FineObjectiveValue(const std::vector<recorder::Action>&)>;
+
+struct GreedyRTracksSettings final {
+  const char* configName = "GREEDY_R_TRACKS_NAN";
+  double temperature = 1.5;
   size_t top_k = 3;
   ObjectiveFunction objFunc;
-  ObjectiveFunction objFuncCfg;
+  FineObjectiveFunction fineObjFunc;
   double baseline = 0.0;
 };
 
-std::ostream& operator<<(std::ostream& os, const GreedyRSettings& settings);
+std::ostream& operator<<(std::ostream& os,
+                         const GreedyRTracksSettings& settings);
 
-std::vector<recorder::Action> run_greedy_r(
+std::vector<recorder::Action> run_greedy_r_tracks(
     std::mt19937& gen,
-    const GreedyRSettings& settings,
+    const GreedyRTracksSettings& settings,
     const std::vector<recorder::Action>& input);
-
-using GreedySettings = std::variant<GreedyRSettings, GreedyRTracksSettings>;
 
 }  // namespace greedy_r
 }  // namespace cider

@@ -65,7 +65,7 @@ add_subdirectory(tests)
 set(CMD_BITMAP
     "${CMAKE_SOURCE_DIR}/experiments/bitmap++/tests/bitmap++_tests"
     "${EXPERIMENT_BITMAPPLUSPLUS_BUILD_DIR}/src"
-    "${CMAKE_BINARY_DIR}/experiments/bitmap++/tests/bitmap++_player"
+    "${CMAKE_BINARY_DIR}/experiments/bitmap++/tests/bitmap++_player/CMakeFiles/bitmap++_player.dir"
     "${CMAKE_BINARY_DIR}/bin/bitmap++_player"
     "${CMAKE_BINARY_DIR}"
     "${CMAKE_BINARY_DIR}/results/bitmap++/"

@@ -11,7 +11,7 @@ namespace pipelines {
 
 class GreedyRStage final : public SimulationPipe {
  public:
-  GreedyRStage(const greedy_r::GreedyRSettings& settings, int numberOfRuns);
+  GreedyRStage(const greedy_r::GreedySettings& settings, int numberOfRuns);
 
   std::string getLetter() const override { return "GREEDY_R"; }
 
@@ -21,12 +21,13 @@ class GreedyRStage final : public SimulationPipe {
                 const recorder::Actions& input,
                 recorder::Actions& output,
                 const ObjectiveFunction& objFunc,
+                const ObjectiveFunction& objFuncСfg,
                 const FineObjectiveFunction& fineObjFunc) override;
 
   std::string getConfigName() const override;
   std::string getPrefix() const override;
 
-  greedy_r::GreedyRSettings m_settings;
+  greedy_r::GreedySettings m_settings;
 };
 
 }  // namespace pipelines

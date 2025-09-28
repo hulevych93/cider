@@ -34,6 +34,7 @@ class SimulationPipe : public Pipe {
                         const recorder::Actions& input,
                         recorder::Actions& output,
                         const ObjectiveFunction& objFunc,
+                        const ObjectiveFunction& objFuncСfg,
                         const FineObjectiveFunction& fineObjFunc) = 0;
 
   virtual std::string getConfigName() const = 0;

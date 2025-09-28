@@ -85,25 +85,19 @@ std::optional<RootReport> parseJsonCovReport(const std::string& json,
   return report;
 }
 
-std::string loadFile(const std::string& path) {
-  if (!std::filesystem::exists(path)) {
-    std::cout << path << "doesn't exist" << std::endl;
-  }
-  std::ifstream scr1(path, std::ios::binary);
-  scr1.seekg(0, std::ios::end);
-  size_t size = scr1.tellg();
-  std::string script(size, ' ');
-  scr1.seekg(0);
-  scr1.read(&script[0], size);
-  return script;
-}
-
 bool cleanCoverage(const std::string& workingDir) {
-  tpl::Process process(
-      std::string{"find "} + workingDir + " -name \"*.gcda\" -delete", "",
-      [](const char* data, std::size_t) { std::cout << data; },
-      [](const char* data, std::size_t) { std::cout << data; });
-  return process.get_exit_status() == 0;
+  namespace fs = std::filesystem;
+  try {
+    for (auto& p : fs::recursive_directory_iterator(workingDir)) {
+      if (p.path().extension() == ".gcda") {
+        fs::remove(p.path());
+      }
+    }
+    return true;
+  } catch (const std::exception& e) {
+    std::cerr << "[cleanCoverage] Error: " << e.what() << "\n";
+    return false;
+  }
 }
 
 bool runCoverage(const std::string& base,

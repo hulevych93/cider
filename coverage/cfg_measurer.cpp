@@ -31,7 +31,7 @@ CfgCoverageOpt CoverageMeasurment::getReport(
                            [&](const char* data, std::size_t size) {
                              jsonReport += std::string{data, size};
                            });
-  if (result) {
+  if (result || isDebuggerAttached()) {
     std::string jsonStr = readCoverageFromStream(jsonReport);
 
     try {
@@ -67,15 +67,15 @@ CoveragePerAction CoverageMeasurment::getFineReport(
                            [&](const char* data, std::size_t size) {
                              jsonReport += std::string{data, size};
                            });
-  // if (result) {
-  std::string jsonStr = readCoverageFromStream(jsonReport);
+  if (result || isDebuggerAttached()) {
+    std::string jsonStr = readCoverageFromStream(jsonReport);
 
-  try {
-    return deserializeCovPerActReport(jsonStr);
-  } catch (...) {
-    std::cerr << "Failed to parse coverage JSON!\n";
+    try {
+      return deserializeCovPerActReport(jsonStr);
+    } catch (...) {
+      std::cerr << "Failed to parse coverage JSON!\n";
+    }
   }
-  // }
 
   return {};
 }

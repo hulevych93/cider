@@ -6,6 +6,7 @@
 
 #include "coverage/cfg_coverage.h"
 #include "coverage/gcov_coverage.h"
+#include "coverage/llvm_coverage.h"
 
 #include "recorder/details/action.h"
 #include "recorder/details/params.h"

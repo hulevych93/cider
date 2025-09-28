@@ -22,6 +22,7 @@ class MetaSearchStage final : public SimulationPipe {
                 const recorder::Actions& input,
                 recorder::Actions& output,
                 const ObjectiveFunction& objFunc,
+                const ObjectiveFunction& objFuncСfg,
                 const FineObjectiveFunction& fineObjFunc) override;
 
   std::string getConfigName() const override;

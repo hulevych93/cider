@@ -21,6 +21,7 @@ bool SynthesisStage::simulate(const std::string& /*outPath*/,
                               const recorder::Actions& input,
                               recorder::Actions& output,
                               const ObjectiveFunction& objFunc,
+                              const ObjectiveFunction& /*objFuncСfg*/,
                               const FineObjectiveFunction& /*fineObjFunc*/) {
   return std::visit(
       [&](const auto& s) {

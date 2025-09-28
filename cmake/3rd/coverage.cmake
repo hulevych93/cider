@@ -160,7 +160,10 @@ foreach(LANG ${LANGUAGES})
   endif()
 endforeach()
 
-set(COVERAGE_COMPILER_FLAGS "-g -fprofile-arcs -ftest-coverage"
+## flags for llvm-cov export coverage
+## -fprofile-instr-generate -fcoverage-mapping -O0 -fno-jump-tables -fno-discard-value-names -fno-inline
+
+set(COVERAGE_COMPILER_FLAGS "-g -fprofile-arcs -ftest-coverage -O0 -fno-jump-tables -fno-discard-value-names -fno-inline"
     CACHE INTERNAL "")
 if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
     include(CheckCXXCompilerFlag)

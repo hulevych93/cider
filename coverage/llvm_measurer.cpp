@@ -1,60 +1,48 @@
 // Copyright (C) 2022-2024 Hulevych Mykhailo
 // SPDX-License-Identifier: MIT
 
-#include "gcov_measurer.h"
+#include "llvm_measurer.h"
 
-#include <assert.h>
-
+#include <cassert>
+#include <filesystem>
+#include <iostream>
 #include <thread>
 
-#include <iostream>
 #include "recorder/details/generator.h"
 #include "scripting/runner.h"
 
 namespace cider {
-namespace gcov_coverage {
+namespace llvm_coverage {
 
 CoverageMeasurment::CoverageMeasurment(const Cmd& cmd, const char* module)
-    : _cmd(cmd), _module(module) {}
+    : _cmd(cmd), _module(module) {
+  retry([&]() { return cleanCoverage(_cmd.covDir); });
+}
 
 ReportOpt CoverageMeasurment::getReport(
     const std::vector<cider::recorder::Action>& actions) {
   const auto script = getScript(actions);
 
-  const auto now = std::chrono::system_clock::now();
-  retry([&]() -> bool { return cleanCoverage(_cmd.covDir); });
+  retry([&]() { return cleanCoverage(_cmd.workingDir); });
 
-  const auto result = scripting::runScript(
+  const auto result = llvm_coverage::runScript(
       _cmd.binPath, _cmd.workingDir, script, [](const char*, std::size_t) {});
 
   if (result || isDebuggerAttached()) {
     std::string jsonReport;
 
-    retry([&]() -> bool {
-      return runCoverage(_cmd.sourcesDir, _cmd.objectDir,
-                         [&](const char* data, std::size_t size) {
-                           jsonReport += std::string{data, size};
-                         });
-    });
+    runCoverage(
+        _cmd.binPath, _cmd.workingDir,
+        [&](const char* data, std::size_t sz) { jsonReport.append(data, sz); });
 
-    const auto rootReport = parseJsonCovReport(jsonReport, false);
-
-    if (rootReport.has_value() && m_logger) {
-      m_logger->log(_index, rootReport.value());
+    if (!jsonReport.empty()) {
+      const auto rootReport = llvm_coverage::parseJsonCovReport(jsonReport);
+      if (rootReport && m_logger) {
+        m_logger->log(_index, *rootReport);
+      }
+      return rootReport;
     }
-
-    const auto end = std::chrono::system_clock::now();
-    const auto meassureTimeMcs =
-        std::chrono::duration_cast<std::chrono::milliseconds>(end - now)
-            .count();
-
-    if (true) {
-      std::cout << "Cov time: " << meassureTimeMcs << " mills" << std::endl;
-    }
-
-    return rootReport;
   }
-
   return std::nullopt;
 }
 
@@ -73,34 +61,27 @@ void StepperCoverageMeasurment::measure(
     const std::vector<cider::recorder::Action>& actions,
     const size_t stepSize,
     const std::optional<size_t> covReachLen) {
-  std::cout << "actions size: " << actions.size() << std::endl;
-
-  if (m_logger) {
+  if (m_logger)
     m_logger->log(0U, {});
-  }
 
   _index = 0;
-
   for (; _index < actions.size();) {
     (*this)(actions);
     const size_t nextIndex = _index + stepSize;
 
-    if (covReachLen.has_value()) {
-      const auto richLenIntex = covReachLen.value() - 1;
-      if (richLenIntex > _index && richLenIntex < nextIndex &&
-          richLenIntex < actions.size()) {
-        _index = richLenIntex;
-        std::cout << "[CovReach] forced log at i=" << _index << "\n";
+    if (covReachLen) {
+      size_t richLenIndex = *covReachLen - 1;
+      if (richLenIndex > _index && richLenIndex < nextIndex &&
+          richLenIndex < actions.size()) {
+        _index = richLenIndex;
         (*this)(actions);
       }
     }
-
     _index = nextIndex;
   }
 
   if (_index - stepSize < actions.size() - 1) {
     _index = actions.size() - 1;
-    std::cout << "[CovReach] final log at i=" << _index << "\n";
     (*this)(actions);
   }
 }
@@ -111,5 +92,5 @@ std::string StepperCoverageMeasurment::getScript(
   return cider::recorder::generateScript(generator, actions, _index);
 }
 
-}  // namespace gcov_coverage
+}  // namespace llvm_coverage
 }  // namespace cider

@@ -7,6 +7,7 @@
 #include <optional>
 #include <random>
 #include <string>
+#include <thread>
 
 namespace cider {
 
@@ -28,6 +29,10 @@ enum class PipelineType {
   GreedyR1 = 40,
   GreedyR2 = 41,
   GreedyR3 = 42,
+
+  GreedyRTracks1 = 200,
+  GreedyRTracks2 = 201,
+  GreedyRTracks3 = 202,
 
   DSL_FM0 = 34,
   DSL_FM1 = 35,
@@ -114,7 +119,7 @@ struct Cmd final {
 
   PipelineType pipelineType = PipelineType::HS0;
   std::string workingDir;
-  std::string baseDir;
+  std::string sourcesDir;
   std::string objectDir;
   std::string binPath;
   std::string covDir;
@@ -139,6 +144,18 @@ class Seed final {
   mutable std::mt19937 _gen;
 };
 
+bool isDebuggerAttached();
+
 std::string loadFile(const std::string& path);
+
+template <typename Func>
+bool retry(Func&& func, int maxAttempts = 5) {
+    for (int i = 0; i < maxAttempts; ++i) {
+        if (func())
+            return true;
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
+    return false;
+}
 
 }  // namespace cider

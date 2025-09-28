@@ -56,7 +56,7 @@ int main(int argc, char* argv[]) {
   if (pipeline.newResuls()) {
     tlog_info << "Save results? (y/n): ";
     char decision;
-    if (!cider::pipelines::isDebuggerAttached()) {
+    if (!cider::isDebuggerAttached()) {
       std::cin >> decision;
     } else {
       decision = 'Y';

@@ -106,6 +106,12 @@ add_target_def(GRR1 40 GROUP ${GROUP_GREEDY_R})
 add_target_def(GRR2 41 GROUP ${GROUP_GREEDY_R})
 add_target_def(GRR3 42 GROUP ${GROUP_GREEDY_R})
 
+
+# === GRR-T (Greedy Temperature) ===
+add_target_def(GRR-T1 200 GROUP ${GROUP_GREEDY_R})
+add_target_def(GRR-T2 201 GROUP ${GROUP_GREEDY_R})
+add_target_def(GRR-T3 202 GROUP ${GROUP_GREEDY_R})
+
 # === DSL ===
 add_target_def(DSL_FM0 34 GROUP ${GROUP_DSL})
 add_target_def(DSL_FM1 35 GROUP ${GROUP_DSL})

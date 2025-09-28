@@ -68,6 +68,7 @@ bool DSlicerStage::simulate(const std::string& /*outPath*/,
                             const recorder::Actions& input,
                             recorder::Actions& output,
                             const ObjectiveFunction& objFunc,
+                            const ObjectiveFunction& /*objFuncСfg*/,
                             const FineObjectiveFunction& fineObjFunc) {
   return std::visit(
       [&](const auto& settings) -> bool {
@@ -149,7 +150,7 @@ bool DQLPostProcessSlicerStage::process(const std::string&,
 
       Result result;
       result.testCaseName = r.testCaseName;
-      result.timeElapsedMcs = r.timeElapsedMcs + elapsed_mcs;
+      result.timeElapsedMcs = r.timeElapsedMcs;
       result.oldActions = deepCopy(r.oldActions);
       result.newActions = deepCopy(sliced);
 

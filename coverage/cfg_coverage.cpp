@@ -61,8 +61,6 @@ double Coverage::getPercentage() const {
   if (total == 0)
     return 0.0f;
   auto result = double(covered) / double(total);
-  if (result < percentageThreshold)
-    result = 0.0f;
   return result * 100.0f;
 }
 
