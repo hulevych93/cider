@@ -7,6 +7,8 @@
 
 #include "coverage/coverage.h"
 
+#include "reward_func.h"
+
 #include <variant>
 
 namespace cider {
@@ -22,6 +24,8 @@ struct LearningSettingsBase {
   size_t maxRollback = 20U;
   size_t maxStateDepth = 5U;
   size_t coverageConvergenceCounter = 200U;
+
+  RewardShappingParams rewardShaping;
 };
 
 double linearDecay(const double initial,

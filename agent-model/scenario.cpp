@@ -1,81 +1,11 @@
 #include "scenario.h"
 
+#include "reward_func.h"
+
 #include <tlog.h>
 
 namespace cider {
 namespace agent_model {
-
-namespace {
-
-bool hasNewCoverageBit(const std::vector<std::uint8_t>& current,
-                       const std::vector<std::uint8_t>& previous) {
-  const size_t size = std::min(current.size(), previous.size());
-  for (size_t i = 0; i < size; ++i) {
-    if ((current[i] & ~previous[i]) != 0) {
-      return true;  // New bit discovered
-    }
-  }
-  return false;  // No new bits
-}
-
-inline double normalize_reward(double reward) {
-  return reward / (1 + std::abs(reward));
-}
-
-std::optional<double> rewardFunction(
-    RewardCounter& rwCounter,
-    const ObjectiveValue& objValue,
-    const ObjectiveValue& targetValue,
-    double biggerCoverageReward,
-    double newTracksReward,
-    const std::function<double()>& sameCoverageReward,
-    double penalty) {
-  if (objValue.coverage > std::numeric_limits<double>::epsilon()) {
-    const auto coverageBigger = objValue.coverage > targetValue.coverage;
-    const auto coverageSame = abs(objValue.coverage - targetValue.coverage) <
-                              std::numeric_limits<double>::epsilon();
-
-    tlog_info << objValue.coverage << std::endl;
-
-    if (coverageBigger) {
-      rwCounter.covGrow++;
-      return biggerCoverageReward;
-    } else if (coverageSame && hasNewCoverageBit(objValue.coveredTracks,
-                                                 targetValue.coveredTracks)) {
-      rwCounter.trackGrow++;
-      return newTracksReward;
-    } else if (coverageSame) {
-      return sameCoverageReward();
-    } else {
-      rwCounter.penalty++;
-      return penalty;
-    }
-
-  } else {
-    return std::nullopt;
-  }
-}
-
-double calculateContinuousMultiplier(RewardCounter& rwCounter,
-                                     size_t initialSize,
-                                     size_t currentSize) {
-  if (currentSize < initialSize) {
-    rwCounter.scriptLower++;
-    double ratio = static_cast<double>(initialSize - currentSize) / initialSize;
-    double multiplier = 1.0 + ratio;
-    return std::min(2.0, multiplier);
-  } else if (currentSize > initialSize) {
-    rwCounter.scriptBigger++;
-    double ratio = static_cast<double>(currentSize - initialSize) / initialSize;
-    double multiplier = 0.5 - 0.3 * ratio;
-    return std::max(0.2, multiplier);
-  } else {
-    rwCounter.scriptSame++;
-    return 0.5;
-  }
-}
-
-}  // namespace
 
 Scenario::Scenario(std::mt19937& gen,
                    int maxStateDepth,
@@ -93,72 +23,44 @@ recorder::Actions Scenario::getCurrentState() const {
   return recorder::Actions{_actions.end() - count, _actions.end()};
 }
 
-LearningScenario::LearningScenario(RewardCounter& counter,
+LearningScenario::LearningScenario(const RewardShappingParams& params,
+                                   RewardCounter& counter,
                                    std::mt19937& gen,
                                    int maxStateDepth,
                                    const recorder::Actions& initial,
                                    const synthesis::ObjectiveFunction& objFunc)
-    : Scenario(gen, maxStateDepth, initial, objFunc), _rwCounter(counter) {}
+    : Scenario(gen, maxStateDepth, initial, objFunc),
+      _rwCounter(counter),
+      _params(params) {}
 
 std::optional<double> LearningScenario::getReward() const {
   const auto objValue = _objFunc(_actions);
 
-  std::optional<double> result;
+  return getShapedReward(_params, _rwCounter, objValue, _lastObjVal,
+                         _initialObjVal, _initialSize, _actions.size(),
+                         calculateRedundancy(true), !_availableActions.empty());
+}
 
-  if (synthesis::isOverFunc(objValue, _initialObjVal,
-                            _availableActions.empty())) {
-    result = rewardFunction(
-        _rwCounter, objValue, _initialObjVal, finalReward.coverageIncreased,
-        finalReward.newTracksFound,
-        [&]() {
-          if (_initialSize > _actions.size()) {
-            return finalReward.sameButShorter;
-          } else {
-            return finalReward.sameCoverage;
-          }
-        },
-        finalReward.lowerCoverage);
+size_t LearningScenario::calculateRedundancy(bool local) const {
+  if (_actions.size() < 2)
+    return 0;
+
+  const auto getRedundancy = [](const recorder::Actions& actions) {
+    int redundancy = 0;
+
+    for (size_t i = 1; i < actions.size(); ++i) {
+      if (cider::recorder::semanticallyEqual(actions[i], actions[i - 1])) {
+        redundancy++;
+      }
+    }
+    return redundancy;
+  };
+
+  if (local) {
+    return getRedundancy(getCurrentState());
   } else {
-    result = rewardFunction(
-        _rwCounter, objValue, _lastObjVal, stepReward.coverageIncreased,
-        stepReward.newTracksFound,
-        [&]() {
-          if (_actions.size() >= 2U) {
-            if (cider::recorder::semanticallyEqual(
-                    _actions[_actions.size() - 1],
-                    _actions[_actions.size() - 2])) {
-              if (_actions.size() >= 3U) {
-                if (cider::recorder::semanticallyEqual(
-                        _actions[_actions.size() - 2],
-                        _actions[_actions.size() - 3])) {
-                  _rwCounter.threeSameAct++;
-                  return stepReward.threeSemanticallyEqualAction;
-                }
-              }
-              _rwCounter.twoSameAct++;
-              return stepReward.twoSemanticallyEqualAction;
-            }
-          }
-
-          _rwCounter.sameCov++;
-          return stepReward.sameCoverage;
-        },
-        stepReward.lowerCoverage);
+    return getRedundancy(_actions);
   }
-
-  if (result.has_value()) {
-    _lastObjVal = objValue;
-
-    const double lenghtMultiplier = calculateContinuousMultiplier(
-        _rwCounter, _initialSize, _actions.size());
-
-    tlog_info << "Multi: " << lenghtMultiplier << ", old: " << _initialSize
-              << ", new: " << _actions.size() << std::endl;
-
-    result = normalize_reward(result.value() * lenghtMultiplier);
-  }
-
-  return result;
 }
 
 double LearningScenario::getCoverage(bool retry) const {

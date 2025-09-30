@@ -76,12 +76,6 @@ bool LearningStage::process(const std::string& metadata,
   std::filesystem::path outPath(cmd.resultsDir);
   outPath /= metadata;
 
-  if (std::filesystem::exists(outPath)) {
-    tlog_info << "Already existing result for: " << outPath << ". Skipping..."
-              << std::endl;
-    return true;
-  }
-
   outPath /= prefix;
   std::filesystem::create_directories(outPath);
 

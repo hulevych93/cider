@@ -50,20 +50,20 @@ std::string loadFile(const std::string& path) {
 }
 
 bool isDebuggerAttached() {
-    int mib[4];
-    struct kinfo_proc info;
-    size_t size = sizeof(info);
-    memset(&info, 0, sizeof(info));
+  int mib[4];
+  struct kinfo_proc info;
+  size_t size = sizeof(info);
+  memset(&info, 0, sizeof(info));
 
-    mib[0] = CTL_KERN;
-    mib[1] = KERN_PROC;
-    mib[2] = KERN_PROC_PID;
-    mib[3] = getpid();
+  mib[0] = CTL_KERN;
+  mib[1] = KERN_PROC;
+  mib[2] = KERN_PROC_PID;
+  mib[3] = getpid();
 
-    if (sysctl(mib, 4, &info, &size, nullptr, 0) == -1) {
-        return false;  // safer default
-    }
-    return (info.kp_proc.p_flag & P_TRACED) != 0;
+  if (sysctl(mib, 4, &info, &size, nullptr, 0) == -1) {
+    return false;  // safer default
+  }
+  return (info.kp_proc.p_flag & P_TRACED) != 0;
 }
 
 }  // namespace cider

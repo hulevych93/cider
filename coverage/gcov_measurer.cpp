@@ -48,7 +48,7 @@ ReportOpt CoverageMeasurment::getReport(
         std::chrono::duration_cast<std::chrono::milliseconds>(end - now)
             .count();
 
-    if (true) {
+    if (false) {
       std::cout << "Cov time: " << meassureTimeMcs << " mills" << std::endl;
     }
 

@@ -150,12 +150,12 @@ std::string loadFile(const std::string& path);
 
 template <typename Func>
 bool retry(Func&& func, int maxAttempts = 5) {
-    for (int i = 0; i < maxAttempts; ++i) {
-        if (func())
-            return true;
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    }
-    return false;
+  for (int i = 0; i < maxAttempts; ++i) {
+    if (func())
+      return true;
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  }
+  return false;
 }
 
 }  // namespace cider

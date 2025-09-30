@@ -27,8 +27,9 @@ void prelearningSession(const QLearningSettings& settings,
 
   for (int i = 0; i < settings.prelearningEpisodes; ++i) {
     RewardCounter rwCounter;
-    LearningScenario scenario(rwCounter, Seed::instance().get(),
-                              settings.maxStateDepth, list, objFunc);
+    LearningScenario scenario(settings.rewardShaping, rwCounter,
+                              Seed::instance().get(), settings.maxStateDepth,
+                              list, objFunc);
     auto nextState = scenario.getCurrentState();
 
     float total_reward = 0.0f;
@@ -87,8 +88,9 @@ void learningSession(const QLearningSettings& settings,
     tlog_info << "Episode: " << i << ", expRate: " << expRate
               << ", LR: " << learningRate << std::endl;
 
-    LearningScenario scenario(counter, Seed::instance().get(),
-                              settings.maxStateDepth, list, objFunc);
+    LearningScenario scenario(settings.rewardShaping, counter,
+                              Seed::instance().get(), settings.maxStateDepth,
+                              list, objFunc);
 
     auto nextState = scenario.getCurrentState();
 
@@ -152,7 +154,7 @@ void learningSession(const QLearningSettings& settings,
 
     if (coverage >= objValue.coverage) {
       coverageCounter++;
-      if (coverageCounter > settings.coverageConvergenceCounter) {
+      if (coverageCounter > 1000) {
         break;
       }
     } else {

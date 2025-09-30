@@ -194,7 +194,7 @@ auto getGreedyRTracks1Settings() {
   settings.configName = "GRR-T1";
 
   settings.top_k = 3;
-  settings.temperature = 1.0;
+  settings.temperature = 0.5;
   return settings;
 }
 
@@ -203,7 +203,7 @@ auto getGreedyRTracks2Settings() {
   settings.configName = "GRR-T2";
 
   settings.top_k = 5;
-  settings.temperature = 2.0;
+  settings.temperature = 1.5;
   return settings;
 }
 
@@ -212,7 +212,7 @@ auto getGreedyRTracks3Settings() {
   settings.configName = "GRR-T3";
 
   settings.top_k = 7;
-  settings.temperature = 3.0;
+  settings.temperature = 2.0;
   return settings;
 }
 
@@ -249,14 +249,14 @@ auto getMCTS3Settings() {
 auto getQLearningSettings() {
   agent_model::qlearning::QLearningSettings settings;
   settings.configName = "QL";
-  settings.prelearningEpisodes = 50U;
+  settings.prelearningEpisodes = 5U;
   settings.discountFactor = 0.85;
   settings.initialLearningRate = 0.3;
   settings.finalLearningRate = 0.1;
   settings.episodes = 1000U;
   settings.maxRollback = 20U;
   settings.coverageConvergenceCounter = 100U;
-  settings.maxStateDepth = 7U;
+  settings.maxStateDepth = 5U;
   return settings;
 }
 

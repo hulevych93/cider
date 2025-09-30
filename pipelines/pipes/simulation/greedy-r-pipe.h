@@ -28,6 +28,7 @@ class GreedyRStage final : public SimulationPipe {
   std::string getPrefix() const override;
 
   greedy_r::GreedySettings m_settings;
+  std::vector<bool> _openers;
 };
 
 }  // namespace pipelines

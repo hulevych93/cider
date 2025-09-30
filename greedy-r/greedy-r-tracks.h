@@ -23,6 +23,7 @@ struct GreedyRTracksSettings final {
   size_t top_k = 3;
   ObjectiveFunction objFunc;
   FineObjectiveFunction fineObjFunc;
+  std::vector<bool>* openers = nullptr;
   double baseline = 0.0;
 };
 

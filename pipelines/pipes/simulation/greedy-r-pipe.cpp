@@ -15,7 +15,8 @@ bool runRGreedy(SettingsType settings,
                 const FineObjectiveFunction& fineObjFunc,
                 const recorder::Actions& input,
                 recorder::Actions& output,
-                double baseline) {
+                double baseline,
+                std::vector<bool>& openers) {
   try {
     if constexpr (std::is_same_v<SettingsType, greedy_r::GreedyRSettings>) {
       settings.objFunc = objFunc;
@@ -28,6 +29,7 @@ bool runRGreedy(SettingsType settings,
       settings.objFunc = objFunc;
       settings.fineObjFunc = fineObjFunc;
       settings.baseline = baseline;
+      settings.openers = std::addressof(openers);
 
       output = greedy_r::run_greedy_r_tracks(Seed::instance().get(), settings,
                                              input);
@@ -56,7 +58,7 @@ bool GreedyRStage::simulate(const std::string& /*outPath*/,
   return std::visit(
       [&](const auto& settings) -> bool {
         return runRGreedy(settings, objFunc, objFuncСfg, fineObjFunc,
-                          deepCopy(input), output, baseline);
+                          deepCopy(input), output, baseline, _openers);
       },
       m_settings);
 }

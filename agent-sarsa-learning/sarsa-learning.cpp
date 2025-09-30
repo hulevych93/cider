@@ -24,9 +24,9 @@ void prelearningSession(const SarsaLearningSettings& settings,
 
   for (int i = 0; i < settings.prelearningEpisodes; ++i) {
     RewardCounter rwCounter;
-    agent_model::LearningScenario scenario(rwCounter, Seed::instance().get(),
-                                           settings.maxStateDepth, list,
-                                           objFunc);
+    agent_model::LearningScenario scenario(
+        settings.rewardShaping, rwCounter, Seed::instance().get(),
+        settings.maxStateDepth, list, objFunc);
 
     auto nextState = scenario.getCurrentState();
 
@@ -89,7 +89,8 @@ void learningSession(const SarsaLearningSettings& settings,
     tlog_info << "Episode: " << i << ", expRate: " << expRate << std::endl;
 
     agent_model::LearningScenario scenario(
-        counter, Seed::instance().get(), settings.maxStateDepth, list, objFunc);
+        settings.rewardShaping, counter, Seed::instance().get(),
+        settings.maxStateDepth, list, objFunc);
 
     ExponentialMovingAverage smoothLoss(0.5);
     float total_reward = 0.0f;
