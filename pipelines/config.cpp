@@ -193,7 +193,7 @@ auto getGreedyRTracks1Settings() {
   greedy_r::GreedyRTracksSettings settings;
   settings.configName = "GRR-T1";
 
-  settings.top_k = 3;
+  settings.top_k = 5;
   settings.temperature = 0.5;
   return settings;
 }
@@ -498,7 +498,7 @@ const pipelines::ReportConfiguration& getReportALLSelected() {
 }
 
 constexpr const int StatsCount = 30U;
-constexpr const int GreedyCount = 5U;
+constexpr const int GreedyCount = 30U;
 constexpr const int MCTSCount = 1U;
 
 }  // namespace

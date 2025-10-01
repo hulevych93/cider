@@ -16,7 +16,7 @@ bool runRGreedy(SettingsType settings,
                 const recorder::Actions& input,
                 recorder::Actions& output,
                 double baseline,
-                std::vector<bool>& openers) {
+                std::vector<double>& openers) {
   try {
     if constexpr (std::is_same_v<SettingsType, greedy_r::GreedyRSettings>) {
       settings.objFunc = objFunc;
@@ -48,13 +48,30 @@ GreedyRStage::GreedyRStage(const greedy_r::GreedySettings& settings,
                            int numberOfRuns)
     : SimulationPipe(numberOfRuns), m_settings(settings) {}
 
-bool GreedyRStage::simulate(const std::string& /*outPath*/,
+GreedyRStage::~GreedyRStage() {
+  try {
+    serialization::Serializer serializer;
+    serializer << _openers;
+    serializer.save(_path + "/openers.bin");
+  } catch (...) {
+  }
+}
+
+bool GreedyRStage::simulate(const std::string& outPath,
                             const double baseline,
                             const recorder::Actions& input,
                             recorder::Actions& output,
                             const ObjectiveFunction& objFunc,
                             const ObjectiveFunction& objFuncСfg,
                             const FineObjectiveFunction& fineObjFunc) {
+  _path = outPath;
+
+  try {
+    serialization::Deserializer deserializer(_path + "/openers.bin");
+    deserializer >> _openers;
+  } catch (const std::exception& e) {
+  }
+
   return std::visit(
       [&](const auto& settings) -> bool {
         return runRGreedy(settings, objFunc, objFuncСfg, fineObjFunc,

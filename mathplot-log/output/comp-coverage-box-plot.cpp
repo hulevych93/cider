@@ -316,7 +316,7 @@ double plotBoxStats(const std::string& path,
 
 std::array<double, 2> getYAxisLims(const std::string& libName) {
   if (libName == "bitmap_cplusplus") {
-    return {26.0, 32.0};
+    return {12.0, 32.0};
   }
   if (libName == "hjson") {
     return {34.0, 38.0};

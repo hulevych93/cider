@@ -131,6 +131,8 @@ bool QLearningLossLogger::load() {
 void QLearningLossLogger::log(size_t episode, const double averageLoss) {
   jeps_.push_back(static_cast<double>(episode));
   loss_.push_back(averageLoss);
+
+  plot();
 }
 
 void QLearningLossLogger::plot() {
