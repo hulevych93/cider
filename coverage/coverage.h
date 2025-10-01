@@ -116,6 +116,7 @@ struct ObjectiveValue final {
 struct FineObjectiveValue final {
   double coverage = 0.0;
   std::vector<std::vector<std::uint8_t>> fineCoveredTracks;
+  bool hasUnique = false;
 };
 
 struct Cmd final {

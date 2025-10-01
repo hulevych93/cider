@@ -67,6 +67,7 @@ struct CoverageMeasurment final {
         for (const auto& entry : rootReport) {
           value.fineCoveredTracks.emplace_back(entry.coveredTracks);
         }
+        value.hasUnique = rootReport.back().hasUnique;
       }
       return value;
     };

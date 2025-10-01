@@ -22,6 +22,7 @@ struct Coverage final : serialization::SerializableTag {
   bool status = true;
 
   std::vector<std::uint8_t> coveredTracks;
+  bool hasUnique = false;
 
   double getPercentage() const;
 

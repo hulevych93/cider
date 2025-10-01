@@ -53,6 +53,7 @@ Coverage& Coverage::operator=(const Coverage& rhs) {
     total = rhs.total;
     status = rhs.status;
     coveredTracks = rhs.coveredTracks;
+    hasUnique = rhs.hasUnique;
   }
   return *this;
 }
@@ -70,6 +71,7 @@ bool serialize(const Coverage& obj, serialization::Serializer& serializer) {
   serializer << obj.total;
   serializer << obj.status;
   serializer << obj.coveredTracks;
+  serializer << obj.hasUnique;
   return true;
 }
 
@@ -80,6 +82,7 @@ bool deserialize(Coverage& obj,
   deserializer >> obj.total;
   deserializer >> obj.status;
   deserializer >> obj.coveredTracks;
+  deserializer >> obj.hasUnique;
   return true;
 }
 

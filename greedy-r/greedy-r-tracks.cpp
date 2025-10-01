@@ -72,13 +72,7 @@ TestCase run_greedy_r_tracks(std::mt19937& gen,
     trial.push_back(actionSpace[i]);
 
     const auto fine = settings.fineObjFunc(trial);
-    if (fine.fineCoveredTracks.empty()) {
-      return false;
-    }
-    const auto& lastStep = fine.fineCoveredTracks.back();
-
-    return std::any_of(lastStep.begin(), lastStep.end(),
-                       [](uint8_t v) { return v == 1; });
+    return fine.hasUnique;
   };
 
   int lastPoolSize = -1;
