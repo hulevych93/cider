@@ -15,25 +15,33 @@
 namespace cider {
 namespace cfg_coverage {
 
-struct Coverage final : serialization::SerializableTag {
+struct Coverage : serialization::SerializableTag {
   std::uint32_t meassureTimeMcs = 0U;
   std::uint32_t covered = 0U;
   std::uint32_t total = 0U;
   bool status = true;
 
   std::vector<std::uint8_t> coveredTracks;
-  bool hasUnique = false;
 
   double getPercentage() const;
 
   Coverage& operator=(const Coverage& rhs);
 };
 
-using CoveragePerAction = std::vector<Coverage>;
+struct CoverageExtended final : Coverage {
+    bool hasUnique = false;
+};
+
+using CoveragePerAction = std::vector<CoverageExtended>;
 
 bool serialize(const Coverage& obj, serialization::Serializer& serializer);
 
 bool deserialize(Coverage& obj,
+                 const serialization::Deserializer& deserializer);
+
+bool serialize(const CoverageExtended& obj, serialization::Serializer& serializer);
+
+bool deserialize(CoverageExtended& obj,
                  const serialization::Deserializer& deserializer);
 
 void zeroCfgCounters(int* blockCount = nullptr);

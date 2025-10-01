@@ -53,7 +53,6 @@ Coverage& Coverage::operator=(const Coverage& rhs) {
     total = rhs.total;
     status = rhs.status;
     coveredTracks = rhs.coveredTracks;
-    hasUnique = rhs.hasUnique;
   }
   return *this;
 }
@@ -71,7 +70,6 @@ bool serialize(const Coverage& obj, serialization::Serializer& serializer) {
   serializer << obj.total;
   serializer << obj.status;
   serializer << obj.coveredTracks;
-  serializer << obj.hasUnique;
   return true;
 }
 
@@ -82,8 +80,20 @@ bool deserialize(Coverage& obj,
   deserializer >> obj.total;
   deserializer >> obj.status;
   deserializer >> obj.coveredTracks;
-  deserializer >> obj.hasUnique;
   return true;
+}
+
+bool serialize(const CoverageExtended& obj, serialization::Serializer& serializer) {
+    serialize(static_cast<const Coverage&>(obj), serializer);
+    serializer << obj.hasUnique;
+    return true;
+}
+
+bool deserialize(CoverageExtended& obj,
+                 const serialization::Deserializer& deserializer) {
+    deserialize(static_cast<Coverage&>(obj), deserializer);
+    deserializer >> obj.hasUnique;
+    return true;
 }
 
 void zeroCfgCounters(int* blockCount) {
@@ -97,6 +107,7 @@ void zeroCfgCounters(int* blockCount) {
   if (blockCount) {
     *blockCount = max_guard_id;
   }
+  std::cout << "Not relative block count " << j << std::endl;
 }
 
 void dumpCoverageToCout(
