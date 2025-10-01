@@ -473,7 +473,7 @@ const pipelines::ReportConfiguration& getReportConfigQLEGvsQLB() {
 
 const pipelines::ReportConfiguration& getReportConfigGreedyR() {
   static const std::vector<std::string> orderedMethods = {
-      "GR", "GRR1", "GRR2", "GRR3", "GRR-T1", "GRR-T2", "GRR-T3"};
+      "GR", "GRR1", "GRR2", "GRR3", "GRR-T1", "GRR-T2", "GRR-T3", "GRR-TD1", "GRR-TD2", "GRR-TD3"};
   return orderedMethods;
 }
 
@@ -498,8 +498,15 @@ const pipelines::ReportConfiguration& getReportConfigTarget() {
 
 const pipelines::ReportConfiguration& getReportALLSelected() {
   static const std::vector<std::string> orderedMethods = {
-      "DSL", "DSL-FM1", "DSL-FM2", "DSL-FM3", "GR", "GRR1", "GRR2", "GRR3",
-      "GRR-T1", "GRR-T2", "GRR-T3", "MCTS1", "MCTS2", "MCTS3",
+      // ---- DD ----
+      "DSL", "DSL-FM1", "DSL-FM2", "DSL-FM3",
+
+      // ---- GREEDY ----
+      "GR", "GRR1", "GRR2", "GRR3",
+        "GRR-T1", "GRR-T2", "GRR-T3", "GRR-TD1", "GRR-TD2", "GRR-TD3",
+
+      // --- MCTS ----
+      "MCTS1", "MCTS2", "MCTS3",
 
       // --- QLEG1 ---
       "QLEG1", "QLEG1+DSL", "QLEG1+DSL-FM0", "QLEG1+DSL-FM1", "QLEG1+DSL-FM2",
@@ -528,7 +535,7 @@ const pipelines::ReportConfiguration& getReportALLSelected() {
 }
 
 constexpr const int StatsCount = 30U;
-constexpr const int GreedyCount = 30U;
+constexpr const int GreedyCount = 4U;
 constexpr const int MCTSCount = 1U;
 
 }  // namespace

@@ -22,8 +22,8 @@ LuaWorker::LuaWorker(const std::string& binary, const std::string& workingDir) {
         }
         cv.notify_one();
       },
-      [this](const char* bytes, size_t n) {
-        std::cerr << "[stderr] " << std::string(bytes, n) << std::endl;
+      [this](const char*, size_t) {
+        //std::cerr << "[stderr] " << std::string(bytes, n) << std::endl;
       },
       true);
   _binary = binary;
