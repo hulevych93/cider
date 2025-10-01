@@ -97,7 +97,6 @@ void zeroCfgCounters(int* blockCount) {
   if (blockCount) {
     *blockCount = max_guard_id;
   }
-  std::cout << "Not relative block count " << j << std::endl;
 }
 
 void dumpCoverageToCout(

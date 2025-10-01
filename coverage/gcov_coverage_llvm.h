@@ -29,11 +29,6 @@ class GcovBranchParser final {
   size_t coveredBranches = 0;
 };
 
-bool runScript(const std::string& binary,
-               const std::string& workingDir,
-               const std::string& script,
-               std::function<void(const char*, std::size_t)> callback);
-
 bool runCoverage(const std::string& objectDir,
                  const std::string& sourcesDir,
                  std::function<void(const char*, std::size_t)> callback);

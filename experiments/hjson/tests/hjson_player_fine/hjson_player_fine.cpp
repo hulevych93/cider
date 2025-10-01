@@ -22,26 +22,45 @@ int luaopen_hjson(lua_State* L);
 
 int main(int argc, char* argv[]) {
   try {
-    std::string script;
-    if (argc == 2) {
-      script = cider::loadFile(argv[1]);
-    } else {
-      for (std::string line; std::getline(std::cin, line);) {
-        script += line += "\n";
-      }
-    }
-
     auto lState = cider::scripting::get_lua();
     luaopen_hjson(lState.get());
 
-    cider::scripting::CoverageCollector coverageCollector(lState.get(), false);
+    if (argc == 2) {
+      const auto script = cider::loadFile(argv[1]);
 
-    const auto result =
-        cider::scripting::executeScript(lState.get(), script.c_str()) ? 0 : 1;
+      cider::scripting::CoverageCollector coverageCollector(lState.get(),
+                                                            false);
+      int result =
+          cider::scripting::executeScript(lState.get(), script.c_str()) ? 0 : 1;
+      cider::cfg_coverage::dumpCoverageToCout(coverageCollector.getTrace());
+      return result;
+    }
 
-    cider::cfg_coverage::dumpCoverageToCout(coverageCollector.getTrace());
+    std::string line;
+    while (std::getline(std::cin, line)) {
+      if (line == "QUIT")
+        break;
 
-    return result;
+      if (line == "RUN") {
+        std::string script, line;
+        while (std::getline(std::cin, line)) {
+          if (line == "<<<END>>>")
+            break;
+          script += line + "\n";
+        }
+
+        cider::scripting::CoverageCollector coverageCollector(lState.get(),
+                                                              false);
+
+        bool ok = cider::scripting::executeScript(lState.get(), script.c_str());
+
+        cider::cfg_coverage::dumpCoverageToCout(coverageCollector.getTrace());
+
+        std::cout << (ok ? "OK" : "FAIL") << "\nEND\n" << std::flush;
+      }
+    }
+    return 0;
+
   } catch (const std::exception& e) {
     std::cerr << e.what();
     return 1;

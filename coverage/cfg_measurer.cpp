@@ -62,11 +62,17 @@ CoveragePerAction CoverageMeasurment::getFineReport(
   const auto binaryPath = std::string{_cmd.binPath} + "_fine";
 
   std::string jsonReport;
+
+  if (m_worker == nullptr) {
+    m_worker =
+        std::make_shared<scripting::LuaWorker>(binaryPath, _cmd.workingDir);
+  }
+
   const auto result =
-      scripting::runScript(binaryPath, _cmd.workingDir, script,
-                           [&](const char* data, std::size_t size) {
-                             jsonReport += std::string{data, size};
-                           });
+      m_worker->runScript(script, [&](const char* data, std::size_t size) {
+        jsonReport += std::string{data, size};
+      });
+
   if (result || isDebuggerAttached()) {
     std::string jsonStr = readCoverageFromStream(jsonReport);
 

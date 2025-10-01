@@ -78,5 +78,59 @@ void LuaActionHook::clear(lua_State* L) {
   initFunc_ = nullptr;
 }
 
+CoverageCollector::CoverageCollector(lua_State* L, bool collectFineTracks)
+    : lState(L), collectFineTracks_(collectFineTracks) {
+  blockCount_ = std::make_unique<int>(0);
+  startTime_ = std::chrono::steady_clock::now();
+
+  cider::scripting::LuaActionHook::instance().setHook(
+      lState,
+      [&](int numActions) {
+        traceCoverage_.resize(numActions);
+        seenBlocks_.clear();
+        if (*blockCount_ > 0) {
+          seenBlocks_.resize(*blockCount_, 0);
+        }
+      },
+      [&](lua_State* lua, int idx) { onAction(lua, idx); });
+
+  cider::cfg_coverage::zeroCfgCounters(blockCount_.get());
+}
+
+CoverageCollector::~CoverageCollector() {
+  cider::scripting::LuaActionHook::instance().clear(lState);
+}
+
+void CoverageCollector::onAction(lua_State* L, int idx) {
+  (void)L;
+
+  if (seenBlocks_.empty() && *blockCount_ > 0) {
+    seenBlocks_.resize(*blockCount_, 0);
+  }
+
+  auto cov = cider::cfg_coverage::getCoverage();
+  cov.meassureTimeMcs = std::chrono::duration_cast<std::chrono::microseconds>(
+                            std::chrono::steady_clock::now() - startTime_)
+                            .count();
+  cov.status = true;
+
+  bool unique = false;
+  std::vector<std::uint8_t> delta(cov.coveredTracks.size(), 0);
+  for (size_t j = 0; j < cov.coveredTracks.size(); ++j) {
+    if (cov.coveredTracks[j] && !seenBlocks_[j]) {
+      delta[j] = 1;
+      seenBlocks_[j] = 1;
+      unique = true;
+    }
+  }
+
+  traceCoverage_[idx].hasUnique = unique;
+  if (collectFineTracks_) {
+    traceCoverage_[idx].coveredTracks = std::move(delta);
+  }
+  traceCoverage_[idx].meassureTimeMcs = cov.meassureTimeMcs;
+  traceCoverage_[idx].status = cov.status;
+}
+
 }  // namespace scripting
 }  // namespace cider

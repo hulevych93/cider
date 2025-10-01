@@ -12,6 +12,10 @@
 #include <fstream>
 
 namespace cider {
+namespace scripting {
+class LuaWorker;
+}  // namespace scripting
+
 namespace cfg_coverage {
 
 using CfgCoverageOpt = std::optional<cfg_coverage::Coverage>;
@@ -79,6 +83,8 @@ struct CoverageMeasurment final {
  private:
   const Cmd& _cmd;
   std::shared_ptr<ICoverageLogger> m_logger;
+
+  mutable std::shared_ptr<scripting::LuaWorker> m_worker;
 
  protected:
   mutable size_t _index = 1U;

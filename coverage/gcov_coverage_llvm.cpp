@@ -160,21 +160,6 @@ bool cleanCoverage(const std::string& workingDir) {
   }
 }
 
-bool runScript(const std::string& binary,
-               const std::string& workingDir,
-               const std::string& script,
-               std::function<void(const char*, std::size_t)> callback) {
-  tpl::Process process(
-      binary, workingDir, callback,
-      [](const char*, std::size_t) {},  // stderr callback
-      true);                            // open_stdin
-
-  process.write(script.data(), script.size());
-  process.close_stdin();
-
-  return process.get_exit_status() == 0;
-}
-
 namespace {
 
 bool runCoveragePerSource(
