@@ -65,9 +65,6 @@ class TempGcnoLinks {
       try {
         if (std::filesystem::exists(link)) {
           std::filesystem::remove(link);
-        } else {
-          std::cerr << "[TempGcnoLinks] link missing at cleanup: " << link
-                    << "\n";
         }
       } catch (const std::exception& e) {
         std::cerr << "[TempGcnoLinks] remove error: " << e.what() << " for "

@@ -112,6 +112,11 @@ add_target_def(GRR-T1 200 GROUP ${GROUP_GREEDY_R})
 add_target_def(GRR-T2 201 GROUP ${GROUP_GREEDY_R})
 add_target_def(GRR-T3 202 GROUP ${GROUP_GREEDY_R})
 
+# === GRR-TD (Greedy Discount) ===
+add_target_def(GRR-TD1 205 GROUP ${GROUP_GREEDY_R})
+add_target_def(GRR-TD2 206 GROUP ${GROUP_GREEDY_R})
+add_target_def(GRR-TD3 207 GROUP ${GROUP_GREEDY_R})
+
 # === DSL ===
 add_target_def(DSL_FM0 34 GROUP ${GROUP_DSL})
 add_target_def(DSL_FM1 35 GROUP ${GROUP_DSL})
@@ -308,7 +313,7 @@ foreach(lib_def IN LISTS LIBS)
 endforeach()
 
 add_custom_target(hjson_RUN)
-add_dependencies(hjson_RUN hjson_DSL_FM1 hjson_DSL_FM2 hjson_DSL_FM3)
+add_dependencies(hjson_RUN hjson_GRR-T1 hjson_GRR-T2 hjson_GRR-T3)
 
 add_custom_target(bitmap++_RUN)
-add_dependencies(bitmap++_RUN bitmap++_DSL_FM1 bitmap++_DSL_FM2 bitmap++_DSL_FM3)
+add_dependencies(bitmap++_RUN bitmap++_GRR-T1 bitmap++_GRR-T2 bitmap++_GRR-T3)

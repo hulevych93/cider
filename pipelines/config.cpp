@@ -216,6 +216,36 @@ auto getGreedyRTracks3Settings() {
   return settings;
 }
 
+auto getGreedyRTracksD1Settings() {
+  greedy_r::GreedyRTracksSettings settings;
+  settings.configName = "GRR-TD1";
+
+  settings.discount = 0.35;
+  settings.top_k = 5;
+  settings.temperature = 1.5;
+  return settings;
+}
+
+auto getGreedyRTracksD2Settings() {
+  greedy_r::GreedyRTracksSettings settings;
+  settings.configName = "GRR-TD2";
+
+  settings.discount = 0.65;
+  settings.top_k = 5;
+  settings.temperature = 1.5;
+  return settings;
+}
+
+auto getGreedyRTracksD3Settings() {
+  greedy_r::GreedyRTracksSettings settings;
+  settings.configName = "GRR-TD3";
+
+  settings.discount = 0.9;
+  settings.top_k = 5;
+  settings.temperature = 1.5;
+  return settings;
+}
+
 auto getMCTS1Settings() {
   mcts::MonteCarloSettings settings;
   settings.configName = "MCTS1";
@@ -602,6 +632,18 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
     case PipelineType::GreedyRTracks3:
       pipeline.addStage(std::make_unique<GreedyRStage>(
           getGreedyRTracks3Settings(), GreedyCount));
+      break;
+    case PipelineType::GreedyRTracksD1:
+      pipeline.addStage(std::make_unique<GreedyRStage>(
+          getGreedyRTracksD1Settings(), GreedyCount));
+      break;
+    case PipelineType::GreedyRTracksD2:
+      pipeline.addStage(std::make_unique<GreedyRStage>(
+          getGreedyRTracksD2Settings(), GreedyCount));
+      break;
+    case PipelineType::GreedyRTracksD3:
+      pipeline.addStage(std::make_unique<GreedyRStage>(
+          getGreedyRTracksD3Settings(), GreedyCount));
       break;
     case PipelineType::DSL:
       pipeline.addStage(std::make_unique<DSlicerStage>(getDSLSettings(), 5));

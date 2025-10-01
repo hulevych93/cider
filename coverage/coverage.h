@@ -34,6 +34,10 @@ enum class PipelineType {
   GreedyRTracks2 = 201,
   GreedyRTracks3 = 202,
 
+  GreedyRTracksD1 = 205,
+  GreedyRTracksD2 = 206,
+  GreedyRTracksD3 = 207,
+
   DSL_FM0 = 34,
   DSL_FM1 = 35,
   DSL_FM2 = 36,
