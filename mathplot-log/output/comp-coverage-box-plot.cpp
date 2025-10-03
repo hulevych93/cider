@@ -467,7 +467,7 @@ void CoverageBoxPlot::plot() {
   const auto& axisLims = getYAxisLims(_libName);
   plt::ylim(axisLims[0], axisLims[1]);
 
-  if (_boxData.size() > 4) {
+  if (_boxData.size() > 9) {
     makeLegentByGroups(getColorGroups(), {0.82, 0.43});
 
     plt::tight_layout();

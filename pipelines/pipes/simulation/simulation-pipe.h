@@ -26,7 +26,7 @@ class SimulationPipe : public Pipe {
                const std::string& libName,
                const cider::Cmd& cmd) override final;
 
-  bool needTS() const override { return true; }
+  bool needTS() const override { return false; }
 
  private:
   virtual bool simulate(const std::string& outPath,

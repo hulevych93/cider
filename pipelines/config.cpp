@@ -535,7 +535,7 @@ const pipelines::ReportConfiguration& getReportALLSelected() {
 }
 
 constexpr const int StatsCount = 30U;
-constexpr const int GreedyCount = 4U;
+constexpr const int GreedyCount = 15U;
 constexpr const int MCTSCount = 1U;
 
 }  // namespace

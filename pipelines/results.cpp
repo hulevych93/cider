@@ -140,7 +140,7 @@ double getOldCov(const std::string& libName,
     return report.branchCov.percent;
   }
   if (libName == "hjson") {
-    return report.branchCov.percent - 1.5f;
+    return report.branchCov.percent;
   }
   throw std::logic_error{"Wrong library name."};
 }
