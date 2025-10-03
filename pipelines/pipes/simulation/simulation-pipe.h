@@ -37,6 +37,8 @@ class SimulationPipe : public Pipe {
                         const ObjectiveFunction& objFuncСfg,
                         const FineObjectiveFunction& fineObjFunc) = 0;
 
+  virtual void onCleanup() {}
+
   virtual std::string getConfigName() const = 0;
   virtual std::string getPrefix() const = 0;
 

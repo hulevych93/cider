@@ -40,6 +40,7 @@ bool SimulationPipe::process(const std::string& metadata,
   }
 
   bool success = true;
+
   for (int idx = 0; idx < _numberOfRuns;) {
     recorder::Actions output;
     const auto start = std::chrono::steady_clock::now();
@@ -73,6 +74,8 @@ bool SimulationPipe::process(const std::string& metadata,
               << "]: " << (double)elapsed_mcs / 1000 << " ms elapsed"
               << std::endl;
   }
+
+  onCleanup();
 
   return success;
 }

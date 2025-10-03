@@ -48,15 +48,6 @@ GreedyRStage::GreedyRStage(const greedy_r::GreedySettings& settings,
                            int numberOfRuns)
     : SimulationPipe(numberOfRuns), m_settings(settings) {}
 
-GreedyRStage::~GreedyRStage() {
-  try {
-    serialization::Serializer serializer;
-    serializer << _openers;
-    serializer.save(_path + "/openers.bin");
-  } catch (...) {
-  }
-}
-
 bool GreedyRStage::simulate(const std::string& outPath,
                             const double baseline,
                             const recorder::Actions& input,
@@ -64,12 +55,14 @@ bool GreedyRStage::simulate(const std::string& outPath,
                             const ObjectiveFunction& objFunc,
                             const ObjectiveFunction& objFuncСfg,
                             const FineObjectiveFunction& fineObjFunc) {
-  _path = outPath;
+  if (_path.empty()) {
+    _path = outPath;
 
-  try {
-    serialization::Deserializer deserializer(_path + "/openers.bin");
-    deserializer >> _openers;
-  } catch (const std::exception& e) {
+    try {
+      serialization::Deserializer deserializer(_path + "/openers.bin");
+      deserializer >> _openers;
+    } catch (const std::exception& e) {
+    }
   }
 
   return std::visit(
@@ -78,6 +71,20 @@ bool GreedyRStage::simulate(const std::string& outPath,
                           deepCopy(input), output, baseline, _openers);
       },
       m_settings);
+}
+
+void GreedyRStage::onCleanup() {
+  if (!_path.empty()) {
+    try {
+      serialization::Serializer serializer;
+      serializer << _openers;
+      serializer.save(_path + "/openers.bin");
+    } catch (...) {
+    }
+
+    _path.clear();
+    _openers.clear();
+  }
 }
 
 std::string GreedyRStage::getPrefix() const {
