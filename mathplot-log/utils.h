@@ -53,9 +53,9 @@ inline std::vector<std::string> getColorGroups() {
 
 inline std::string getColorByLabel(const std::string& label) {
   if (label.rfind("DSL", 0) == 0)
-    return "#1f77b4";
+    return "#595959";  // світло-сірий для груп DSL - return "#1f77b4";
   if (label.rfind("GR", 0) == 0)
-    return "#2ca02c";
+    return "#b0b0b0";  // темно-сірий для груп GR - return "#2ca02c";
   if (label.rfind("MCTS", 0) == 0)
     return "#1f9e89";
   if (label.rfind("QLEG", 0) == 0 && label.find("+DSL") == std::string::npos)

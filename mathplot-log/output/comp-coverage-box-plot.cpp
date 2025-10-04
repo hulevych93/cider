@@ -48,7 +48,7 @@ std::string getXAxisName() {
 #ifdef ENG_NAMES
   return "Policy Configuration";
 #else
-  return "Метод / конфігурація";
+  return "Конфігурація";
 #endif
 }
 
@@ -316,10 +316,10 @@ double plotBoxStats(const std::string& path,
 
 std::array<double, 2> getYAxisLims(const std::string& libName) {
   if (libName == "bitmap_cplusplus") {
-    return {12.0, 32.0};
+    return {20.0, 32.0};
   }
   if (libName == "hjson") {
-    return {34.0, 38.0};
+    return {30.0, 42.0};
   }
   throw std::logic_error{"Wrong library name."};
 }
@@ -422,12 +422,14 @@ void CoverageBoxPlot::plot() {
 
   tlog_info << maxOriginalCoverage << std::endl;
 
-  plt::plot(std::vector<double>{0.5, xticks.back()},
-            std::vector<double>{maxOriginalCoverage, maxOriginalCoverage},
-            {{"linestyle", "-."},
-             {"color", "#c5b0d5"},
-             {"linewidth", "1.0"},
-             {"label", getOriginalTSName()}});
+  plt::plot(
+      std::vector<double>{0.5, xticks.back()},
+      std::vector<double>{maxOriginalCoverage, maxOriginalCoverage},
+      {{"linestyle", "-."},
+       {"color",
+        "#333333"},  // насичений сірий замість фіолетового{"color", "#c5b0d5"},
+       {"linewidth", "1.0"},
+       {"label", getOriginalTSName()}});
 
   int i = 1;
   for (const auto& orderName : _order) {

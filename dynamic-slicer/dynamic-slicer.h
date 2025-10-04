@@ -23,7 +23,7 @@ struct DSlicingSettings final {
 
 std::ostream& operator<<(std::ostream& os, const DSlicingSettings& s);
 
-std::vector<recorder::Action> run_d_slicing(
+std::vector<recorder::Action> run_dd(
     const DSlicingSettings& settings,
     const std::vector<recorder::Action>& input);
 
@@ -37,7 +37,7 @@ struct BatchDSlicingSettings final {
 
 std::ostream& operator<<(std::ostream& os, const BatchDSlicingSettings& s);
 
-std::vector<recorder::Action> run_d_slicing_batch(
+std::vector<recorder::Action> run_dd_batch(
     const BatchDSlicingSettings& settings,
     const std::vector<recorder::Action>& actionSpace);
 
@@ -53,7 +53,7 @@ struct BatchMultiPassDSlicingSettings final {
 std::ostream& operator<<(std::ostream& os,
                          const BatchMultiPassDSlicingSettings& s);
 
-std::vector<recorder::Action> run_d_slicing_batch_multipass(
+std::vector<recorder::Action> run_dd_batch_multipass(
     const BatchMultiPassDSlicingSettings& settings,
     const std::vector<recorder::Action>& actionSpace);
 

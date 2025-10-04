@@ -63,6 +63,11 @@ bool GreedyRStage::simulate(const std::string& outPath,
       deserializer >> _openers;
     } catch (const std::exception& e) {
     }
+
+    for(const auto& opener: _openers) {
+        std::cout << opener << " ";
+    }
+    std::cout << std::endl;
   }
 
   return std::visit(

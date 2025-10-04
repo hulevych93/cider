@@ -29,7 +29,7 @@ inline std::ostream& operator<<(std::ostream& os,
   return os;
 }
 
-std::vector<recorder::Action> run_d_slicing_fast_tracks(
+std::vector<recorder::Action> run_dd_basic_blocks(
     const BatchTracksDSlicingSettings& settings,
     const std::vector<recorder::Action>& actionSpace);
 

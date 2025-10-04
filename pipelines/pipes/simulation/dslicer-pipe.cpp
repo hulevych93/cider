@@ -25,14 +25,14 @@ bool runDynamicSlicing(SettingsType settings,
       settings.objFunc = objFunc;
       settings.baseline = baseline;
 
-      output = dslicer::run_d_slicing(settings, input);
+      output = dslicer::run_dd(settings, input);
     } else if constexpr (std::is_same_v<SettingsType,
                                         dslicer::BatchDSlicingSettings>) {
       settings.objFunc = objFunc;
       settings.fineObjFunc = fineObjFunc;
       settings.baseline = baseline;
 
-      output = dslicer::run_d_slicing_batch(settings, input);
+      output = dslicer::run_dd_batch(settings, input);
     } else if constexpr (std::is_same_v<
                              SettingsType,
                              dslicer::BatchMultiPassDSlicingSettings>) {
@@ -40,14 +40,14 @@ bool runDynamicSlicing(SettingsType settings,
       settings.fineObjFunc = fineObjFunc;
       settings.baseline = baseline;
 
-      output = dslicer::run_d_slicing_batch_multipass(settings, input);
+      output = dslicer::run_dd_batch_multipass(settings, input);
     } else if constexpr (std::is_same_v<SettingsType,
                                         dslicer::BatchTracksDSlicingSettings>) {
       settings.objFunc = objFunc;
       settings.fineObjFunc = fineObjFunc;
       settings.baseline = baseline;
 
-      output = dslicer::run_d_slicing_fast_tracks(settings, input);
+      output = dslicer::run_dd_basic_blocks(settings, input);
     }
   } catch (const std::exception& e) {
     std::cerr << e.what();

@@ -21,7 +21,7 @@ struct GreedyRTracksSettings final {
   const char* configName = "GREEDY_R_TRACKS_NAN";
   double temperature = 1.5;
   size_t top_k = 3;
-  double discount = 0.8;
+  double lambda = 0.8;
   ObjectiveFunction objFunc;
   FineObjectiveFunction fineObjFunc;
   std::vector<double>* openers = nullptr;

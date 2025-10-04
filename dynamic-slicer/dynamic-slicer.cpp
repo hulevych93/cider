@@ -35,7 +35,7 @@ std::ostream& operator<<(std::ostream& os,
 
 using TestCase = std::vector<recorder::Action>;
 
-TestCase run_d_slicing(const DSlicingSettings& settings,
+TestCase run_dd(const DSlicingSettings& settings,
                        const std::vector<recorder::Action>& actionSpace) {
   auto targetCovered = settings.baseline;
 
@@ -51,7 +51,7 @@ TestCase run_d_slicing(const DSlicingSettings& settings,
 
   std::vector<recorder::Action> sliced = deepCopy(actionSpace);
 
-  tlog_info << "[Slice] Original length: " << actionSpace.size()
+  tlog_info << "Original length: " << actionSpace.size()
             << ", branches covered %: " << targetCovered << "\n";
 
   for (size_t i = 0; i < sliced.size();) {
@@ -61,7 +61,7 @@ TestCase run_d_slicing(const DSlicingSettings& settings,
     auto cov = settings.objFunc(trial).coverage;
 
     if (cov >= targetCovered) {
-      tlog_info << "  [Slice] Removing action #" << i << " → OK\n"
+      tlog_info << "  Removing action #" << i << " → OK\n"
                 << ", total covered = " << cov << "/" << targetCovered << "\n";
       sliced = std::move(trial);
     } else {
@@ -72,16 +72,16 @@ TestCase run_d_slicing(const DSlicingSettings& settings,
   const auto targetCoveredRecheck = settings.objFunc(actionSpace).coverage;
   auto finalCov = settings.objFunc(sliced).coverage;
   if (finalCov < targetCoveredRecheck) {
-    tlog_info << "[Slice] Recheck FAILED: final=" << finalCov
+    tlog_info << "Recheck FAILED: final=" << finalCov
               << " < target=" << targetCoveredRecheck
               << ". Rollback to original.\n";
   }
 
-  tlog_info << "[Slice] Final length: " << sliced.size() << "\n";
+  tlog_info << "Final length: " << sliced.size() << "\n";
   return sliced;
 }
 
-std::vector<recorder::Action> run_d_slicing_batch(
+std::vector<recorder::Action> run_dd_batch(
     const BatchDSlicingSettings& settings,
     const std::vector<recorder::Action>& actionSpace) {
   auto currentSpace = deepCopy(actionSpace);
@@ -98,7 +98,7 @@ std::vector<recorder::Action> run_d_slicing_batch(
     return currentSpace;
   }
 
-  tlog_info << "[Slice-Batch] Original length=" << currentSpace.size()
+  tlog_info << "[Batch] Original length=" << currentSpace.size()
             << " baseline=" << baseline << "\n";
 
   size_t i = 0;
@@ -126,14 +126,14 @@ std::vector<recorder::Action> run_d_slicing_batch(
   }
 
   auto finalCov = settings.objFunc(currentSpace);
-  tlog_info << "[Slice-Batch] Final length=" << currentSpace.size()
+  tlog_info << "[Batch] Final length=" << currentSpace.size()
             << " coverage=" << finalCov.coverage << " baseline=" << baseline
             << "\n";
 
   return currentSpace;
 }
 
-std::vector<recorder::Action> run_d_slicing_batch_multipass(
+std::vector<recorder::Action> run_dd_batch_multipass(
     const BatchMultiPassDSlicingSettings& settings,
     const std::vector<recorder::Action>& actionSpace) {
   std::vector<recorder::Action> current = deepCopy(actionSpace);
@@ -166,7 +166,7 @@ std::vector<recorder::Action> run_d_slicing_batch_multipass(
     fastSettings.batchSize = step;
     fastSettings.baseline = baseline;
 
-    current = run_d_slicing_batch(fastSettings, current);
+    current = run_dd_batch(fastSettings, current);
     current = deepCopy(current);
 
     if (step == settings.minimalGranularity) {

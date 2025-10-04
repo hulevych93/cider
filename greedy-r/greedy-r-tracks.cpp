@@ -56,7 +56,7 @@ TestCase run_greedy_r_tracks(std::mt19937& gen,
   std::vector<Candidate> lastRun(actionSpace.size());
 
   auto getObjective = [&](const Candidate& c) -> double {
-    return c.branchGain + settings.discount * (*settings.openers)[c.index];
+    return c.branchGain + settings.lambda * (*settings.openers)[c.index];
   };
 
   size_t previousIndex = 0;

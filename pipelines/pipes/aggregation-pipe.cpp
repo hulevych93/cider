@@ -7,6 +7,7 @@
 
 #include "coverage/cfg_measurer.h"
 #include "coverage/gcov_measurer.h"
+#include "coverage/llvm_measurer.h"
 
 #include "pipelines/metrics.h"
 
@@ -54,7 +55,6 @@ groupIntoTestSets(const Results& results, const std::string& libName) {
 
     size_t sessions = 0;
     for (const auto& it : grouped) {
-      const auto& name = it.first;
       const auto& vec = it.second;
 
       sessions = std::max(sessions, vec.size());
@@ -178,7 +178,6 @@ bool ResultsAgregationStage::process(const std::string&,
   for (const auto& it : testSets) {
     const auto& method = it.first;
     const auto& pack = it.second;
-    const auto& methodStats = results[method];
 
     tlog_info << "[PROCESS] Method: " << method
               << " | sessions: " << pack.size() << std::endl;
