@@ -36,6 +36,8 @@ struct Result final : serialization::SerializableTag {
   unsigned long oldExecutionTimeMcs = 0;
   unsigned long newExecutionTimeMcs = 0;
   std::optional<unsigned long> coverageReachedLength;
+
+  std::optional<unsigned long> coverageReachedTimeMcs;  // TODO
 };
 
 struct MethodResults final : serialization::SerializableTag {

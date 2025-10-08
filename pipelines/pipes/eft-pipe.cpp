@@ -126,7 +126,7 @@ bool EfficencyReportStage::process(const std::string& metadata,
 
     const auto handleResults = [&](const std::string& methodName,
                                    const std::vector<Result>& results) {
-      Metrics m = computeMetrics(methodName, results);
+        Metrics m = computeMetrics(cmd, methodName, libName, results);
 
       csvEsc(out, methodName);
       out << ';';

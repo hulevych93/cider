@@ -7,7 +7,7 @@
 
 #include "pipelines/metrics.h"
 
-#include "pipelines/metrics.h"
+#include "coverage/cfg_measurer.h"
 
 #include <tlog.h>
 
@@ -36,24 +36,30 @@ std::function<void(cider::mathplot::IBasicPlot* plot,
 ExecTimesBarPlotReportStage::createProcessor() {
   return [this](cider::mathplot::IBasicPlot* plot,
                 const std::string& methodName, const std::string& libName,
-                const cider::Cmd&, const Result& result) {
+                const cider::Cmd& cmd, const Result& result) {
     auto* logger = dynamic_cast<cider::mathplot::ExecTimesBarPlot*>(plot);
 
-    getCompression(methodName, libName, result,
-                   [&](unsigned long /*covReachLen*/, double) {
-                     if (_filter1.accept(methodName, result.testCaseName,
-                                         result.oldExecutionTimeMcs) &&
-                         _filter2.accept(methodName, result.testCaseName,
-                                         result.newExecutionTimeMcs)) {
-                       logger->log(methodName, result.oldExecutionTimeMcs,
-                                   result.newExecutionTimeMcs);
-                     } else {
-                       tlog_info << "SKIP: " << methodName << " "
-                                 << result.testCaseName << " "
-                                 << result.oldExecutionTimeMcs << " "
-                                 << result.newExecutionTimeMcs << std::endl;
-                     }
-                   });
+    getCompression(
+        methodName, libName, result, [&](unsigned long covReachLen, double) {
+          auto newExecutionTime = result.newExecutionTimeMcs;
+          getExecutionTimeUpToCovReach(
+              cmd, methodName, libName, result, covReachLen,
+              [&newExecutionTime](unsigned long elapsedMcs) {
+                newExecutionTime = elapsedMcs;
+              });
+
+          if (_filter1.accept(methodName, result.testCaseName,
+                              result.oldExecutionTimeMcs) &&
+              _filter2.accept(methodName, result.testCaseName,
+                              newExecutionTime)) {
+            logger->log(methodName, result.oldExecutionTimeMcs,
+                        newExecutionTime);
+          } else {
+            tlog_info << "SKIP: " << methodName << " " << result.testCaseName
+                      << " " << result.oldExecutionTimeMcs << " "
+                      << result.newExecutionTimeMcs << std::endl;
+          }
+        });
   };
 }
 

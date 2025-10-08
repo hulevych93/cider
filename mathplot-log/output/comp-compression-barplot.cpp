@@ -32,7 +32,7 @@ static std::string getYAxisName() {
 static std::string getXAxisName() {
 #ifdef ENG_NAMES
 #else
-  return "Метод / конфігурація";
+  return "Конфігурація";
 #endif
 }
 
@@ -114,7 +114,7 @@ void CompressionBarPlot::plot() {
                   {{"fmt", "none"}, {"ecolor", "red"}, {"capsize", "3"}});
   }
 
-  if (_barData.size() > 4) {
+  if (_barData.size() > 9) {
     makeLegentByGroups(getColorGroups(), {0.54, 1.0});
     rotateXTicks90();
   }

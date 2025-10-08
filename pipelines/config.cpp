@@ -134,7 +134,7 @@ auto getDSL_FM1_Settings() {
 auto getDSL_FM2_Settings() {
   dslicer::BatchMultiPassDSlicingSettings settings;
   settings.configName = "DSL-FM2";
-  settings.initialStepRatio = 0.2;
+  settings.initialStepRatio = 0.25;
   settings.minimalGranularity = 3;
   return settings;
 }
@@ -142,7 +142,7 @@ auto getDSL_FM2_Settings() {
 auto getDSL_FM3_Settings() {
   dslicer::BatchMultiPassDSlicingSettings settings;
   settings.configName = "DSL-FM3";
-  settings.initialStepRatio = 0.2;
+  settings.initialStepRatio = 0.3;
   settings.minimalGranularity = 1;
   return settings;
 }
@@ -220,7 +220,7 @@ auto getGreedyRTracksD1Settings() {
   greedy_r::GreedyRTracksSettings settings;
   settings.configName = "GRR-TD1";
 
-  settings.discount = 0.35;
+  settings.lambda = 0.35;
   settings.top_k = 5;
   settings.temperature = 1.5;
   return settings;
@@ -230,7 +230,7 @@ auto getGreedyRTracksD2Settings() {
   greedy_r::GreedyRTracksSettings settings;
   settings.configName = "GRR-TD2";
 
-  settings.discount = 0.65;
+  settings.lambda = 0.65;
   settings.top_k = 5;
   settings.temperature = 1.5;
   return settings;
@@ -240,7 +240,7 @@ auto getGreedyRTracksD3Settings() {
   greedy_r::GreedyRTracksSettings settings;
   settings.configName = "GRR-TD3";
 
-  settings.discount = 0.9;
+  settings.lambda = 0.9;
   settings.top_k = 5;
   settings.temperature = 1.5;
   return settings;
@@ -472,8 +472,8 @@ const pipelines::ReportConfiguration& getReportConfigQLEGvsQLB() {
 }
 
 const pipelines::ReportConfiguration& getReportConfigGreedyR() {
-  static const std::vector<std::string> orderedMethods = {
-      "GR", "GRR1", "GRR2", "GRR3", "GRR-T1", "GRR-T2", "GRR-T3", "GRR-TD1", "GRR-TD2", "GRR-TD3"};
+  static const std::vector<std::string> orderedMethods = {"GRR-TD1", "GRR-TD2",
+                                                          "GRR-TD3"};
   return orderedMethods;
 }
 
@@ -484,8 +484,9 @@ const pipelines::ReportConfiguration& getReportConfigDSlicing() {
 }
 
 const pipelines::ReportConfiguration& getReportConfigSelected() {
-  static const std::vector<std::string> orderedMethods = {"DSL", "GR", "GRR2",
-                                                          "MCTS2", "QLB2+DSL"};
+  static const std::vector<std::string> orderedMethods = {
+      "DSL",     "GR",      "DSL-FM1", "DSL-FM2",
+      "DSL-FM3", "GRR-TD1", "GRR-TD2", "GRR-TD3"};
   return orderedMethods;
 }
 
@@ -502,8 +503,8 @@ const pipelines::ReportConfiguration& getReportALLSelected() {
       "DSL", "DSL-FM1", "DSL-FM2", "DSL-FM3",
 
       // ---- GREEDY ----
-      "GR", "GRR1", "GRR2", "GRR3",
-        "GRR-T1", "GRR-T2", "GRR-T3", "GRR-TD1", "GRR-TD2", "GRR-TD3",
+      "GR", "GRR1", "GRR2", "GRR3", "GRR-T1", "GRR-T2", "GRR-T3", "GRR-TD1",
+      "GRR-TD2", "GRR-TD3",
 
       // --- MCTS ----
       "MCTS1", "MCTS2", "MCTS3",
@@ -535,7 +536,7 @@ const pipelines::ReportConfiguration& getReportALLSelected() {
 }
 
 constexpr const int StatsCount = 30U;
-constexpr const int GreedyCount = 15U;
+constexpr const int GreedyCount = 20U;
 constexpr const int MCTSCount = 1U;
 
 }  // namespace

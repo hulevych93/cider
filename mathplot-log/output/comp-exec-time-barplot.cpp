@@ -10,6 +10,7 @@
 #include "mathplot-log/utils.h"
 
 #include <matplotlibcpp.h>
+#include <chrono>
 
 namespace plt = matplotlibcpp;
 
@@ -25,7 +26,7 @@ static std::string getYAxisName() {
 #ifdef ENG_NAMES
   return "Average execution time, µs";
 #else
-  return "Середній час виконання ТН, мкс";
+  return "Середній час виконання ТН, мс";
 #endif
 }
 
@@ -33,7 +34,7 @@ static std::string getXAxisName() {
 #ifdef ENG_NAMES
   return "Method / configuration";
 #else
-  return "Метод / конфігурація";
+  return "Конфігурація";
 #endif
 }
 
@@ -93,15 +94,20 @@ bool ExecTimesBarPlot::load() {
 void ExecTimesBarPlot::log(const std::string& method,
                            size_t oldTime,
                            size_t newTime) {
+  constexpr double kMicroToMilli = 1.0 / 1000.0;
+
+  const double oldTimeMs = static_cast<double>(oldTime) * kMicroToMilli;
+  const double newTimeMs = static_cast<double>(newTime) * kMicroToMilli;
+
   const auto it = _barData.find(method);
   if (it != _barData.end()) {
     auto& data = it->second;
-    data.oldTimes.emplace_back(oldTime);
-    data.newTimes.emplace_back(newTime);
+    data.oldTimes.emplace_back(oldTimeMs);
+    data.newTimes.emplace_back(newTimeMs);
   } else {
     auto& data = _barData[method];
-    data.oldTimes.emplace_back(oldTime);
-    data.newTimes.emplace_back(newTime);
+    data.oldTimes.emplace_back(oldTimeMs);
+    data.newTimes.emplace_back(newTimeMs);
   }
 }
 
@@ -153,22 +159,26 @@ void ExecTimesBarPlot::plot() {
   double oldMean = math_stat::mean(oldTimes);
   tlog_info << oldMean << std::endl;
 
-  plt::plot(std::vector<double>{0.0, xg.back()},
-            std::vector<double>{oldMean, oldMean},
-            {{"linestyle", "-."},
-             {"color", "purple"},
-             {"linewidth", "1.5"},
-             {"label", getOriginalTSName()}});
+  plt::plot(
+      std::vector<double>{-0.5, xg.back() + 0.5},
+      std::vector<double>{oldMean, oldMean},
+      {{"linestyle", "-."},
+       {"color",
+        "#333333"},  // насичений сірий замість фіолетового{"color", "#c5b0d5"},
+       {"linewidth", "1.5"},
+       {"label", getOriginalTSName()}});
 
-  makeLegentByGroups(getColorGroups(), {0.84, 0.9});
-
+  if (_barData.size() > 9) {
+    makeLegentByGroups(getColorGroups(), {0.84, 0.9});
+  }
   plt::xticks(xg, methods, {{"fontsize", "7"}});
   plt::ylabel(getYAxisName());
   plt::xlabel(getXAxisName());
 
   applyPublicationStyle();
+  plt::legend();
 
-  if (_barData.size() > 5) {
+  if (_barData.size() > 9) {
     rotateXTicks90();
   }
 

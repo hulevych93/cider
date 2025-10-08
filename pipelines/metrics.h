@@ -53,7 +53,17 @@ void getCompression(const std::string& methodName,
                     const Result& result,
                     const std::function<void(unsigned long, double)> handler);
 
-Metrics computeMetrics(const std::string& methodName,
+void getExecutionTimeUpToCovReach(
+    const cider::Cmd& cmd,
+    const std::string& methodName,
+    const std::string& libName,
+    const Result& result,
+    unsigned long covReachLen,
+    const std::function<void(unsigned long elapsedMcs)> handler);
+
+Metrics computeMetrics(const cider::Cmd& cmd,
+                       const std::string& methodName,
+                       const std::string& libName,
                        const std::vector<Result>& results,
                        double alpha = 1.0,
                        double beta = 1.0,

@@ -53,16 +53,56 @@ bool ResultsCompressionStage::process(const std::string&,
                                                   libName, cmd);
       tlog_info << "[" << i << "," << results.size() << "][" << j << ","
                 << pack.entries.size() << "]" << std::endl;
+
+      size_t covLen = 0;
       if (reached.has_value()) {
+        covLen = *reached;
         r.coverageReachedLength = *reached;
         tlog_info << "[OK] " << r.testCaseName
                   << " coverage reached at length = " << *reached << "\n";
       } else {
+        covLen = r.newActions.size();
         r.coverageReachedLength = r.newActions.size();
         tlog_info << "[FAIL] " << r.testCaseName
                   << " never reached old coverage, "
                   << "fallback = full length "
                   << r.coverageReachedLength.value() << "\n";
+      }
+
+      if (covLen < r.newActions.size()) {
+        auto trimmed = r.newActions;
+        trimmed.erase(trimmed.begin() + covLen, trimmed.end());
+
+        try {
+          gcov_coverage::CoverageMeasurment measurer(cmd, libName.c_str());
+          auto covVal = measurer.getReport(trimmed);
+          if (!covVal.has_value()) {
+            tlog_info << "[ERROR] Trigmmed coverage not available\n";
+            continue;
+          }
+
+          auto covOld = measurer.getReport(r.newActions);
+          if (!covOld.has_value()) {
+            tlog_info << "[ERROR] Old coverage not available\n";
+            continue;
+          }
+
+          if (covVal->report.branchCov.percent >=
+              covOld->report.branchCov.percent * 0.999) {
+            r.newActions = std::move(trimmed);
+            tlog_info << "[TRIM-OK] " << r.testCaseName
+                      << " validated and truncated to " << r.newActions.size()
+                      << " actions\n";
+          } else {
+            tlog_info << "[TRIM-REJECTED] " << r.testCaseName
+                      << " coverage drop detected ("
+                      << covVal->report.branchCov.percent << " < "
+                      << covOld->report.branchCov.percent << ")\n";
+          }
+        } catch (const std::exception& e) {
+          tlog_info << "[TRIM-ERROR] " << r.testCaseName
+                    << " failed validation: " << e.what() << "\n";
+        }
       }
     }
   }
