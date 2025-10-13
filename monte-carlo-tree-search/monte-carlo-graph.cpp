@@ -16,50 +16,6 @@
 namespace cider {
 namespace mcts {
 
-// утиліта для Action → строка
-std::string actionToGenericRepro(const recorder::Action& action) {
-  std::stringstream os;
-  std::visit(
-      [&os](auto&& value) {
-        using T = std::decay_t<decltype(value)>;
-
-        auto printParams = [&os](const auto& args) {
-          os << "(";
-          for (size_t i = 0; i < args.size(); ++i) {
-            os << "_";
-            if (i + 1 != args.size())
-              os << ", ";
-          }
-          os << ")";
-        };
-
-        if constexpr (std::is_same_v<T, cider::recorder::Function>) {
-          os << value.name;
-          printParams(value.params);
-        } else if constexpr (std::is_same_v<T, cider::recorder::ClassMethod>) {
-          os << "obj." << value.method.name;
-          printParams(value.method.params);
-        } else if constexpr (std::is_same_v<T,
-                                            cider::recorder::ClassBinaryOp>) {
-          std::string opStr =
-              (value.opName == cider::recorder::BinaryOpType::Assignment) ? "="
-                                                                          : "?";
-          os << "obj " << opStr;
-        } else if constexpr (std::is_same_v<T, cider::recorder::ClassUnaryOp>) {
-          std::string opStr =
-              (value.opName == cider::recorder::UnaryOpType::Minus) ? "-" : "?";
-          os << opStr << "obj";
-        } else if constexpr (std::is_same_v<T,
-                                            cider::recorder::ClassDestructor>) {
-          os << "destroy(obj)";
-        } else {
-          static_assert(!sizeof(T), "Unsupported Action type");
-        }
-      },
-      action);
-  return os.str();
-}
-
 // ===== кольоровий маппінг від min..max reward =====
 
 std::string lerpColor(double t,

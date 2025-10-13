@@ -22,11 +22,11 @@ bool SynthesisStage::simulate(const std::string& /*outPath*/,
                               recorder::Actions& output,
                               const ObjectiveFunction& objFunc,
                               const ObjectiveFunction& /*objFuncСfg*/,
-                              const FineObjectiveFunction& /*fineObjFunc*/) {
+                              const FineObjectiveFunction& fineObjFunc) {
   return std::visit(
       [&](const auto& s) {
-        return synthesis::synthesize(Seed::instance().get(), s, objFunc, input,
-                                     output);
+        return synthesis::synthesize(Seed::instance().get(), s, objFunc,
+                                     fineObjFunc, input, output);
       },
       m_settings);
 }

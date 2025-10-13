@@ -6,11 +6,12 @@ namespace synthesis {
 bool synthesize(std::mt19937& gen,
                 const synthesis::RandSynthesisSettings& settings,
                 ObjectiveFunction objFunc,
+                FineObjectiveFunction fineObjFunc,
                 const recorder::Actions& initial,
                 recorder::Actions& out) {
   out.clear();
 
-  TestScenario scenario(gen, initial, objFunc);
+  TestScenario scenario(gen, initial, objFunc, fineObjFunc);
 
   const auto actionChoosing = [&](const synthesis::TestScenario& testCase) {
     return testCase.getRandomAction();

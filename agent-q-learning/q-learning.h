@@ -18,15 +18,20 @@ namespace qlearning {
 using ObjectiveFunction =
     std::function<ObjectiveValue(const std::vector<recorder::Action>&)>;
 
+using FineObjectiveFunction =
+    std::function<FineObjectiveValue(const std::vector<recorder::Action>&)>;
+
 void prelearningSession(const QLearningSettings& settings,
                         const recorder::Actions& list,
                         ObjectiveFunction objFunc,
+                        FineObjectiveFunction fineObjFunc,
                         IRewardLogger& rwLogger,
                         ILossLogger& lossLogger);
 
 void learningSession(const QLearningSettings& settings,
                      const recorder::Actions& list,
                      ObjectiveFunction objFunc,
+                     FineObjectiveFunction fineObjFunc,
                      RewardCounter& counter,
                      IRewardLogger& rwLogger,
                      ILossLogger& lossLogger,

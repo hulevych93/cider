@@ -53,6 +53,9 @@ using Action = std::variant<Function,
 
 using Actions = std::vector<Action>;
 
+std::string actionToGenericRepro(const recorder::Action& action);
+std::string actionsToGenericRepro(const std::vector<recorder::Action>& actions);
+
 Action deepCopy(const Action& action);
 
 void print(std::ostream& os, const Action& action);

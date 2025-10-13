@@ -6,6 +6,8 @@
 #include "recorder/details/action.h"
 #include "recorder/details/params.h"
 
+#include "synthesis/test-case.h"
+
 #include "coverage/coverage.h"
 
 namespace cider {
@@ -24,7 +26,6 @@ struct GreedyRTracksSettings final {
   double lambda = 0.8;
   ObjectiveFunction objFunc;
   FineObjectiveFunction fineObjFunc;
-  std::vector<double>* openers = nullptr;
   double baseline = 0.0;
 };
 
@@ -33,6 +34,7 @@ std::ostream& operator<<(std::ostream& os,
 
 std::vector<recorder::Action> run_greedy_r_tracks(
     std::mt19937& gen,
+    synthesis::Openers& openers,
     const GreedyRTracksSettings& settings,
     const std::vector<recorder::Action>& input);
 

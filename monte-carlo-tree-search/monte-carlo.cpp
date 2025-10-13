@@ -41,11 +41,12 @@ bool isValid(ObjectiveFunction objFunc, const TestCase& base) {
 
 double rollout(std::mt19937& gen,
                ObjectiveFunction objFunc,
+               FineObjectiveFunction fineObjFunc,
                TestCase& candidate,
                size_t max_rollback,
                size_t maxDepth,
                const std::vector<recorder::Action>& actionSpace) {
-  synthesis::TestScenario scenario(gen, actionSpace, objFunc);
+  synthesis::TestScenario scenario(gen, actionSpace, objFunc, fineObjFunc);
   for (const auto& a : candidate) {
     scenario.add(a);
   }
@@ -174,8 +175,8 @@ TestCase run_mcts(std::mt19937& gen,
     // === Rollout ===
     TestCase candidate = expanded->path;
     const auto reward =
-        rollout(gen, settings.objFunc, candidate, settings.maxRollback,
-                settings.maxDepth, actionSpace);
+        rollout(gen, settings.objFunc, settings.fineObjFunc, candidate,
+                settings.maxRollback, settings.maxDepth, actionSpace);
 
     // === Backpropagation ===
     backpropagate(expanded, reward, candidate);

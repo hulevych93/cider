@@ -29,9 +29,6 @@ class GreedyRStage final : public SimulationPipe {
   void onCleanup() override;
 
   greedy_r::GreedySettings m_settings;
-
-  std::string _path;
-  std::vector<double> _openers;
 };
 
 }  // namespace pipelines

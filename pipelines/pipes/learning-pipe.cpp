@@ -57,7 +57,8 @@ bool PreLearningStage::process(const std::string& metadata,
   std::visit(
       [&](const auto& settings) {
         prelearningSession(settings, input.actions, measurer.getObjValueFunc(),
-                           rwLogger, lossLogger);
+                           measurer.getFastObjValueFunc(), rwLogger,
+                           lossLogger);
       },
       m_settings);
 
@@ -93,7 +94,7 @@ bool LearningStage::process(const std::string& metadata,
   std::ostringstream oss;
 
   for (size_t i = 0; i < input.actions.size(); ++i) {
-    oss << agent_model::actionToGenericRepro(input.actions[i]) << "\t";
+    oss << actionToGenericRepro(input.actions[i]) << "\t";
     print(oss, input.actions[i]);
     oss << std::endl;
   }
@@ -130,7 +131,8 @@ bool LearningStage::process(const std::string& metadata,
   std::visit(
       [&](const auto& settings) {
         learningSession(settings, input.actions, measurer.getObjValueFunc(),
-                        rwCounter, rwLogger, lossLogger, covLogger, dump);
+                        measurer.getFastObjValueFunc(), rwCounter, rwLogger,
+                        lossLogger, covLogger, dump);
       },
       m_settings);
 

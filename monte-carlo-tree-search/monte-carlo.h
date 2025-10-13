@@ -14,6 +14,9 @@ namespace mcts {
 using ObjectiveFunction =
     std::function<ObjectiveValue(const std::vector<recorder::Action>&)>;
 
+using FineObjectiveFunction =
+    std::function<FineObjectiveValue(const std::vector<recorder::Action>&)>;
+
 struct MonteCarloSettings final {
   const char* configName = "MCTS_NAN";
   size_t maxIter = 100;
@@ -21,6 +24,7 @@ struct MonteCarloSettings final {
   size_t maxDepth = 10;
   double ucb_C = 1.4142;
   ObjectiveFunction objFunc;
+  FineObjectiveFunction fineObjFunc;
 };
 
 std::ostream& operator<<(std::ostream& os, const MonteCarloSettings& settings);

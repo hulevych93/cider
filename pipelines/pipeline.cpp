@@ -5,13 +5,13 @@
 
 #include "agent-q-learning/q-learning-agent.h"
 #include "agent-sarsa-learning/sarsa-learning-agent.h"
+#include "synthesis/test-case.h"
 
 #include "paths.h"
 
+#include <tlog.h>
 #include <chrono>
 #include <ctime>
-
-#include <tlog.h>
 #include <filesystem>
 #include <iomanip>
 #include <sstream>
@@ -114,6 +114,8 @@ Pipeline::Pipeline(const std::string& libName, const cider::Cmd& cmd)
 
   agent_model::sarsa::SarsaLearningAgent::setPath(
       paths::getSarsaAgentPath(cmd.resultsDir));
+
+  synthesis::Openers::setPath(paths::getOpenersPath(cmd.resultsDir));
 
   tlog_info << "Load results: " << cmd.resultsDir
             << ", status: " << load(cmd.resultsDir) << std::endl;

@@ -11,6 +11,8 @@
 #include <iomanip>
 #include <random>
 
+#include "math/softmax.h"
+
 #include <tlog.h>
 
 namespace cider {
@@ -201,36 +203,23 @@ std::optional<recorder::Action> QTableAgent::chooseBolzmanAction(
       return scenario.getRandomAction();
     }
 
-    std::vector<float> probabilities(qValues.size());
-    float sum = 0.0f;
-    auto qValIt = qValues.begin();
-    for (size_t i = 0; i < qValues.size(); ++i, ++qValIt) {
-      const auto& value = qValIt->second;
-      probabilities[i] = std::exp(value / temperature);
-      sum += probabilities[i];
+    std::vector<std::pair<const recorder::Action*, float>> pool;
+    pool.reserve(qValues.size());
+    for (const auto& kv : qValues) {
+      pool.emplace_back(std::addressof(kv.first), kv.second);
     }
 
-    if (sum == 0.0f || std::isinf(sum)) {
+    if (pool.empty()) {
       tlog_info << "fallback to random: 3" << std::endl;
       return scenario.getRandomAction();
     }
 
-    for (float& p : probabilities) {
-      p /= sum;
-    }
+    auto winner = math_stat::softmax_choice(
+        pool, [](const auto& p) { return static_cast<double>(p.second); },
+        temperature, _gen);
 
-    std::discrete_distribution<int> dist(probabilities.begin(),
-                                         probabilities.end());
-    const auto index = dist(_gen);
-
-    qValIt = qValues.begin();
-    size_t i = 0;
-    for (; i < index; ++i, ++qValIt)
-      ;
-
-    tlog_info << "Bolzman action" << std::endl;
-
-    action = qValIt->first;
+    tlog_info << "Boltzmann action" << std::endl;
+    return *winner.first;
   }
 
   return action;

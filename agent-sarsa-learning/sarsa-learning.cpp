@@ -18,6 +18,7 @@ namespace sarsa {
 void prelearningSession(const SarsaLearningSettings& settings,
                         const recorder::Actions& list,
                         ObjectiveFunction objFunc,
+                        FineObjectiveFunction fineObjFunc,
                         IRewardLogger& rwLogger,
                         ILossLogger& lossLogger) {
   SarsaLearningAgent& agent = SarsaLearningAgent::get();
@@ -26,7 +27,7 @@ void prelearningSession(const SarsaLearningSettings& settings,
     RewardCounter rwCounter;
     agent_model::LearningScenario scenario(
         settings.rewardShaping, rwCounter, Seed::instance().get(),
-        settings.maxStateDepth, list, objFunc);
+        settings.maxStateDepth, list, objFunc, fineObjFunc);
 
     auto nextState = scenario.getCurrentState();
 
@@ -65,6 +66,7 @@ void prelearningSession(const SarsaLearningSettings& settings,
 void learningSession(const SarsaLearningSettings& settings,
                      const recorder::Actions& list,
                      ObjectiveFunction objFunc,
+                     FineObjectiveFunction fineObjFunc,
                      RewardCounter& counter,
                      IRewardLogger& rwLogger,
                      ILossLogger& lossLogger,
@@ -90,7 +92,7 @@ void learningSession(const SarsaLearningSettings& settings,
 
     agent_model::LearningScenario scenario(
         settings.rewardShaping, counter, Seed::instance().get(),
-        settings.maxStateDepth, list, objFunc);
+        settings.maxStateDepth, list, objFunc, fineObjFunc);
 
     ExponentialMovingAverage smoothLoss(0.5);
     float total_reward = 0.0f;

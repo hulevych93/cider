@@ -18,7 +18,8 @@ class Scenario : public synthesis::TestScenario {
   Scenario(std::mt19937& gen,
            int maxStateDepth,
            const recorder::Actions& initial,
-           const synthesis::ObjectiveFunction& objFunc);
+           const synthesis::ObjectiveFunction& objFunc,
+           const synthesis::FineObjectiveFunction& fineObjFunc);
 
   recorder::Actions getCurrentState() const;
 
@@ -33,7 +34,8 @@ class LearningScenario : public Scenario {
                    std::mt19937& gen,
                    int maxStateDepth,
                    const recorder::Actions& initial,
-                   const synthesis::ObjectiveFunction& objFunc);
+                   const synthesis::ObjectiveFunction& objFunc,
+                   const synthesis::FineObjectiveFunction& fineObjFunc);
 
   std::optional<double> getReward() const;
 
@@ -45,9 +47,6 @@ class LearningScenario : public Scenario {
   RewardCounter& _rwCounter;
   const RewardShappingParams _params;
 };
-
-std::string actionToGenericRepro(const recorder::Action& action);
-std::string actionsToGenericRepro(const std::vector<recorder::Action>& actions);
 
 }  // namespace agent_model
 }  // namespace cider

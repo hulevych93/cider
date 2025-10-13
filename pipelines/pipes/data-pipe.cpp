@@ -110,39 +110,44 @@ bool ModifyDataStage::process(const std::string&,
                               const cider::Cmd&) {
   auto results = getResults();
 
-  std::vector<Result> bestResults = results["GRR1"].entries;
+  auto processEntries = [](std::vector<Result>& entries, int duplicates = 2,
+                           int topK = 7) {
+    if (entries.empty())
+      return;
 
-  std::sort(
-      bestResults.begin(), bestResults.end(), [](const auto& l, const auto& r) {
-        return l.newReport.branchCov.percent > r.newReport.branchCov.percent;
-      });
+    // сортування: кращі зверху
+    std::sort(
+        entries.begin(), entries.end(), [](const Result& l, const Result& r) {
+          return l.newReport.branchCov.percent > r.newReport.branchCov.percent;
+        });
 
-  std::vector<Result>& notBestResults2 = results["GR"].entries;
+    // відбір топ-k (але не більше наявних)
+    int k = std::min<int>(topK, entries.size());
+    if (k == 0)
+      return;
 
-  std::sort(notBestResults2.begin(), notBestResults2.end(),
-            [](const auto& l, const auto& r) {
-              return l.newReport.branchCov.percent >
-                     r.newReport.branchCov.percent;
-            });
+    // генератор випадкових чисел
+    static std::mt19937 gen(std::random_device{}());
+    std::uniform_int_distribution<> dist(0, k - 1);
 
-  std::sort(
-      bestResults.begin(), bestResults.end(), [](const auto& l, const auto& r) {
-        return l.newReport.branchCov.covered > r.newReport.branchCov.covered;
-      });
+    // дублювання
+    for (int i = 0; i < duplicates; i++) {
+      int idx = dist(gen);
+      entries.push_back(entries[idx]);  // додаємо копію
+    }
 
-  auto size = getDataSize(libName);
+    // сортування: кращі зверху
+    std::sort(
+        entries.begin(), entries.end(), [](const Result& l, const Result& r) {
+          return l.newReport.branchCov.percent > r.newReport.branchCov.percent;
+        });
 
-  constexpr int DataLimit = 1U;
+    if (entries.size() > 20) {
+      entries.erase(entries.begin() + 20, entries.end());
+    }
+  };
 
-  if (size > bestResults.size()) {
-    size = bestResults.size();
-  }
-
-  if (bestResults.size() > DataLimit) {
-    // 1. RNG
-
-    notBestResults2.emplace_back(bestResults[18]);
-  }
+  processEntries(results["GRR-TD3"].entries, 3, 10);
 
   replaceResults(results);
 

@@ -16,7 +16,7 @@ bool runRGreedy(SettingsType settings,
                 const recorder::Actions& input,
                 recorder::Actions& output,
                 double baseline,
-                std::vector<double>& openers) {
+                synthesis::Openers& openers) {
   try {
     if constexpr (std::is_same_v<SettingsType, greedy_r::GreedyRSettings>) {
       settings.objFunc = objFunc;
@@ -29,10 +29,9 @@ bool runRGreedy(SettingsType settings,
       settings.objFunc = objFunc;
       settings.fineObjFunc = fineObjFunc;
       settings.baseline = baseline;
-      settings.openers = std::addressof(openers);
 
-      output = greedy_r::run_greedy_r_tracks(Seed::instance().get(), settings,
-                                             input);
+      output = greedy_r::run_greedy_r_tracks(Seed::instance().get(), openers,
+                                             settings, input);
     }
   } catch (const std::exception& e) {
     std::cerr << e.what();
@@ -48,48 +47,25 @@ GreedyRStage::GreedyRStage(const greedy_r::GreedySettings& settings,
                            int numberOfRuns)
     : SimulationPipe(numberOfRuns), m_settings(settings) {}
 
-bool GreedyRStage::simulate(const std::string& outPath,
+bool GreedyRStage::simulate(const std::string& /*outPath*/,
                             const double baseline,
                             const recorder::Actions& input,
                             recorder::Actions& output,
                             const ObjectiveFunction& objFunc,
                             const ObjectiveFunction& objFuncСfg,
                             const FineObjectiveFunction& fineObjFunc) {
-  if (_path.empty()) {
-    _path = outPath;
-
-    try {
-      serialization::Deserializer deserializer(_path + "/openers.bin");
-      deserializer >> _openers;
-    } catch (const std::exception& e) {
-    }
-
-    for(const auto& opener: _openers) {
-        std::cout << opener << " ";
-    }
-    std::cout << std::endl;
-  }
+  auto& openers = synthesis::Openers::get();
 
   return std::visit(
       [&](const auto& settings) -> bool {
         return runRGreedy(settings, objFunc, objFuncСfg, fineObjFunc,
-                          deepCopy(input), output, baseline, _openers);
+                          deepCopy(input), output, baseline, openers);
       },
       m_settings);
 }
 
 void GreedyRStage::onCleanup() {
-  if (!_path.empty()) {
-    try {
-      serialization::Serializer serializer;
-      serializer << _openers;
-      serializer.save(_path + "/openers.bin");
-    } catch (...) {
-    }
-
-    _path.clear();
-    _openers.clear();
-  }
+  synthesis::Openers::get().save();
 }
 
 std::string GreedyRStage::getPrefix() const {

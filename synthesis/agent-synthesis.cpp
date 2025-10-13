@@ -18,25 +18,28 @@ namespace synthesis {
 bool synthesize(std::mt19937& gen,
                 const QSynthesisSettings& settings,
                 ObjectiveFunction objFunc,
+                FineObjectiveFunction fineObjFunc,
                 const recorder::Actions& initial,
                 recorder::Actions& out) {
   const auto& agent = agent_model::qlearning::QLearningAgent::get();
-  return synthesize(gen, settings, agent, objFunc, initial, out);
+  return synthesize(gen, settings, agent, objFunc, fineObjFunc, initial, out);
 }
 
 bool synthesize(std::mt19937& gen,
                 const SarsaSynthesisSettings& settings,
                 ObjectiveFunction objFunc,
+                FineObjectiveFunction fineObjFunc,
                 const recorder::Actions& initial,
                 recorder::Actions& out) {
   const auto& agent = agent_model::sarsa::SarsaLearningAgent::get();
-  return synthesize(gen, settings, agent, objFunc, initial, out);
+  return synthesize(gen, settings, agent, objFunc, fineObjFunc, initial, out);
 }
 
 bool synthesize(std::mt19937& gen,
                 const AgentSynthesisSettings& settings,
                 const agent_model::IAgent& agent,
                 ObjectiveFunction objFunc,
+                FineObjectiveFunction fineObjFunc,
                 const recorder::Actions& initial,
                 recorder::Actions& out) {
   out.clear();
@@ -44,7 +47,8 @@ bool synthesize(std::mt19937& gen,
   const auto maxStateDepth = agent.getMaxStateDepth();
   assert(maxStateDepth > 0);
 
-  agent_model::Scenario scenario(gen, maxStateDepth, initial, objFunc);
+  agent_model::Scenario scenario(gen, maxStateDepth, initial, objFunc,
+                                 fineObjFunc);
 
   const auto actionChoosing = [&](const synthesis::TestScenario& testCase) {
     const auto& scenario = dynamic_cast<const agent_model::Scenario&>(testCase);

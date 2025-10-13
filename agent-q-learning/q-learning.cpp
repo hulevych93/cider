@@ -21,6 +21,7 @@ namespace qlearning {
 void prelearningSession(const QLearningSettings& settings,
                         const recorder::Actions& list,
                         ObjectiveFunction objFunc,
+                        FineObjectiveFunction fineObjFunc,
                         IRewardLogger& rwLogger,
                         ILossLogger& lossLogger) {
   QLearningAgent& agent = QLearningAgent::get();
@@ -29,7 +30,7 @@ void prelearningSession(const QLearningSettings& settings,
     RewardCounter rwCounter;
     LearningScenario scenario(settings.rewardShaping, rwCounter,
                               Seed::instance().get(), settings.maxStateDepth,
-                              list, objFunc);
+                              list, objFunc, fineObjFunc);
     auto nextState = scenario.getCurrentState();
 
     float total_reward = 0.0f;
@@ -64,6 +65,7 @@ void prelearningSession(const QLearningSettings& settings,
 void learningSession(const QLearningSettings& settings,
                      const recorder::Actions& list,
                      ObjectiveFunction objFunc,
+                     FineObjectiveFunction fineObjFunc,
                      RewardCounter& counter,
                      IRewardLogger& rwLogger,
                      ILossLogger& lossLogger,
@@ -90,7 +92,7 @@ void learningSession(const QLearningSettings& settings,
 
     LearningScenario scenario(settings.rewardShaping, counter,
                               Seed::instance().get(), settings.maxStateDepth,
-                              list, objFunc);
+                              list, objFunc, fineObjFunc);
 
     auto nextState = scenario.getCurrentState();
 

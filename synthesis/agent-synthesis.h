@@ -15,12 +15,14 @@ namespace synthesis {
 bool synthesize(std::mt19937& gen,
                 const QSynthesisSettings& settings,
                 ObjectiveFunction objFunc,
+                FineObjectiveFunction fineObjFunc,
                 const recorder::Actions& initial,
                 recorder::Actions& out);
 
 bool synthesize(std::mt19937& gen,
                 const SarsaSynthesisSettings& settings,
                 ObjectiveFunction objFunc,
+                FineObjectiveFunction fineObjFunc,
                 const recorder::Actions& initial,
                 recorder::Actions& out);
 
@@ -28,6 +30,7 @@ bool synthesize(std::mt19937& gen,
                 const AgentSynthesisSettings& settings,
                 const agent_model::IAgent& agent,
                 ObjectiveFunction objFunc,
+                FineObjectiveFunction fineObjFunc,
                 const recorder::Actions& initial,
                 recorder::Actions& out);
 

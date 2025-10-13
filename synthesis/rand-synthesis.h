@@ -14,6 +14,7 @@ namespace synthesis {
 bool synthesize(std::mt19937& gen,
                 const synthesis::RandSynthesisSettings& settings,
                 ObjectiveFunction objFunc,
+                FineObjectiveFunction fineObjFunc,
                 const recorder::Actions& initial,
                 recorder::Actions& out);
 
