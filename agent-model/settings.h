@@ -24,6 +24,11 @@ struct LearningSettingsBase {
   size_t maxRollback = 20U;
   size_t maxStateDepth = 5U;
   size_t coverageConvergenceCounter = 200U;
+  ActionMakerStrategyType strategy = ActionMakerStrategyType::EGreedy;
+
+  double temperature = 1.5f;
+  double lambda = 1.0f;
+  size_t top_k = 5;
 
   RewardShappingParams rewardShaping;
 };

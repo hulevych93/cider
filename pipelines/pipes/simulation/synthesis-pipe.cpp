@@ -6,6 +6,9 @@
 #include "synthesis/agent-synthesis.h"
 #include "synthesis/rand-synthesis.h"
 
+#include "agent-q-learning/q-learning-agent.h"
+#include "mathplot-log/monitoring/suffix-freq-plot.h"
+
 #include <assert.h>
 #include <tlog.h>
 
@@ -16,19 +19,34 @@ SynthesisStage::SynthesisStage(const synthesis::SynthesisSettings& settings,
                                int numberOfRuns)
     : SimulationPipe(numberOfRuns), m_settings(settings) {}
 
-bool SynthesisStage::simulate(const std::string& /*outPath*/,
+SynthesisStage::~SynthesisStage() = default;
+
+bool SynthesisStage::simulate(const std::string& outPath,
                               const double /*baseline*/,
                               const recorder::Actions& input,
                               recorder::Actions& output,
                               const ObjectiveFunction& objFunc,
                               const ObjectiveFunction& /*objFuncСfg*/,
                               const FineObjectiveFunction& fineObjFunc) {
+  if (!_freqPlot) {
+    std::string graphTitle = "freq_plot_";
+    graphTitle += getConfigName();
+
+    _freqPlot = std::make_unique<mathplot::SuffixFreqPlot>(outPath, graphTitle);
+    agent_model::qlearning::QLearningAgent::setLogger(
+        [&](const auto suffix) { _freqPlot->log(suffix); });
+  }
+
   return std::visit(
       [&](const auto& s) {
         return synthesis::synthesize(Seed::instance().get(), s, objFunc,
                                      fineObjFunc, input, output);
       },
       m_settings);
+}
+
+void SynthesisStage::onCleanup() {
+  _freqPlot->plot();
 }
 
 std::string SynthesisStage::getPrefix() const {

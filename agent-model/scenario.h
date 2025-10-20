@@ -13,6 +13,8 @@
 namespace cider {
 namespace agent_model {
 
+recorder::Actions takeSuffix(const recorder::Actions& actions, size_t k);
+
 class Scenario : public synthesis::TestScenario {
  public:
   Scenario(std::mt19937& gen,

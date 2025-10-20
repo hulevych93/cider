@@ -25,9 +25,15 @@ class IAgent {
  public:
   virtual ~IAgent() = default;
 
-  virtual std::optional<recorder::Action> chooseBolzmanAction(
+  virtual std::optional<recorder::Action> chooseBoltzmannAction(
       const Scenario& scenario,
       const double temperature) const = 0;
+
+  virtual std::optional<recorder::Action> chooseBoltzmannWithOpenersAction(
+      const Scenario& scenario,
+      const double temperature,
+      const double lambda,
+      size_t top_k) const = 0;
 
   virtual std::optional<recorder::Action> chooseEGreedyAction(
       const Scenario& scenario,

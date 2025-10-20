@@ -38,12 +38,8 @@ harmony::Harmony Search::generateHarmony(
   harmony::Harmony newHarmony;
   std::uniform_real_distribution<double> dist(0.0, 1.0);
   if (dist(_gen) < _settings.harmonyMemoryConsiderationRate) {
-    synthesis::TestScenario scenario(
-        _gen, harmony.actions, [&](const auto& actions) {
-          ObjectiveValue val;
-          val.coverage = _settings.objFunc(actions);
-          return val;
-        });
+    synthesis::TestScenario scenario(_gen, harmony.actions, _settings.objFunc,
+                                     _settings.fineObjFunc);
 
     const auto actionChoosing = [&](const synthesis::TestScenario& testCase) {
       return testCase.getRandomAction();
@@ -61,7 +57,7 @@ harmony::Harmony Search::generateHarmony(
     newHarmony.actions = _actionsGenerator();
   }
 
-  const auto objValue = _settings.objFunc(newHarmony.actions);
+  const auto objValue = _settings.objFunc(newHarmony.actions).coverage;
   if (objValue > std::numeric_limits<double>::epsilon()) {
     newHarmony.objVal = objValue;
   } else {
@@ -93,7 +89,7 @@ std::optional<harmony::Harmony> Search::mutateHarmony(
     return std::nullopt;
   }
 
-  const auto objValue = _settings.objFunc(mutatedHarmony.actions);
+  const auto objValue = _settings.objFunc(mutatedHarmony.actions).coverage;
   if (objValue > std::numeric_limits<double>::epsilon()) {
     mutatedHarmony.objVal = objValue;
     tlog_info << objValue << std::endl;

@@ -7,6 +7,14 @@
 namespace cider {
 namespace agent_model {
 
+recorder::Actions takeSuffix(const recorder::Actions& actions, size_t k) {
+  if (k == 0 || actions.empty())
+    return {};
+  if (k >= actions.size())
+    return actions;
+  return recorder::Actions(actions.end() - static_cast<long>(k), actions.end());
+}
+
 Scenario::Scenario(std::mt19937& gen,
                    int maxStateDepth,
                    const recorder::Actions& initial,
@@ -16,12 +24,7 @@ Scenario::Scenario(std::mt19937& gen,
       _maxStateDepth(maxStateDepth) {}
 
 recorder::Actions Scenario::getCurrentState() const {
-  auto count = _maxStateDepth;
-  if (count > _actions.size()) {
-    count = _actions.size();
-  }
-
-  return recorder::Actions{_actions.end() - count, _actions.end()};
+  return takeSuffix(_actions, _maxStateDepth);
 }
 
 LearningScenario::LearningScenario(

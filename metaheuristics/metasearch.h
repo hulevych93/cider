@@ -8,13 +8,18 @@
 
 #include "metaheuristics/args_mutator.h"
 
+#include "coverage/coverage.h"
+
 #include <variant>
 
 namespace cider {
 namespace metasearch {
 
 using ObjectiveFunction =
-    std::function<double(const std::vector<recorder::Action>&)>;
+    std::function<ObjectiveValue(const std::vector<recorder::Action>&)>;
+
+using FineObjectiveFunction =
+    std::function<FineObjectiveValue(const std::vector<recorder::Action>&)>;
 
 struct Solution final {
   std::vector<recorder::Action> actions;
@@ -85,6 +90,7 @@ struct Settings final {
   size_t maxIterationsWithoutUpdates = 50U;
   size_t maxIter = 22;
   ObjectiveFunction objFunc;
+  FineObjectiveFunction fineObjFunc;
   ArgsMutationStrategy strategy = ArgsMutationStrategy::ShuffleBytes;
 };
 
@@ -100,6 +106,7 @@ struct Settings {
   size_t maxIterationsWithoutUpdates = 500U;
   size_t maxIter = 1000;
   ObjectiveFunction objFunc;
+  FineObjectiveFunction fineObjFunc;
   ArgsMutationStrategy strategy = ArgsMutationStrategy::ShuffleBytes;
   InstructionsMutationStrategy instructionsMutationStrategy =
       InstructionsMutationStrategy::Shuffle;

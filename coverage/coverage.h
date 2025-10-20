@@ -68,11 +68,15 @@ enum class PipelineType {
   QLearningAgentB2 = 71,
   QLearningAgentB3 = 72,
 
+  QLearningAgentBoltzmannWithOpeners = 73,
+
   SarsaAgentB1 = 75,
   SarsaAgentB2 = 76,
   SarsaAgentB3 = 77,
 
   QLearningStats = 80,
+  SuffixStats = 81,
+
   GenerationCoverageBoxStats = 90,
   GenerationCoverageStepperStats = 100,
   GenerationLinesBarStats = 110,
@@ -117,6 +121,13 @@ struct FineObjectiveValue final {
   double coverage = 0.0;
   std::vector<std::vector<std::uint8_t>> fineCoveredTracks;
   bool hasUnique = false;
+};
+
+enum class ActionMakerStrategyType {
+  Greedy,
+  EGreedy,
+  Boltzmann,
+  BoltzmannWithOpeners
 };
 
 struct Cmd final {

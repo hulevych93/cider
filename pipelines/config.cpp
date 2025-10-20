@@ -279,14 +279,14 @@ auto getMCTS3Settings() {
 auto getQLearningSettings() {
   agent_model::qlearning::QLearningSettings settings;
   settings.configName = "QL";
-  settings.prelearningEpisodes = 5U;
+  settings.prelearningEpisodes = 1U;
   settings.discountFactor = 0.85;
   settings.initialLearningRate = 0.3;
   settings.finalLearningRate = 0.1;
-  settings.episodes = 1000U;
+  settings.episodes = 500U;
   settings.maxRollback = 20U;
-  settings.coverageConvergenceCounter = 100U;
-  settings.maxStateDepth = 5U;
+  settings.coverageConvergenceCounter = 15U;
+  settings.maxStateDepth = 10U;
   return settings;
 }
 
@@ -304,7 +304,7 @@ auto getSarsaLearningSettings() {
 auto getQGenG1Settings() {
   synthesis::QSynthesisSettings settings;
   settings.configName = "QLEG1";
-  settings.epsilon = 0.1;
+  settings.epsilon = 0.01;
   settings.maxRollback = 30U;
   settings.strategy = synthesis::GenerationStrategyType::EGreedy;
   settings.stopType = synthesis::StopCondition::GreaterCoverage;
@@ -387,6 +387,18 @@ auto getQGenB3Settings() {
   settings.temperature = 5.0;
   settings.maxRollback = 30U;
   settings.strategy = synthesis::GenerationStrategyType::Boltzmann;
+  settings.stopType = synthesis::StopCondition::GreaterCoverage;
+  return settings;
+}
+
+auto getQGenB2WithOpenersSettings() {
+  synthesis::QSynthesisSettings settings;
+  settings.configName = "QLB2_WO";
+  settings.temperature = 1.5;
+  settings.lambda = 1.0;
+  settings.top_k = 5;
+  settings.maxRollback = 30U;
+  settings.strategy = synthesis::GenerationStrategyType::BoltzmannWithOpeners;
   settings.stopType = synthesis::StopCondition::GreaterCoverage;
   return settings;
 }
@@ -535,8 +547,8 @@ const pipelines::ReportConfiguration& getReportALLSelected() {
   return orderedMethods;
 }
 
-constexpr const int StatsCount = 30U;
-constexpr const int GreedyCount = 20U;
+constexpr const int StatsCount = 10U;
+constexpr const int GreedyCount = 1U;
 constexpr const int MCTSCount = 1U;
 
 }  // namespace
@@ -748,6 +760,10 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
       pipeline.addStage(
           std::make_unique<SynthesisStage>(getQGenB3Settings(), StatsCount));
       break;
+    case PipelineType::QLearningAgentBoltzmannWithOpeners:
+      pipeline.addStage(std::make_unique<SynthesisStage>(
+          getQGenB2WithOpenersSettings(), StatsCount));
+      break;
     case PipelineType::SarsaAgentB1:
       pipeline.addStage(std::make_unique<SynthesisStage>(
           getSarsaGenB1Settings(), StatsCount));
@@ -847,6 +863,9 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
       break;
     case PipelineType::QLearningStats:
       pipeline.addStage(std::make_unique<QLearningReportStage>());
+      break;
+    case PipelineType::SuffixStats:
+      pipeline.addStage(std::make_unique<SuffixReportStage>());
       break;
     case PipelineType::ShowResults:
       pipeline.addStage(

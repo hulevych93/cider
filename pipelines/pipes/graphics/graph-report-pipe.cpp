@@ -5,6 +5,7 @@
 
 #include "mathplot-log/monitoring/q-learning-cov-ep-plot.h"
 #include "mathplot-log/monitoring/q-learning-reward-loss-plot.h"
+#include "mathplot-log/monitoring/suffix-freq-plot.h"
 
 #include <tlog.h>
 
@@ -24,6 +25,19 @@ bool QLearningReportStage::process(const std::string& metadata,
   rwLogger.load();
   lossLogger.load();
   covLogger.load();
+
+  return true;
+}
+
+bool SuffixReportStage::process(const std::string& metadata,
+                                const std::string&,
+                                const cider::Cmd& cmd) {
+  std::filesystem::path outPath(cmd.resultsDir);
+  outPath /= metadata;
+
+  mathplot::SuffixFreqPlot rwLogger(outPath, "freq_plot_QLEG2.png");
+
+  rwLogger.load();
 
   return true;
 }

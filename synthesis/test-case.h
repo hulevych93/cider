@@ -44,10 +44,10 @@ using CandidatesMap = std::unordered_map<recorder::Action,
 
 class Openers final {
  public:
-     static Openers& get() {
-      if (Path.empty()) {
-          throw std::logic_error{"agent path error"};
-      }
+  static Openers& get() {
+    if (Path.empty()) {
+      throw std::logic_error{"agent path error"};
+    }
     static Openers openers(Path);
     return openers;
   }

@@ -151,12 +151,16 @@ add_target_def(QLB1 70 GROUP ${GROUP_QLB})
 add_target_def(QLB2 71 GROUP ${GROUP_QLB})
 add_target_def(QLB3 72 GROUP ${GROUP_QLB})
 
+# === QLB With Openers ===
+add_target_def(QLB2_WO 73 GROUP ${GROUP_QLB})
+
 # === SLB ===
 add_target_def(SLB1 75)
 add_target_def(SLB2 76)
 add_target_def(SLB3 77)
 
 add_target_def(QL_STAT 80)
+add_target_def(SUF_STAT 81)
 
 # === CBOX Grouped ===
 add_target_def(CBOX_RAND     90 GROUP ${GROUP_RAND})
@@ -250,7 +254,7 @@ add_target_def(SHOW_ALL      170)
 add_target_def(EFT 120)
 
 # === AGG ===
-add_target_def(AGG 140 GROUP ${GROUP_SELECTED})
+add_target_def(AGG_GRR      140 GROUP ${GROUP_GREEDY_R})
 
 # === VER ===
 add_target_def(VER 145 GROUP ${GROUP_QLEG})
@@ -259,6 +263,7 @@ add_target_def(VER 145 GROUP ${GROUP_QLEG})
 add_target_def(CALC_COMPR_QLEG        146 GROUP ${GROUP_QLEG})
 add_target_def(CALC_COMPR_QLB         146 GROUP ${GROUP_QLB})
 add_target_def(CALC_COMPR_DSL         146 GROUP ${GROUP_DSL})
+add_target_def(CALC_COMPR_GRR         146 GROUP ${GROUP_GREEDY_R})
 add_target_def(CALC_COMPR_SLEG        146 GROUP ${GROUP_SLEG})
 add_target_def(CALC_COMPR_SLB         146 GROUP ${GROUP_SLB})
 add_target_def(CALC_COMPR_MCTS        146 GROUP ${GROUP_MCTS})

@@ -19,11 +19,12 @@ class QLearningAgent : public agent_model::QTableAgent {
     if (Path.empty()) {
       throw std::logic_error{"agent path error"};
     }
-    static QLearningAgent agent(Path);
+    static QLearningAgent agent(Path, Logger);
     return agent;
   }
 
   static void setPath(const std::string& path) { Path = path; }
+  static void setLogger(const SuffixLogger& logger) { Logger = logger; }
 
   double updateQValues(const recorder::Actions& state,
                        const recorder::Actions& nextState,
@@ -33,6 +34,8 @@ class QLearningAgent : public agent_model::QTableAgent {
                        const double discount);
 
   static std::string Path;
+
+  static SuffixLogger Logger;
 };
 
 }  // namespace qlearning

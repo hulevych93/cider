@@ -102,7 +102,26 @@ void learningSession(const QLearningSettings& settings,
     const auto chooseValidAction = [&]() -> std::optional<recorder::Action> {
       size_t rollback = 0;
       while (true) {
-        auto actionOpt = agent.chooseEGreedyAction(scenario, expRate);
+        std::optional<recorder::Action> actionOpt;
+
+        switch (settings.strategy) {
+          case ActionMakerStrategyType::Greedy:
+            actionOpt = agent.chooseGreedyAction(scenario);
+            break;
+          case ActionMakerStrategyType::EGreedy:
+            actionOpt = agent.chooseEGreedyAction(scenario, expRate);
+            break;
+          case ActionMakerStrategyType::Boltzmann:
+            actionOpt =
+                agent.chooseBoltzmannAction(scenario, settings.temperature);
+            break;
+          case ActionMakerStrategyType::BoltzmannWithOpeners:
+            actionOpt = agent.chooseBoltzmannWithOpenersAction(
+                scenario, settings.temperature, settings.lambda,
+                settings.top_k);
+            break;
+        }
+
         if (!actionOpt.has_value()) {
           rollback++;
           if (rollback > settings.maxRollback) {

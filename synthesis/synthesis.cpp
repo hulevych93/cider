@@ -48,6 +48,9 @@ std::ostream& operator<<(std::ostream& os,
     case GenerationStrategyType::Boltzmann:
       strategyName = "Boltzmann";
       break;
+    case GenerationStrategyType::BoltzmannWithOpeners:
+      strategyName = "BoltzmannWithOpeners";
+      break;
     default:
       strategyName = "Unknown";
   }

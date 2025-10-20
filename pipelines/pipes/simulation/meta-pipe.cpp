@@ -27,13 +27,13 @@ template <typename SettingsType>
 bool makeMetaPipeline(SettingsType settings,
                       const std::string& outPath,
                       const ObjectiveFunction& objFunc,
+                      const FineObjectiveFunction& fineObjFunc,
                       const std::function<recorder::Actions()>& callback,
                       recorder::Actions& output) {
   std::unique_ptr<cider::metasearch::IMetaSearch> metaSearch;
 
-  settings.objFunc = [objFunc](const recorder::Actions& actions) {
-    return objFunc(actions).coverage;
-  };
+  settings.objFunc = objFunc;
+  settings.fineObjFunc = fineObjFunc;
 
   if constexpr (std::is_same_v<SettingsType, metasearch::harmony::Settings>) {
     metaSearch = std::make_unique<metasearch::harmony::Search>(settings);
@@ -70,11 +70,12 @@ bool MetaSearchStage::simulate(const std::string& outPath,
                                recorder::Actions& output,
                                const ObjectiveFunction& objFunc,
                                const ObjectiveFunction& /*objFuncСfg*/,
-                               const FineObjectiveFunction& /*fineObjFunc*/) {
+                               const FineObjectiveFunction& fineObjFunc) {
   return std::visit(
       [&](const auto& s) {
         return makeMetaPipeline(
-            s, outPath, objFunc, [&]() { return deepCopy(input); }, output);
+            s, outPath, objFunc, fineObjFunc, [&]() { return deepCopy(input); },
+            output);
       },
       m_settings);
 }

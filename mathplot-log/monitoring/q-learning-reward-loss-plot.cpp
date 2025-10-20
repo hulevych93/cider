@@ -72,10 +72,26 @@ bool QLearningRewardLogger::load() {
 void QLearningRewardLogger::log(size_t episode, const double totalReward) {
   ieps_.push_back(static_cast<double>(episode));
   rwrd_.push_back(totalReward);
+
+  if ((_updateCounter++ % 27) == 0) {
+    plot();
+  }
 }
 
 void QLearningRewardLogger::plot() {
+  if (ieps_.empty()) {
+    return;
+  }
+
   plt::clf();
+
+  int i = 0;
+  for (auto& c : rwrd_) {
+    ++i;
+    if (c < 8.0) {
+      c = 8.0;
+    }
+  }
 
   plt::plot(ieps_, rwrd_,
             std::map<std::string, std::string>{
@@ -132,13 +148,72 @@ void QLearningLossLogger::log(size_t episode, const double averageLoss) {
   jeps_.push_back(static_cast<double>(episode));
   loss_.push_back(averageLoss);
 
-  plot();
+  if ((_updateCounter++ % 16) == 0) {
+    plot();
+  }
+}
+
+std::vector<double> exponentialSmooth(const std::vector<double>& data,
+                                      double alpha = 0.2) {
+  std::vector<double> smoothed;
+  smoothed.reserve(data.size());
+  if (data.empty())
+    return smoothed;
+
+  double prev = data[0];
+  smoothed.push_back(prev);
+  for (size_t i = 1; i < data.size(); ++i) {
+    double val = alpha * data[i] + (1.0 - alpha) * prev;
+    smoothed.push_back(val);
+    prev = val;
+  }
+  return smoothed;
+}
+
+std::vector<double> smoothSpikeResistant(const std::vector<double>& data,
+                                         double alpha = 0.2) {
+  std::vector<double> result;
+  result.reserve(data.size());
+  if (data.empty())
+    return result;
+
+  double prev = data[0];
+  for (size_t i = 0; i < data.size(); ++i) {
+    double diff = data[i] - prev;
+    // якщо зміна різка — згладжуємо сильніше
+    if (std::abs(diff) > 0.02)
+      prev = prev + alpha * diff;
+    else
+      prev = data[i];
+    result.push_back(prev);
+  }
+  return result;
 }
 
 void QLearningLossLogger::plot() {
+  if (jeps_.empty()) {
+    return;
+  }
+
   plt::clf();
 
-  plt::plot(jeps_, loss_,
+  // ==== М’яке приглушення піків ====
+  std::vector<double> clipped = loss_;
+
+  // оцінюємо типовий рівень шуму (середнє або медіанне)
+  double mean =
+      std::accumulate(clipped.begin(), clipped.end(), 0.0) / clipped.size();
+  double threshold = 3.0 * mean;  // допустимо максимум у 3 рази вище середнього
+
+  for (auto& c : clipped) {
+    if (c > threshold) {
+      // плавне стиснення без обрізання
+      double excess = c - threshold;
+      c = threshold + excess / (1.0 + excess * 25.0);
+    }
+  }
+
+  plt::plot(jeps_, clipped,
             std::map<std::string, std::string>{
                 {"color", "blue"}, {"linestyle", "-"}, {"linewidth", "0.5"}});
 

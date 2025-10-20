@@ -31,12 +31,14 @@ struct SynthesisSettingsBasic {
 std::ostream& operator<<(std::ostream& os,
                          const SynthesisSettingsBasic& settings);
 
-enum class GenerationStrategyType { Greedy, EGreedy, Boltzmann };
+using GenerationStrategyType = ActionMakerStrategyType;
 
 struct AgentSynthesisSettings : SynthesisSettingsBasic {
   GenerationStrategyType strategy = GenerationStrategyType::Greedy;
   float epsilon = 0.1f;
   float temperature = 1.0f;
+  float lambda = 1.0f;
+  size_t top_k = 5;
 };
 
 std::ostream& operator<<(std::ostream& os,

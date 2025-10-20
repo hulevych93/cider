@@ -20,47 +20,136 @@ namespace agent_model {
 
 namespace {
 
-QTableStats collectStats(const QTable& table) {
-  QTableStats s{};
-  s.numStates = table.size();
-  if (s.numStates == 0)
-    return s;
+using QActionsPool = std::vector<std::pair<const recorder::Action*, double>>;
 
-  s.minActionsInState = std::numeric_limits<std::size_t>::max();
-
-  for (const auto& tIt : table) {
-    const auto& qvals = tIt.second;
-
-    const std::size_t n = qvals.size();
-    s.totalActions += n;
-    s.maxActionsInState = std::max(s.maxActionsInState, n);
-    s.minActionsInState = std::min(s.minActionsInState, n);
-    if (n == 0)
-      ++s.zeroActionStates;
-  }
-
-  s.avgActionsPerState =
-      static_cast<double>(s.totalActions) / static_cast<double>(s.numStates);
-  if (s.minActionsInState == std::numeric_limits<std::size_t>::max())
-    s.minActionsInState = 0;
-
-  return s;
+bool hasValidQInfo(
+    const std::vector<std::pair<const recorder::Action*, double>>& pool) {
+  for (auto& p : pool)
+    if (std::abs(p.second) > 1e-15)
+      return true;
+  return false;
 }
 
-static std::string tsISO(const std::chrono::system_clock::time_point& tp) {
-  const std::time_t tt = std::chrono::system_clock::to_time_t(tp);
-  std::tm tm{};
-  localtime_r(&tt, &tm);
+const recorder::Action* chooseGreedy(const QActionsPool& pool,
+                                     std::mt19937& gen) {
+  auto maxIt = std::max_element(pool.begin(), pool.end(), [](auto& a, auto& b) {
+    return a.second < b.second;
+  });
 
-  char buf[32];
-  std::strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", &tm);
-  return buf;
+  if (maxIt == pool.end() || std::abs(maxIt->second) < 1e-15)
+    return nullptr;
+
+  std::vector<const recorder::Action*> best;
+  for (auto& p : pool)
+    if (std::abs(p.second - maxIt->second) < 1e-9)
+      best.push_back(p.first);
+
+  std::uniform_int_distribution<size_t> dist(0, best.size() - 1);
+  return best[dist(gen)];
+}
+
+const recorder::Action* chooseSoftmax(const QActionsPool& pool,
+                                      double temperature,
+                                      std::mt19937& gen) {
+  if (!hasValidQInfo(pool))
+    return nullptr;
+
+  auto winner = math_stat::softmax_choice(
+      pool, [](const auto& p) { return static_cast<double>(p.second); },
+      temperature, gen);
+
+  return winner.first;
+}
+
+QActionsPool blendQOverSuffixes(SuffixLogger logger,
+                                const QTable& table,
+                                const recorder::Actions& currentState,
+                                const recorder::Actions& availableActions,
+                                double beta = 0.7) {
+  tlog_info << "[blendQ] state size=" << currentState.size()
+            << ", table states=" << table.size() << std::endl;
+
+  QValues acc, wsum;
+  acc.reserve(availableActions.size());
+  wsum.reserve(availableActions.size());
+
+  for (size_t k = 0; k <= currentState.size(); ++k) {
+    const auto key = takeSuffix(currentState, k);
+    const auto it = table.find(key);
+    if (it == table.end()) {
+      tlog_info << "[blendQ]  k=" << k << "  ❌ no entry" << std::endl;
+      continue;
+    }
+
+    if (logger) {
+      logger(k);
+    }
+
+    const double N = static_cast<double>(it->second.size());
+    const double w = std::pow(N + 1e-6, beta);
+
+    tlog_info << "[blendQ]  k=" << k << "  ✅ found  actions=" << N
+              << "  weight=" << w << std::endl;
+
+    for (const auto& a : availableActions) {
+      double q = 0.0001;
+      auto qit = it->second.find(a);
+      if (qit != it->second.end())
+        q = qit->second;
+
+      acc[a] += w * q;
+      wsum[a] += w;
+    }
+  }
+
+  QActionsPool pool;
+  pool.reserve(availableActions.size());
+
+  for (const auto& a : availableActions) {
+    const double w = wsum[a];
+    const double q = (w > 0.0 ? acc[a] / w : 0.0001);
+    pool.emplace_back(&a, q);
+  }
+
+  if (pool.empty())
+    tlog_info << "[blendQ] no blended Q-values (all zero or no suffix match)"
+              << std::endl;
+
+  return pool;
+}
+
+template <typename ChoosePolicy>
+std::optional<recorder::Action> chooseActionBase(SuffixLogger logger,
+                                                 std::mt19937& gen,
+                                                 const QTable& table,
+                                                 const Scenario& scenario,
+                                                 ChoosePolicy chooser) {
+  const auto& available = scenario.getAvailableActions();
+  if (available.empty())
+    return std::nullopt;
+
+  const auto currentState = scenario.getCurrentState();
+  const auto pool =
+      blendQOverSuffixes(logger, table, currentState, available, 0.7);
+
+  if (!hasValidQInfo(pool)) {
+    tlog_info << "[Policy] no Q info → random fallback" << std::endl;
+    return scenario.getRandomAction();
+  }
+
+  const recorder::Action* act = chooser(pool, gen);
+  if (!act)
+    return scenario.getRandomAction();
+  return *act;
 }
 
 }  // namespace
 
-QTableAgent::QTableAgent(const std::string& path)
-    : _gen(Seed::instance().get()), m_loaded(load(path)), m_path(path) {
+QTableAgent::QTableAgent(const std::string& path, SuffixLogger suffixLogger)
+    : _gen(Seed::instance().get()),
+      m_loaded(load(path)),
+      m_path(path),
+      m_suffixLogger(suffixLogger) {
   tlog_info << "Load agent: " << path << ", status: " << m_loaded << std::endl;
 }
 
@@ -92,137 +181,109 @@ bool QTableAgent::save() const {
   return true;
 }
 
-QValues getAvailableQValues(const recorder::Actions& available,
-                            const QValues& values) {
-  QValues availableValues;
-  for (const auto& action : available) {
-    const auto qValueIter = values.find(action);
-    if (qValueIter != values.cend()) {
-      availableValues.emplace(action, qValueIter->second);
-    } else {
-      availableValues.emplace(action, 0.0001);
-    }
-  }
-  return availableValues;
-}
-
-recorder::Actions QTableAgent::getBestFromAvailable(
-    const recorder::Actions& available,
-    const QValues& values) {
-  QValues availableValues;
-  for (const auto& action : available) {
-    const auto qValueIter = values.find(action);
-    if (qValueIter != values.cend()) {
-      availableValues.emplace(action, qValueIter->second);
-    }
-  }
-
-  recorder::Actions bestValues;
-  const auto elemIter = std::max_element(
-      availableValues.cbegin(), availableValues.cend(),
-      [](const QValues::value_type& left, const QValues::value_type& right) {
-        return left.second < right.second;
-      });
-  for (const auto value : availableValues) {
-    if (value.second == elemIter->second) {
-      bestValues.emplace_back(value.first);
-    }
-  }
-
-  if (bestValues.empty()) {
-    return available;
-  }
-
-  return bestValues;
-}
-
-std::optional<recorder::Action> QTableAgent::findBestOrRandomAvailableAction(
-    const Scenario& scenario) const {
-  const auto state = scenario.getCurrentState();
-  const auto qValuesIter = m_qtable.find(state);
-  const auto& availableActions = scenario.getAvailableActions();
-  if (availableActions.empty()) {
-    return std::nullopt;
-  }
-  if (qValuesIter != m_qtable.cend()) {
-    const auto& qValues =
-        getBestFromAvailable(availableActions, qValuesIter->second);
-    if (!qValues.empty()) {
-      tlog_info << "E-Greedy action" << std::endl;
-      std::uniform_int_distribution<size_t> indexDist(0, qValues.size() - 1);
-      return qValues[indexDist(_gen)];
-    }
-
-    return std::nullopt;
-  } else {
-    tlog_info << "fallback to random: 1" << std::endl;
-    std::uniform_int_distribution<size_t> indexDist(
-        0, availableActions.size() - 1);
-    return availableActions[indexDist(_gen)];
-  }
-}
-
 std::optional<recorder::Action> QTableAgent::chooseEGreedyAction(
     const Scenario& scenario,
-    const double exploration) const {
-  std::optional<recorder::Action> action;
+    double exploration) const {
   std::uniform_real_distribution<double> dist(0.0, 1.0);
   if (dist(_gen) < exploration) {
-    action = scenario.getRandomAction();
+    tlog_info << "E-Greedy: random exploration" << std::endl;
+    return scenario.getRandomAction();
   }
-  if (!action.has_value()) {
-    action = findBestOrRandomAvailableAction(scenario);
-  }
-  return action;
+
+  tlog_info << "E-Greedy: greedy exploitation" << std::endl;
+  return chooseActionBase(m_suffixLogger, _gen, m_qtable, scenario,
+                          chooseGreedy);
 }
 
 std::optional<recorder::Action> QTableAgent::chooseGreedyAction(
     const Scenario& scenario) const {
-  return findBestOrRandomAvailableAction(scenario);
+  tlog_info << "Greedy(blended) policy" << std::endl;
+  return chooseActionBase(m_suffixLogger, _gen, m_qtable, scenario,
+                          chooseGreedy);
 }
 
-std::optional<recorder::Action> QTableAgent::chooseBolzmanAction(
+std::optional<recorder::Action> QTableAgent::chooseBoltzmannAction(
     const Scenario& scenario,
-    const double temperature) const {
-  std::optional<recorder::Action> action;
-  const auto qValuesIt = m_qtable.find(scenario.getCurrentState());
-  if (qValuesIt == m_qtable.cend()) {
-    tlog_info << "fallback to random: 1" << std::endl;
-    action = scenario.getRandomAction();
+    double temperature) const {
+  tlog_info << "Boltzmann(blended) policy" << std::endl;
+  return chooseActionBase(m_suffixLogger, _gen, m_qtable, scenario,
+                          [&](auto& pool, auto& gen) {
+                            return chooseSoftmax(pool, temperature, gen);
+                          });
+}
+
+std::optional<recorder::Action> QTableAgent::chooseBoltzmannWithOpenersAction(
+    const Scenario& scenario,
+    double temperature,
+    double lambda,
+    size_t top_k) const {
+  const auto& available = scenario.getAvailableActions();
+  if (available.empty())
+    return std::nullopt;
+
+  const auto currentState = scenario.getCurrentState();
+  auto pool = blendQOverSuffixes(m_suffixLogger, m_qtable, currentState,
+                                 available, 0.7);
+
+  bool noQInfo = !hasValidQInfo(pool);
+
+  if (noQInfo) {
+    auto& openers = synthesis::Openers::get();
+    auto candidates = scenario.getCandidates(openers);
+    if (candidates.empty()) {
+      tlog_info << "Boltzmann(Openers fallback): no candidates" << std::endl;
+      return scenario.getRandomAction();
+    }
+    tlog_info << "Boltzmann(Openers fallback): pure openers mode" << std::endl;
+    const auto winner = synthesis::chooseWithOpeners(
+        _gen, candidates, openers, top_k, temperature, lambda);
+    return winner.action;
   } else {
-    const auto& availableActions = scenario.getAvailableActions();
-    if (availableActions.empty()) {
-      return std::nullopt;
+    auto& openers = synthesis::Openers::get();
+    auto candidates = scenario.getCandidates(openers);
+
+    if (!candidates.empty()) {
+      auto getObjective = [&](const synthesis::Candidate& c) -> double {
+        return openers.getObjective(lambda, c);
+      };
+      std::sort(candidates.begin(), candidates.end(),
+                [&](const auto& a, const auto& b) {
+                  return getObjective(a) > getObjective(b);
+                });
+
+      if (candidates.size() > top_k)
+        candidates.resize(top_k);
+
+      std::unordered_set<recorder::Action, recorder::FuzzyActionHash,
+                         recorder::FuzzyEqualPred>
+          topPicked;
+      for (auto& c : candidates) {
+        topPicked.insert(c.action);
+      }
+
+      auto minmaxIt = std::minmax_element(
+          pool.begin(), pool.end(),
+          [](auto& a, auto& b) { return a.second < b.second; });
+
+      double range =
+          std::max(1e-6, minmaxIt.first->second - minmaxIt.second->second);
+      double lambda_auto = 0.1 * range;
+
+      for (auto& p : pool)
+        if (topPicked.count(*p.first))
+          p.second += lambda_auto;
+
+      tlog_info << "Boltzmann(Openers mixed): λ=" << lambda
+                << ", top_k=" << top_k << ", adjusted " << topPicked.size()
+                << " actions" << std::endl;
     }
-
-    const auto& qValues =
-        getAvailableQValues(availableActions, qValuesIt->second);
-
-    if (qValues.empty()) {
-      tlog_info << "fallback to random: 2" << std::endl;
-      return scenario.getRandomAction();
-    }
-
-    std::vector<std::pair<const recorder::Action*, float>> pool;
-    pool.reserve(qValues.size());
-    for (const auto& kv : qValues) {
-      pool.emplace_back(std::addressof(kv.first), kv.second);
-    }
-
-    if (pool.empty()) {
-      tlog_info << "fallback to random: 3" << std::endl;
-      return scenario.getRandomAction();
-    }
-
-    auto winner = math_stat::softmax_choice(
-        pool, [](const auto& p) { return static_cast<double>(p.second); },
-        temperature, _gen);
-
-    tlog_info << "Boltzmann action" << std::endl;
-    return *winner.first;
   }
 
-  return action;
+  tlog_info << "Boltzmann(backoff+prior) policy" << std::endl;
+  auto act = chooseSoftmax(pool, temperature, _gen);
+  if (!act)
+    return scenario.getRandomAction();
+  return *act;
 }
 
 void QTableAgent::print(std::ostream& ss) const {
@@ -238,6 +299,44 @@ void QTableAgent::print(std::ostream& ss) const {
 }
 
 void QTableAgent::printMetrics(std::ostream& os, const Episode& episode) const {
+  const auto collectStats = [&](const QTable& table) -> QTableStats {
+    QTableStats s{};
+    s.numStates = table.size();
+    if (s.numStates == 0)
+      return s;
+
+    s.minActionsInState = std::numeric_limits<std::size_t>::max();
+
+    for (const auto& tIt : table) {
+      const auto& qvals = tIt.second;
+
+      const std::size_t n = qvals.size();
+      s.totalActions += n;
+      s.maxActionsInState = std::max(s.maxActionsInState, n);
+      s.minActionsInState = std::min(s.minActionsInState, n);
+      if (n == 0)
+        ++s.zeroActionStates;
+    }
+
+    s.avgActionsPerState =
+        static_cast<double>(s.totalActions) / static_cast<double>(s.numStates);
+    if (s.minActionsInState == std::numeric_limits<std::size_t>::max())
+      s.minActionsInState = 0;
+
+    return s;
+  };
+
+  const auto tsISO =
+      [&](const std::chrono::system_clock::time_point& tp) -> std::string {
+    const std::time_t tt = std::chrono::system_clock::to_time_t(tp);
+    std::tm tm{};
+    localtime_r(&tt, &tm);
+
+    char buf[32];
+    std::strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", &tm);
+    return buf;
+  };
+
   const QTableStats s = collectStats(m_qtable);
 
   const std::string tStart = tsISO(episode.start);

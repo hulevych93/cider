@@ -29,16 +29,11 @@ struct QTableStats final {
   std::size_t zeroActionStates = 0;
 };
 
+using SuffixLogger = std::function<void(int)>;
+
 class QTableAgent : public IAgent {
-  static recorder::Actions getBestFromAvailable(
-      const recorder::Actions& available,
-      const QValues& values);
-
-  std::optional<recorder::Action> findBestOrRandomAvailableAction(
-      const Scenario& scenario) const;
-
  protected:
-  explicit QTableAgent(const std::string& path);
+  explicit QTableAgent(const std::string& path, SuffixLogger suffixLogger = {});
 
  public:
   bool isLoaded() const override { return m_loaded; }
@@ -46,9 +41,14 @@ class QTableAgent : public IAgent {
   bool load(const std::string& filePath) override;
   bool save() const override;
 
-  std::optional<recorder::Action> chooseBolzmanAction(
+  std::optional<recorder::Action> chooseBoltzmannAction(
       const Scenario& scenario,
       const double temperature) const override;
+  std::optional<recorder::Action> chooseBoltzmannWithOpenersAction(
+      const Scenario& scenario,
+      const double temperature,
+      const double lambda,
+      size_t top_k) const override;
   std::optional<recorder::Action> chooseEGreedyAction(
       const Scenario& scenario,
       const double exploration) const override;
@@ -61,6 +61,8 @@ class QTableAgent : public IAgent {
   size_t getMaxStateDepth() const override { return m_maxStateDepth; }
 
  protected:
+  SuffixLogger m_suffixLogger;
+
   size_t m_maxStateDepth = 0U;
   QTable m_qtable;
 

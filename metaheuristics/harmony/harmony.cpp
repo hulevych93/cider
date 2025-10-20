@@ -42,7 +42,7 @@ void Search::initialize(const ActionsCallback& callback) {
   _harmonyMemory.resize(_settings.harmonyMemorySize);
   for (auto i = 0U; i < _settings.harmonyMemorySize; ++i) {
     auto actions = _actionsGenerator();
-    const auto objValue = _settings.objFunc(actions);
+    const auto objValue = _settings.objFunc(actions).coverage;
     if (objValue > std::numeric_limits<double>::epsilon()) {
       Solution solution;
       solution.actions = std::move(actions);
@@ -91,7 +91,7 @@ Harmony Search::generateHarmony(const Harmony& harmony) const {
     newHarmony = deepCopy(harmony);
   } else {
     auto actions = _actionsGenerator();
-    const auto objValue = _settings.objFunc(actions);
+    const auto objValue = _settings.objFunc(actions).coverage;
     if (objValue > std::numeric_limits<double>::epsilon()) {
       newHarmony.actions = std::move(actions);
       newHarmony.objVal = objValue;
@@ -123,7 +123,7 @@ std::optional<Harmony> Search::mutateHarmony(const Harmony& harmony) const {
     return std::nullopt;
   }
 
-  const auto objValue = _settings.objFunc(mutatedHarmony.actions);
+  const auto objValue = _settings.objFunc(mutatedHarmony.actions).coverage;
   if (objValue > std::numeric_limits<double>::epsilon()) {
     mutatedHarmony.objVal = objValue;
     tlog_info << objValue << std::endl;

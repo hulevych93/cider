@@ -19,30 +19,40 @@ double QLearningAgent::updateQValues(const recorder::Actions& state,
   auto& qValues = m_qtable[state];
   auto& qValue = qValues[action];
 
-  double maxQValue = 0;
-  const auto qNextValuesIter = m_qtable.find(nextState);
-  if (qNextValuesIter != m_qtable.cend()) {
-    const auto& qNextValues = qNextValuesIter->second;
-    for (const auto& qNextValue : qNextValues) {
-      maxQValue = std::max(maxQValue, qNextValue.second);
-    }
+  double maxQValue = 0.0;
+  if (auto it = m_qtable.find(nextState); it != m_qtable.end()) {
+    for (const auto& [_, qNext] : it->second)
+      maxQValue = std::max(maxQValue, qNext);
   }
 
-  tlog_info << "lr: " << learningRate << ", r: " << reward
-            << ", mV: " << maxQValue << ", qv: " << qValue << " -> ";
+  const double target = reward + discount * maxQValue;
+  const double tdError = target - qValue;
 
-  qValue += learningRate * (reward + discount * maxQValue - qValue);
+  tlog_info << "lr:" << learningRate << ", r:" << reward << ", mV:" << maxQValue
+            << ", qv:" << qValue << " -> ";
 
-  float target = reward + discount * maxQValue;
-  float loss = 0.5f * (qValue - target) * (qValue - target);
+  qValue += learningRate * tdError;
 
-  tlog_info << qValue << ", target:" << target << ", loss: " << loss
+  const size_t L = state.size();
+  const double lambda = 0.8;
+  for (size_t k = 1; k < L; ++k) {
+    recorder::Actions suffix(state.end() - static_cast<long>(k), state.end());
+    auto& qValsK = m_qtable[suffix];
+    auto& qvK = qValsK[action];
+    const double decay = std::pow(lambda, static_cast<double>(L - k));
+    qvK += learningRate * decay * tdError;
+  }
+
+  const double loss = 0.5 * tdError * tdError;
+  tlog_info << qValue << ", target:" << target << ", loss:" << loss
             << std::endl;
 
   return loss;
 }
 
 std::string QLearningAgent::Path;
+
+SuffixLogger QLearningAgent::Logger;
 
 }  // namespace qlearning
 }  // namespace agent_model

@@ -61,8 +61,6 @@ TestCase run_greedy_r_tracks(std::mt19937& gen,
         synthesis::chooseWithOpeners(gen, candidates, openers, settings.top_k,
                                      settings.temperature, settings.lambda);
 
-    openers.setWinner(winner.action);
-
     scenario.add(winner.action);
 
     for (auto& c : candidates) {
@@ -77,14 +75,15 @@ TestCase run_greedy_r_tracks(std::mt19937& gen,
               << " branchGain=" << winner.branchGain << std::endl;
     ++step;
 
-    if(!scenario.isValid(true)) {
-        scenario.rollback();
+    if (!scenario.isValid(true)) {
+      scenario.rollback();
     } else {
-        if (scenario.isOver()) {
-            tlog_info << "[Greedy-BB-SM] Target coverage reached at step " << step
-                      << ".\n";
-            break;
-        }
+      openers.setWinner(winner.action);
+      if (scenario.isOver()) {
+        tlog_info << "[Greedy-BB-SM] Target coverage reached at step " << step
+                  << ".\n";
+        break;
+      }
     }
   }
 

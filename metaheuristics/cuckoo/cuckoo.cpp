@@ -102,7 +102,7 @@ void Search::initialize(const ActionsCallback& callback) {
   _memory.reserve(_settings.populationSize);
   for (auto i = 0U; i < _settings.populationSize;) {
     auto actions = _actionsGenerator();
-    const auto objValue = _settings.objFunc(actions);
+    const auto objValue = _settings.objFunc(actions).coverage;
     if (objValue > std::numeric_limits<double>::epsilon()) {
       Nest newNest;
       newNest.actions = std::move(actions);
@@ -157,7 +157,7 @@ void Search::run() {
                  int(_settings.Pa * _settings.populationSize);
          i < _settings.populationSize; ++i) {
       auto actions = _actionsGenerator();
-      const auto objValue = _settings.objFunc(actions);
+      const auto objValue = _settings.objFunc(actions).coverage;
       if (objValue > std::numeric_limits<double>::epsilon()) {
         Nest newNest;
         newNest.actions = std::move(actions);
@@ -178,7 +178,7 @@ std::optional<Nest> Search::generateNest(const Nest& nest) const {
   levyFlight(_gen, newNest.actions,
              [&](auto& action) { std::visit(mutator, action); });
 
-  const auto objValue = _settings.objFunc(newNest.actions);
+  const auto objValue = _settings.objFunc(newNest.actions).coverage;
   if (objValue > std::numeric_limits<double>::epsilon()) {
     newNest.objVal = objValue;
     return newNest;

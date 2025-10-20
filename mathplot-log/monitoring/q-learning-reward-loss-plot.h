@@ -29,6 +29,8 @@ class QLearningRewardLogger : public agent_model::IRewardLogger {
  private:
   mutable std::vector<double> ieps_, rwrd_;
   std::string m_path;
+
+  mutable size_t _updateCounter = 0;
 };
 
 class QLearningLossLogger : public agent_model::ILossLogger {
@@ -51,6 +53,7 @@ class QLearningLossLogger : public agent_model::ILossLogger {
   mutable std::vector<double> jeps_, loss_;
 
   std::string m_path;
+  mutable size_t _updateCounter = 0;
 };
 
 }  // namespace mathplot

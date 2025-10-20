@@ -8,12 +8,18 @@
 #include "synthesis/synthesis.h"
 
 namespace cider {
+
+namespace mathplot {
+class SuffixFreqPlot;
+}
+
 namespace pipelines {
 
 class SynthesisStage final : public SimulationPipe {
  public:
   SynthesisStage(const synthesis::SynthesisSettings& settings,
                  int numberOfRuns = 1);
+  ~SynthesisStage();
 
   std::string getLetter() const override { return "G"; }
 
@@ -28,10 +34,14 @@ class SynthesisStage final : public SimulationPipe {
                 const ObjectiveFunction& objFuncСfg,
                 const FineObjectiveFunction& fineObjFunc) override;
 
+  void onCleanup() override;
+
   std::string getConfigName() const override;
   std::string getPrefix() const override;
 
   synthesis::SynthesisSettings m_settings;
+
+  std::unique_ptr<mathplot::SuffixFreqPlot> _freqPlot;
 };
 
 }  // namespace pipelines
