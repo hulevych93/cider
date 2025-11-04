@@ -151,6 +151,9 @@ add_target_def(QLB1 70 GROUP ${GROUP_QLB})
 add_target_def(QLB2 71 GROUP ${GROUP_QLB})
 add_target_def(QLB3 72 GROUP ${GROUP_QLB})
 
+# === QLB Lambda analys ===
+add_target_def(QLB2LA 210 GROUP ${GROUP_QLB})
+
 # === QLB With Openers ===
 add_target_def(QLB2_WO 73 GROUP ${GROUP_QLB})
 
@@ -161,6 +164,7 @@ add_target_def(SLB3 77)
 
 add_target_def(QL_STAT 80)
 add_target_def(SUF_STAT 81)
+add_target_def(SUF_EX_STAT 82)
 
 # === CBOX Grouped ===
 add_target_def(CBOX_RAND     90 GROUP ${GROUP_RAND})

@@ -25,7 +25,7 @@ namespace {
 static std::string getYAxisName() {
 #ifdef ENG_NAMES
 #else
-  return "Середній час роботи, мкс";
+  return "Середній час виконання, мкс";
 #endif
 }
 
@@ -114,7 +114,7 @@ void TimesBarPlot::plot() {
                   {{"fmt", "none"}, {"ecolor", "red"}, {"capsize", "3"}});
   }
 
-  makeLegentByGroups(getColorGroups(), {0.54, 1.0});
+  makeLegentByGroups(getColorGroups(_order), {0.67, 1.0});
 
   plt::xticks(xg, methods, {{"fontsize", "7"}});
   plt::ylabel(getYAxisName());

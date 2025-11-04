@@ -7,6 +7,7 @@
 #include "synthesis/rand-synthesis.h"
 
 #include "agent-q-learning/q-learning-agent.h"
+#include "mathplot-log/monitoring/suffix-exist-rate-plot.h"
 #include "mathplot-log/monitoring/suffix-freq-plot.h"
 
 #include <assert.h>
@@ -32,9 +33,26 @@ bool SynthesisStage::simulate(const std::string& outPath,
     std::string graphTitle = "freq_plot_";
     graphTitle += getConfigName();
 
+    auto& existPlot =
+        mathplot::SuffixExistRatePlot::get(outPath, "freq_exist_plot");
+
+    existPlot.next(std::visit(
+        [&](const auto& settings) -> double {
+          using T = std::decay_t<decltype(settings)>;
+          if constexpr (std::is_same_v<T, synthesis::QSynthesisSettings>) {
+            return settings.lambda;
+          } else {
+            return 0.0;
+          }
+        },
+        m_settings));
+
     _freqPlot = std::make_unique<mathplot::SuffixFreqPlot>(outPath, graphTitle);
     agent_model::qlearning::QLearningAgent::setLogger(
-        [&](const auto suffix) { _freqPlot->log(suffix); });
+        [&](const auto suffix, bool found) {
+          _freqPlot->log(suffix);
+          existPlot.log(suffix, found);
+        });
   }
 
   return std::visit(
@@ -47,6 +65,9 @@ bool SynthesisStage::simulate(const std::string& outPath,
 
 void SynthesisStage::onCleanup() {
   _freqPlot->plot();
+
+  auto& existPlot = mathplot::SuffixExistRatePlot::get();
+  existPlot.finalize();
 }
 
 std::string SynthesisStage::getPrefix() const {

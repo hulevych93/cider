@@ -83,17 +83,18 @@ bool deserialize(Coverage& obj,
   return true;
 }
 
-bool serialize(const CoverageExtended& obj, serialization::Serializer& serializer) {
-    serialize(static_cast<const Coverage&>(obj), serializer);
-    serializer << obj.hasUnique;
-    return true;
+bool serialize(const CoverageExtended& obj,
+               serialization::Serializer& serializer) {
+  serialize(static_cast<const Coverage&>(obj), serializer);
+  serializer << obj.hasUnique;
+  return true;
 }
 
 bool deserialize(CoverageExtended& obj,
                  const serialization::Deserializer& deserializer) {
-    deserialize(static_cast<Coverage&>(obj), deserializer);
-    deserializer >> obj.hasUnique;
-    return true;
+  deserialize(static_cast<Coverage&>(obj), deserializer);
+  deserializer >> obj.hasUnique;
+  return true;
 }
 
 void zeroCfgCounters(int* blockCount) {

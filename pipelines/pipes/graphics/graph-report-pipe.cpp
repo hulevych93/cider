@@ -5,6 +5,7 @@
 
 #include "mathplot-log/monitoring/q-learning-cov-ep-plot.h"
 #include "mathplot-log/monitoring/q-learning-reward-loss-plot.h"
+#include "mathplot-log/monitoring/suffix-exist-rate-plot.h"
 #include "mathplot-log/monitoring/suffix-freq-plot.h"
 
 #include <tlog.h>
@@ -35,9 +36,24 @@ bool SuffixReportStage::process(const std::string& metadata,
   std::filesystem::path outPath(cmd.resultsDir);
   outPath /= metadata;
 
-  mathplot::SuffixFreqPlot rwLogger(outPath, "freq_plot_QLEG2.png");
+  mathplot::SuffixFreqPlot rwLogger(outPath, "freq_plot_QLEG2");
 
   rwLogger.load();
+
+  return true;
+}
+
+bool SuffixExistRateReportStage::process(const std::string& metadata,
+                                         const std::string&,
+                                         const cider::Cmd& cmd) {
+  std::filesystem::path outPath(cmd.resultsDir);
+  outPath /= metadata;
+
+  auto plot = mathplot::SuffixExistRatePlot(outPath, "freq_exist_plot");
+
+  plot.load();
+  plot.plot();
+  plot.finalize();
 
   return true;
 }

@@ -37,6 +37,7 @@ struct AgentSynthesisSettings : SynthesisSettingsBasic {
   GenerationStrategyType strategy = GenerationStrategyType::Greedy;
   float epsilon = 0.1f;
   float temperature = 1.0f;
+  float openersLambda = 1.0f;
   float lambda = 1.0f;
   size_t top_k = 5;
 };

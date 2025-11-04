@@ -36,7 +36,7 @@ std::ostream& operator<<(std::ostream& os,
 using TestCase = std::vector<recorder::Action>;
 
 TestCase run_dd(const DSlicingSettings& settings,
-                       const std::vector<recorder::Action>& actionSpace) {
+                const std::vector<recorder::Action>& actionSpace) {
   auto targetCovered = settings.baseline;
 
   if (targetCovered <= std::numeric_limits<double>::epsilon()) {

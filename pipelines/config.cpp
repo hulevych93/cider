@@ -381,6 +381,50 @@ auto getQGenB2Settings() {
   return settings;
 }
 
+auto getQGenB2L1Settings() {
+  synthesis::QSynthesisSettings settings;
+  settings.configName = "QLB2L1";
+  settings.temperature = 1.5;
+  settings.maxRollback = 30U;
+  settings.lambda = 0.3;
+  settings.strategy = synthesis::GenerationStrategyType::Boltzmann;
+  settings.stopType = synthesis::StopCondition::GreaterCoverage;
+  return settings;
+}
+
+auto getQGenB2L2Settings() {
+  synthesis::QSynthesisSettings settings;
+  settings.configName = "QLB2L2";
+  settings.temperature = 1.5;
+  settings.maxRollback = 30U;
+  settings.lambda = 0.5;
+  settings.strategy = synthesis::GenerationStrategyType::Boltzmann;
+  settings.stopType = synthesis::StopCondition::GreaterCoverage;
+  return settings;
+}
+
+auto getQGenB2L3Settings() {
+  synthesis::QSynthesisSettings settings;
+  settings.configName = "QLB2L3";
+  settings.temperature = 1.5;
+  settings.maxRollback = 30U;
+  settings.lambda = 0.7;
+  settings.strategy = synthesis::GenerationStrategyType::Boltzmann;
+  settings.stopType = synthesis::StopCondition::GreaterCoverage;
+  return settings;
+}
+
+auto getQGenB2L4Settings() {
+  synthesis::QSynthesisSettings settings;
+  settings.configName = "QLB2L4";
+  settings.temperature = 1.5;
+  settings.maxRollback = 30U;
+  settings.lambda = 0.9;
+  settings.strategy = synthesis::GenerationStrategyType::Boltzmann;
+  settings.stopType = synthesis::StopCondition::GreaterCoverage;
+  return settings;
+}
+
 auto getQGenB3Settings() {
   synthesis::QSynthesisSettings settings;
   settings.configName = "QLB3";
@@ -395,7 +439,7 @@ auto getQGenB2WithOpenersSettings() {
   synthesis::QSynthesisSettings settings;
   settings.configName = "QLB2_WO";
   settings.temperature = 1.5;
-  settings.lambda = 1.0;
+  settings.openersLambda = 1.0;
   settings.top_k = 5;
   settings.maxRollback = 30U;
   settings.strategy = synthesis::GenerationStrategyType::BoltzmannWithOpeners;
@@ -497,8 +541,12 @@ const pipelines::ReportConfiguration& getReportConfigDSlicing() {
 
 const pipelines::ReportConfiguration& getReportConfigSelected() {
   static const std::vector<std::string> orderedMethods = {
-      "DSL",     "GR",      "DSL-FM1", "DSL-FM2",
-      "DSL-FM3", "GRR-TD1", "GRR-TD2", "GRR-TD3"};
+     "DSL", "GR", "MCTS2", "QLB-M2", "QLB-MD2"
+
+     /*  "DSL", "GR", "MCTS1", "MCTS2", "MCTS3",
+      "QLB-M1", "QLB-M2", "QLB-M3",
+      "QLB-MD1", "QLB-MD2", "QLB-MD3" */
+  };
   return orderedMethods;
 }
 
@@ -535,19 +583,19 @@ const pipelines::ReportConfiguration& getReportALLSelected() {
 
       // --- QLB1 ---
       "QLB1", "QLB1+DSL", "QLB1+DSL-FM0", "QLB1+DSL-FM1", "QLB1+DSL-FM2",
-      "QLB1+DSL-FM3",
+      "QLB1+DSL-FM3", "QLB-M1", "QLB-MD1",
 
       // --- QLB2 ---
       "QLB2", "QLB2+DSL", "QLB2+DSL-FM0", "QLB2+DSL-FM1", "QLB2+DSL-FM2",
-      "QLB2+DSL-FM3",
+      "QLB2+DSL-FM3", "QLB-M2", "QLB-MD2",
 
       // --- QLB3 ---
       "QLB3", "QLB3+DSL", "QLB3+DSL-FM0", "QLB3+DSL-FM1", "QLB3+DSL-FM2",
-      "QLB3+DSL-FM3"};
+      "QLB3+DSL-FM3", "QLB-M3", "QLB-MD3"};
   return orderedMethods;
 }
 
-constexpr const int StatsCount = 10U;
+constexpr const int StatsCount = 3U;
 constexpr const int GreedyCount = 1U;
 constexpr const int MCTSCount = 1U;
 
@@ -760,6 +808,16 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
       pipeline.addStage(
           std::make_unique<SynthesisStage>(getQGenB3Settings(), StatsCount));
       break;
+    case PipelineType::QLearningAgentB2LambdaAnalys:
+      pipeline.addStage(
+          std::make_unique<SynthesisStage>(getQGenB2L1Settings(), StatsCount));
+      pipeline.addStage(
+          std::make_unique<SynthesisStage>(getQGenB2L2Settings(), StatsCount));
+      pipeline.addStage(
+          std::make_unique<SynthesisStage>(getQGenB2L3Settings(), StatsCount));
+      pipeline.addStage(
+          std::make_unique<SynthesisStage>(getQGenB2L4Settings(), StatsCount));
+      break;
     case PipelineType::QLearningAgentBoltzmannWithOpeners:
       pipeline.addStage(std::make_unique<SynthesisStage>(
           getQGenB2WithOpenersSettings(), StatsCount));
@@ -825,7 +883,7 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
     case PipelineType::GenerationEfficienctRadarPlotStats:
       if (pipeline.hasResults()) {
         pipeline.addStage(std::make_unique<EfficiencyRadarPlotReportStage>(
-            getReportALLSelected()));
+            getReportConfigSelected()));
       }
       break;
     case PipelineType::AggregateData:
@@ -866,6 +924,9 @@ Pipeline makePipeline(const std::string& libName, const cider::Cmd& cmd) {
       break;
     case PipelineType::SuffixStats:
       pipeline.addStage(std::make_unique<SuffixReportStage>());
+      break;
+    case PipelineType::SuffixExistRateStats:
+      pipeline.addStage(std::make_unique<SuffixExistRateReportStage>());
       break;
     case PipelineType::ShowResults:
       pipeline.addStage(

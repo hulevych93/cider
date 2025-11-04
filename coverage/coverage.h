@@ -68,6 +68,8 @@ enum class PipelineType {
   QLearningAgentB2 = 71,
   QLearningAgentB3 = 72,
 
+  QLearningAgentB2LambdaAnalys = 210,
+
   QLearningAgentBoltzmannWithOpeners = 73,
 
   SarsaAgentB1 = 75,
@@ -76,6 +78,7 @@ enum class PipelineType {
 
   QLearningStats = 80,
   SuffixStats = 81,
+  SuffixExistRateStats = 82,
 
   GenerationCoverageBoxStats = 90,
   GenerationCoverageStepperStats = 100,

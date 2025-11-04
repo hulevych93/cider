@@ -115,7 +115,7 @@ void CompressionBarPlot::plot() {
   }
 
   if (_barData.size() > 9) {
-    makeLegentByGroups(getColorGroups(), {0.54, 1.0});
+    makeLegentByGroups(getColorGroups(_order), {0.3, 1.0});
     rotateXTicks90();
   }
 
@@ -123,6 +123,7 @@ void CompressionBarPlot::plot() {
   plt::ylabel(getYAxisName());
   plt::xlabel(getXAxisName());
 
+  plt::tight_layout();
   applyPublicationStyle();
 
   plt::save(ensureExtension(m_path, ".eps"), 1200);

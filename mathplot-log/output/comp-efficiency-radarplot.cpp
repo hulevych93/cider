@@ -23,10 +23,9 @@ std::vector<std::string> getMetrics() {
   return {"Compression, %", "Time Reduction, %", "Processing Time, %",
           "Retention Rate, %"};
 #else
-  return {"Коефіцієнт\nстиснення (CR), %",
-          "Коефіцієнт\nзбереження\nресурсів (ECR), %",
-          "Коефіцієнт\nобислювальної\nвартості (СС), %",
-          "Коефіцієнт\nзбереження\nпокриття (RC), %"};
+  return {"Коефіцієнт\nстиснення\n(CC), %",
+          "Коефіцієнт\nзбереження\nчасу\n(ECR), %",
+          "Коефіцієнт\nзбереження\nпокриття\n(RC), %"};
 #endif
 }
 
@@ -106,6 +105,8 @@ void EfficiencyRadarPlot::plot() {
     return;
   }
 
+  tlog_info << "Radar plot path: " << m_path << std::endl;
+
   struct NormVals final {
     double CR, ERC, CC, RC;
   };
@@ -128,13 +129,13 @@ void EfficiencyRadarPlot::plot() {
          maxProc = 0, minBranchCov = 1e9, maxBranchCov = 0;
 
   for (auto& kv : avgVals) {
-    minComp = 0;  // std::min(minComp, kv.second.comp);
+    minComp = 0;
     maxComp = std::max(maxComp, kv.second.CR);
-    minTR = 0;  // std::min(minTR, kv.second.timeRed);
+    minTR = 0;
     maxTR = std::max(maxTR, kv.second.ERC);
-    minProc = 0;  // std::min(minProc, kv.second.procTime);
+    minProc = 0;
     maxProc = std::max(maxProc, kv.second.CC);
-    minBranchCov = 0;  // std::min(minRet, kv.second.retention);
+    minBranchCov = 0;
     maxBranchCov = std::max(maxBranchCov, kv.second.RC);
   }
 
@@ -143,7 +144,7 @@ void EfficiencyRadarPlot::plot() {
   std::vector<double> angles(numVars + 1);
 
   for (size_t i = 0; i < numVars; i++) {
-    angles[i] = 2 * M_PI * i / numVars;
+    angles[i] = 2 * M_PI * i / numVars + M_PI / 2;
   }
   angles[numVars] = angles[0];
 
@@ -153,15 +154,12 @@ void EfficiencyRadarPlot::plot() {
       continue;
 
     const auto& v = it->second;
-    std::vector<double> values = {v.CR, v.ERC,
-                                  math_stat::normalize(v.CC, minProc, maxProc),
-                                  v.RC / _originalCoverage};
+    std::vector<double> values = {v.CR, v.ERC, v.RC / _originalCoverage};
 
     tlog_info << "Method: " << method << std::endl;
-    tlog_info << "CR: " << values[0] << std::endl;
+    tlog_info << "CC: " << values[0] << std::endl;
     tlog_info << "ECR: " << values[1] << std::endl;
-    tlog_info << "CC: " << values[2] << std::endl;
-    tlog_info << "RC: " << values[3] << std::endl;
+    tlog_info << "RC: " << values[2] << std::endl;
 
     values.push_back(values[0]);
 
@@ -172,15 +170,14 @@ void EfficiencyRadarPlot::plot() {
     }
 
     plt::plot(xs, ys, {{"linewidth", "0.2"}});
-    plt::fill(xs, ys, {{"label", method}}, 0.4);
+    plt::fill(xs, ys, {{"label", method}}, 0.3);
   }
 
-  plt::text(1.25, 0.0, metrics[0]);
-  plt::text(-0.6, 1.35, metrics[1]);
-  plt::text(-2.05, 0.0, metrics[2]);
-  plt::text(-0.4, -1.5, metrics[3]);
+  plt::text(0.80, -0.35, metrics[2], {{"fontsize", "14"}});
+  plt::text(-0.6, 0.95, metrics[0], {{"fontsize", "14"}});
+  plt::text(-1.25, -0.35, metrics[1], {{"fontsize", "14"}});
 
-  std::vector<double> levels = {0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2};
+  std::vector<double> levels = {0.0, 0.2, 0.4, 0.6, 0.8, 1.0};
   for (double r : levels) {
     std::vector<double> xs(numVars + 1), ys(numVars + 1);
     for (size_t i = 0; i < numVars; i++) {
@@ -199,7 +196,7 @@ void EfficiencyRadarPlot::plot() {
     const auto cordX = -0.05;
     const auto cordY = r + 0.01;
     plt::text(cordX, cordY, oss.str(),
-              {{"ha", "left"}, {"va", "center"}, {"fontsize", "6"}});
+              {{"ha", "left"}, {"va", "center"}, {"fontsize", "8"}});
   }
 
   disableFrame();

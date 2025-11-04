@@ -27,7 +27,8 @@ class IAgent {
 
   virtual std::optional<recorder::Action> chooseBoltzmannAction(
       const Scenario& scenario,
-      const double temperature) const = 0;
+      const double temperature,
+      const double lambda) const = 0;
 
   virtual std::optional<recorder::Action> chooseBoltzmannWithOpenersAction(
       const Scenario& scenario,

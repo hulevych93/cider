@@ -82,12 +82,12 @@ bool SuffixFreqPlot::load(const std::string& logFile) {
   }
   return true;
 }
-
 void SuffixFreqPlot::plot() const {
   if (suffixFreq_.empty())
     return;
 
-  std::vector<double> x(suffixFreq_.size()), y(suffixFreq_.size());
+  std::vector<double> x(suffixFreq_.size()), y(suffixFreq_.size()),
+      err(suffixFreq_.size());
   double total = std::accumulate(suffixFreq_.begin(), suffixFreq_.end(), 0.0);
   if (total <= 0.0)
     return;
@@ -95,6 +95,7 @@ void SuffixFreqPlot::plot() const {
   for (size_t i = 0; i < suffixFreq_.size(); ++i) {
     x[i] = static_cast<double>(i);
     y[i] = suffixFreq_[i] / total;
+    err[i] = std::sqrt(suffixFreq_[i]) / total;  // статистична похибка
   }
 
   plt::clf();
@@ -106,6 +107,13 @@ void SuffixFreqPlot::plot() const {
              {"markeredgecolor", "#000000"},
              {"markersize", "4"},
              {"linestyle", "--"}});
+
+  // Похибка (error bars)
+  plt::errorbar(x, y, err,
+                {{"fmt", "none"},
+                 {"ecolor", "red"},
+                 {"elinewidth", "0.8"},
+                 {"capsize", "3"}});
 
   plt::xlabel(getXAxisName());
   plt::ylabel(getYAxisName());

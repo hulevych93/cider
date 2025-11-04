@@ -29,7 +29,7 @@ struct QTableStats final {
   std::size_t zeroActionStates = 0;
 };
 
-using SuffixLogger = std::function<void(int)>;
+using SuffixLogger = std::function<void(size_t, bool)>;
 
 class QTableAgent : public IAgent {
  protected:
@@ -43,7 +43,8 @@ class QTableAgent : public IAgent {
 
   std::optional<recorder::Action> chooseBoltzmannAction(
       const Scenario& scenario,
-      const double temperature) const override;
+      const double temperature,
+      const double lambda) const override;
   std::optional<recorder::Action> chooseBoltzmannWithOpenersAction(
       const Scenario& scenario,
       const double temperature,

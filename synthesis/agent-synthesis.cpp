@@ -63,12 +63,13 @@ bool synthesize(std::mt19937& gen,
         selectedOpt = agent.chooseEGreedyAction(scenario, settings.epsilon);
         break;
       case GenerationStrategyType::Boltzmann:
-        selectedOpt =
-            agent.chooseBoltzmannAction(scenario, settings.temperature);
+        selectedOpt = agent.chooseBoltzmannAction(
+            scenario, settings.temperature, settings.lambda);
         break;
       case GenerationStrategyType::BoltzmannWithOpeners:
         selectedOpt = agent.chooseBoltzmannWithOpenersAction(
-            scenario, settings.temperature, settings.lambda, settings.top_k);
+            scenario, settings.temperature, settings.openersLambda,
+            settings.top_k);
         break;
     }
 

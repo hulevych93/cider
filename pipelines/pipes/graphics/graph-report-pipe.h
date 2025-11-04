@@ -30,6 +30,15 @@ class SuffixReportStage final : public Pipe {
   std::string getLetter() const override { return "REPORT"; }
 };
 
+class SuffixExistRateReportStage final : public Pipe {
+ public:
+  bool process(const std::string& metadata,
+               const std::string& libName,
+               const cider::Cmd& cmd) override;
+
+  std::string getLetter() const override { return "REPORT"; }
+};
+
 class GraphReportStage : public Pipe {
  public:
   GraphReportStage(const std::string& title, const ReportConfiguration& config);

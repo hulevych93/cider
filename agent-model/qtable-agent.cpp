@@ -65,28 +65,41 @@ QActionsPool blendQOverSuffixes(SuffixLogger logger,
                                 const QTable& table,
                                 const recorder::Actions& currentState,
                                 const recorder::Actions& availableActions,
-                                double beta = 0.7) {
+                                double lambda = 1.0) {
   tlog_info << "[blendQ] state size=" << currentState.size()
             << ", table states=" << table.size() << std::endl;
+
+  const auto beta = 0.7;
 
   QValues acc, wsum;
   acc.reserve(availableActions.size());
   wsum.reserve(availableActions.size());
 
+  QActionsPool pool;
+  pool.reserve(availableActions.size());
+
   for (size_t k = 0; k <= currentState.size(); ++k) {
     const auto key = takeSuffix(currentState, k);
     const auto it = table.find(key);
     if (it == table.end()) {
+      if (logger) {
+        logger(k, false);
+      }
+
       tlog_info << "[blendQ]  k=" << k << "  ❌ no entry" << std::endl;
       continue;
     }
 
     if (logger) {
-      logger(k);
+      logger(k, true);
     }
 
     const double N = static_cast<double>(it->second.size());
-    const double w = std::pow(N + 1e-6, beta);
+
+    const size_t L = currentState.size();
+
+    const double decay = std::pow(lambda, static_cast<double>(L - k));
+    const double w = std::pow(N + 1e-6, beta) * decay;
 
     tlog_info << "[blendQ]  k=" << k << "  ✅ found  actions=" << N
               << "  weight=" << w << std::endl;
@@ -94,16 +107,14 @@ QActionsPool blendQOverSuffixes(SuffixLogger logger,
     for (const auto& a : availableActions) {
       double q = 0.0001;
       auto qit = it->second.find(a);
-      if (qit != it->second.end())
+      if (qit != it->second.end()) {
         q = qit->second;
+      }
 
       acc[a] += w * q;
       wsum[a] += w;
     }
   }
-
-  QActionsPool pool;
-  pool.reserve(availableActions.size());
 
   for (const auto& a : availableActions) {
     const double w = wsum[a];
@@ -123,7 +134,8 @@ std::optional<recorder::Action> chooseActionBase(SuffixLogger logger,
                                                  std::mt19937& gen,
                                                  const QTable& table,
                                                  const Scenario& scenario,
-                                                 ChoosePolicy chooser) {
+                                                 ChoosePolicy chooser,
+                                                 double lambda) {
   const auto& available = scenario.getAvailableActions();
   if (available.empty())
     return std::nullopt;
@@ -192,24 +204,27 @@ std::optional<recorder::Action> QTableAgent::chooseEGreedyAction(
 
   tlog_info << "E-Greedy: greedy exploitation" << std::endl;
   return chooseActionBase(m_suffixLogger, _gen, m_qtable, scenario,
-                          chooseGreedy);
+                          chooseGreedy, 0.7);
 }
 
 std::optional<recorder::Action> QTableAgent::chooseGreedyAction(
     const Scenario& scenario) const {
   tlog_info << "Greedy(blended) policy" << std::endl;
   return chooseActionBase(m_suffixLogger, _gen, m_qtable, scenario,
-                          chooseGreedy);
+                          chooseGreedy, 0.7);
 }
 
 std::optional<recorder::Action> QTableAgent::chooseBoltzmannAction(
     const Scenario& scenario,
-    double temperature) const {
+    double temperature,
+    double lambda) const {
   tlog_info << "Boltzmann(blended) policy" << std::endl;
-  return chooseActionBase(m_suffixLogger, _gen, m_qtable, scenario,
-                          [&](auto& pool, auto& gen) {
-                            return chooseSoftmax(pool, temperature, gen);
-                          });
+  return chooseActionBase(
+      m_suffixLogger, _gen, m_qtable, scenario,
+      [&](auto& pool, auto& gen) {
+        return chooseSoftmax(pool, temperature, gen);
+      },
+      lambda);
 }
 
 std::optional<recorder::Action> QTableAgent::chooseBoltzmannWithOpenersAction(

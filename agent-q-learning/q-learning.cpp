@@ -112,8 +112,8 @@ void learningSession(const QLearningSettings& settings,
             actionOpt = agent.chooseEGreedyAction(scenario, expRate);
             break;
           case ActionMakerStrategyType::Boltzmann:
-            actionOpt =
-                agent.chooseBoltzmannAction(scenario, settings.temperature);
+            actionOpt = agent.chooseBoltzmannAction(
+                scenario, settings.temperature, settings.lambda);
             break;
           case ActionMakerStrategyType::BoltzmannWithOpeners:
             actionOpt = agent.chooseBoltzmannWithOpenersAction(

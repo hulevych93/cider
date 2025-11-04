@@ -316,10 +316,10 @@ double plotBoxStats(const std::string& path,
 
 std::array<double, 2> getYAxisLims(const std::string& libName) {
   if (libName == "bitmap_cplusplus") {
-    return {20.0, 32.0};
+    return {20.0, 40.0};
   }
   if (libName == "hjson") {
-    return {30.0, 42.0};
+    return {34.0, 38.0};
   }
   throw std::logic_error{"Wrong library name."};
 }
@@ -460,7 +460,7 @@ void CoverageBoxPlot::plot() {
     ++i;
   }
 
-  plt::xticks(xticks, labels, {{"fontsize", "8"}});
+  plt::xticks(xticks, labels);
 
   plt::ylabel(getYAxisName(_type));
   plt::xlabel(getXAxisName());
@@ -470,7 +470,7 @@ void CoverageBoxPlot::plot() {
   plt::ylim(axisLims[0], axisLims[1]);
 
   if (_boxData.size() > 9) {
-    makeLegentByGroups(getColorGroups(), {0.82, 0.43});
+    makeLegentByGroups(getColorGroups(_order), {0.18, 0.96});
 
     plt::tight_layout();
   }

@@ -20,9 +20,12 @@ double QLearningAgent::updateQValues(const recorder::Actions& state,
   auto& qValue = qValues[action];
 
   double maxQValue = 0.0;
-  if (auto it = m_qtable.find(nextState); it != m_qtable.end()) {
-    for (const auto& [_, qNext] : it->second)
+  auto it = m_qtable.find(nextState);
+  if (it != m_qtable.end()) {
+    for (const auto& qValIt : it->second) {
+      const auto& qNext = qValIt.second;
       maxQValue = std::max(maxQValue, qNext);
+    }
   }
 
   const double target = reward + discount * maxQValue;
@@ -33,13 +36,14 @@ double QLearningAgent::updateQValues(const recorder::Actions& state,
 
   qValue += learningRate * tdError;
 
-  const size_t L = state.size();
+  const size_t k = state.size();
   const double lambda = 0.8;
-  for (size_t k = 1; k < L; ++k) {
-    recorder::Actions suffix(state.end() - static_cast<long>(k), state.end());
-    auto& qValsK = m_qtable[suffix];
+
+  for (size_t i = 0; i < k; ++i) {
+    const auto& subSuffix = takeSuffix(state, i);
+    auto& qValsK = m_qtable[subSuffix];
     auto& qvK = qValsK[action];
-    const double decay = std::pow(lambda, static_cast<double>(L - k));
+    const double decay = std::pow(lambda, static_cast<double>(k - i));
     qvK += learningRate * decay * tdError;
   }
 

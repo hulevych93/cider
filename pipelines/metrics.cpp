@@ -45,8 +45,9 @@ void getCompression(const std::string& methodName,
     tlog_info << "[Compression] covReachLen=" << covReachLen
               << " (actions=" << result.oldActions.size() << ")" << std::endl;
 
-    if (methodName.find("+DSL") != std::string::npos) {
-      if (covReachLen > 500) {
+    if ((methodName.find("+DSL") != std::string::npos) ||
+        methodName.find("-M") != std::string::npos) {
+      if (covReachLen > 400) {
         tlog_info << "[Compression] skipped: covReachLen>500" << std::endl;
         return;
       }
@@ -92,7 +93,7 @@ void getExecutionTimeUpToCovReach(
     newExecutionTime = report.value().meassureTimeMcs;
 
     if (ourMethod(methodName)) {
-     // newExecutionTime -= 15000;
+      // newExecutionTime -= 15000;
     }
 
     tlog_info << "[TIME] " << methodName << " " << result.testCaseName
@@ -146,27 +147,26 @@ Metrics computeMetrics(const cider::Cmd& cmd,
 
     getCompression(methodName, r.testCaseName, r,
                    [&](unsigned long covReachLen, double coeff) {
-                       covReachLength = covReachLen;
+                     covReachLength = covReachLen;
 
-                       ++m.retainedCount;
-                       compressions.push_back(coeff);
-                       covReachLens.push_back(covReachLen);
+                     ++m.retainedCount;
+                     compressions.push_back(coeff);
+                     covReachLens.push_back(covReachLen);
 
-                       if (r.oldExecutionTimeMcs > 0 &&
-                           r.oldExecutionTimeMcs > r.newExecutionTimeMcs) {
-                           double tr = (double)(r.oldExecutionTimeMcs -
-                                                 r.newExecutionTimeMcs) /
-                                       (double)r.oldExecutionTimeMcs;
-                           timeReductions.push_back(tr);
-                       }
+                     if (r.oldExecutionTimeMcs > 0 &&
+                         r.oldExecutionTimeMcs > r.newExecutionTimeMcs) {
+                       double tr = (double)(r.oldExecutionTimeMcs -
+                                            r.newExecutionTimeMcs) /
+                                   (double)r.oldExecutionTimeMcs;
+                       timeReductions.push_back(tr);
+                     }
                    });
 
     auto newExecutionTime = r.newExecutionTimeMcs;
-    getExecutionTimeUpToCovReach(
-        cmd, methodName, libName, r, covReachLength,
-        [&newExecutionTime](unsigned long elapsedMcs) {
-            newExecutionTime = elapsedMcs;
-        });
+    getExecutionTimeUpToCovReach(cmd, methodName, libName, r, covReachLength,
+                                 [&newExecutionTime](unsigned long elapsedMcs) {
+                                   newExecutionTime = elapsedMcs;
+                                 });
 
     if (_filter1.accept("method", r.testCaseName, r.oldExecutionTimeMcs) &&
         _filter2.accept("method", r.testCaseName, newExecutionTime)) {

@@ -8,6 +8,7 @@
 #include <vector>
 
 #include <pybind11/embed.h>
+
 namespace py = pybind11;
 using namespace py::literals;
 
@@ -33,32 +34,6 @@ std::string ensureExtension(const std::string& path, const std::string& ext) {
   return filePath.string();
 }
 
-std::string ensureBinExtension(const std::string& path) {
-  std::filesystem::path filePath(path);
-
-  // Check if the extension is already .png (case insensitive)
-  if (filePath.extension() == ".bin") {
-    return filePath.string();
-  }
-
-  // Add .png extension
-  filePath.replace_extension(".bin");
-  return filePath.string();
-}
-
-std::string ensureCsvExtension(const std::string& path) {
-  std::filesystem::path filePath(path);
-
-  // Check if the extension is already .png (case insensitive)
-  if (filePath.extension() == ".csv") {
-    return filePath.string();
-  }
-
-  // Add .png extension
-  filePath.replace_extension(".csv");
-  return filePath.string();
-}
-
 std::string ensurePath(const std::string& logDir,
                        const std::string& logFileName) {
   std::filesystem::path outPath(logDir);
@@ -71,7 +46,6 @@ double kruskal_wallis(const std::vector<std::vector<double>>& groups) {
   try {
     py::module_ stats = py::module_::import("scipy.stats");
 
-    // формуємо список Python-списків
     py::list py_groups;
     for (const auto& g : groups) {
       py::list py_group;
@@ -166,12 +140,9 @@ void rotateXTicks90() {
     py::object ax = plt.attr("gca")();  // get current axes
 
     ax.attr("tick_params")("axis"_a = "x", "labelrotation"_a = 90);
-
-    // піджати графік, звільнити місце під підписи
     plt.attr("tight_layout")();
 
-    // або ж вручну налаштувати поля
-    plt.attr("subplots_adjust")("bottom"_a = 0.22);  // 25% поля знизу
+    plt.attr("subplots_adjust")("bottom"_a = 0.22);
 
   } catch (const std::exception& e) {
     std::cerr << "Rotate error: " << e.what() << std::endl;
@@ -243,6 +214,20 @@ void applyPublicationStyle() {
 
     ax.attr("spines")["top"].attr("set_visible")(false);
     ax.attr("spines")["right"].attr("set_visible")(false);
+
+    ax.attr("xaxis").attr("label").attr("set_size")(14);
+    ax.attr("yaxis").attr("label").attr("set_size")(14);
+
+    // --- Axis and tick settings ---
+    ax.attr("tick_params")("direction"_a = "out", "axis"_a = "both",
+                           "length"_a = 3.5,   // tick length
+                           "width"_a = 0.6,    // tick thickness
+                           "labelsize"_a = 9  // font size for tick labels
+    );
+
+    // --- Optional: increase padding between axis and labels ---
+    ax.attr("xaxis").attr("labelpad") = 1;
+    ax.attr("yaxis").attr("labelpad") = 6;
 
   } catch (const std::exception& e) {
     std::cerr << "Style error: " << e.what() << std::endl;

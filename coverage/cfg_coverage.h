@@ -29,7 +29,7 @@ struct Coverage : serialization::SerializableTag {
 };
 
 struct CoverageExtended final : Coverage {
-    bool hasUnique = false;
+  bool hasUnique = false;
 };
 
 using CoveragePerAction = std::vector<CoverageExtended>;
@@ -39,7 +39,8 @@ bool serialize(const Coverage& obj, serialization::Serializer& serializer);
 bool deserialize(Coverage& obj,
                  const serialization::Deserializer& deserializer);
 
-bool serialize(const CoverageExtended& obj, serialization::Serializer& serializer);
+bool serialize(const CoverageExtended& obj,
+               serialization::Serializer& serializer);
 
 bool deserialize(CoverageExtended& obj,
                  const serialization::Deserializer& deserializer);

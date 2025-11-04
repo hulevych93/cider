@@ -169,20 +169,22 @@ void ExecTimesBarPlot::plot() {
        {"label", getOriginalTSName()}});
 
   if (_barData.size() > 9) {
-    makeLegentByGroups(getColorGroups(), {0.84, 0.9});
+    makeLegentByGroups(getColorGroups(_order), {0.90, 0.9});
   }
+
   plt::xticks(xg, methods, {{"fontsize", "7"}});
   plt::ylabel(getYAxisName());
   plt::xlabel(getXAxisName());
 
   applyPublicationStyle();
-  plt::legend();
 
   if (_barData.size() > 9) {
     rotateXTicks90();
   }
 
   plt::save(ensureExtension(m_path, ".eps"), 1200);
+
+  plt::pause(0.01);
   plt::close();
 
   serialize(ensureExtension(m_path, ".bin"));

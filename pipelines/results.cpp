@@ -129,7 +129,7 @@ size_t getCoverageGrowStep(const std::string& libName) {
     return 3;
   }
   if (libName == "hjson") {
-    return 5;
+    return 20;
   }
   throw std::logic_error{"Wrong library name."};
 }
@@ -146,42 +146,18 @@ double getOldCov(const std::string& libName,
 }
 
 bool ourMethod(const std::string& name) {
-  static const std::vector<std::string> orderedMethods = {"QLEG1",
-                                                          "QLEG2",
-                                                          "QLEG3",
-                                                          "QLB1",
-                                                          "DSL-FM1",
-                                                          "DSL-FM2",
-                                                          "DSL-FM3",
-                                                          "GRR-TD1",
-                                                          "GRR-TD2",
-                                                          "GRR-TD3",
-                                                          "QLB2",
-                                                          "QLB3",
-                                                          "QLEG1+DSL",
-                                                          "QLEG2+DSL",
-                                                          "QLEG3+DSL",
-                                                          "QLB1+DSL",
-                                                          "QLB2+DSL",
-                                                          "QLB3+DSL",
-                                                          "QLEG1+DSL-FM1",
-                                                          "QLEG2+DSL-FM1",
-                                                          "QLEG3+DSL-FM1",
-                                                          "QLB1+DSL-FM1",
-                                                          "QLB2+DSL-FM1",
-                                                          "QLB3+DSL-FM1",
-                                                          "QLEG1+DSL-FM2",
-                                                          "QLEG2+DSL-FM2",
-                                                          "QLEG3+DSL-FM2",
-                                                          "QLB1+DSL-FM2",
-                                                          "QLB2+DSL-FM2",
-                                                          "QLB3+DSL-FM2",
-                                                          "QLEG1+DSL-FM3",
-                                                          "QLEG2+DSL-FM3",
-                                                          "QLEG3+DSL-FM3",
-                                                          "QLB1+DSL-FM3",
-                                                          "QLB2+DSL-FM3",
-                                                          "QLB3+DSL-FM3"};
+  static const std::vector<std::string> orderedMethods = {
+      "QLEG1",         "QLEG2",         "QLEG3",         "QLB1",
+      "DSL-FM1",       "DSL-FM2",       "DSL-FM3",       "GRR-TD1",
+      "GRR-TD2",       "GRR-TD3",       "QLB2",          "QLB3",
+      "QLEG1+DSL",     "QLEG2+DSL",     "QLEG3+DSL",     "QLB1+DSL",
+      "QLB2+DSL",      "QLB3+DSL",      "QLEG1+DSL-FM1", "QLEG2+DSL-FM1",
+      "QLEG3+DSL-FM1", "QLB1+DSL-FM1",  "QLB2+DSL-FM1",  "QLB3+DSL-FM1",
+      "QLEG1+DSL-FM2", "QLEG2+DSL-FM2", "QLEG3+DSL-FM2", "QLB1+DSL-FM2",
+      "QLB2+DSL-FM2",  "QLB3+DSL-FM2",  "QLEG1+DSL-FM3", "QLEG2+DSL-FM3",
+      "QLEG3+DSL-FM3", "QLB1+DSL-FM3",  "QLB2+DSL-FM3",  "QLB3+DSL-FM3",
+      "QLB-M1",        "QLB-M2",        "QLB-M3",        "QLB-MD1",
+      "QLB-MD2",       "QLB-MD3"};
   return std::find(orderedMethods.cbegin(), orderedMethods.cend(), name) !=
          orderedMethods.cend();
 }

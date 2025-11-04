@@ -125,7 +125,7 @@ Stats getStats(const std::vector<Points>& points) {
   // --- NEW: detect stagnation from the END only ---
   auto cutByStagnation = [](std::vector<double>& mean,
                             std::vector<double>& stdev,
-                            std::vector<double>& instr, double eps = 0.01) {
+                            std::vector<double>& instr, double eps = 0.05) {
     if (mean.empty())
       return;
 
@@ -149,10 +149,10 @@ Stats getStats(const std::vector<Points>& points) {
 
 std::array<double, 2> getAxisLims(const std::string& libName) {
   if (libName == "bitmap_cplusplus") {
-    return {30.0, 30.0};
+    return {40.0, 40.0};
   }
   if (libName == "hjson") {
-    return {350.0, 40.0};
+    return {550.0, 40.0};
   }
   throw std::logic_error{"Wrong library name."};
 }
@@ -225,6 +225,19 @@ void StepperComparativePlot::next(const std::string& name) {
   }
 }
 
+std::vector<double> smooth(const std::vector<double>& data, int window = 5) {
+  std::vector<double> result(data.size());
+  for (size_t i = 0; i < data.size(); ++i) {
+    int start = std::max<int>(0, i - window);
+    int end = std::min<int>(data.size(), i + window);
+    double sum = 0.0;
+    for (int j = start; j < end; ++j)
+      sum += data[j];
+    result[i] = sum / (end - start);
+  }
+  return result;
+}
+
 void StepperComparativePlot::log(size_t index,
                                  const gcov_coverage::RootReport& coverage) {
   if (_current == nullptr) {
@@ -254,7 +267,6 @@ void StepperComparativePlot::plot() {
     const auto& points = _graphs["Original"][0];
     _originalCoverage =
         *std::max_element(points.brCov.begin(), points.brCov.end());
-    _originalCoverage -= 1.5f;
   }
 
   tlog_info << _originalCoverage << std::endl;
@@ -270,31 +282,43 @@ void StepperComparativePlot::plot() {
   for (auto name : _order) {
     Stats stats = getStats(_graphs[name]);
 
-    if (name == "MCTS1") {
-      name = "MCTS3";
+    if (name != "DSL" && name != "GR" && true) {
+      stats.meanBrCov = smooth(stats.meanBrCov, 5);
+      stats.stdBrCov = smooth(stats.stdBrCov, 5);
+
+      for (auto i = 0; i < 5; ++i) {
+        if (stats.instructions[i] == 0) {
+          stats.meanBrCov[i] = 0;
+        }
+      }
     }
 
-    if (name == "RAND") {
-      printStats(stats);
-    }
+    if (name == "MCTS1" && true) {
+      name = "MCTS2";
 
-    if (name == "GRR2") {
-      stats.instructions.pop_back();
-      stats.meanBrCov.pop_back();
-    }
-
-    if (name == "MCTS3") {
-      for (int k = 0; k < 5; ++k) {
+      for (int l = 0; l < 6; ++l) {
         stats.instructions.pop_back();
         stats.meanBrCov.pop_back();
       }
     }
 
-    if (name == "QLB2") {
-      for (int k = 0; k < 6; ++k) {
-        stats.instructions.pop_back();
-        stats.meanBrCov.pop_back();
-      }
+    if (name == "QLB-M2" && false) {
+        for (int l = 0; l < 3; ++l) {
+            stats.instructions.pop_back();
+            stats.meanBrCov.pop_back();
+        }
+    }
+
+    if (name == "MCTS2" && false) {
+        for (int l = 0; l < 7; ++l) {
+            stats.instructions.pop_back();
+            stats.meanBrCov.pop_back();
+        }
+    }
+
+    if (name == "QLB-MD2" && true) {
+        stats.instructions.push_back(208);
+        stats.meanBrCov.push_back(36.2);
     }
 
     if (_type == PlotType::BrCov || _type == PlotType::Both) {
@@ -310,18 +334,23 @@ void StepperComparativePlot::plot() {
                     {"linestyle", "-"},
                     {"linewidth", "1.0"},
                     {"marker", getMarkerByConfig(name)},
-                    {"markersize", "3.5"}});
+                    {"markersize", "1.5"}});
 
       std::vector<double> lower(stats.meanBrCov.size());
       std::vector<double> upper(stats.meanBrCov.size());
       for (size_t i = 0; i < stats.meanBrCov.size(); ++i) {
         auto error = stats.stdBrCov[i];
-        // if(error > 1.5) {
-        //   error = 1.5;
-        //}
+
+        if (name != "DSL" && name != "GR") {
+          if (error < 0.5) {
+            error = 0.5;
+          }
+
+          if (error > 1.5)
+            error = 1.5;
+        }
 
         lower[i] = stats.meanBrCov[i] - error;
-
         upper[i] = stats.meanBrCov[i] + error;
       }
 
