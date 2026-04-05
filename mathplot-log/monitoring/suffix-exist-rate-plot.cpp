@@ -21,7 +21,7 @@ namespace {
 
 std::string getYAxisName() {
 #ifdef ENG_NAMES
-  return "Fraction of known suffixes";
+  return "Fraction of discovered state–action\nentries in the Q-table, a.u.";
 #else
   return "Частка знайдених записів\nу Q-таблиці, ум. од.";
 #endif
@@ -29,9 +29,9 @@ std::string getYAxisName() {
 
 std::string getXAxisName() {
 #ifdef ENG_NAMES
-  return "Configuration (λ)";
+  return "Decay coefficient of shorter\nTC suffix influence λ";
 #else
-  return "Коефіцієнт згасання λ";
+  return "Коефіцієнт згасання впливу\nкоротших суфіксів ТС λ";
 #endif
 }
 

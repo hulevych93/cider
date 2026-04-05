@@ -29,7 +29,7 @@ std::string getLossYAxisName() {
 #ifdef ENG_NAMES
   return "Average Loss (Unit)";
 #else
-  return "Середньоквадратична похибка Белмана, ум. од.";
+  return "Середньоквадратична похибка Беллмана, ум. од.";
 #endif
 }
 

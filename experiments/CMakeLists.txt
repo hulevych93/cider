@@ -219,6 +219,7 @@ add_target_def(EXEC_TIMES_ALL         137 GROUP ${GROUP_ALL})
 
 # === EFFICIENCY RADAT Grouped ===
 add_target_def(RADAR_SELECT   138 GROUP ${GROUP_SELECTED})
+add_target_def(RADAR_ALL   138 GROUP ${GROUP_ALL})
 
 # === COMPRESSION BAR Grouped ===
 add_target_def(COMPR_QLEG        136 GROUP ${GROUP_QLEG})
@@ -296,7 +297,7 @@ add_target_def(MOD      180)
 set(LIBS "" CACHE INTERNAL "List of libraries for experiment targets")
 
 add_subdirectory(hjson)
-add_subdirectory(pugixml)
+#add_subdirectory(pugixml)
 add_subdirectory(bitmap++)
 
 if(STAGING)

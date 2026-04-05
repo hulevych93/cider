@@ -27,7 +27,7 @@ static std::string getYAxisName(const CoverageBoxPlot::PlotType type) {
   if (type == CoverageBoxPlot::PlotType::Both) {
     plotName = "Coverage (%)";
   } else if (type == CoverageBoxPlot::PlotType::BrCov) {
-    plotName = "Branch Coverage (%)";
+    plotName = "Branch Coverage, %";
   } else if (type == CoverageBoxPlot::PlotType::LineCov) {
     plotName = "Line Coverage (%)";
   }
@@ -46,7 +46,7 @@ static std::string getYAxisName(const CoverageBoxPlot::PlotType type) {
 
 std::string getXAxisName() {
 #ifdef ENG_NAMES
-  return "Policy Configuration";
+  return "Configuration";
 #else
   return "Конфігурація";
 #endif

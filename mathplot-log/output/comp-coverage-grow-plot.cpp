@@ -26,7 +26,7 @@ std::string getYAxisName(const StepperComparativePlot::PlotType type) {
   if (type == StepperComparativePlot::PlotType::Both) {
     plotName = "Coverage (%)";
   } else if (type == StepperComparativePlot::PlotType::BrCov) {
-    plotName = "Branch Coverage (%)";
+    plotName = "Branch Coverage, %";
   } else if (type == StepperComparativePlot::PlotType::LineCov) {
     plotName = "Line Coverage (%)";
   }
@@ -45,7 +45,7 @@ std::string getYAxisName(const StepperComparativePlot::PlotType type) {
 
 std::string getXAxisName() {
 #ifdef ENG_NAMES
-  return "Instruction";
+  return "Number of executed TC instructions";
 #else
   return "Кількість виконаних інструкцій";
 #endif
@@ -303,22 +303,22 @@ void StepperComparativePlot::plot() {
     }
 
     if (name == "QLB-M2" && false) {
-        for (int l = 0; l < 3; ++l) {
-            stats.instructions.pop_back();
-            stats.meanBrCov.pop_back();
-        }
+      for (int l = 0; l < 3; ++l) {
+        stats.instructions.pop_back();
+        stats.meanBrCov.pop_back();
+      }
     }
 
     if (name == "MCTS2" && false) {
-        for (int l = 0; l < 7; ++l) {
-            stats.instructions.pop_back();
-            stats.meanBrCov.pop_back();
-        }
+      for (int l = 0; l < 7; ++l) {
+        stats.instructions.pop_back();
+        stats.meanBrCov.pop_back();
+      }
     }
 
     if (name == "QLB-MD2" && true) {
-        stats.instructions.push_back(208);
-        stats.meanBrCov.push_back(36.2);
+      stats.instructions.push_back(208);
+      stats.meanBrCov.push_back(36.2);
     }
 
     if (_type == PlotType::BrCov || _type == PlotType::Both) {

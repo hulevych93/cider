@@ -23,7 +23,8 @@ namespace {
 
 std::string getYAxisName() {
 #ifdef ENG_NAMES
-  return "Relative frequency";
+  return "Relative frequency of state–action\npair occurrences in the Q-table, "
+         "a.u.";
 #else
   return "Відносна частота знаходження записів\nу Q-таблиці, ум. од.";
 #endif
@@ -31,9 +32,9 @@ std::string getYAxisName() {
 
 std::string getXAxisName() {
 #ifdef ENG_NAMES
-  return "Suffix length k";
+  return "TC Suffix length k";
 #else
-  return "Довжина суфікса k";
+  return "Довжина суфікса ТС η";
 #endif
 }
 

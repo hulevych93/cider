@@ -139,7 +139,7 @@ void rotateXTicks90() {
     py::module_ plt = py::module_::import("matplotlib.pyplot");
     py::object ax = plt.attr("gca")();  // get current axes
 
-    ax.attr("tick_params")("axis"_a = "x", "labelrotation"_a = 90);
+    ax.attr("tick_params")("axis"_a = "x", "labelrotation"_a = 30);
     plt.attr("tight_layout")();
 
     plt.attr("subplots_adjust")("bottom"_a = 0.22);
@@ -211,6 +211,7 @@ void applyPublicationStyle() {
     }
 
     ax.attr("tick_params")("direction"_a = "out", "axis"_a = "both");
+    ax.attr("tick_params")("labelcolor"_a = "black");
 
     ax.attr("spines")["top"].attr("set_visible")(false);
     ax.attr("spines")["right"].attr("set_visible")(false);
@@ -222,11 +223,11 @@ void applyPublicationStyle() {
     ax.attr("tick_params")("direction"_a = "out", "axis"_a = "both",
                            "length"_a = 3.5,   // tick length
                            "width"_a = 0.6,    // tick thickness
-                           "labelsize"_a = 9  // font size for tick labels
+                           "labelsize"_a = 11  // font size for tick labels
     );
 
     // --- Optional: increase padding between axis and labels ---
-    ax.attr("xaxis").attr("labelpad") = 1;
+    ax.attr("xaxis").attr("labelpad") = 4;
     ax.attr("yaxis").attr("labelpad") = 6;
 
   } catch (const std::exception& e) {

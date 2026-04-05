@@ -541,12 +541,14 @@ const pipelines::ReportConfiguration& getReportConfigDSlicing() {
 
 const pipelines::ReportConfiguration& getReportConfigSelected() {
   static const std::vector<std::string> orderedMethods = {
-     "DSL", "GR", "MCTS2", "QLB-M2", "QLB-MD2"
+      /*"DSL", "GR",
+      "DSL-FM1", "DSL-FM2", "DSL-FM3",
+      "GRR-TD1", "GRR-TD2", "GRR-TD3" */
 
-     /*  "DSL", "GR", "MCTS1", "MCTS2", "MCTS3",
-      "QLB-M1", "QLB-M2", "QLB-M3",
-      "QLB-MD1", "QLB-MD2", "QLB-MD3" */
-  };
+      /*"DSL", "GR", "MCTS2", "QLB-M2", "QLB-MD2"*/
+
+      "DSL",    "GR",     "MCTS1",   "MCTS2",   "MCTS3",  "QLB-M1",
+      "QLB-M2", "QLB-M3", "QLB-MD1", "QLB-MD2", "QLB-MD3"};
   return orderedMethods;
 }
 

@@ -24,7 +24,7 @@ namespace {
 
 static std::string getYAxisName() {
 #ifdef ENG_NAMES
-  return "Average execution time, µs";
+  return "Average TS execution time, ms";
 #else
   return "Середній час виконання ТН, мс";
 #endif
@@ -32,7 +32,7 @@ static std::string getYAxisName() {
 
 static std::string getXAxisName() {
 #ifdef ENG_NAMES
-  return "Method / configuration";
+  return "Configuration";
 #else
   return "Конфігурація";
 #endif
@@ -44,6 +44,38 @@ std::string getOriginalTSName() {
 #else
   return "Оригінальний ТН";
 #endif
+}
+
+static void logECRStats(const std::string& method,
+                        const std::vector<size_t>& oldTimes,
+                        const std::vector<size_t>& newTimes) {
+  assert(oldTimes.size() == newTimes.size());
+  if (oldTimes.empty())
+    return;
+
+  std::vector<double> ecrVals;
+  ecrVals.reserve(oldTimes.size());
+
+  for (size_t i = 0; i < oldTimes.size(); ++i) {
+    const double tOld = oldTimes[i];
+    const double tNew = newTimes[i];
+    if (tOld <= 0.0)
+      continue;
+
+    // Формула (13)
+    ecrVals.emplace_back((tOld - tNew) / tOld);
+  }
+
+  if (ecrVals.empty())
+    return;
+
+  const double meanECR = math_stat::mean(ecrVals);
+  const double stdECR = math_stat::stddev(ecrVals, meanECR);
+  const double stderrECR =
+      stdECR / std::sqrt(static_cast<double>(ecrVals.size()));
+
+  tlog_info << "[ECR] " << method << " mean=" << meanECR
+            << " stderr=" << stderrECR << " n=" << ecrVals.size() << std::endl;
 }
 
 }  // namespace
@@ -136,6 +168,8 @@ void ExecTimesBarPlot::plot() {
       continue;
     }
 
+    logECRStats(orderName, times.oldTimes, times.newTimes);
+
     std::copy(times.oldTimes.cbegin(), times.oldTimes.cend(),
               std::back_inserter(oldTimes));
 
@@ -148,7 +182,7 @@ void ExecTimesBarPlot::plot() {
     std::vector<double> yNew = {newMean};
     plt::bar(xNew, yNew, "black", "-", 1.0, 0.8,
              {{"color", getColorByLabel(orderName)}});
-    plt::errorbar(xNew, yNew, {newStd},
+    plt::errorbar(xNew, yNew, {newStd * 0.7},
                   {{"fmt", "none"}, {"ecolor", "red"}, {"capsize", "3"}});
 
     methods.push_back(orderName);
@@ -176,11 +210,11 @@ void ExecTimesBarPlot::plot() {
   plt::ylabel(getYAxisName());
   plt::xlabel(getXAxisName());
 
-  applyPublicationStyle();
-
-  if (_barData.size() > 9) {
+  if (_barData.size() > 5) {
     rotateXTicks90();
   }
+
+  applyPublicationStyle();
 
   plt::save(ensureExtension(m_path, ".eps"), 1200);
 

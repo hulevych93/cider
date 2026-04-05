@@ -48,6 +48,9 @@ add_subdirectory(thirdparty/tpl)
 add_subdirectory(thirdparty/tinylog)
 
 add_subdirectory(thirdparty/mathplotlib)
+
+#add_compile_definitions(ENG_NAMES)
+
 add_subdirectory(mathplot-log)
 
 add_subdirectory(synthesis)

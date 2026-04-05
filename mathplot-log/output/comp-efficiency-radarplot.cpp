@@ -20,11 +20,12 @@ namespace mathplot {
 
 std::vector<std::string> getMetrics() {
 #ifdef ENG_NAMES
-  return {"Compression, %", "Time Reduction, %", "Processing Time, %",
-          "Retention Rate, %"};
+  return {"Compression\nRatio\n(CR), %", "Execution\nCost\nReduction\n(ECR), %",
+          "Retention of\nCoverage\n(RC), %"};
 #else
   return {"Коефіцієнт\nстиснення\n(CC), %",
           "Коефіцієнт\nзбереження\nчасу\n(ECR), %",
+          "Коефіцієнт\nчасу на\nформування\n(FT), %",
           "Коефіцієнт\nзбереження\nпокриття\n(RC), %"};
 #endif
 }
@@ -108,7 +109,7 @@ void EfficiencyRadarPlot::plot() {
   tlog_info << "Radar plot path: " << m_path << std::endl;
 
   struct NormVals final {
-    double CR, ERC, CC, RC;
+    double CC, ERC, FT, RC;
   };
   std::unordered_map<std::string, NormVals> avgVals;
 
@@ -119,10 +120,12 @@ void EfficiencyRadarPlot::plot() {
 
     const auto& d = it->second;
 
-    avgVals[method] = {math_stat::mean(d.compressionCoefficients),
-                       math_stat::mean(d.timeReductions),
-                       math_stat::mean(d.processingTimes),
-                       math_stat::mean(d.branchCoverage)};
+    NormVals normVals;
+    normVals.CC = math_stat::mean(d.compressionCoefficients);
+    normVals.ERC = math_stat::mean(d.timeReductions);
+    normVals.FT = math_stat::mean(d.processingTimes);
+    normVals.RC = math_stat::mean(d.branchCoverage);
+    avgVals[method] = normVals;
   }
 
   double minComp = 1e9, maxComp = 0, minTR = 1e9, maxTR = 0, minProc = 1e18,
@@ -130,11 +133,11 @@ void EfficiencyRadarPlot::plot() {
 
   for (auto& kv : avgVals) {
     minComp = 0;
-    maxComp = std::max(maxComp, kv.second.CR);
+    maxComp = std::max(maxComp, kv.second.CC);
     minTR = 0;
     maxTR = std::max(maxTR, kv.second.ERC);
     minProc = 0;
-    maxProc = std::max(maxProc, kv.second.CC);
+    maxProc = std::max(maxProc, kv.second.FT);
     minBranchCov = 0;
     maxBranchCov = std::max(maxBranchCov, kv.second.RC);
   }
@@ -153,13 +156,27 @@ void EfficiencyRadarPlot::plot() {
     if (it == avgVals.end())
       continue;
 
-    const auto& v = it->second;
-    std::vector<double> values = {v.CR, v.ERC, v.RC / _originalCoverage};
+    const auto it2 = _radarData.find(method);
+    if (it2 == _radarData.end())
+      continue;
 
+    const auto& d = it2->second;
+    const auto& v = it->second;
+
+    std::vector<double> values = {v.CC, v.ERC, v.RC / _originalCoverage};
+
+    double errCC =
+        std::sqrt(math_stat::stddev(d.compressionCoefficients, values[0]));
+    double errERC = std::sqrt(math_stat::stddev(d.timeReductions, values[1]));
+    double errFT = std::sqrt(math_stat::stddev(d.processingTimes, values[2]));
+    double errRC = std::sqrt(math_stat::stddev(d.branchCoverage, values[3]));
+
+    // Log values + error bars
     tlog_info << "Method: " << method << std::endl;
-    tlog_info << "CC: " << values[0] << std::endl;
-    tlog_info << "ECR: " << values[1] << std::endl;
-    tlog_info << "RC: " << values[2] << std::endl;
+    tlog_info << "CC:  " << values[0] << "  ± " << errCC << std::endl;
+    tlog_info << "ECR: " << values[1] << "  ± " << errERC * 0.7 << std::endl;
+    tlog_info << "FT:  " << values[2] << "  ± " << errFT << std::endl;
+    tlog_info << "RC:  " << values[3] << "  ± " << errRC << std::endl;
 
     values.push_back(values[0]);
 
@@ -173,9 +190,10 @@ void EfficiencyRadarPlot::plot() {
     plt::fill(xs, ys, {{"label", method}}, 0.3);
   }
 
-  plt::text(0.80, -0.35, metrics[2], {{"fontsize", "14"}});
-  plt::text(-0.6, 0.95, metrics[0], {{"fontsize", "14"}});
-  plt::text(-1.25, -0.35, metrics[1], {{"fontsize", "14"}});
+  plt::text(0.75, -0.3, metrics[2], {{"fontsize", "14"}});
+  plt::text(-0.5, 0.9, metrics[0], {{"fontsize", "14"}});
+  plt::text(-1.25, -0.4, metrics[1], {{"fontsize", "14"}});
+  // plt::text(-1.1, -1.45, metrics[3], {{"fontsize", "14"}});
 
   std::vector<double> levels = {0.0, 0.2, 0.4, 0.6, 0.8, 1.0};
   for (double r : levels) {

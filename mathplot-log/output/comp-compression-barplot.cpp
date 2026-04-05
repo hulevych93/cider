@@ -24,6 +24,7 @@ namespace {
 
 static std::string getYAxisName() {
 #ifdef ENG_NAMES
+  return "Compression Ratio, a. u.";
 #else
   return "Коефіцієнт стиснення, ум. од.";
 #endif
@@ -31,6 +32,7 @@ static std::string getYAxisName() {
 
 static std::string getXAxisName() {
 #ifdef ENG_NAMES
+  return "Configuration";
 #else
   return "Конфігурація";
 #endif
@@ -106,7 +108,10 @@ void CompressionBarPlot::plot() {
 
     const auto mean = math_stat::mean(it->second);
     means.emplace_back(mean);
-    stddevs.emplace_back(math_stat::stddev(it->second, mean));
+
+    double newStd = math_stat::stddev(it->second, mean);
+    std::cout << orderName << " stderr " << newStd << std::endl;
+    stddevs.emplace_back(newStd);
 
     plt::bar(x, means, "black", "-", 1.0, 0.8,
              {{"color", getColorByLabel(it->first)}});
@@ -116,7 +121,6 @@ void CompressionBarPlot::plot() {
 
   if (_barData.size() > 9) {
     makeLegentByGroups(getColorGroups(_order), {0.3, 1.0});
-    rotateXTicks90();
   }
 
   plt::xticks(xg, methods, {{"fontsize", "7"}});
@@ -124,6 +128,11 @@ void CompressionBarPlot::plot() {
   plt::xlabel(getXAxisName());
 
   plt::tight_layout();
+
+  if (_barData.size() > 5) {
+    rotateXTicks90();
+  }
+
   applyPublicationStyle();
 
   plt::save(ensureExtension(m_path, ".eps"), 1200);
