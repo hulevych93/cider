@@ -115,7 +115,6 @@ void TimesBarPlot::plot() {
 
   for (size_t idx = 0; idx < methods.size(); ++idx) {
     const std::string& methodName = methods[idx];
-    const auto& values = _barData[methodName];
 
     std::vector<double> means(1);
     std::vector<double> stddevs(1);

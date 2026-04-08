@@ -109,8 +109,9 @@ void EfficiencyRadarPlot::plot() {
   tlog_info << "Radar plot path: " << m_path << std::endl;
 
   struct NormVals final {
-    double CC, ERC, FT, RC;
+    double CC, ERC, rawFT, RC;
   };
+
   std::unordered_map<std::string, NormVals> avgVals;
 
   for (auto method : _order) {
@@ -123,8 +124,9 @@ void EfficiencyRadarPlot::plot() {
     NormVals normVals;
     normVals.CC = math_stat::mean(d.compressionCoefficients);
     normVals.ERC = math_stat::mean(d.timeReductions);
-    normVals.FT = math_stat::mean(d.processingTimes);
+    normVals.rawFT = math_stat::mean(d.processingTimes);
     normVals.RC = math_stat::mean(d.branchCoverage);
+
     avgVals[method] = normVals;
   }
 
@@ -137,7 +139,7 @@ void EfficiencyRadarPlot::plot() {
     minTR = 0;
     maxTR = std::max(maxTR, kv.second.ERC);
     minProc = 0;
-    maxProc = std::max(maxProc, kv.second.FT);
+    maxProc = std::max(maxProc, kv.second.rawFT);
     minBranchCov = 0;
     maxBranchCov = std::max(maxBranchCov, kv.second.RC);
   }
@@ -147,7 +149,7 @@ void EfficiencyRadarPlot::plot() {
   std::vector<double> angles(numVars + 1);
 
   for (size_t i = 0; i < numVars; i++) {
-    angles[i] = 2 * M_PI * i / numVars + M_PI / 2;
+    angles[i] = 2 * M_PI * i / numVars;
   }
   angles[numVars] = angles[0];
 
@@ -160,23 +162,16 @@ void EfficiencyRadarPlot::plot() {
     if (it2 == _radarData.end())
       continue;
 
-    const auto& d = it2->second;
     const auto& v = it->second;
 
-    std::vector<double> values = {v.CC, v.ERC, v.RC / _originalCoverage};
-
-    double errCC =
-        std::sqrt(math_stat::stddev(d.compressionCoefficients, values[0]));
-    double errERC = std::sqrt(math_stat::stddev(d.timeReductions, values[1]));
-    double errFT = std::sqrt(math_stat::stddev(d.processingTimes, values[2]));
-    double errRC = std::sqrt(math_stat::stddev(d.branchCoverage, values[3]));
+    std::vector<double> values = {v.CC, v.ERC, v.rawFT / maxProc, v.RC / _originalCoverage};
 
     // Log values + error bars
     tlog_info << "Method: " << method << std::endl;
-    tlog_info << "CC:  " << values[0] << "  ± " << errCC << std::endl;
-    tlog_info << "ECR: " << values[1] << "  ± " << errERC * 0.7 << std::endl;
-    tlog_info << "FT:  " << values[2] << "  ± " << errFT << std::endl;
-    tlog_info << "RC:  " << values[3] << "  ± " << errRC << std::endl;
+    tlog_info << "CC:  " << values[0] << std::endl;
+    tlog_info << "ECR: " << values[1] << std::endl;
+    tlog_info << "FT:  " << values[2] << std::endl;
+    tlog_info << "RC:  " << values[3] << std::endl;
 
     values.push_back(values[0]);
 
@@ -190,10 +185,10 @@ void EfficiencyRadarPlot::plot() {
     plt::fill(xs, ys, {{"label", method}}, 0.3);
   }
 
-  plt::text(0.75, -0.3, metrics[2], {{"fontsize", "14"}});
-  plt::text(-0.5, 0.9, metrics[0], {{"fontsize", "14"}});
-  plt::text(-1.25, -0.4, metrics[1], {{"fontsize", "14"}});
-  // plt::text(-1.1, -1.45, metrics[3], {{"fontsize", "14"}});
+  plt::text(1.05, -0.25, metrics[0], {{"fontsize", "14"}});
+  plt::text(-0.7, 0.9, metrics[1], {{"fontsize", "14"}});
+  plt::text(-1.8, -0.4, metrics[2], {{"fontsize", "14"}});
+  plt::text(-0.9, -1.35, metrics[3], {{"fontsize", "14"}});
 
   std::vector<double> levels = {0.0, 0.2, 0.4, 0.6, 0.8, 1.0};
   for (double r : levels) {

@@ -57,14 +57,7 @@ EfficiencyRadarPlotReportStage::createProcessor() {
           }
         });
 
-    if (_filter1.accept("method", r.testCaseName, r.oldExecutionTimeMcs) &&
-            _filter2.accept("method", r.testCaseName, r.newExecutionTimeMcs) ||
-        methodName == "MCTS2") {
-      logger->logProcessingTime(methodName, (double)r.newExecutionTimeMcs /
-                                                (double)r.oldExecutionTimeMcs);
-    }
-
-    if (_filter.accept("method", r.testCaseName, r.timeElapsedMcs)) {
+    if (_filter.accept(methodName, r.testCaseName, r.timeElapsedMcs)) {
       logger->logProcessingTime(methodName, r.timeElapsedMcs);
     }
 
